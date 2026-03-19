@@ -78,6 +78,17 @@ def _normalise_ohlcv_cols(df: pl.DataFrame) -> pl.DataFrame:
     return df
 
 
+def _strip_timezone(df: pl.DataFrame) -> pl.DataFrame:
+    """Strip timezone from datetime column if present, for safe comparisons."""
+    if "datetime" in df.columns:
+        dt_dtype = df["datetime"].dtype
+        if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
+            df = df.with_columns(
+                pl.col("datetime").dt.replace_time_zone(None).alias("datetime")
+            )
+    return df
+
+
 def assign_day_id(df: pl.DataFrame) -> pl.DataFrame:
     """Assign integer day_id based on calendar date of each bar."""
     df = df.with_columns(
@@ -137,7 +148,14 @@ def load_stock_data(
         if "symbol" in schema_names:
             lf = lf.filter(pl.col("symbol") == symbol)
 
-        # Filter by date range
+        # Filter by date range (timezone-safe: cast to naive if needed)
+        if start_date or end_date:
+            dt_dtype = lf.collect_schema()["datetime"]
+            # If the column is tz-aware, strip timezone for comparison
+            if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
+                lf = lf.with_columns(
+                    pl.col("datetime").dt.replace_time_zone(None).alias("datetime")
+                )
         if start_date:
             lf = lf.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())
         if end_date:
@@ -178,6 +196,7 @@ def load_vix_data(
         df = pl.read_parquet(path)
         df = _normalise_datetime_col(df)
         df = _normalise_ohlcv_cols(df)
+        df = _strip_timezone(df)
 
         if start_date:
             df = df.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())
@@ -223,6 +242,7 @@ def load_index_data(
         df = pl.read_parquet(path)
         df = _normalise_datetime_col(df)
         df = _normalise_ohlcv_cols(df)
+        df = _strip_timezone(df)
 
         if start_date:
             df = df.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())
@@ -275,6 +295,7 @@ def merge_vix_index(
 
 def split_train_test(df: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Split into training (<=2024-12-31) and test (>=2025-01-01)."""
+    df = _strip_timezone(df)
     train = df.filter(pl.col("datetime") <= pl.lit(TRAIN_END + " 23:59:59").str.to_datetime())
     test = df.filter(pl.col("datetime") >= pl.lit(TEST_START).str.to_datetime())
     return train, test
@@ -316,14 +337,25 @@ def build_data_inventory() -> dict:
             try:
                 lf = pl.scan_parquet(path)
                 schema = {name: str(dtype) for name, dtype in lf.collect_schema().items()}
+                # Find datetime column
+                dt_col = None
+                for c in lf.collect_schema().names():
+                    if c.lower() in ("datetime", "date", "timestamp"):
+                        dt_col = c
+                        break
                 # Get row count and date range
-                stats = lf.select(
-                    pl.count().alias("rows"),
-                    pl.col(next(c for c in lf.collect_schema().names()
-                                if c.lower() in ("datetime", "date", "timestamp"))).min().alias("min_dt"),
-                    pl.col(next(c for c in lf.collect_schema().names()
-                                if c.lower() in ("datetime", "date", "timestamp"))).max().alias("max_dt"),
-                ).collect()
+                if dt_col is not None:
+                    stats = lf.select(
+                        pl.count().alias("rows"),
+                        pl.col(dt_col).min().alias("min_dt"),
+                        pl.col(dt_col).max().alias("max_dt"),
+                    ).collect()
+                else:
+                    stats = lf.select(pl.count().alias("rows")).collect()
+                    stats = stats.with_columns(
+                        pl.lit(None).alias("min_dt"),
+                        pl.lit(None).alias("max_dt"),
+                    )
                 symbols = get_available_symbols(tf)
                 inventory["timeframes"][tf] = {
                     "file": str(path),

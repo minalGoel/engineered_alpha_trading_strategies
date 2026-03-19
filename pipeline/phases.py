@@ -5,14 +5,12 @@ The main entry point is `run_strategy_pipeline()`.
 """
 from __future__ import annotations
 import orjson
-import shutil
 import logging
 import time
-import signal
+import threading
 import polars as pl
 from pathlib import Path
 from typing import Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from pipeline.config import (
     RESULTS_DIR, OUTPUTS_DIR, TRAIN_END, TEST_START,
@@ -23,7 +21,7 @@ from pipeline.config import (
 from pipeline.strategy_parser import ParsedStrategy, parse_strategy
 from pipeline.data_loader import (
     load_stock_data, load_vix_data, load_index_data,
-    merge_vix_index, assign_day_id,
+    merge_vix_index,
 )
 from pipeline.indicators import compute_all_indicators
 from pipeline.backtester import backtest_single, build_signals_from_trades
@@ -33,6 +31,10 @@ from pipeline.stock_filter import filter_all_stocks
 from pipeline.report import generate_report
 
 log = logging.getLogger(__name__)
+
+# Overall strategy timeout: 45 min (covers data load + all phases).
+# Optuna gets its own 30-min timeout via study.optimize(timeout=...).
+STRATEGY_TIMEOUT_SECS = 45 * 60
 
 
 def _save_json(path: Path, data):
@@ -57,12 +59,48 @@ def _make_verdict(verdict: str, reason: str = "") -> dict:
     return {"verdict": verdict, "reason": reason}
 
 
-class TimeoutError(Exception):
+class StrategyTimeoutError(Exception):
+    """Raised when a strategy exceeds its processing time limit."""
     pass
 
 
-def _timeout_handler(signum, frame):
-    raise TimeoutError("Strategy processing timed out")
+class _TimeoutWatchdog:
+    """Thread-based timeout that works in any thread/process (unlike SIGALRM).
+
+    Usage:
+        wd = _TimeoutWatchdog(seconds=1800)
+        wd.start()
+        try:
+            ... # do work; periodically call wd.check()
+        finally:
+            wd.cancel()
+    """
+
+    def __init__(self, seconds: int):
+        self.seconds = seconds
+        self.deadline = 0.0
+        self._expired = False
+
+    def start(self):
+        self.deadline = time.monotonic() + self.seconds
+        self._expired = False
+
+    def cancel(self):
+        self.deadline = 0.0
+
+    def check(self):
+        """Call periodically from the worker thread. Raises if expired."""
+        if self.deadline > 0 and time.monotonic() > self.deadline:
+            self._expired = True
+            raise StrategyTimeoutError(
+                f"Strategy processing exceeded {self.seconds}s timeout"
+            )
+
+    @property
+    def expired(self) -> bool:
+        if self.deadline > 0 and time.monotonic() > self.deadline:
+            self._expired = True
+        return self._expired
 
 
 def run_strategy_pipeline(
@@ -74,6 +112,11 @@ def run_strategy_pipeline(
     start_phase: int = 1,
 ) -> dict:
     """Run the full pipeline for a single strategy.
+
+    Args:
+        start_phase: Skip phases before this number. Loads prior results from disk.
+                     1=run everything, 3=skip data loading (reuse indicators from prior run),
+                     6=skip to OOS validation, etc.
 
     Returns a summary dict with verdict and key metrics.
     """
@@ -94,14 +137,11 @@ def run_strategy_pipeline(
         "tags": raw_json.get("tags", []),
     }
 
-    try:
-        # Set timeout
-        try:
-            signal.signal(signal.SIGALRM, _timeout_handler)
-            signal.alarm(OPTUNA_TIMEOUT_SECS)
-        except (ValueError, AttributeError):
-            pass  # SIGALRM not available on Windows / threads
+    # Thread-safe timeout watchdog (works in joblib subprocesses unlike SIGALRM)
+    watchdog = _TimeoutWatchdog(STRATEGY_TIMEOUT_SECS)
+    watchdog.start()
 
+    try:
         # ── Phase 2: Parse strategy ─────────────────────────────────────
         log.info("%s — Phase 2 — parsing strategy", log_prefix)
         ps = parse_strategy(raw_json)
@@ -126,7 +166,7 @@ def run_strategy_pipeline(
             df = load_stock_data(ps.timeframe, sym, end_date=TRAIN_END)
             if df is not None and not df.is_empty():
                 df = merge_vix_index(df, vix_df, index_df)
-                # Compute indicators once
+                # Compute indicators once — reused across all Optuna trials
                 df, computed, failed = compute_all_indicators(
                     df, ps.indicator_defs,
                     needs_vwap=ps.needs_vwap,
@@ -140,6 +180,8 @@ def run_strategy_pipeline(
                 if len(df) > ps.max_lookback:
                     train_stock_data[sym] = df
 
+        watchdog.check()  # Check timeout after data loading
+
         if not train_stock_data:
             verdict = _make_verdict("FAILED_NO_TRADES", "No stock data available for this timeframe")
             _save_json(strat_dir / "verdict.json", verdict)
@@ -150,111 +192,149 @@ def run_strategy_pipeline(
         log.info("%s — Phase 2 — loaded %d stocks", log_prefix, len(train_stock_data))
 
         # ── Phase 3a: Default backtest + CV ─────────────────────────────
-        log.info("%s — Phase 3a — default backtest on full training set", log_prefix)
+        if start_phase <= 3:
+            log.info("%s — Phase 3a — default backtest on full training set", log_prefix)
 
-        default_trades, trading_days = run_default_backtest(ps, train_stock_data, n_jobs=n_cores)
+            default_trades, trading_days = run_default_backtest(ps, train_stock_data, n_jobs=n_cores)
 
-        if default_trades is None or len(default_trades) < MIN_TRADES_FULL:
-            n_trades = len(default_trades) if default_trades is not None else 0
-            verdict = _make_verdict("FAILED_NO_TRADES",
-                                    f"Only {n_trades} trades on full training set (need {MIN_TRADES_FULL})")
-            _save_json(strat_dir / "verdict.json", verdict)
-            result["verdict"] = "FAILED_NO_TRADES"
-            _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_NO_TRADES", verdict["reason"])
-            return result
+            if default_trades is None or len(default_trades) < MIN_TRADES_FULL:
+                n_trades = len(default_trades) if default_trades is not None else 0
+                verdict = _make_verdict("FAILED_NO_TRADES",
+                                        f"Only {n_trades} trades on full training set (need {MIN_TRADES_FULL})")
+                _save_json(strat_dir / "verdict.json", verdict)
+                result["verdict"] = "FAILED_NO_TRADES"
+                _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_NO_TRADES", verdict["reason"])
+                return result
 
-        default_metrics = compute_metrics(default_trades, ps.capital_per_trade, trading_days)
-        default_sharpe = default_metrics["sharpe_annualized"]
-        log.info("%s — Phase 3a — default: %d trades, Sharpe=%.3f",
-                 log_prefix, len(default_trades), default_sharpe)
+            default_metrics = compute_metrics(default_trades, ps.capital_per_trade, trading_days)
+            default_sharpe = default_metrics["sharpe_annualized"]
+            log.info("%s — Phase 3a — default: %d trades, Sharpe=%.3f",
+                     log_prefix, len(default_trades), default_sharpe)
 
-        # Cross-validation
-        log.info("%s — Phase 3a — 5-fold CV with default params", log_prefix)
-        cv_results, cv_passed = run_cv_validation(ps, train_stock_data, n_jobs=n_cores)
+            # Cross-validation
+            log.info("%s — Phase 3a — 5-fold CV with default params", log_prefix)
+            cv_results, cv_passed = run_cv_validation(ps, train_stock_data, n_jobs=n_cores)
+            watchdog.check()
 
-        if not cv_passed:
-            profitable_folds = sum(1 for f in cv_results if f["profitable"])
-            verdict = _make_verdict("FAILED_OVERFIT",
-                                    f"Only {profitable_folds}/5 CV folds profitable with default params")
-            _save_json(strat_dir / "verdict.json", verdict)
-            result["verdict"] = "FAILED_OVERFIT"
+            if not cv_passed:
+                profitable_folds = sum(1 for f in cv_results if f["profitable"])
+                verdict = _make_verdict("FAILED_OVERFIT",
+                                        f"Only {profitable_folds}/5 CV folds profitable with default params")
+                _save_json(strat_dir / "verdict.json", verdict)
+                result["verdict"] = "FAILED_OVERFIT"
 
-            # Still save optimization.json with CV results
-            opt_json = {
-                "default_params": {k: v[0] for k, v in ps.tunable_params.items()},
-                "optimized_params": {},
-                "param_bounds": {},
-                "default_sharpe": round(default_sharpe, 4),
-                "optimized_sharpe": 0,
-                "sharpe_improvement_ratio": 0,
-                "overfit_flag": False,
-                "cv_fold_results": cv_results,
-                "cv_folds_profitable": profitable_folds,
-                "optuna_trials_completed": 0,
-                "optuna_best_trial": 0,
-                "optuna_timeout_hit": False,
-            }
-            _save_json(strat_dir / "optimization.json", opt_json)
-            _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_OVERFIT",
-                                  verdict["reason"], optimization=opt_json, cv_folds=cv_results)
-            return result
+                opt_json = {
+                    "default_params": {k: v[0] for k, v in ps.tunable_params.items()},
+                    "optimized_params": {},
+                    "param_bounds": {},
+                    "default_sharpe": round(default_sharpe, 4),
+                    "optimized_sharpe": 0,
+                    "sharpe_improvement_ratio": 0,
+                    "overfit_flag": False,
+                    "cv_fold_results": cv_results,
+                    "cv_folds_profitable": profitable_folds,
+                    "optuna_trials_completed": 0,
+                    "optuna_best_trial": 0,
+                    "optuna_timeout_hit": False,
+                }
+                _save_json(strat_dir / "optimization.json", opt_json)
+                _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_OVERFIT",
+                                      verdict["reason"], optimization=opt_json, cv_folds=cv_results)
+                return result
 
-        # ── Phase 3b: Optuna optimization ───────────────────────────────
-        log.info("%s — Phase 3b — Optuna optimization (100 trials)", log_prefix)
+            # ── Phase 3b: Optuna optimization ───────────────────────────
+            log.info("%s — Phase 3b — Optuna optimization (100 trials)", log_prefix)
 
-        trial_count = [0]
-        def progress_cb(trial_num, sharpe):
-            trial_count[0] = trial_num + 1
-            if (trial_num + 1) % 10 == 0:
-                log.info("%s — Phase 3 — trial %d/100 — best Sharpe %.3f",
-                         log_prefix, trial_num + 1, sharpe)
+            def progress_cb(trial_num, sharpe):
+                if (trial_num + 1) % 10 == 0:
+                    log.info("%s — Phase 3 — trial %d/100 — best Sharpe %.3f",
+                             log_prefix, trial_num + 1, sharpe)
 
-        opt_result = run_optimization(
-            ps, train_stock_data, default_sharpe, trading_days,
-            n_jobs=n_cores, progress_callback=progress_cb,
-        )
-        opt_result["cv_fold_results"] = cv_results
-        opt_result["cv_folds_profitable"] = sum(1 for f in cv_results if f["profitable"])
-        _save_json(strat_dir / "optimization.json", opt_result)
+            opt_result = run_optimization(
+                ps, train_stock_data, default_sharpe, trading_days,
+                n_jobs=n_cores, progress_callback=progress_cb,
+            )
+            opt_result["cv_fold_results"] = cv_results
+            opt_result["cv_folds_profitable"] = sum(1 for f in cv_results if f["profitable"])
+            _save_json(strat_dir / "optimization.json", opt_result)
 
-        optimized_params = opt_result["optimized_params"]
-        optimized_sharpe = opt_result["optimized_sharpe"]
-        log.info("%s — Phase 3b — optimized Sharpe=%.3f (default=%.3f, ratio=%.2f)",
-                 log_prefix, optimized_sharpe, default_sharpe,
-                 opt_result["sharpe_improvement_ratio"])
+            optimized_params = opt_result["optimized_params"]
+            optimized_sharpe = opt_result["optimized_sharpe"]
+            log.info("%s — Phase 3b — optimized Sharpe=%.3f (default=%.3f, ratio=%.2f)",
+                     log_prefix, optimized_sharpe, default_sharpe,
+                     opt_result["sharpe_improvement_ratio"])
+        else:
+            # ── Phase restart: load optimization results from disk ──────
+            opt_path = strat_dir / "optimization.json"
+            if opt_path.exists():
+                opt_result = orjson.loads(opt_path.read_bytes())
+                optimized_params = opt_result.get("optimized_params", {})
+                default_sharpe = opt_result.get("default_sharpe", 0)
+                cv_results = opt_result.get("cv_fold_results", [])
+                trading_days = 748  # approximate, will be refined
+                log.info("%s — Phase 3 — loaded from disk", log_prefix)
+            else:
+                log.error("%s — Phase 3 results missing, cannot restart from phase %d",
+                          log_prefix, start_phase)
+                verdict = _make_verdict("FAILED_ERROR", "Missing optimization.json for phase restart")
+                _save_json(strat_dir / "verdict.json", verdict)
+                result["verdict"] = "FAILED_ERROR"
+                return result
+
+        watchdog.check()
 
         # ── Phase 4: Per-stock backtesting ──────────────────────────────
-        log.info("%s — Phase 4 — per-stock backtesting", log_prefix)
+        if start_phase <= 4:
+            log.info("%s — Phase 4 — per-stock backtesting", log_prefix)
 
-        per_stock_dir = strat_dir / "training" / "per_stock"
-        per_stock_dir.mkdir(parents=True, exist_ok=True)
+            per_stock_dir = strat_dir / "training" / "per_stock"
+            per_stock_dir.mkdir(parents=True, exist_ok=True)
 
-        all_train_trades = []
-        per_stock_metrics = {}
+            all_train_trades = []
+            per_stock_metrics = {}
 
-        for sym, df in train_stock_data.items():
-            trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
-                                     skip_indicators=True)
-            if trades is not None and not trades.is_empty():
-                all_train_trades.append(trades)
-                m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade, trading_days)
-                per_stock_metrics[sym] = m
-                _save_json(per_stock_dir / f"{sym}.json", m)
-            else:
-                per_stock_metrics[sym] = {
-                    "symbol": sym, "total_trades": 0, "win_rate": 0, "profit_factor": 0,
-                    "sharpe": 0, "total_pnl": 0, "max_drawdown": 0, "avg_trade_pnl": 0,
-                    "avg_winner": 0, "avg_loser": 0, "avg_holding_bars": 0,
-                    "best_trade_pnl": 0, "worst_trade_pnl": 0,
-                    "passed_filter": False, "filter_failures": ["no_trades"],
-                }
-                _save_json(per_stock_dir / f"{sym}.json", per_stock_metrics[sym])
+            for sym, df in train_stock_data.items():
+                trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
+                                         skip_indicators=True)
+                if trades is not None and not trades.is_empty():
+                    all_train_trades.append(trades)
+                    m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade, trading_days)
+                    per_stock_metrics[sym] = m
+                    _save_json(per_stock_dir / f"{sym}.json", m)
+                else:
+                    per_stock_metrics[sym] = {
+                        "symbol": sym, "total_trades": 0, "win_rate": 0, "profit_factor": 0,
+                        "sharpe": 0, "total_pnl": 0, "max_drawdown": 0, "avg_trade_pnl": 0,
+                        "avg_winner": 0, "avg_loser": 0, "avg_holding_bars": 0,
+                        "best_trade_pnl": 0, "worst_trade_pnl": 0,
+                        "passed_filter": False, "filter_failures": ["no_trades"],
+                    }
+                    _save_json(per_stock_dir / f"{sym}.json", per_stock_metrics[sym])
+            watchdog.check()
+        else:
+            # Load per-stock from disk
+            per_stock_dir = strat_dir / "training" / "per_stock"
+            per_stock_metrics = {}
+            all_train_trades = []
+            if per_stock_dir.exists():
+                for jf in per_stock_dir.glob("*.json"):
+                    sym = jf.stem
+                    per_stock_metrics[sym] = orjson.loads(jf.read_bytes())
 
         # ── Phase 5: Stock filtering ────────────────────────────────────
-        log.info("%s — Phase 5 — stock filtering", log_prefix)
+        if start_phase <= 5:
+            log.info("%s — Phase 5 — stock filtering", log_prefix)
 
-        stock_filter_json, passing_syms, failing_syms = filter_all_stocks(per_stock_metrics)
-        _save_json(strat_dir / "stock_filter.json", stock_filter_json)
+            stock_filter_json, passing_syms, failing_syms = filter_all_stocks(per_stock_metrics)
+            _save_json(strat_dir / "stock_filter.json", stock_filter_json)
+        else:
+            sf_path = strat_dir / "stock_filter.json"
+            if sf_path.exists():
+                stock_filter_json = orjson.loads(sf_path.read_bytes())
+                passing_syms = stock_filter_json.get("passing_symbols", [])
+            else:
+                stock_filter_json, passing_syms, _ = filter_all_stocks(per_stock_metrics)
+                _save_json(strat_dir / "stock_filter.json", stock_filter_json)
 
         if len(passing_syms) < MIN_PASSING_STOCKS:
             verdict = _make_verdict("FAILED_NARROW",
@@ -262,7 +342,6 @@ def run_strategy_pipeline(
             _save_json(strat_dir / "verdict.json", verdict)
             result["verdict"] = "FAILED_NARROW"
 
-            # Save training results even for failed strategies
             _save_training_results(strat_dir, all_train_trades, ps, per_stock_metrics,
                                    passing_syms, trading_days)
             _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_NARROW",
@@ -275,8 +354,9 @@ def run_strategy_pipeline(
                  len(passing_syms), len(per_stock_metrics))
 
         # Save training results (passing stocks only for aggregate)
+        passing_set = set(passing_syms)
         passing_trades = [t for t in all_train_trades
-                          if t["symbol"][0] in set(passing_syms)] if all_train_trades else []
+                          if t["symbol"][0] in passing_set] if all_train_trades else []
         train_combined = pl.concat(passing_trades) if passing_trades else pl.DataFrame()
         train_metrics = compute_metrics(train_combined, ps.capital_per_trade, trading_days)
         train_metrics["passing_stocks"] = len(passing_syms)
@@ -316,6 +396,8 @@ def run_strategy_pipeline(
                 m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade)
                 test_per_stock[sym] = m
 
+        watchdog.check()
+
         test_combined = pl.concat(all_test_trades) if all_test_trades else pl.DataFrame()
         test_metrics = compute_metrics(test_combined, ps.capital_per_trade)
 
@@ -340,7 +422,6 @@ def run_strategy_pipeline(
         test_sharpe = test_metrics.get("sharpe_annualized", 0)
         train_sharpe_val = train_metrics.get("sharpe_annualized", 0)
 
-        # Check OOS criteria
         oos_failures = []
         if test_pf < OOS_MIN_PROFIT_FACTOR:
             oos_failures.append(f"test PF={test_pf:.2f} < {OOS_MIN_PROFIT_FACTOR}")
@@ -350,7 +431,6 @@ def run_strategy_pipeline(
             oos_failures.append(
                 f"test Sharpe={test_sharpe:.4f} < 30% of train ({train_sharpe_val * OOS_SHARPE_DECAY_LIMIT:.4f})")
 
-        # Check % of stocks still profitable
         if passing_syms:
             profitable_test_stocks = sum(
                 1 for sym in passing_syms
@@ -402,9 +482,9 @@ def run_strategy_pipeline(
         )
         _save_text(strat_dir / "report.md", report_md)
 
-    except TimeoutError:
-        log.warning("%s — TIMEOUT after %d seconds", log_prefix, OPTUNA_TIMEOUT_SECS)
-        verdict = _make_verdict("FAILED_TIMEOUT", f"Exceeded {OPTUNA_TIMEOUT_SECS}s safety timeout")
+    except StrategyTimeoutError:
+        log.warning("%s — TIMEOUT after %d seconds", log_prefix, STRATEGY_TIMEOUT_SECS)
+        verdict = _make_verdict("FAILED_TIMEOUT", f"Exceeded {STRATEGY_TIMEOUT_SECS}s safety timeout")
         _save_json(strat_dir / "verdict.json", verdict)
         result["verdict"] = "FAILED_TIMEOUT"
 
@@ -415,11 +495,7 @@ def run_strategy_pipeline(
         result["verdict"] = "FAILED_ERROR"
 
     finally:
-        # Cancel alarm
-        try:
-            signal.alarm(0)
-        except (ValueError, AttributeError):
-            pass
+        watchdog.cancel()
 
     log.info("%s — complete — verdict=%s", log_prefix, result["verdict"])
     return result
@@ -446,8 +522,9 @@ def _save_training_results(
             _save_parquet(train_dir / "signals.parquet", signals)
 
         if train_metrics is None:
+            passing_set = set(passing_syms)
             passing_trades = [t for t in all_trades
-                              if t["symbol"][0] in set(passing_syms)]
+                              if t["symbol"][0] in passing_set]
             if passing_trades:
                 train_combined = pl.concat(passing_trades)
                 train_metrics = compute_metrics(train_combined, ps.capital_per_trade, trading_days)

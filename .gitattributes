@@ -1,2 +1,9 @@
+# Data files (large)
+data/**/*.csv filter=lfs diff=lfs merge=lfs -text
 data/**/*.parquet filter=lfs diff=lfs merge=lfs -text
 data/*.parquet filter=lfs diff=lfs merge=lfs -text
+data/parquet/**/*.parquet filter=lfs diff=lfs merge=lfs -text
+
+# Result Parquet files (large — signals and trades)
+strategy_results/**/*.parquet filter=lfs diff=lfs merge=lfs -text
+outputs/*.parquet filter=lfs diff=lfs merge=lfs -text

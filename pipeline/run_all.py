@@ -9,6 +9,7 @@ Usage:
     python pipeline/run_all.py --dry-run
 """
 from __future__ import annotations
+import os
 import argparse
 import logging
 import sys
@@ -16,6 +17,10 @@ import time
 import orjson
 from pathlib import Path
 from joblib import Parallel, delayed
+
+# Prevent Numba from spawning its own thread pool inside each worker.
+# Without this, 16 strategies × Numba's default threads = massive over-subscription.
+os.environ.setdefault("NUMBA_NUM_THREADS", "1")
 
 from pipeline.config import (
     RESULTS_DIR, OUTPUTS_DIR,
@@ -162,9 +167,36 @@ def main():
     total = len(parseable)
     all_results = []
 
+    # When restarting from a later phase, skip strategies that already have a verdict
+    if args.phase > 1:
+        to_process = []
+        for strat in parseable:
+            name = strat.get("name", "unknown")
+            verdict_path = RESULTS_DIR / name / "verdict.json"
+            if verdict_path.exists() and args.phase > 3:
+                try:
+                    existing = orjson.loads(verdict_path.read_bytes())
+                    v = existing.get("verdict", "")
+                    # Skip strategies that already reached a terminal verdict
+                    if v in ("VALIDATED", "FAILED_OOS", "FAILED_NARROW",
+                             "FAILED_OVERFIT", "FAILED_NO_TRADES", "FAILED_PARSE_ERROR"):
+                        log.info("Skipping %s — already has verdict: %s", name, v)
+                        all_results.append({"name": name, "verdict": v,
+                                            "family": strat.get("_dedup_metadata", {}).get("family", ""),
+                                            "tags": strat.get("tags", [])})
+                        continue
+                except Exception:
+                    pass
+            to_process.append(strat)
+        log.info("After skip check: %d/%d strategies to process", len(to_process), len(parseable))
+    else:
+        to_process = list(parseable)
+
+    total = len(to_process)
+
     if args.parallel_strategies <= 1 or args.strategy:
         # Sequential processing
-        for idx, strat in enumerate(parseable, 1):
+        for idx, strat in enumerate(to_process, 1):
             result = run_strategy_pipeline(
                 strat, available_symbols,
                 strategy_idx=idx, total_strategies=total,
@@ -188,7 +220,7 @@ def main():
             verbose=10,
         )(
             delayed(_process)(strat, idx)
-            for idx, strat in enumerate(parseable, 1)
+            for idx, strat in enumerate(to_process, 1)
         )
         all_results = list(results)
 

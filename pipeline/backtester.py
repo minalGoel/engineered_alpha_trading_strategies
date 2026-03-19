@@ -216,6 +216,10 @@ def backtest_single(
         target_indicator = np.nan_to_num(target_indicator, nan=0.0)
 
         # ── Run state machine ───────────────────────────────────────────
+        eod_flatten_minutes = EOD_FLATTEN_H * 60 + EOD_FLATTEN_M
+        # Cap session end at EOD flatten time — no entries after EOD flatten
+        capped_session_end = min(effective_end, eod_flatten_minutes)
+
         result = run_state_machine(
             open_arr=arrays.get("open", np.zeros(n)),
             high_arr=arrays.get("high", np.zeros(n)),
@@ -238,9 +242,9 @@ def backtest_single(
             trailing_activate_pct=trail_activate,
             breakeven_pct=be_pct,
             time_stop_bars=time_stop,
-            eod_flatten_minutes=EOD_FLATTEN_H * 60 + EOD_FLATTEN_M,
+            eod_flatten_minutes=eod_flatten_minutes,
             session_start_minutes=effective_start,
-            session_end_minutes=effective_end,
+            session_end_minutes=capped_session_end,
             max_trades_per_day=strategy.max_trades_per_day,
             max_daily_loss=strategy.max_daily_loss_inr,
             capital_per_trade=strategy.capital_per_trade,

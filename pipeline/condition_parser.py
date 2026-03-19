@@ -77,6 +77,21 @@ _RE_TRAIL_ATR = re.compile(r"trail(?:ing)?\s+(?:at|by)\s+([\d.]+)\s*\*?\s*ATR", 
 _RE_TRAIL_BE = re.compile(r"(?:move\s+)?(?:SL|stop)\s+to\s+breakeven\s+after\s+\+?([\d.]+)%", re.IGNORECASE)
 _RE_TRAIL_ACTIVATE = re.compile(r"once (?:profit|past)\s+(?:exceeds?\s+)?([\d.]+)%", re.IGNORECASE)
 
+# "between" pattern: "vix between 12-22" or "rsi_14 between 30 and 70"
+_RE_BETWEEN = re.compile(
+    r"^\s*(\w+)\s+between\s+([\d.]+)\s*[-–]\s*([\d.]+)\s*$",
+    re.IGNORECASE
+)
+_RE_BETWEEN_AND = re.compile(
+    r"^\s*(\w+)\s+between\s+([\d.]+)\s+and\s+([\d.]+)\s*$",
+    re.IGNORECASE
+)
+
+# Function-call syntax in conditions: "RSI(close, 14) < 30", "ADX(14) > 20"
+_RE_FUNC_COMPARISON = re.compile(
+    r"^\s*([A-Za-z_]+)\(.*?\)\s*(>=|<=|!=|>|<|==|=)\s*([\-+]?[\d.]+)\s*$"
+)
+
 # ── VIX filter patterns ────────────────────────────────────────────────────
 _RE_VIX = re.compile(r"(?:vix|india_vix|India_VIX)\s*(>=|<=|>|<)\s*([\d.]+)", re.IGNORECASE)
 _RE_VIX_RANGE = re.compile(
@@ -259,7 +274,31 @@ def parse_condition(cond_str: str) -> list[ParsedCondition | CrossCondition]:
 
     results = []
 
-    # Check for AND compound conditions first
+    # Check "between" BEFORE AND-splitting (since "between X and Y" contains AND)
+    m = _RE_BETWEEN.match(cond_str) or _RE_BETWEEN_AND.match(cond_str)
+    if m:
+        col, lo, hi = m.group(1), float(m.group(2)), float(m.group(3))
+        return [
+            ParsedCondition(col, ">=", lo),
+            ParsedCondition(col, "<=", hi),
+        ]
+
+    # Function-call syntax: "RSI(close, 14) < 30" → rsi_14 < 30
+    m = _RE_FUNC_COMPARISON.match(cond_str)
+    if m:
+        func_name, op, rhs_val = m.group(1).lower(), m.group(2), float(m.group(3))
+        op = _OPS.get(op, op)
+        # Map function call to likely column name
+        # Extract period from inside parens if present
+        inner = re.search(r"\(.*?(\d+)\s*\)", cond_str)
+        if inner:
+            period = inner.group(1)
+            col_name = f"{func_name}_{period}"
+        else:
+            col_name = func_name
+        return [ParsedCondition(col_name, op, rhs_val)]
+
+    # Check for AND compound conditions
     if _RE_AND.search(cond_str):
         parts = _RE_AND.split(cond_str)
         for part in parts:

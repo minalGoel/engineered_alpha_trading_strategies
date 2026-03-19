@@ -18,7 +18,9 @@ GIT_USER="${GIT_USER:-your-github-username}"
 GIT_TOKEN="${GIT_TOKEN:-ghp_your_github_pat_here}"
 
 # Pipeline settings
-PARALLEL_STRATEGIES="${PARALLEL_STRATEGIES:-16}"
+# 8 workers × ~8GB peak = 64GB, safe for 128GB instance. Do NOT increase to 16
+# without reducing per-worker memory (e.g. memory-mapped parquets).
+PARALLEL_STRATEGIES="${PARALLEL_STRATEGIES:-8}"
 CORES_PER_STRATEGY="${CORES_PER_STRATEGY:-4}"
 
 # Working directory
@@ -30,7 +32,12 @@ echo "[$(date)] Starting EC2 bootstrap..."
 # Update system
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq python3.12 python3.12-venv python3.12-dev git git-lfs curl
+apt-get install -y -qq python3.12 python3.12-venv python3.12-dev git git-lfs curl tzdata
+
+# Set timezone to IST — pipeline time constants depend on IST timestamps
+ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+echo "Asia/Kolkata" > /etc/timezone
+export TZ=Asia/Kolkata
 
 # Install git LFS BEFORE any clone
 git lfs install
@@ -97,10 +104,13 @@ PIPELINE_EXIT=$?
 echo "[$(date)] Pipeline exited with code=$PIPELINE_EXIT"
 
 # ── Push results to git ──────────────────────────────────────────────────
+if [ "$PIPELINE_EXIT" -ne 0 ]; then
+    echo "[$(date)] WARNING: Pipeline exited with code=$PIPELINE_EXIT — pushing partial results"
+fi
 echo "[$(date)] Pushing results to git..."
 git lfs install
-git add strategy_results/ outputs/
-git commit -m "Pipeline results $(date -I)" || echo "Nothing to commit"
+git add strategy_results/ outputs/ pipeline.log
+git commit -m "Pipeline results $(date -I) (exit=$PIPELINE_EXIT)" || echo "Nothing to commit"
 
 MAX_RETRIES=4
 RETRY_DELAY=2

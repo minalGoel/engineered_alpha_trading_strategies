@@ -47,7 +47,9 @@ log = logging.getLogger(__name__)
 
 def _save_json(path: Path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2))
+    from pipeline.phases import _sanitise_for_json
+    sanitised = _sanitise_for_json(data)
+    path.write_bytes(orjson.dumps(sanitised, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
 
 def main():

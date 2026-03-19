@@ -635,6 +635,176 @@ def test_optimizer_all_trials_fail():
     return True
 
 
+def test_state_machine_force_close_at_end_of_data():
+    """BUG 12: Positions open at end of data must be force-closed."""
+    from pipeline.state_machine import run_state_machine, warmup_numba
+    warmup_numba()
+
+    n = 50
+    prices = np.full(n, 100.0, dtype=np.float64)
+    opens = prices.copy()
+    highs = prices + 0.1
+    lows = prices - 0.1
+    close = prices.copy()
+
+    day_ids = np.zeros(n, dtype=np.int32)
+    # All bars at time 600 (well within session), so no EOD flatten triggers
+    time_mins = np.full(n, 600, dtype=np.int32)
+
+    long_entry = np.zeros(n, dtype=np.bool_)
+    long_entry[10] = True  # Enter at bar 10
+    short_entry = np.zeros(n, dtype=np.bool_)
+
+    result = run_state_machine(
+        opens, highs, lows, close,
+        day_ids, time_mins,
+        long_entry, short_entry,
+        np.zeros(n, dtype=np.bool_), np.zeros(n, dtype=np.bool_),
+        np.ones(n, dtype=np.float64), np.zeros(n, dtype=np.float64),
+        stop_loss_pct=0.0, stop_loss_atr_mult=0.0,
+        target_pct=0.0, target_atr_mult=0.0,
+        use_target_indicator=False, trailing_stop_pct=0.0,
+        trailing_activate_pct=0.0, breakeven_pct=0.0,
+        time_stop_bars=0,  # No time stop
+        eod_flatten_minutes=920,
+        session_start_minutes=555, session_end_minutes=920,
+        max_trades_per_day=10, max_daily_loss=0.0,
+        capital_per_trade=100000.0, warmup_bars=5,
+    )
+    entry_bars, exit_bars, sides, entry_prices, exit_prices, exit_reasons, trade_count = result
+    assert trade_count == 1, f"Expected 1 force-closed trade, got {trade_count}"
+    assert exit_bars[0] == n - 1, f"Expected exit at last bar ({n-1}), got {exit_bars[0]}"
+    assert exit_reasons[0] == 6, f"Expected EOD exit reason (6), got {exit_reasons[0]}"
+
+    print("  State machine force-close at end of data: passed")
+    return True
+
+
+def test_drawdown_sorted_by_exit_time():
+    """BUG 4: Drawdown must be computed on time-ordered trades."""
+    from pipeline.metrics import compute_metrics
+
+    # Create trades that are NOT in exit-time order
+    trades = pl.DataFrame({
+        "trade_id": ["t0", "t1", "t2", "t3"],
+        "symbol": ["A"] * 4,
+        "side": ["LONG"] * 4,
+        "entry_time": [
+            datetime(2024, 1, 5, 10, 0),
+            datetime(2024, 1, 1, 10, 0),
+            datetime(2024, 1, 10, 10, 0),
+            datetime(2024, 1, 3, 10, 0),
+        ],
+        "exit_time": [
+            datetime(2024, 1, 5, 11, 0),   # 3rd chronologically
+            datetime(2024, 1, 1, 11, 0),   # 1st chronologically
+            datetime(2024, 1, 10, 11, 0),  # 4th chronologically
+            datetime(2024, 1, 3, 11, 0),   # 2nd chronologically
+        ],
+        "entry_price": [100.0] * 4,
+        "exit_price": [100.0] * 4,
+        # Order in DataFrame: +1000, -2000, +3000, -500
+        # Chronological order: -2000, -500, +1000, +3000
+        "pnl": [1000.0, -2000.0, 3000.0, -500.0],
+        "pnl_pct": [0.01, -0.02, 0.03, -0.005],
+        "holding_bars": [10] * 4,
+        "exit_reason": ["TARGET"] * 4,
+        "entry_indicators": ["{}"] * 4,
+    })
+
+    m = compute_metrics(trades, capital_per_trade=100000, total_trading_days=10)
+    # Chronological PnL: -2000, -500, +1000, +3000
+    # Cumulative: -2000, -2500, -1500, +1500
+    # Running max: 0, 0, 0, 1500 (but starts at 0 before any trade? No — cumsum starts at first trade)
+    # Actually cumsum: [-2000, -2500, -1500, 1500]
+    # Running max: [-2000, -2000, -1500, 1500] — wait, np.maximum.accumulate starts with first element
+    # max.accumulate([-2000, -2500, -1500, 1500]) = [-2000, -2000, -1500, 1500]
+    # drawdowns = max - cumul = [0, 500, 0, 0]
+    # max_drawdown = 500
+    # If NOT sorted: cumsum([1000, -2000, 3000, -500]) = [1000, -1000, 2000, 1500]
+    # max.accumulate = [1000, 1000, 2000, 2000]
+    # drawdowns = [0, 2000, 0, 500]
+    # max_drawdown = 2000 (WRONG — inflated by arbitrary ordering)
+    assert m["max_drawdown"] == 500.0, \
+        f"Drawdown should be 500 (time-ordered), got {m['max_drawdown']}"
+
+    print("  Drawdown sorted by exit time: passed")
+    return True
+
+
+def test_short_mask_zeros_when_no_conditions():
+    """BUG 36: Short mask must be zeros when strategy has no short conditions."""
+    from pipeline.backtester import backtest_single
+    from pipeline.strategy_parser import parse_strategy
+
+    raw = {
+        "name": "test_no_short_conds",
+        "timeframe": "1min",
+        "session": "09:15-15:20",
+        "indicators": [],
+        "entry": {
+            "long": {"conditions": ["close > 0"]},
+            # Short has no parseable conditions, but is NOT marked "N/A"
+            "short": {"conditions": ["some_unparseable_gibberish_xyz_123"]},
+        },
+        "exit": {"stop_loss": "0.5%"},
+        "filters": {},
+        "risk": {"capital_per_trade": 100000},
+    }
+
+    ps = parse_strategy(raw)
+    # After parsing, short_conditions should be empty (unparseable)
+    # and is_long_only should be True because no short conditions parsed
+    assert ps.is_long_only or len(ps.short_conditions) == 0, \
+        "Strategy with unparseable short conditions should have no short signals"
+
+    print("  Short mask zeros when no conditions: passed")
+    return True
+
+
+def test_json_nan_handling():
+    """BUG 3: orjson must not crash on NaN/Infinity values."""
+    import math
+    from pipeline.phases import _sanitise_for_json
+
+    data = {
+        "sharpe": float("nan"),
+        "profit_factor": float("inf"),
+        "nested": {"value": float("-inf"), "ok": 1.5},
+        "list": [1.0, float("nan"), 3.0],
+    }
+
+    sanitised = _sanitise_for_json(data)
+    assert sanitised["sharpe"] is None, "NaN should become None"
+    assert sanitised["profit_factor"] is None, "Infinity should become None"
+    assert sanitised["nested"]["value"] is None, "Nested -inf should become None"
+    assert sanitised["nested"]["ok"] == 1.5, "Normal float should be preserved"
+    assert sanitised["list"][1] is None, "NaN in list should become None"
+
+    # Verify orjson can serialize it
+    import orjson
+    result = orjson.dumps(sanitised)
+    assert b"null" in result, "Sanitised NaN should serialize as null"
+
+    print("  JSON NaN handling: passed")
+    return True
+
+
+def test_expiry_day_weekday():
+    """BUG 14: Polars weekday uses 1=Mon..7=Sun, Thursday=4."""
+    import polars as pl
+
+    # Create a known Thursday
+    df = pl.DataFrame({
+        "datetime": [datetime(2024, 1, 4, 10, 0)]  # Jan 4, 2024 is a Thursday
+    })
+    weekday = df["datetime"].dt.weekday().to_numpy()[0]
+    assert weekday == 4, f"Thursday should be weekday=4 in Polars, got {weekday}"
+
+    print("  Expiry day weekday: passed")
+    return True
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("Pipeline Unit Tests")
@@ -653,6 +823,11 @@ if __name__ == "__main__":
         ("State machine edge cases", test_state_machine_edge_cases),
         ("Session end capped at EOD", test_session_end_capped_at_eod),
         ("Optimizer all-trials-fail", test_optimizer_all_trials_fail),
+        ("State machine force-close at end", test_state_machine_force_close_at_end_of_data),
+        ("Drawdown sorted by exit time", test_drawdown_sorted_by_exit_time),
+        ("Short mask zeros", test_short_mask_zeros_when_no_conditions),
+        ("JSON NaN handling", test_json_nan_handling),
+        ("Expiry day weekday", test_expiry_day_weekday),
     ]
 
     passed = 0

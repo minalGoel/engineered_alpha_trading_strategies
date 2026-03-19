@@ -61,7 +61,13 @@ def compute_metrics(
     avg_holding = float(np.mean(holding_bars)) if n_trades > 0 else 0.0
 
     # ── Drawdown ────────────────────────────────────────────────────────
-    cumulative_pnl = np.cumsum(pnls)
+    # Sort trades by exit time to compute drawdown on a proper time-ordered
+    # equity curve, not in arbitrary iteration order.
+    if "exit_time" in trades_df.columns:
+        sorted_pnls = trades_df.sort("exit_time")["pnl"].to_numpy().astype(np.float64)
+    else:
+        sorted_pnls = pnls
+    cumulative_pnl = np.cumsum(sorted_pnls)
     running_max = np.maximum.accumulate(cumulative_pnl)
     drawdowns = running_max - cumulative_pnl
     max_drawdown = float(np.max(drawdowns)) if len(drawdowns) > 0 else 0.0

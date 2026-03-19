@@ -293,7 +293,7 @@ def compute_index_return(df: pl.DataFrame, period: int, name: str) -> pl.DataFra
 def compute_bar_count_from_open(df: pl.DataFrame, name: str = "bar_count_from_open") -> pl.DataFrame:
     """Number of bars since market open (first bar of each day_id)."""
     return df.with_columns(
-        (pl.arange(0, pl.count()).over("day_id")).cast(pl.Int32).alias(name)
+        (pl.lit(1).cum_sum().over("day_id") - 1).cast(pl.Int32).alias(name)
     )
 
 

@@ -351,6 +351,21 @@ def run_state_machine(
             if entered:
                 daily_trades += 1
 
+    # ── Force-close any position still open at end of data ────────────
+    if state != _FLAT and trade_count < max_trades:
+        fill_price = close_arr[n - 1]
+        if state == _LONG:
+            pnl = (fill_price - entry_price) * (capital_per_trade / entry_price)
+        else:
+            pnl = (entry_price - fill_price) * (capital_per_trade / entry_price)
+        out_entry_bar[trade_count] = entry_bar_idx
+        out_exit_bar[trade_count] = n - 1
+        out_side[trade_count] = state
+        out_entry_price[trade_count] = entry_price
+        out_exit_price[trade_count] = fill_price
+        out_exit_reason[trade_count] = _EXIT_EOD
+        trade_count += 1
+
     # Trim output arrays
     return (
         out_entry_bar[:trade_count],

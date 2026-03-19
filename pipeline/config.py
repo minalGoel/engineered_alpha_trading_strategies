@@ -92,7 +92,10 @@ OOS_SHARPE_DECAY_LIMIT = 0.30  # test Sharpe >= 30% of train Sharpe
 OOS_MIN_STOCKS_PROFITABLE_PCT = 0.50
 
 # ── Parallelism defaults ───────────────────────────────────────────────────
-DEFAULT_PARALLEL_STRATEGIES = 16
+# 8 workers × ~8GB peak per worker = 64GB, safely within 128GB on c7a.16xlarge.
+# 16 workers would exceed 128GB during indicator computation (16 × 8GB = 128GB
+# with no headroom for OS/JIT/Optuna overhead).
+DEFAULT_PARALLEL_STRATEGIES = 8
 DEFAULT_CORES_PER_STRATEGY = 4
 
 # ── Signal actions ──────────────────────────────────────────────────────────

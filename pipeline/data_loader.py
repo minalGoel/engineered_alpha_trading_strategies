@@ -167,6 +167,8 @@ def load_stock_data(
 
         df = _normalise_ohlcv_cols(df)
         df = df.sort("datetime")
+        # Drop duplicate timestamps — keep last (most recent correction)
+        df = df.unique(subset=["datetime"], keep="last", maintain_order=True)
         df = assign_day_id(df)
         return df
 

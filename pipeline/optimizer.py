@@ -48,7 +48,7 @@ def run_default_backtest(
     max_trading_days = 0
 
     def _run_one(symbol: str, df: pl.DataFrame):
-        return backtest_single(df, strategy, symbol)
+        return backtest_single(df, strategy, symbol, skip_indicators=True)
 
     results = Parallel(n_jobs=n_jobs, prefer="threads")(
         delayed(_run_one)(sym, df)
@@ -96,7 +96,7 @@ def run_cv_validation(
             if fold_df.is_empty() or len(fold_df) < strategy.max_lookback:
                 continue
 
-            trades = backtest_single(fold_df, strategy, sym)
+            trades = backtest_single(fold_df, strategy, sym, skip_indicators=True)
             if trades is not None and not trades.is_empty():
                 fold_trades.append(trades)
 
@@ -182,7 +182,12 @@ def run_optimization(
         sharpe = compute_sharpe_from_trades(combined, strategy.capital_per_trade, total_trading_days)
 
         if progress_callback:
-            progress_callback(trial.number, sharpe)
+            # Report the best Sharpe found so far, not just this trial's
+            try:
+                best_so_far = max(sharpe, study.best_value) if study.best_value is not None else sharpe
+            except ValueError:
+                best_so_far = sharpe
+            progress_callback(trial.number, best_so_far)
 
         return sharpe
 
@@ -211,20 +216,33 @@ def run_optimization(
     # Extract results
     # Guard against all-trials-fail: if best_value is the sentinel -999,
     # treat as if no valid trial was found and fall back to defaults.
-    if (study.best_trial is not None
-            and study.best_value is not None
-            and study.best_value > -900):
-        optimized_params = study.best_params
-        optimized_sharpe = study.best_value
-        best_trial_num = study.best_trial.number
-    else:
+    # Also guard against ValueError from study.best_trial when no trials completed.
+    try:
+        best_trial = study.best_trial
+        best_value = study.best_value
+        if (best_trial is not None
+                and best_value is not None
+                and best_value > -900):
+            optimized_params = study.best_params
+            optimized_sharpe = best_value
+            best_trial_num = best_trial.number
+        else:
+            optimized_params = default_params
+            optimized_sharpe = default_sharpe
+            best_trial_num = 0
+    except ValueError:
+        # No completed trials at all — all crashed
+        log.warning("All Optuna trials failed for %s, using defaults", strategy.name)
         optimized_params = default_params
         optimized_sharpe = default_sharpe
         best_trial_num = 0
 
-    improvement_ratio = (optimized_sharpe / default_sharpe
-                         if default_sharpe > 0 and default_sharpe != 0
-                         else 1.0)
+    # Guard against zero/negative default Sharpe — overfit ratio is only
+    # meaningful when the default Sharpe is positive and non-trivial.
+    if default_sharpe > 0.01:
+        improvement_ratio = optimized_sharpe / default_sharpe
+    else:
+        improvement_ratio = 1.0
     overfit_flag = improvement_ratio > OVERFIT_SHARPE_RATIO
 
     return {

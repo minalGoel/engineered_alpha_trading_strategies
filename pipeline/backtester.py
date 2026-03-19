@@ -106,6 +106,13 @@ def backtest_single(
                 needs_bar_count=strategy.needs_bar_count,
             )
 
+        # Forward-fill NaN in OHLC columns BEFORE numpy conversion.
+        # Polars vectorised forward_fill is orders of magnitude faster than a
+        # Python-level loop over numpy arrays.
+        ohlc_cols = [c for c in ("open", "high", "low", "close") if c in df.columns]
+        if ohlc_cols:
+            df = df.with_columns([pl.col(c).forward_fill() for c in ohlc_cols])
+
         # Convert to numpy arrays for condition evaluation
         arrays = _df_to_arrays(df)
 
@@ -125,8 +132,11 @@ def backtest_single(
         else:
             long_mask = np.zeros(n, dtype=np.bool_)
 
-        if not strategy.is_long_only and short_conds:
-            short_mask = evaluate_conditions(short_conds, arrays)
+        if not strategy.is_long_only:
+            if short_conds:
+                short_mask = evaluate_conditions(short_conds, arrays)
+            else:
+                short_mask = np.zeros(n, dtype=np.bool_)
 
         # Apply VIX filter
         if vix_conds:
@@ -151,9 +161,10 @@ def backtest_single(
         # Apply expiry day filter
         if strategy.time_filter.skip_expiry:
             # Skip Thursdays (approximate expiry detection)
+            # Polars weekday: Monday=1 .. Sunday=7, so Thursday=4
             if "datetime" in df.columns:
                 weekday = df["datetime"].dt.weekday().to_numpy()
-                expiry_mask = weekday != 3  # 3 = Thursday
+                expiry_mask = weekday != 4  # 4 = Thursday in Polars
                 long_mask &= expiry_mask
                 short_mask &= expiry_mask
 
@@ -211,7 +222,8 @@ def backtest_single(
         time_stop = int(param_overrides.get("time_stop_bars",
                     strategy.exit_rules.time_stop_bars or DEFAULT_MAX_HOLD_BARS))
 
-        # NaN-safe: replace NaN with 0 in atr array
+        # NaN-safe: replace NaN with 0 in atr and target arrays.
+        # OHLC forward-fill is already done above via Polars (before numpy conversion).
         atr_arr = np.nan_to_num(atr_arr, nan=0.0)
         target_indicator = np.nan_to_num(target_indicator, nan=0.0)
 

@@ -2,6 +2,8 @@
 # Run a single strategy locally for testing
 set -euo pipefail
 
+export TZ=Asia/Kolkata
+
 STRATEGY="${1:-}"
 
 if [ -z "$STRATEGY" ]; then

@@ -4,6 +4,7 @@ Computes indicators, evaluates conditions, runs the Numba state machine,
 and returns trades + signals DataFrames.
 """
 from __future__ import annotations
+import math
 import numpy as np
 import polars as pl
 import logging
@@ -319,11 +320,11 @@ def backtest_single(
                 ind_name = ind.get("name", "")
                 if ind_name in arrays:
                     val = float(arrays[ind_name][entry_bar])
-                    if val == val:  # not NaN
+                    if val == val and not math.isinf(val):  # not NaN or Inf
                         ind_dict[ind_name] = round(val, 4)
             if "vix" in arrays:
                 val = float(arrays["vix"][entry_bar])
-                if val == val:
+                if val == val and not math.isinf(val):
                     ind_dict["vix"] = round(val, 2)
             entry_indicators_list.append(orjson.dumps(ind_dict).decode())
 

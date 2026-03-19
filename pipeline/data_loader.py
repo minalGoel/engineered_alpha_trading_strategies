@@ -79,12 +79,20 @@ def _normalise_ohlcv_cols(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _strip_timezone(df: pl.DataFrame) -> pl.DataFrame:
-    """Strip timezone from datetime column if present, for safe comparisons."""
+    """Convert timezone-aware datetime to naive IST, for safe comparisons.
+
+    The parquet data stores timestamps in UTC. We must convert to IST
+    *before* stripping the timezone label so that hour/minute extraction
+    (used for session window, EOD flatten) reflects IST market hours.
+    """
     if "datetime" in df.columns:
         dt_dtype = df["datetime"].dtype
         if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
             df = df.with_columns(
-                pl.col("datetime").dt.replace_time_zone(None).alias("datetime")
+                pl.col("datetime")
+                .dt.convert_time_zone("Asia/Kolkata")
+                .dt.replace_time_zone(None)
+                .alias("datetime")
             )
     return df
 
@@ -148,13 +156,16 @@ def load_stock_data(
         if "symbol" in schema_names:
             lf = lf.filter(pl.col("symbol") == symbol)
 
-        # Filter by date range (timezone-safe: cast to naive if needed)
+        # Filter by date range (timezone-safe: convert UTC→IST then strip)
         if start_date or end_date:
             dt_dtype = lf.collect_schema()["datetime"]
-            # If the column is tz-aware, strip timezone for comparison
+            # If the column is tz-aware, convert to IST then strip timezone
             if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
                 lf = lf.with_columns(
-                    pl.col("datetime").dt.replace_time_zone(None).alias("datetime")
+                    pl.col("datetime")
+                    .dt.convert_time_zone("Asia/Kolkata")
+                    .dt.replace_time_zone(None)
+                    .alias("datetime")
                 )
         if start_date:
             lf = lf.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())

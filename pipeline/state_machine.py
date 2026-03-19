@@ -309,14 +309,14 @@ def run_state_machine(
                 # Compute stop and target prices
                 if stop_loss_pct > 0:
                     stop_price = entry_price * (1.0 - stop_loss_pct)
-                elif stop_loss_atr_mult > 0 and atr_arr[i] == atr_arr[i]:
+                elif stop_loss_atr_mult > 0 and atr_arr[i] == atr_arr[i] and atr_arr[i] > 0:
                     stop_price = entry_price - stop_loss_atr_mult * atr_arr[i]
                 else:
                     stop_price = 0.0
 
                 if target_pct > 0:
                     target_price = entry_price * (1.0 + target_pct)
-                elif target_atr_mult > 0 and atr_arr[i] == atr_arr[i]:
+                elif target_atr_mult > 0 and atr_arr[i] == atr_arr[i] and atr_arr[i] > 0:
                     target_price = entry_price + target_atr_mult * atr_arr[i]
                 else:
                     target_price = 0.0
@@ -336,14 +336,14 @@ def run_state_machine(
                 # Compute stop and target for short
                 if stop_loss_pct > 0:
                     stop_price = entry_price * (1.0 + stop_loss_pct)
-                elif stop_loss_atr_mult > 0 and atr_arr[i] == atr_arr[i]:
+                elif stop_loss_atr_mult > 0 and atr_arr[i] == atr_arr[i] and atr_arr[i] > 0:
                     stop_price = entry_price + stop_loss_atr_mult * atr_arr[i]
                 else:
                     stop_price = 0.0
 
                 if target_pct > 0:
                     target_price = entry_price * (1.0 - target_pct)
-                elif target_atr_mult > 0 and atr_arr[i] == atr_arr[i]:
+                elif target_atr_mult > 0 and atr_arr[i] == atr_arr[i] and atr_arr[i] > 0:
                     target_price = entry_price - target_atr_mult * atr_arr[i]
                 else:
                     target_price = 0.0

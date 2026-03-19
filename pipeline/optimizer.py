@@ -209,7 +209,11 @@ def run_optimization(
     timeout_hit = elapsed >= OPTUNA_TIMEOUT_SECS - 5
 
     # Extract results
-    if study.best_trial is not None:
+    # Guard against all-trials-fail: if best_value is the sentinel -999,
+    # treat as if no valid trial was found and fall back to defaults.
+    if (study.best_trial is not None
+            and study.best_value is not None
+            and study.best_value > -900):
         optimized_params = study.best_params
         optimized_sharpe = study.best_value
         best_trial_num = study.best_trial.number

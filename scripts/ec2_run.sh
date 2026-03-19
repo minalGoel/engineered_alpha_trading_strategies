@@ -35,14 +35,29 @@ apt-get install -y -qq python3.12 python3.12-venv python3.12-dev git git-lfs cur
 # Install git LFS BEFORE any clone
 git lfs install
 
-# ── Clone repository ────────────────────────────────────────────────────────
+# ── Clone repository (with retry) ──────────────────────────────────────────
 echo "[$(date)] Cloning repository..."
 mkdir -p "$WORK_DIR"
 cd "$WORK_DIR"
 
-# Configure git credentials
 CLONE_URL="https://${GIT_USER}:${GIT_TOKEN}@${REPO_URL#https://}"
-git clone --branch "$GIT_BRANCH" "$CLONE_URL" repo
+CLONE_OK=false
+for attempt in 1 2 3 4; do
+    echo "[$(date)] Clone attempt $attempt/4..."
+    if git clone --branch "$GIT_BRANCH" "$CLONE_URL" repo; then
+        CLONE_OK=true
+        break
+    fi
+    delay=$((2 ** attempt))
+    echo "[$(date)] Clone failed, retrying in ${delay}s..."
+    rm -rf repo  # clean partial clone
+    sleep "$delay"
+done
+if [ "$CLONE_OK" = false ]; then
+    echo "[$(date)] FATAL: Clone failed after 4 attempts"
+    exit 1
+fi
+
 cd repo
 
 # Pull LFS files (data)
@@ -63,38 +78,35 @@ echo "[$(date)] Python environment ready."
 python3 --version
 pip list | grep -E "polars|numba|optuna|orjson"
 
-# ── Run pipeline ───────────────────────────────────────────────────────────
-echo "[$(date)] Starting pipeline..."
+# ── Run pipeline + push inside nohup (survives SSH disconnect) ─────────────
+# The entire run-and-push sequence is inside nohup so that if the user
+# connected via SSH and the session drops, the push still happens.
+echo "[$(date)] Starting pipeline (nohup-protected)..."
 echo "[$(date)] parallel=$PARALLEL_STRATEGIES, cores_per=$CORES_PER_STRATEGY"
 
-nohup python3 pipeline/run_all.py \
-    --parallel-strategies "$PARALLEL_STRATEGIES" \
-    --cores-per-strategy "$CORES_PER_STRATEGY" \
-    > ~/pipeline.log 2>&1 &
+nohup bash -c '
+set -eo pipefail
+cd '"$WORK_DIR/repo"'
+source .venv/bin/activate
 
-PIPELINE_PID=$!
-echo "[$(date)] Pipeline started with PID=$PIPELINE_PID"
-echo "[$(date)] Monitor with: tail -f ~/pipeline.log"
-
-# Wait for pipeline to complete (disable set -e so we can capture exit code)
-set +e
-wait $PIPELINE_PID
+echo "[$(date)] Pipeline starting..."
+python3 pipeline/run_all.py \
+    --parallel-strategies '"$PARALLEL_STRATEGIES"' \
+    --cores-per-strategy '"$CORES_PER_STRATEGY"'
 PIPELINE_EXIT=$?
-set -e
 echo "[$(date)] Pipeline exited with code=$PIPELINE_EXIT"
 
-# ── Push results to git ────────────────────────────────────────────────────
+# ── Push results to git ──────────────────────────────────────────────────
 echo "[$(date)] Pushing results to git..."
 git lfs install
 git add strategy_results/ outputs/
 git commit -m "Pipeline results $(date -I)" || echo "Nothing to commit"
 
-# Retry push with backoff
-MAX_RETRIES=3
-RETRY_DELAY=30
+MAX_RETRIES=4
+RETRY_DELAY=2
 for i in $(seq 1 $MAX_RETRIES); do
     echo "[$(date)] Push attempt $i/$MAX_RETRIES..."
-    if git push origin "$GIT_BRANCH"; then
+    if git push origin '"$GIT_BRANCH"'; then
         echo "[$(date)] Push successful!"
         break
     fi
@@ -110,6 +122,11 @@ for i in $(seq 1 $MAX_RETRIES); do
     fi
 done
 
-# ── Shutdown on success ────────────────────────────────────────────────────
 echo "[$(date)] All done. Shutting down..."
 sudo shutdown -h now
+' > ~/pipeline.log 2>&1 &
+
+PIPELINE_PID=$!
+echo "[$(date)] Pipeline+push started with PID=$PIPELINE_PID"
+echo "[$(date)] Monitor with: tail -f ~/pipeline.log"
+echo "[$(date)] Safe to disconnect SSH — nohup protects the entire flow."

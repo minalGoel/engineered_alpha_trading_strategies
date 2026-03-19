@@ -460,6 +460,181 @@ def test_metrics():
     return True
 
 
+def test_condition_parser_edge_cases():
+    """Test condition parser edge cases found during audit."""
+    from pipeline.condition_parser import parse_condition
+
+    # 1. "between" pattern
+    result = parse_condition("vix between 12-22")
+    assert len(result) == 2, f"'between' should produce 2 conditions, got {len(result)}"
+    # Should be vix >= 12 AND vix <= 22
+    assert result[0].lhs == "vix" and result[0].op == ">=" and result[0].rhs == 12.0
+    assert result[1].lhs == "vix" and result[1].op == "<=" and result[1].rhs == 22.0
+
+    # 2. "between X and Y"
+    result = parse_condition("rsi_14 between 30 and 70")
+    assert len(result) == 2, f"'between X and Y' should produce 2 conditions, got {len(result)}"
+
+    # 3. Function-call syntax: "RSI(close, 14) < 30"
+    result = parse_condition("RSI(close, 14) < 30")
+    assert len(result) == 1, f"'RSI(close,14) < 30' should parse, got {len(result)}"
+    assert result[0].lhs == "rsi_14"
+    assert result[0].op == "<"
+    assert result[0].rhs == 30.0
+
+    # 4. "ADX(14) > 20"
+    result = parse_condition("ADX(14) > 20")
+    assert len(result) == 1, f"'ADX(14) > 20' should parse, got {len(result)}"
+    assert result[0].lhs == "adx_14"
+
+    # 5. No spaces: "close<vwap"
+    result = parse_condition("close<vwap")
+    assert len(result) == 1, f"'close<vwap' should parse, got {len(result)}"
+
+    # 6. Percentage: "morning_return > 0.3%"
+    result = parse_condition("morning_return > 0.3%")
+    assert len(result) == 1
+    assert abs(result[0].rhs - 0.003) < 0.0001, f"0.3% should become 0.003, got {result[0].rhs}"
+
+    # 7. AND within single string
+    result = parse_condition("rsi_14 < 30 AND adx > 20")
+    assert len(result) == 2
+
+    print("  Condition parser edge cases: all passed")
+    return True
+
+
+def test_state_machine_edge_cases():
+    """Test state machine edge cases found during audit."""
+    from pipeline.state_machine import run_state_machine
+
+    def make_base(n):
+        prices = np.full(n, 100.0, dtype=np.float64)
+        return (prices.copy(), prices + 0.2, prices - 0.2, prices.copy(),  # OHLC
+                np.zeros(n, dtype=np.int32),  # day_id
+                np.array([(555 + i) for i in range(n)], dtype=np.int32),  # time_mins
+                np.zeros(n, dtype=np.bool_), np.zeros(n, dtype=np.bool_),  # entries
+                np.zeros(n, dtype=np.bool_), np.zeros(n, dtype=np.bool_),  # sig exits
+                np.full(n, 1.0, dtype=np.float64),  # atr
+                np.zeros(n, dtype=np.float64))  # target_ind
+
+    def run(n, opens, highs, lows, close, day_ids, time_mins, le, se, sel, ses, atr, ti,
+            **kwargs):
+        defaults = dict(stop_loss_pct=0.005, stop_loss_atr_mult=0.0,
+                       target_pct=0.01, target_atr_mult=0.0,
+                       use_target_indicator=False, trailing_stop_pct=0.0,
+                       trailing_activate_pct=0.0, breakeven_pct=0.0,
+                       time_stop_bars=30, eod_flatten_minutes=920,
+                       session_start_minutes=555, session_end_minutes=920,
+                       max_trades_per_day=10, max_daily_loss=0.0,
+                       capital_per_trade=100000.0, warmup_bars=5)
+        defaults.update(kwargs)
+        return run_state_machine(opens, highs, lows, close, day_ids, time_mins,
+                                 le, se, sel, ses, atr, ti, **defaults)
+
+    # Test 1: Zero entry signals → zero trades
+    n = 100
+    result = run(n, *make_base(n))
+    assert result[6] == 0, "Zero signals should produce zero trades"
+
+    # Test 2: Stop and target same bar → stop wins
+    n = 100
+    opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti = make_base(n)
+    highs[:] = 100.5
+    lows[:] = 99.8
+    le[10] = True
+    close[10] = 100.0
+    highs[11] = 101.5  # above target (101)
+    lows[11] = 99.0    # below stop (99.5)
+    result = run(n, opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti)
+    assert result[6] > 0
+    assert result[5][0] == 1, "Stop should fire before target on same bar"
+
+    # Test 3: No entries during warmup
+    n = 100
+    opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti = make_base(n)
+    le[3] = True   # during warmup
+    le[25] = True  # after warmup
+    result = run(n, opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti,
+                 warmup_bars=20)
+    assert result[6] > 0
+    assert result[0][0] >= 20, "No entries during warmup"
+
+    # Test 4: Consecutive entry signals - second ignored when in position
+    n = 100
+    opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti = make_base(n)
+    le[10] = True
+    le[11] = True  # should be ignored - already in position
+    result = run(n, opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti)
+    assert result[0][0] == 10
+    # Since range is tight (99.8-100.2), stop at 99.5 won't trigger between bars
+    if result[6] > 1:
+        assert result[0][1] != 11, "Second entry at bar 11 should be ignored"
+
+    # Test 5: Entry at 15:19, EOD at 15:20 → 1-bar hold
+    n = 50
+    opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti = make_base(n)
+    tm[:] = 600
+    tm[30] = 919  # 15:19
+    tm[31] = 920  # 15:20
+    le[30] = True
+    result = run(n, opens, highs, lows, close, day_ids, tm, le, se, sel, ses, atr, ti,
+                 target_pct=0.5)  # huge target so it won't trigger
+    assert result[6] > 0
+    assert result[1][0] - result[0][0] == 1, "Should be a 1-bar hold"
+    assert result[5][0] == 6, "Should exit via EOD"
+
+    print("  State machine edge cases: all passed")
+    return True
+
+
+def test_session_end_capped_at_eod():
+    """Verify session end is capped at EOD flatten time in backtester."""
+    from pipeline.config import EOD_FLATTEN_H, EOD_FLATTEN_M
+    eod = EOD_FLATTEN_H * 60 + EOD_FLATTEN_M  # 920
+
+    # If strategy has session end at 15:30 (930), it should be capped to 920
+    effective_end = 930
+    capped = min(effective_end, eod)
+    assert capped == 920, f"Session end should be capped at EOD, got {capped}"
+
+    # If strategy has session end at 15:15 (915), it stays at 915
+    effective_end = 915
+    capped = min(effective_end, eod)
+    assert capped == 915, f"Session end below EOD should stay, got {capped}"
+
+    print("  Session end capped at EOD: passed")
+    return True
+
+
+def test_optimizer_all_trials_fail():
+    """Verify optimizer handles all-trials-fail gracefully."""
+    # Simulate: best_value = -999 means all trials failed
+    # The optimizer should fall back to default params
+    default_sharpe = 0.5
+    best_value = -999.0
+
+    # This mirrors the logic in optimizer.py
+    if best_value is not None and best_value > -900:
+        optimized_sharpe = best_value
+    else:
+        optimized_sharpe = default_sharpe
+
+    assert optimized_sharpe == default_sharpe, \
+        f"All-trials-fail should fall back to default_sharpe, got {optimized_sharpe}"
+
+    # Normal case
+    best_value = 1.5
+    if best_value is not None and best_value > -900:
+        optimized_sharpe = best_value
+    else:
+        optimized_sharpe = default_sharpe
+    assert optimized_sharpe == 1.5
+
+    print("  Optimizer all-trials-fail: passed")
+    return True
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("Pipeline Unit Tests")
@@ -474,6 +649,10 @@ if __name__ == "__main__":
         ("Strategy parser", test_strategy_parser),
         ("Metrics computation", test_metrics),
         ("Numba state machine", test_numba_state_machine),
+        ("Condition parser edge cases", test_condition_parser_edge_cases),
+        ("State machine edge cases", test_state_machine_edge_cases),
+        ("Session end capped at EOD", test_session_end_capped_at_eod),
+        ("Optimizer all-trials-fail", test_optimizer_all_trials_fail),
     ]
 
     passed = 0

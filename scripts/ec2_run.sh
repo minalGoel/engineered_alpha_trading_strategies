@@ -18,7 +18,9 @@ GIT_USER="${GIT_USER:-your-github-username}"
 GIT_TOKEN="${GIT_TOKEN:-ghp_your_github_pat_here}"
 
 # Pipeline settings
-PARALLEL_STRATEGIES="${PARALLEL_STRATEGIES:-16}"
+# 8 workers × ~8GB peak = 64GB, safe for 128GB instance. Do NOT increase to 16
+# without reducing per-worker memory (e.g. memory-mapped parquets).
+PARALLEL_STRATEGIES="${PARALLEL_STRATEGIES:-8}"
 CORES_PER_STRATEGY="${CORES_PER_STRATEGY:-4}"
 
 # Working directory

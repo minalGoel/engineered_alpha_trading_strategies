@@ -258,6 +258,9 @@ def generate_report(
     lines.append("- One position at a time per stock per strategy")
     lines.append("- Stop/target checked against bar high/low; if both hit same bar, stop assumed first")
     lines.append("- Expiry days approximated as every Thursday")
+    lines.append("- **Sharpe ratio note:** Absolute Sharpe values are computed using per-trade capital "
+                 "(₹100K) as the denominator, NOT total deployed capital (~50 stocks × ₹100K = ₹50L). "
+                 "This inflates absolute values. Relative comparisons between strategies remain valid.")
     lines.append("")
 
     return "\n".join(lines)

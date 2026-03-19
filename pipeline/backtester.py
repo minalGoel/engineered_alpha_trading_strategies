@@ -106,6 +106,13 @@ def backtest_single(
                 needs_bar_count=strategy.needs_bar_count,
             )
 
+        # Forward-fill NaN in OHLC columns BEFORE numpy conversion.
+        # Polars vectorised forward_fill is orders of magnitude faster than a
+        # Python-level loop over numpy arrays.
+        ohlc_cols = [c for c in ("open", "high", "low", "close") if c in df.columns]
+        if ohlc_cols:
+            df = df.with_columns([pl.col(c).forward_fill() for c in ohlc_cols])
+
         # Convert to numpy arrays for condition evaluation
         arrays = _df_to_arrays(df)
 
@@ -216,19 +223,9 @@ def backtest_single(
                     strategy.exit_rules.time_stop_bars or DEFAULT_MAX_HOLD_BARS))
 
         # NaN-safe: replace NaN with 0 in atr and target arrays.
-        # Also forward-fill NaN in price arrays — NaN prices from missing data
-        # would produce NaN PnL and corrupt all downstream metrics.
+        # OHLC forward-fill is already done above via Polars (before numpy conversion).
         atr_arr = np.nan_to_num(atr_arr, nan=0.0)
         target_indicator = np.nan_to_num(target_indicator, nan=0.0)
-        for key in ("open", "high", "low", "close"):
-            if key in arrays:
-                arr = arrays[key]
-                mask = np.isnan(arr)
-                if mask.any():
-                    # Forward-fill NaN values in price arrays
-                    for idx in range(len(arr)):
-                        if mask[idx] and idx > 0:
-                            arr[idx] = arr[idx - 1]
 
         # ── Run state machine ───────────────────────────────────────────
         eod_flatten_minutes = EOD_FLATTEN_H * 60 + EOD_FLATTEN_M

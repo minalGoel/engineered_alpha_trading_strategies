@@ -107,6 +107,10 @@ def build_leaderboard(
             )
         md_lines.append("")
 
+    md_lines.append("> **Note on Sharpe values:** Absolute Sharpe ratios use per-trade capital (₹100K) as "
+                    "denominator, not total deployed capital (~50 stocks × ₹100K). This inflates absolute "
+                    "values but relative comparisons between strategies are valid.")
+    md_lines.append("")
     md_lines.append("## Failure Breakdown")
     md_lines.append("")
     for reason, count in sorted(failure_summary.items(), key=lambda x: -x[1]):

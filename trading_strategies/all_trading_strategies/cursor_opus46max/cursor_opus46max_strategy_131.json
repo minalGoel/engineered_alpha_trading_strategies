@@ -1,0 +1,125 @@
+{
+  "name": "reliance_vs_ril_subsidiaries_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "Reliance",
+    "conglomerate",
+    "sum_of_parts",
+    "relative_value"
+  ],
+  "thesis": "Reliance Industries (RIL) is a conglomerate with value derived from O2C (petrochemicals), Jio Platforms (telecom/digital), and Retail. Since Jio Financial Services (JFSL) was demerged and listed separately (Aug 2023), the intraday return correlation between RIL and JFSL provides a tradeable pairs opportunity. Both stocks share common ownership, investor base, and macro sensitivity (Ambani group sentiment). When RIL moves sharply but JFSL doesn't follow (or vice versa), the divergence reverts within 30-60 minutes because: (1) group sentiment contagion — positive/negative sentiment about Reliance group affects both, (2) portfolio rebalancers who hold both adjust allocations intraday, (3) retail traders treat them as substitutes. The pair has 0.55-0.65 daily correlation but higher intraday (0.45-0.55 on 1-min returns), providing a mean-reverting spread.",
+  "universe": "Reliance Industries (RELIANCE), Jio Financial Services (JIOFIN)",
+  "stock_filter": "RELIANCE: ADV > ₹2000 crore. JIOFIN: ADV > ₹200 crore",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "15-60 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "Brent crude oil price (RIL O2C sensitivity)",
+      "JFSL-specific news feed"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "ril_return_cum",
+      "formula": "(RELIANCE_close - RELIANCE_open_day) / RELIANCE_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "jfsl_return_cum",
+      "formula": "(JIOFIN_close - JIOFIN_open_day) / JIOFIN_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "pair_spread",
+      "formula": "ril_return_cum - beta * jfsl_return_cum where beta = rolling_regression_beta(RELIANCE, JIOFIN, 60)",
+      "params": {
+        "beta_lookback": 60
+      }
+    },
+    {
+      "name": "spread_zscore",
+      "formula": "(pair_spread - SMA(pair_spread, 45)) / STDEV(pair_spread, 45)",
+      "params": {
+        "lookback": 45
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "spread_zscore < -2.0 (RIL underperforming JFSL relative to beta — expect RIL catch-up)",
+        "abs(pair_spread) > 15 bps (meaningful in absolute terms)",
+        "no RIL-specific or JFSL-specific news today"
+      ],
+      "confirmation": "spread_zscore starts rising (crosses above -1.7)"
+    },
+    "short": {
+      "conditions": [
+        "spread_zscore > 2.0 (RIL outperforming JFSL — expect convergence)",
+        "abs(pair_spread) > 15 bps",
+        "no RIL-specific or JFSL-specific news today"
+      ],
+      "confirmation": "spread_zscore starts falling (crosses below 1.7)"
+    },
+    "entry_price": "market order both legs: long underperformer + short outperformer"
+  },
+  "exit": {
+    "target": "spread_zscore reverts to 0",
+    "stop_loss": "spread_zscore extends to ±3.0",
+    "trailing_stop": "none (target is full spread reversion)",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "RIL-specific or JFSL-specific news breaks during trade"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹50K long leg + ₹50K short leg (beta-adjusted notional)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22",
+    "time_filter": "no trades in first 15 min or last 15 min",
+    "volume_filter": "both stocks trading at > 0.7x normal volume",
+    "trend_filter": "no trend filter (pairs are market-neutral by construction)",
+    "spread_filter": "both stocks bid-ask < 5 bps (RELIANCE always tight; JIOFIN may be wider)",
+    "event_filter": "skip on RIL/JFSL AGM day, result day, or Ambani group news days",
+    "other_filters": [
+      "skip if Brent crude moves > 2% intraday (RIL O2C segment drives independent movement)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Medium — as JFSL matures and develops its own identity, the correlation with RIL may decline, weakening the pairs signal. The pair is relatively new (post-demerger Aug 2023) with limited history."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "JFSL is a newly listed stock (Aug 2023) with limited trading history. Beta estimates and correlation assumptions are based on sparse data and may be unreliable.",
+    "RIL's stock price is driven by O2C (oil), Jio (telecom), and Retail — three very different businesses. JFSL is pure financial services. The fundamental link weakens over time.",
+    "JFSL's liquidity is significantly lower than RIL's, creating asymmetric slippage between the two legs."
+  ],
+  "prior_art": "Gatev, Goetzmann & Rouwenhorst (2006) 'Pairs Trading: Performance of a Relative-Value Arbitrage Rule'. In Indian context, conglomerate pair trades are common among prop desks. Tata group pairs (TCS-Tata Motors) are frequently cited examples.",
+  "notes": "If RIL demerges more businesses in the future (e.g., Jio Platforms IPO, Retail IPO), additional pair opportunities will emerge. Monitor SEBI filings for potential demerger announcements. The beta between RIL and JFSL should be re-estimated daily."
+}

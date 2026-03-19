@@ -1,0 +1,126 @@
+{
+  "name": "narrow_range_breakout_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "momentum",
+    "breakout",
+    "volatility_contraction"
+  ],
+  "thesis": "NR7 bars (narrowest range in 7 bars) on 1-min data indicate energy coiling before an expansion. When a stock prints an NR7 bar in the context of declining ATR and above-average volume, the next breakout direction tends to be the prevailing trend direction. This is a volatility-expansion trade: low-vol periods are followed by high-vol periods (mean reversion of volatility). Edge persists because most traders use NR7 on daily bars; on 1-min it's underexplored and more frequent.",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "5-30 bars",
+  "max_hold_bars": 45,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "bar_range",
+      "formula": "high - low",
+      "lookback": 1,
+      "purpose": "current bar range"
+    },
+    {
+      "name": "is_nr7",
+      "formula": "bar_range == MIN(bar_range, 7)",
+      "lookback": 7,
+      "purpose": "narrowest range in 7 bars"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "declining ATR context"
+    },
+    {
+      "name": "atr_20_prev",
+      "formula": "ATR(high, low, close, 20) [5 bars ago]",
+      "lookback": 25,
+      "purpose": "ATR comparison"
+    },
+    {
+      "name": "ema_20",
+      "formula": "EMA(close, 20)",
+      "lookback": 20,
+      "purpose": "trend direction"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "is_nr7 == True",
+        "atr_20 < atr_20_prev (ATR declining)",
+        "close > ema_20 (uptrend context)"
+      ],
+      "confirmation": "next bar breaks above NR7 bar high with volume > SMA(volume, 10)"
+    },
+    "short": {
+      "conditions": [
+        "is_nr7 == True",
+        "atr_20 < atr_20_prev",
+        "close < ema_20 (downtrend context)"
+      ],
+      "confirmation": "next bar breaks below NR7 bar low with volume > SMA(volume, 10)"
+    },
+    "entry_price": "market on breakout bar close"
+  },
+  "exit": {
+    "target": "2.0 * NR7 bar range from entry",
+    "stop_loss": "opposite end of NR7 bar (full NR7 range as risk)",
+    "trailing_stop": "trail by 1.0 * NR7 range after +1.5 * NR7 range",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "close crosses back inside NR7 range"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "volume on breakout bar > SMA(volume, 10)",
+    "trend_filter": "trade in direction of ema_20 only",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "none",
+    "other_filters": [
+      "NR7 bar range must be > 0.02% (not zero range / halted stock)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.48,
+    "edge_decay_risk": "low — volatility clustering is a structural market property"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "NR7 on 1-min is frequent but many signals are in low-volume dead zones (lunch hour)",
+    "False breakouts: tight range breaks, reverses, and stops you out on the opposite side",
+    "Using NR7 bar range as stop can be extremely tight (< 5 bps), leading to noise-triggered stops"
+  ],
+  "prior_art": "NR7 (Tony Crabel) — originally daily; adapted here for 1-min intraday",
+  "notes": "Consider NR4 or NR10 variants. Also test inside bar as alternative contraction pattern."
+}

@@ -1,0 +1,130 @@
+{
+  "name": "gap_continuation_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "gap",
+    "continuation",
+    "momentum",
+    "opening-gap",
+    "intraday"
+  ],
+  "thesis": "Stocks that gap up >1.5% at open AND continue higher in the first 15 minutes (close at bar 15 > open of bar 1) exhibit strong continuation momentum for the next 60-90 minutes. This is the opposite of gap fill — here the gap is GENUINE new information (earnings beat, upgrade, sector catalyst) and the first 15 minutes of upside confirm that the market is digesting the news positively with follow-through buying. The edge exists because most gap strategies focus on gap FILL (mean reversion), while gap CONTINUATION is the higher-edge trade when the gap has institutional backing. The 15-min confirmation period filters out dead-cat-bounce gaps. The inefficiency persists because distinguishing fillable gaps from continuation gaps requires monitoring volume profile and price action in the first 15 minutes.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND gap_pct > 1.5% AND gap_pct < 5%",
+  "timeframe": "1min",
+  "session": "09:30-14:00 IST (enter after confirmation, ride through midday)",
+  "hold_time": "30-90 minutes",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_close",
+      "gap_catalyst_type"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "params": "(open_today - prev_day_close) / prev_day_close * 100",
+      "lookback": 1
+    },
+    {
+      "name": "first_15_return",
+      "params": "(close_bar_15 - open_bar_1) / open_bar_1 * 100",
+      "lookback": 15
+    },
+    {
+      "name": "first_15_vol",
+      "params": "SUM(volume, 15) / (15 * SMA(volume, 20d))",
+      "lookback": 15
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR_14d",
+      "params": "ATR(14) on daily bars",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct > 1.5 AND gap_pct < 5.0",
+        "first_15_return > 0 (gap continuation confirmed)",
+        "first_15_vol > 2.0 (volume surge in first 15 min)",
+        "close > VWAP (above session VWAP after 15 min)",
+        "India_VIX < 25"
+      ],
+      "confirmation": "close at bar 15 > high of first 5 bars (higher high after gap, not just drift)"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct < -1.5 AND gap_pct > -5.0",
+        "first_15_return < 0 (gap down continuation confirmed)",
+        "first_15_vol > 2.0",
+        "close < VWAP",
+        "India_VIX < 25"
+      ],
+      "confirmation": "close at bar 15 < low of first 5 bars (lower low after gap, genuine sell pressure)"
+    },
+    "entry_price": "market order at 09:30 IST (after 15th 1-min bar from 09:15)"
+  },
+  "exit": {
+    "target": "0.8% from entry (larger target — riding genuine momentum)",
+    "stop_loss": "VWAP (if price drops to VWAP, gap continuation thesis is broken) OR 0.5% from entry",
+    "trailing_stop": "trail at 0.3% once profit exceeds 0.5%",
+    "time_stop": "90 bars or 14:00 IST",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if close drops below EMA(close, 20) for 3 consecutive bars"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "fixed 1L; scale to 1.5L for earnings-driven gaps (highest conviction)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25; high VIX = gaps may reverse",
+    "time_filter": "entry only after first 15 min (09:30); no new entries after 12:00",
+    "volume_filter": "first 15-min volume > 2x average per-bar volume",
+    "trend_filter": "prefer gaps in direction of NIFTY move (not contra-index)",
+    "spread_filter": "bid-ask spread < 0.08% (wider ok at open)",
+    "event_filter": "distinguish between earnings gap (likely to continue) and sympathy gap (less likely)",
+    "other_filters": [
+      "gap must be >1.5% to filter out noise; <5% to avoid parabolic extremes"
+    ]
+  },
+  "edge": {
+    "expected_bps": 45,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "low-moderate — gap continuation with 15-min filter is less commonly automated"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very low trade frequency — most days have 0 stocks meeting gap > 1.5% with continuation criteria",
+    "The 15-min wait means missing the initial post-gap move; entry price is already extended from the pre-gap level",
+    "Gaps on sympathy (sector peer had news, this stock gaps with it) tend to fade, and distinguishing from genuine gaps is imperfect"
+  ],
+  "prior_art": "Gap-and-Go strategy by Ross Cameron (Warrior Trading) is the closest prior art. Gap continuation is discussed by Pristine.com and in Bulkowski ('Encyclopedia of Chart Patterns'). The 15-min confirmation window is a standard day trading concept. Academic evidence on gap fills vs continuation: Trennepohl (1972), more recently Yuksel & Zaim (2017).",
+  "notes": "Edge math: 0.52 * 80bps - 0.48 * 50bps = 41.6 - 24.0 = 17.6 bps gross. Costs ~11 bps (possibly 14 bps due to wider opening spreads). Net ≈ 3.6-6.6 bps per trade. One of the more promising strategies. Key challenge is frequency — may only trigger 2-3 times per week across the universe. Consider running across broader universe (BSE 500) to increase signal count."
+}

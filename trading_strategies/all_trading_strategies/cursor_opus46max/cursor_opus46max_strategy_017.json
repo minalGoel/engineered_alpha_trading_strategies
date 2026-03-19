@@ -1,0 +1,128 @@
+{
+  "name": "microstructure_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "microstructure",
+    "order-flow",
+    "imbalance",
+    "mean-reversion",
+    "intraday"
+  ],
+  "thesis": "Inferred order flow imbalance — approximated from volume on up-bars vs down-bars over a short rolling window — can detect when aggressive buying or selling has temporarily exhausted available liquidity. When buy-volume imbalance exceeds 70% of total volume over the last 10 bars but price stops advancing, it signals that buying pressure has been absorbed by limit sellers (institutional supply). The resulting reversion occurs as the aggressive buyers have been filled and new buying flow dries up. The edge exists because order flow imbalance analysis is typically done with L2 data which retail traders rarely have; this approximation using 1-min bar data provides a noisy but usable signal. The edge persists because the signal is inherently noisy and requires calibration — most retail traders give up after initial false signals.",
+  "universe": "NIFTY 100 constituents on NSE",
+  "stock_filter": "ADV(20) > 80 crore INR AND avg_trade_size > 50000 INR",
+  "timeframe": "1min",
+  "session": "09:30-15:00 IST",
+  "hold_time": "5-20 minutes",
+  "max_hold_bars": 20,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "buy_volume_approx",
+      "sell_volume_approx"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "buy_vol",
+      "params": "volume * (close - low) / (high - low) where high != low, else volume * 0.5",
+      "lookback": 1
+    },
+    {
+      "name": "sell_vol",
+      "params": "volume * (high - close) / (high - low) where high != low, else volume * 0.5",
+      "lookback": 1
+    },
+    {
+      "name": "buy_imbalance_10",
+      "params": "SUM(buy_vol, 10) / SUM(volume, 10)",
+      "lookback": 10
+    },
+    {
+      "name": "price_change_10",
+      "params": "(close - close[t-10]) / close[t-10] * 100",
+      "lookback": 10
+    },
+    {
+      "name": "ATR_10",
+      "params": "ATR(10)",
+      "lookback": 10
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "buy_imbalance_10 < 0.30",
+        "price_change_10 < -0.3",
+        "close < VWAP",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "buy_imbalance_10[t] > buy_imbalance_10[t-1] (selling pressure easing, buyers returning)"
+    },
+    "short": {
+      "conditions": [
+        "buy_imbalance_10 > 0.70",
+        "price_change_10 > 0.3",
+        "close > VWAP",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "buy_imbalance_10[t] < buy_imbalance_10[t-1] (buying pressure easing, sellers returning)"
+    },
+    "entry_price": "market order on confirmation bar close"
+  },
+  "exit": {
+    "target": "buy_imbalance_10 crosses 0.50 (flow normalized) OR 0.2% profit from entry",
+    "stop_loss": "0.2% from entry",
+    "trailing_stop": "none — short-duration trade",
+    "time_stop": "20 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if imbalance deepens (buy_imbalance > 0.80 for shorts, < 0.20 for longs)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "none — flow imbalance works across vol regimes",
+    "time_filter": "no entries before 09:30 or after 14:45",
+    "volume_filter": "need sufficient volume for buy/sell split to be meaningful: > 0.8x SMA(volume, 20)",
+    "trend_filter": "none — counter-trend by design",
+    "spread_filter": "bid-ask spread < 0.04% (tight spread critical for microstructure signals)",
+    "event_filter": "skip on event days (genuine order flow shifts, not noise)",
+    "other_filters": [
+      "skip bars where high == low (no range, buy/sell split is undefined)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.0,
+    "profit_factor_estimate": 1.22,
+    "edge_decay_risk": "high — this is an approximation of true order flow; with better data, the edge is larger"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Buy/sell volume split from bar OHLCV is a crude approximation — true order flow requires tick-level or L2 data",
+    "The 10-bar window is arbitrary and likely not optimal across all stocks; needs per-stock calibration",
+    "In low-tick-count environments (illiquid stocks), the buy/sell volume approximation breaks down completely"
+  ],
+  "prior_art": "Order flow imbalance research: Cont et al. (2014) 'Price Impact of Order Flow Imbalances'. Buy/sell volume approximation from OHLCV: known as the 'close location value' or CLV (Chaiken). Accumulation/Distribution line by Chaikin uses similar logic. The 10-bar rolling imbalance approach is closer to the VPIN concept (Easley et al., 2012).",
+  "notes": "Edge math: 0.55 * 20bps - 0.45 * 20bps = 11 - 9 = 2 bps gross. Costs ~11 bps. Net ≈ -9 bps. Significantly negative with these parameters. This strategy CANNOT work at Zerodha cost levels with bar-level data. It is included as a research direction — with tick data and lower-cost execution (co-located, direct exchange access), the edge could be viable. Consider as an alpha signal to blend with other strategies rather than standalone."
+}

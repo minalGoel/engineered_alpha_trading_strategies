@@ -1,0 +1,128 @@
+{
+  "name": "block_deal_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "event_driven",
+    "block_deal",
+    "bulk_deal",
+    "institutional_flow",
+    "momentum"
+  ],
+  "thesis": "Block deals on NSE (trades > 5 lakh shares or ₹10 crore, executed in a separate window 08:45-09:00 or during market hours in 15-min blocks) signal large institutional position changes. When a block deal occurs at a premium to the previous close, it signals institutional buying conviction; when at a discount, selling pressure. The stock subsequently drifts in the block deal direction over the next 1-2 hours as: (1) information about the block deal disseminates (NSE discloses block deals with a 15-min delay), (2) other institutions follow the signal, (3) retail traders notice the unusual volume and pile in. The inefficiency exists because block deal data is disclosed with a lag, and most retail traders don't monitor the block deal window.",
+  "universe": "All NSE stocks eligible for block deals",
+  "stock_filter": "Stock must have a block deal today, ADV > ₹10 crore, price > ₹100",
+  "timeframe": "1min",
+  "session": "09:15-12:00 IST (block deal momentum fades by midday)",
+  "hold_time": "30-90 min",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2 (depends on block deal occurrences)",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "NSE block deal disclosures (via NSE bulk/block deal API)",
+      "previous day close"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "block_premium_pct",
+      "formula": "(block_deal_price - previous_close) / previous_close * 100",
+      "params": {}
+    },
+    {
+      "name": "block_size_relative",
+      "formula": "block_deal_qty / ADV_20",
+      "params": {
+        "adv_lookback": 20
+      }
+    },
+    {
+      "name": "post_block_return",
+      "formula": "(close - open_today) / open_today * 10000 (bps)",
+      "params": {}
+    },
+    {
+      "name": "post_block_volume_ratio",
+      "formula": "volume_1min / SMA(volume_1min, 20)",
+      "params": {
+        "lookback": 20
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "block_premium_pct > 1.0 (block deal at 1%+ premium — bullish signal)",
+        "block_size_relative > 0.5 (deal size > 50% of ADV — meaningful size)",
+        "post_block_return > 0 (stock already drifting upward post-deal)",
+        "post_block_volume_ratio > 1.5 (heightened interest)"
+      ],
+      "confirmation": "close > VWAP AND close > open_today after block deal disclosure"
+    },
+    "short": {
+      "conditions": [
+        "block_premium_pct < -1.0 (block deal at 1%+ discount — bearish signal)",
+        "block_size_relative > 0.5",
+        "post_block_return < 0",
+        "post_block_volume_ratio > 1.5"
+      ],
+      "confirmation": "close < VWAP AND close < open_today after block deal disclosure"
+    },
+    "entry_price": "market order 15-20 min after block deal disclosure (let initial reaction settle)"
+  },
+  "exit": {
+    "target": "50 bps from entry (capturing secondary drift)",
+    "stop_loss": "20 bps from entry",
+    "trailing_stop": "15 bps trailing after 30 bps profit",
+    "time_stop": "exit by 12:00 IST (drift fades by midday)",
+    "eod_rule": "flatten by 12:00 IST (not EOD — this is a morning strategy)",
+    "signal_exit": "post_block_volume_ratio drops below 1.0 (interest fading)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "₹1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25",
+    "time_filter": "entry only after block deal disclosure + 15 min settling period",
+    "volume_filter": "post_block_volume_ratio > 1.5",
+    "trend_filter": "prefer block deal direction aligned with NIFTY 50 trend",
+    "spread_filter": "bid-ask < 10 bps (block deal stocks can have temporarily wide spreads)",
+    "event_filter": "skip if stock also has earnings/corporate action today (confounding signals)",
+    "other_filters": [
+      "skip if block_size_relative < 0.5 (too small to be meaningful)",
+      "skip if block deal is between group companies (not arms-length)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 2.2,
+    "profit_factor_estimate": 1.42,
+    "edge_decay_risk": "Low-Medium — block deal data is public but the 15-min disclosure delay creates an information asymmetry window. Faster data access (direct NSE feed) would reduce the edge for slower participants."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Block deals happen irregularly — some days have zero, others have 5+. The strategy has highly variable daily P&L and long idle periods.",
+    "Block deals between promoter entities or for regulatory compliance (SEBI MPS norms) don't signal genuine institutional conviction and create false signals.",
+    "The 15-minute disclosure delay means by the time we see the data and confirm, the initial momentum may already be exhausted, leaving only residual drift."
+  ],
+  "prior_art": "Holthausen, Leftwich & Mayers (1990) 'Large-Block Transactions, the Speed of Response'. Saar (2001) 'Price Impact Asymmetry of Block Trades'. In India, SEBI circular on block deal framework (2017) defines the mechanism. Banerjee & Ghosh (2019) study NSE block deals.",
+  "notes": "Monitor NSE's block deal disclosures via their website API or scraping. The pre-open block deal window (08:45-09:00) is especially informative — deals in this window are visible before market open, giving an early signal for the day's direction. Bulk deals (different from block deals, disclosed T+1) are not useful for intraday."
+}

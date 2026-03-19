@@ -1,0 +1,127 @@
+{
+  "name": "quality_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "quality",
+    "momentum",
+    "composite",
+    "fundamental-technical",
+    "hybrid"
+  ],
+  "thesis": "High-quality companies (high ROE, low debt/equity, consistent earnings) that also exhibit strong intraday momentum are less likely to experience sharp reversals compared to low-quality momentum stocks. The quality filter acts as crash protection — high ROE, low-leverage names attract institutional buying on dips, creating a floor. The inefficiency persists because quality is typically a long-term factor (monthly rebalancing) and intraday traders ignore it. By restricting momentum trades to high-quality names, we reduce tail risk while maintaining trend-following returns.",
+  "universe": "NIFTY 100 constituents",
+  "stock_filter": "ADV(20) > ₹75 Cr; ROE > 15%; Debt/Equity < 1.0; 4 consecutive quarters of positive earnings",
+  "timeframe": "1min",
+  "session": "09:30-15:10 IST",
+  "hold_time": "20-60 min",
+  "max_hold_bars": 75,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "ROE_trailing",
+      "debt_equity_ratio",
+      "quarterly_earnings_history"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "Quality_Pass",
+      "params": "ROE > 15% AND Debt_Equity < 1.0 AND consecutive_positive_quarters >= 4",
+      "lookback": "daily"
+    },
+    {
+      "name": "EMA_9",
+      "params": "EMA(close, 9)",
+      "lookback": 9
+    },
+    {
+      "name": "EMA_21",
+      "params": "EMA(close, 21)",
+      "lookback": 21
+    },
+    {
+      "name": "Momentum_30",
+      "params": "ROC(close, 30)",
+      "lookback": 30
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(high, low, close, 14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Quality_Pass == True",
+        "EMA(close, 9) > EMA(close, 21)",
+        "Momentum_30 > 20 bps (positive 30-min return > 20bps)",
+        "close > vwap"
+      ],
+      "confirmation": "EMA(close,9) - EMA(close,21) is widening (current gap > gap 5 bars ago)"
+    },
+    "short": {
+      "conditions": [
+        "Quality_Pass == False (low quality stock)",
+        "EMA(close, 9) < EMA(close, 21)",
+        "Momentum_30 < -20 bps",
+        "close < vwap"
+      ],
+      "confirmation": "EMA(close,21) - EMA(close,9) is widening"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "1.5 * ATR(14) from entry",
+    "stop_loss": "1.0 * ATR(14) from entry",
+    "trailing_stop": "After 1.0 * ATR(14) profit, trail at 0.5 * ATR(14)",
+    "time_stop": "75 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "EMA(close,9) crosses EMA(close,21) against position direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "Risk-based: position = capital * 0.4% / (1.0 * ATR(14))",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; skip short entries if VIX < 12 (low-vol bullish regime)",
+    "time_filter": "No entries before 09:30 or after 15:10",
+    "volume_filter": "Volume on entry bar > SMA(volume, 15)",
+    "trend_filter": "NIFTY 50 direction must agree with trade direction (NIFTY EMA(9) vs EMA(21))",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day and 1 day before earnings",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.4,
+    "edge_decay_risk": "Low — quality factor is well-established but rarely applied intraday; combining with momentum is novel at this frequency"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Quality filter is static (changes quarterly) — cannot adapt to rapid deterioration in company fundamentals; a company may report bad results tomorrow while still appearing high-quality today",
+    "Asymmetric long/short logic (long quality, short junk) creates directional bias — net long in bull markets, which may not be the strategy's intent",
+    "EMA(9)/EMA(21) crossover on 1-min bars generates frequent whipsaws; requires momentum confirmation to filter but still produces false signals in choppy markets"
+  ],
+  "prior_art": "Novy-Marx (2013) on quality factor; Asness et al. 'Quality Minus Junk'; momentum factor (Jegadeesh-Titman); quality-momentum combination explored in AQR research papers",
+  "notes": "Short side is harder in Indian markets due to availability constraints and higher borrow costs. Consider making this a long-only quality-momentum strategy to simplify execution."
+}

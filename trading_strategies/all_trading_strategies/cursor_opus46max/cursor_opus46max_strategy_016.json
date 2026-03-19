@@ -1,0 +1,128 @@
+{
+  "name": "intraday_range_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "range",
+    "high-low",
+    "mean-reversion",
+    "intraday-extremes",
+    "intraday"
+  ],
+  "thesis": "When a stock touches its intraday high or low and immediately reverses on a specific bar pattern (pin bar / hammer at the extreme), it signals that the intraday range boundary has been defended. The intraday high/low acts as a natural support/resistance because algorithmic stop-placement and limit-order clustering occur at round extremes. The inefficiency arises because once an intraday extreme is established, many trailing stops and limit orders cluster just beyond it — when these are not triggered (false breakout), the snap-back into the range is aggressive. The edge persists because identifying 'defended range boundaries' in real-time requires pattern recognition beyond simple price comparison.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND intraday_range_today > 0.8%",
+  "timeframe": "1min",
+  "session": "10:00-14:45 IST",
+  "hold_time": "10-40 minutes",
+  "max_hold_bars": 40,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "session_high",
+      "session_low"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "session_high",
+      "params": "running max(high) since 09:15",
+      "lookback": "session"
+    },
+    {
+      "name": "session_low",
+      "params": "running min(low) since 09:15",
+      "lookback": "session"
+    },
+    {
+      "name": "range_pct",
+      "params": "(session_high - session_low) / session_low * 100",
+      "lookback": "session"
+    },
+    {
+      "name": "range_position",
+      "params": "(close - session_low) / (session_high - session_low)",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "low <= session_low * 1.001 (within 0.1% of session low)",
+        "close > session_low",
+        "range_pct > 0.8",
+        "(close - low) / (high - low) > 0.7 (pin bar / hammer pattern)"
+      ],
+      "confirmation": "next bar closes above current bar's high (confirmation of bounce)"
+    },
+    "short": {
+      "conditions": [
+        "high >= session_high * 0.999 (within 0.1% of session high)",
+        "close < session_high",
+        "range_pct > 0.8",
+        "(high - close) / (high - low) > 0.7 (inverted pin bar / shooting star)"
+      ],
+      "confirmation": "next bar closes below current bar's low (confirmation of rejection)"
+    },
+    "entry_price": "market order on confirmation bar close"
+  },
+  "exit": {
+    "target": "50% of intraday range toward the midpoint: (session_high + session_low) / 2",
+    "stop_loss": "0.15% beyond the session extreme (beyond session low for longs, beyond session high for shorts)",
+    "trailing_stop": "trail at 0.1% once 40% of target reached",
+    "time_stop": "40 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if session extreme is breached on elevated volume (genuine breakout)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX between 14-22; too low = no range, too high = range breaks easily",
+    "time_filter": "no entries before 10:00 (let range establish) or after 14:45",
+    "volume_filter": "volume on pin bar > SMA(volume, 20) (volume at the extreme is essential)",
+    "trend_filter": "prefer longs when price is above VWAP session midpoint (bullish bias)",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on event days where range expansion is expected (RBI, budget)",
+    "other_filters": [
+      "range must be established for at least 60 bars (1 hour) before signal is valid"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.79,
+    "edge_decay_risk": "low — range reversion with pin bar confirmation is pattern-dependent and hard to automate naively"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "On genuine breakout days, the first touch of the session extreme IS the breakout — strategy catches the wrong side",
+    "Pin bar recognition on 1-min bars is noisy; the pattern is more reliable on 5-min or 15-min bars",
+    "The 50% range reversion target is ambitious — many reversions stall at 20-30% of range"
+  ],
+  "prior_art": "Intraday range trading is classic (Toby Crabel, 'Day Trading with Short Term Price Patterns'). Pin bar / hammer patterns at range extremes are standard price action (Steve Nison, 'Japanese Candlestick Charting'). The combination of range boundary + candlestick pattern is well-practiced but hard to automate cleanly.",
+  "notes": "Edge math: 0.58 * 40bps - 0.42 * 31bps = 23.2 - 13.0 = 10.2 bps gross. Costs ~11 bps. Net ≈ -0.8 bps. Marginally negative. Improvement: reduce target to 30% of range (more achievable, higher win rate) or use 5-min bar pin bars for higher-quality patterns."
+}

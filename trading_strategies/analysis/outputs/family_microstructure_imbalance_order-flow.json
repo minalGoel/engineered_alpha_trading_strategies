@@ -1,0 +1,235 @@
+{
+  "family": "microstructure imbalance order-flow",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "name": "microstructure_reversion_v1",
+      "universe": "NIFTY 100 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "microstructure",
+        "order-flow",
+        "imbalance",
+        "mean-reversion",
+        "intraday"
+      ],
+      "thesis": "Inferred order flow imbalance \u2014 approximated from volume on up-bars vs down-bars over a short rolling window \u2014 can detect when aggressive buying or selling has temporarily exhausted available liquidity. When buy-volume imbalance exceeds 70% of total volume over the last 10 bars but price stops advan",
+      "indicators": [
+        "buy_vol",
+        "sell_vol",
+        "buy_imbalance_10",
+        "price_change_10",
+        "ATR_10"
+      ],
+      "entry_long": [
+        "buy_imbalance_10 < 0.30",
+        "price_change_10 < -0.3",
+        "close < VWAP",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "entry_short": [
+        "buy_imbalance_10 > 0.70",
+        "price_change_10 > 0.3",
+        "close > VWAP",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "exit_target": "buy_imbalance_10 crosses 0.50 (flow normalized) OR 0.2% profit from entry",
+      "exit_stop": "0.2% from entry",
+      "filters": [
+        "none \u2014 flow imbalance works across vol regimes",
+        "no entries before 09:30 or after 14:45",
+        "need sufficient volume for buy/sell split to be meaningful: > 0.8x SMA(volume, 20)",
+        "none \u2014 counter-trend by design",
+        "bid-ask spread < 0.04% (tight spread critical for microstructure signals)"
+      ],
+      "weaknesses": [
+        "Buy/sell volume split from bar OHLCV is a crude approximation \u2014 true order flow requires tick-level or L2 data",
+        "The 10-bar window is arbitrary and likely not optimal across all stocks; needs per-stock calibration",
+        "In low-tick-count environments (illiquid stocks), the buy/sell volume approximation breaks down completely"
+      ],
+      "prior_art": "Order flow imbalance research: Cont et al. (2014) 'Price Impact of Order Flow Imbalances'. Buy/sell volume approximation from OHLCV: known as the 'close location value' or CLV (Chaiken). Accumulation/"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+      "name": "bid_ask_imbalance_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "microstructure",
+        "order_book",
+        "imbalance",
+        "mean_reversion"
+      ],
+      "thesis": "When the bid-side depth significantly exceeds ask-side depth (or vice versa) at the top 5 levels of the order book, the resulting imbalance predicts short-term price movement in the direction of the heavier side. This inefficiency exists because most retail participants trade market orders and ignor",
+      "indicators": [
+        "bid_ask_imbalance",
+        "BAI_EMA",
+        "BAI_zscore",
+        "volume_ratio"
+      ],
+      "entry_long": [
+        "BAI_zscore > 1.5",
+        "volume_ratio > 1.2",
+        "close > vwap",
+        "India_VIX < 22"
+      ],
+      "entry_short": [
+        "BAI_zscore < -1.5",
+        "volume_ratio > 1.2",
+        "close < vwap",
+        "India_VIX < 22"
+      ],
+      "exit_target": "20 bps from entry",
+      "exit_stop": "10 bps from entry",
+      "filters": [
+        "India_VIX < 22; reduce size by 50% when VIX in 18-22",
+        "no trades in first 5 min (09:15-09:20) or last 15 min (15:15-15:30)",
+        "volume_ratio > 0.8 (skip illiquid bars)",
+        "none (signal is market-neutral by construction)",
+        "skip if bid-ask spread > 5 bps"
+      ],
+      "weaknesses": [
+        "L2 order book data in India is noisy and prone to spoofing/layering, especially in mid-cap names. The signal may be corrupted by phantom orders.",
+        "Zerodha does not provide raw L2 depth via Kite API beyond 5 levels; signal quality degrades without deeper book visibility.",
+        "High-frequency market makers will front-run this signal at sub-second timescales, leaving only residual edge for 1-min bar traders."
+      ],
+      "prior_art": "Cont, Kukanov & Stoikov (2014) 'The Price Impact of Order Book Events' establishes the theoretical foundation. Cartea, Jaimungal & Penalva (2015) extend to optimal execution. In the Indian context, li"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+      "name": "order_flow_imbalance_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "microstructure",
+        "order_flow",
+        "cumulative_delta",
+        "trend_following"
+      ],
+      "thesis": "Cumulative order flow imbalance (OFI) \u2014 the running sum of signed trade volume classified as buyer-initiated or seller-initiated \u2014 predicts short-term price direction. When OFI diverges from price (e.g., OFI rising while price is flat), it signals latent buying pressure that will soon manifest in pr",
+      "indicators": [
+        "OFI_1min",
+        "cumulative_OFI",
+        "OFI_momentum",
+        "OFI_price_divergence"
+      ],
+      "entry_long": [
+        "OFI_momentum > 0",
+        "cumulative_OFI > 0",
+        "OFI_price_divergence == True AND OFI_momentum > 0 (flow says buy, price hasn't moved)",
+        "close > VWAP * 0.999"
+      ],
+      "entry_short": [
+        "OFI_momentum < 0",
+        "cumulative_OFI < 0",
+        "OFI_price_divergence == True AND OFI_momentum < 0",
+        "close < VWAP * 1.001"
+      ],
+      "exit_target": "20 bps from entry",
+      "exit_stop": "10 bps from entry",
+      "filters": [
+        "India_VIX < 22; reduce size 50% when 18 < VIX < 22",
+        "skip first 5 min and last 10 min",
+        "1-min volume > 50th percentile of day's volume distribution",
+        "OFI direction aligns with NIFTY 50 intraday direction",
+        "bid-ask spread < 5 bps"
+      ],
+      "weaknesses": [
+        "Lee-Ready trade classification has ~15-20% misclassification rate, directly corrupting the OFI signal. In fast-moving markets, accuracy drops further.",
+        "Cumulative OFI is susceptible to large single-trade outliers (e.g., a block deal) that can flip the signal without genuine change in market sentiment.",
+        "The divergence signal (flow says X but price says Y) may simply reflect informed sellers distributing into buying flow, making the 'buy' signal a trap."
+      ],
+      "prior_art": "Cont, Stoikov & Talreja (2010) 'A Stochastic Model for Order Book Dynamics'. Chordia & Subrahmanyam (2004) 'Order Imbalance and Individual Stock Returns'. Bouchaud et al. (2004) 'Fluctuations and Resp"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+      "name": "tick_direction_momentum_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "microstructure",
+        "tick_rule",
+        "momentum",
+        "short_term"
+      ],
+      "thesis": "Consecutive upticks (price increases tick-to-tick) aggregated over 1-min bars reveal net buying pressure that predicts short-term continuation. In Indian markets, retail order flow is highly auto-correlated: when buying momentum starts, retail participants pile in with market orders creating a 2-5 m",
+      "indicators": [
+        "tick_ratio",
+        "tick_ratio_ema",
+        "tick_momentum",
+        "price_roc"
+      ],
+      "entry_long": [
+        "tick_ratio_ema > 0.60",
+        "tick_momentum > 0.05",
+        "price_roc > 5 (bps)",
+        "close > VWAP"
+      ],
+      "entry_short": [
+        "tick_ratio_ema < 0.40",
+        "tick_momentum < -0.05",
+        "price_roc < -5 (bps)",
+        "close < VWAP"
+      ],
+      "exit_target": "15 bps from entry",
+      "exit_stop": "8 bps from entry",
+      "filters": [
+        "India_VIX < 25; skip trades when VIX > 25",
+        "no trades 09:15-09:20 or 15:20-15:30",
+        "1-min volume > SMA(volume_1min, 20)",
+        "NIFTY 50 1-min close > NIFTY VWAP (for longs); < VWAP (for shorts)",
+        "bid-ask spread < 5 bps"
+      ],
+      "weaknesses": [
+        "Tick direction is a noisy proxy for order flow \u2014 a single large sell order hitting the bid doesn't register as many downticks but represents significant selling pressure.",
+        "Very tight stop (8 bps) means high probability of stop-outs in volatile stocks. The strategy may generate many small losses that erode the edge from winners.",
+        "Requires tick-level data feed that Zerodha's standard API doesn't provide at sufficient granularity; WebSocket feed has ~500ms latency."
+      ],
+      "prior_art": "Blume, Easley & O'Hara (1994) 'Market Statistics and Technical Analysis'. Chordia, Roll & Subrahmanyam (2002) 'Order Imbalance, Liquidity, and Market Returns'. In India, Jain & Biswal (2016) study mic"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "microstructure imbalance order-flow",
+      "family_slug": "microstructure_imbalance_order_flow",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+      "cosine": 0.7714
+    },
+    {
+      "family": "microstructure imbalance order-flow",
+      "family_slug": "microstructure_imbalance_order_flow",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+      "cosine": 0.749
+    },
+    {
+      "family": "microstructure imbalance order-flow",
+      "family_slug": "microstructure_imbalance_order_flow",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+      "cosine": 0.742
+    },
+    {
+      "family": "microstructure imbalance order-flow",
+      "family_slug": "microstructure_imbalance_order_flow",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+      "cosine": 0.7296
+    },
+    {
+      "family": "microstructure imbalance order-flow",
+      "family_slug": "microstructure_imbalance_order_flow",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+      "cosine": 0.6826
+    },
+    {
+      "family": "microstructure imbalance order-flow",
+      "family_slug": "microstructure_imbalance_order_flow",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+      "cosine": 0.6336
+    }
+  ]
+}

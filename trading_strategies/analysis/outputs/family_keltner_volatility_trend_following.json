@@ -1,0 +1,168 @@
+{
+  "family": "keltner volatility trend_following",
+  "members": [
+    {
+      "fp": "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+      "name": "keltner_channel_trend_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "trend_following",
+        "keltner",
+        "volatility"
+      ],
+      "thesis": "Keltner Channels use ATR-based envelopes which adapt to volatility better than standard deviation-based Bollinger Bands. When price sustains outside the Keltner Channel, it signals a strong trend that ATR-normalized volatility can't explain \u2014 i.e., genuine directional force. The inefficiency exists ",
+      "indicators": [
+        "kc_mid",
+        "kc_upper",
+        "kc_lower",
+        "adx_14"
+      ],
+      "entry_long": [
+        "close > kc_upper",
+        "adx_14 > 25",
+        "close > vwap",
+        "volume > SMA(volume, 20)"
+      ],
+      "entry_short": [
+        "close < kc_lower",
+        "adx_14 > 25",
+        "close < vwap",
+        "volume > SMA(volume, 20)"
+      ],
+      "exit_target": "3.0 * ATR(20) from entry",
+      "exit_stop": "kc_mid (EMA 20)",
+      "filters": [
+        "vix between 13-25",
+        "no entry first 30 min or last 30 min",
+        "volume > 20-bar SMA",
+        "prefer trades aligned with nifty 60-bar EMA direction",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "38% win rate means 5-8 loss streaks are normal. Capital allocation must account for extended drawdowns.",
+        "In rangebound markets (60%+ of days), Keltner signals whipsaw repeatedly. ADX filter helps but lags.",
+        "ATR-based channels adapt slowly to sudden volatility changes \u2014 a sharp spike can invalidate the channel before it adjusts."
+      ],
+      "prior_art": "Keltner Channel strategy. Chester Keltner (1960). Modern version uses EMA + ATR (Linda Raschke adaptation)."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+      "name": "keltner_channel_reversion_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "keltner",
+        "mean-reversion",
+        "atr-based",
+        "volatility-adaptive",
+        "intraday"
+      ],
+      "thesis": "Keltner Channels use ATR-based bands around an EMA, making them more stable than Bollinger Bands (which use standard deviation and are distorted by extreme bars). When price touches the outer Keltner Channel (EMA(20) \u00b1 2.5 * ATR(10)), it represents a 2.5 ATR deviation \u2014 a volatility-normalized extre",
+      "indicators": [
+        "KC_mid",
+        "KC_ATR",
+        "KC_upper",
+        "KC_lower",
+        "KC_position"
+      ],
+      "entry_long": [
+        "low <= KC_lower",
+        "close > KC_lower",
+        "KC_position > 0 AND KC_position < 0.15",
+        "volume > SMA(volume, 20)"
+      ],
+      "entry_short": [
+        "high >= KC_upper",
+        "close < KC_upper",
+        "KC_position > 0.85 AND KC_position < 1.0",
+        "volume > SMA(volume, 20)"
+      ],
+      "exit_target": "KC_mid (EMA(close, 20))",
+      "exit_stop": "1.0 * ATR(10) beyond the channel (beyond KC_lower for longs, beyond KC_upper for shorts)",
+      "filters": [
+        "India_VIX < 25",
+        "no entries before 09:30 or after 14:30",
+        "volume on signal bar > 1x SMA(volume, 20)",
+        "stronger signals when KC_mid slope is flat (range-bound); skip if KC_mid slope > 0.05% per bar (trending)",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "ATR(10) on 1-min bars is only 10 minutes of data \u2014 may not capture true intraday volatility regime",
+        "In persistent trends, price touches the channel and keeps trending \u2014 'channel walk' is the primary failure mode",
+        "The 2.5 ATR multiplier is arbitrary; optimal multiplier varies by stock volatility profile and needs periodic recalibration"
+      ],
+      "prior_art": "Keltner Channels originated from Chester Keltner (1960) and were modernized by Linda Raschke. ATR-based channels are discussed in Raschke & Connors 'Street Smarts'. Using Keltner for mean reversion vs"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_27_of_50.json",
+      "name": "atr_channel_breakout_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "breakout",
+        "channel",
+        "atr"
+      ],
+      "thesis": "Keltner Channel breakouts (close > EMA_20 + 2*ATR_20) with declining VIX signal legitimate expansion, not noise. The ATR-based channel adapts to current volatility, making breakouts more meaningful than fixed-percentage levels. Edge exists because Keltner Channels are less popular than Bollinger Ban",
+      "indicators": [
+        "ema_20",
+        "kc_upper",
+        "kc_lower",
+        "atr_20",
+        "rel_volume"
+      ],
+      "entry_long": [
+        "close > kc_upper",
+        "rel_volume > 2.0",
+        "vix < 22",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "close < kc_lower",
+        "rel_volume > 2.0",
+        "vix < 22",
+        "close < vwap"
+      ],
+      "exit_target": "1.5 * atr_20 from entry",
+      "exit_stop": "ema_20 (channel midline)",
+      "filters": [
+        "vix < 22",
+        "no entries first 15 min or last 30 min",
+        "rel_volume > 2.0 on breakout bar",
+        "none \u2014 breakout determines direction",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "Channel breakout on 1-min can be noisy \u2014 many false breakouts during lunch hour",
+        "Stop at ema_20 can be far from entry if ATR is large, increasing risk per trade",
+        "In low-vol environments, channel is narrow and breakouts are frequent but meaningless"
+      ],
+      "prior_art": "Keltner Channel breakout \u2014 Chester Keltner / Linda Raschke. Well-established."
+    }
+  ],
+  "pairs": [
+    {
+      "family": "keltner volatility trend_following",
+      "family_slug": "keltner_volatility_trend_following",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+      "cosine": 0.7989
+    },
+    {
+      "family": "keltner volatility trend_following",
+      "family_slug": "keltner_volatility_trend_following",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+      "fp_b": "all_trading_strategies/opus/Opus_27_of_50.json",
+      "cosine": 0.7381
+    },
+    {
+      "family": "keltner volatility trend_following",
+      "family_slug": "keltner_volatility_trend_following",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_27_of_50.json",
+      "cosine": 0.7329
+    }
+  ]
+}

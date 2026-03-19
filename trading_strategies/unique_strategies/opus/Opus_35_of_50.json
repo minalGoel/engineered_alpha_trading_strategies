@@ -1,0 +1,130 @@
+{
+  "name": "order_flow_imbalance_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "microstructure",
+    "order_flow",
+    "volume_delta"
+  ],
+  "thesis": "When buy volume (volume on uptick bars) significantly exceeds sell volume (volume on downtick bars) over a 10-bar window, aggressive buyers are dominating. This volume delta predicts near-term price direction for 5-15 bars. The inefficiency exists because most retail platforms don't display volume delta, and computing it in real-time across multiple stocks requires infrastructure. Edge persists because volume delta captures hidden institutional intent before it manifests in price.",
+  "universe": "nifty50",
+  "stock_filter": "top 20 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:45",
+  "hold_time": "5-15 bars",
+  "max_hold_bars": 20,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 12,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "bar_delta",
+      "formula": "volume * sign(close - open)",
+      "lookback": 1,
+      "purpose": "single-bar volume delta (positive = buy dominated)"
+    },
+    {
+      "name": "cum_delta_10",
+      "formula": "SUM(bar_delta, 10)",
+      "lookback": 10,
+      "purpose": "cumulative volume delta over 10 bars"
+    },
+    {
+      "name": "delta_zscore",
+      "formula": "(cum_delta_10 - SMA(cum_delta_10, 60)) / STDDEV(cum_delta_10, 60)",
+      "lookback": 60,
+      "purpose": "standardized delta"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "delta_zscore > 2.0 (strong buy imbalance)",
+        "close > vwap"
+      ],
+      "confirmation": "enter on next bar open"
+    },
+    "short": {
+      "conditions": [
+        "delta_zscore < -2.0 (strong sell imbalance)",
+        "close < vwap"
+      ],
+      "confirmation": "enter on next bar open"
+    },
+    "entry_price": "market on next bar open"
+  },
+  "exit": {
+    "target": "0.2% from entry",
+    "stop_loss": "0.15% from entry",
+    "trailing_stop": "none \u2014 too short",
+    "time_stop": "exit after 20 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "delta_zscore crosses 0 from entry side"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "no trades first 10 min or last 15 min",
+    "volume_filter": "SMA(volume, 10) > SMA(volume, 60) (active tape)",
+    "trend_filter": "VWAP direction alignment",
+    "spread_filter": "skip if spread > 0.06% (tight spreads required for scalps)",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.05,
+    "profit_factor_estimate": 1.34,
+    "edge_decay_risk": "medium \u2014 volume delta is gaining popularity among Indian retail traders"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Volume delta using close vs open is a crude proxy \u2014 true order flow needs tick data",
+    "Very tight target (20 bps) vs costs (12-15 bps) means net edge is thin",
+    "High frequency (up to 12 trades/day) amplifies brokerage costs significantly"
+  ],
+  "prior_art": "Volume delta / cumulative delta \u2014 order flow concept from futures trading (Dalton, Steidlmayer). Adapted for equities.",
+  "notes": "If tick-level data becomes available, switch to true bid/ask volume delta for much better accuracy.",
+  "_filepath": "all_trading_strategies/opus/Opus_35_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_35_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "volume-weighted momentum vol-price-trend",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_028.json"
+    ],
+    "different_pairs": []
+  }
+}

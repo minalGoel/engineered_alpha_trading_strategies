@@ -1,0 +1,107 @@
+{
+    "name": "inside_bar_breakout_v175",
+    "version": "1.0.0",
+    "author": "QuantGen_Subagent_1",
+    "tags": [
+        "price_action",
+        "breakout"
+    ],
+    "thesis": "An inside bar represents intraday equilibrium and volatility contraction. A breakout of the inside bar on increased volume indicates a resolution of this equilibrium. Exists because of localized order book vacuums after consolidation.",
+    "universe": "nifty50",
+    "stock_filter": "top 50 by avg volume in universe",
+    "timeframe": "5min",
+    "session": "09:30-15:15",
+    "hold_time": "30-60 bars",
+    "max_hold_bars": 120,
+    "trades_per_day": "2-5",
+    "max_trades_per_day": 8,
+    "data": {
+        "ohlcv_1min": true,
+        "vwap": true,
+        "vix": true,
+        "index": "nifty50",
+        "option_chain": false,
+        "order_book": false,
+        "other": []
+    },
+    "indicators": [
+        {
+            "name": "prev_high",
+            "formula": "REF(high, 1)",
+            "lookback": 1,
+            "purpose": "inside bar high"
+        },
+        {
+            "name": "prev_low",
+            "formula": "REF(low, 1)",
+            "lookback": 1,
+            "purpose": "inside bar low"
+        },
+        {
+            "name": "is_inside",
+            "formula": "high < prev_high AND low > prev_low",
+            "lookback": 1,
+            "purpose": "condition check"
+        }
+    ],
+    "entry": {
+        "long": {
+            "conditions": [
+                "REF(is_inside, 1) AND close > REF(prev_high, 1)"
+            ],
+            "confirmation": "volume surge"
+        },
+        "short": {
+            "conditions": [
+                "REF(is_inside, 1) AND close < REF(prev_low, 1)"
+            ],
+            "confirmation": "volume surge"
+        },
+        "entry_price": "market"
+    },
+    "exit": {
+        "target": "21 * ATR(14) from entry",
+        "stop_loss": "1.5 * ATR(14) below entry",
+        "trailing_stop": "move SL to breakeven after +0.5%",
+        "time_stop": "exit after 120 bars",
+        "eod_rule": "flatten",
+        "signal_exit": "none"
+    },
+    "risk": {
+        "capital_per_trade": 200000,
+        "max_risk_per_trade_pct": 1.0,
+        "position_sizing": "vol_adjusted",
+        "max_open_positions": 3,
+        "max_daily_loss_inr": 5000,
+        "max_portfolio_heat_pct": 3.0
+    },
+    "filters": {
+        "vix_filter": "vix between 12-22",
+        "time_filter": "only 09:30-14:30",
+        "volume_filter": "none",
+        "trend_filter": "none",
+        "spread_filter": "skip if bid-ask > 0.05%",
+        "event_filter": "skip on RBI policy days",
+        "other_filters": []
+    },
+    "edge": {
+        "expected_bps": 20.0,
+        "win_rate_estimate": 0.37,
+        "avg_winner_to_loser": 3.53,
+        "profit_factor_estimate": 2.05,
+        "edge_decay_risk": "medium — behavioral"
+    },
+    "costs": {
+        "slippage_bps_per_side": 3,
+        "brokerage": "zerodha_intraday",
+        "stt_bps": 2.5,
+        "exchange_charges_bps": 0.5
+    },
+    "weaknesses": [
+        "Extremely susceptible to algorithmic stop hunts (wicks)",
+        "Only effective during certain times of the day (e.g., first 2 hours)",
+        "Low win rate requires strict discipline on stops"
+    ],
+    "prior_art": "Classic Inside Bar Strategy",
+    "notes": "Generated variation 175."
+}

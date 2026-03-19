@@ -1,0 +1,655 @@
+{
+  "family": "mean_reversion pullback oversold",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "name": "rsi_connors_pullback_v46",
+      "universe": "nifty50",
+      "timeframe": "15min",
+      "tags": [
+        "mean_reversion",
+        "pullback"
+      ],
+      "thesis": "A short-term extreme oversold reading within a longer-term uptrend indicates temporary liquidity exhaustion. Counter-party market makers will step in to provide liquidity, bouncing the price. It persists because retail capitulates at local bottoms.",
+      "indicators": [
+        "sma_200",
+        "rsi_2"
+      ],
+      "entry_long": [
+        "close > sma_200 AND rsi_2 < 21"
+      ],
+      "entry_short": [
+        "close < sma_200 AND rsi_2 > 10"
+      ],
+      "exit_target": "close > SMA(close, 5)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix < 25",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Severe gap risk if holding near end of day",
+        "Underperforms heavily in strong momentum sell-offs",
+        "Requires high liquidity to avoid slippage on limit orders"
+      ],
+      "prior_art": "Connors RSI 2-period strategy"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "name": "rsi_connors_pullback_v50",
+      "universe": "nifty200",
+      "timeframe": "15min",
+      "tags": [
+        "mean_reversion",
+        "pullback"
+      ],
+      "thesis": "A short-term extreme oversold reading within a longer-term uptrend indicates temporary liquidity exhaustion. Counter-party market makers will step in to provide liquidity, bouncing the price. It persists because retail capitulates at local bottoms.",
+      "indicators": [
+        "sma_200",
+        "rsi_2"
+      ],
+      "entry_long": [
+        "close > sma_200 AND rsi_2 < 14"
+      ],
+      "entry_short": [
+        "close < sma_200 AND rsi_2 > 30"
+      ],
+      "exit_target": "close > SMA(close, 5)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix < 25",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Severe gap risk if holding near end of day",
+        "Underperforms heavily in strong momentum sell-offs",
+        "Requires high liquidity to avoid slippage on limit orders"
+      ],
+      "prior_art": "Connors RSI 2-period strategy"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "name": "rsi_connors_pullback_v42",
+      "universe": "nifty50",
+      "timeframe": "5min",
+      "tags": [
+        "mean_reversion",
+        "pullback"
+      ],
+      "thesis": "A short-term extreme oversold reading within a longer-term uptrend indicates temporary liquidity exhaustion. Counter-party market makers will step in to provide liquidity, bouncing the price. It persists because retail capitulates at local bottoms.",
+      "indicators": [
+        "sma_200",
+        "rsi_2"
+      ],
+      "entry_long": [
+        "close > sma_200 AND rsi_2 < 14"
+      ],
+      "entry_short": [
+        "close < sma_200 AND rsi_2 > 10"
+      ],
+      "exit_target": "close > SMA(close, 5)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "none",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Severe gap risk if holding near end of day",
+        "Underperforms heavily in strong momentum sell-offs",
+        "Requires high liquidity to avoid slippage on limit orders"
+      ],
+      "prior_art": "Connors RSI 2-period strategy"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "name": "rsi_connors_pullback_v41",
+      "universe": "fno",
+      "timeframe": "15min",
+      "tags": [
+        "mean_reversion",
+        "pullback"
+      ],
+      "thesis": "A short-term extreme oversold reading within a longer-term uptrend indicates temporary liquidity exhaustion. Counter-party market makers will step in to provide liquidity, bouncing the price. It persists because retail capitulates at local bottoms.",
+      "indicators": [
+        "sma_200",
+        "rsi_2"
+      ],
+      "entry_long": [
+        "close > sma_200 AND rsi_2 < 21"
+      ],
+      "entry_short": [
+        "close < sma_200 AND rsi_2 > 30"
+      ],
+      "exit_target": "close > SMA(close, 5)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix < 25",
+        "only 09:30-14:30",
+        "skip if volume < SMA(volume, 20)",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Severe gap risk if holding near end of day",
+        "Underperforms heavily in strong momentum sell-offs",
+        "Requires high liquidity to avoid slippage on limit orders"
+      ],
+      "prior_art": "Connors RSI 2-period strategy"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "name": "rsi_connors_pullback_v54",
+      "universe": "fno",
+      "timeframe": "5min",
+      "tags": [
+        "mean_reversion",
+        "pullback"
+      ],
+      "thesis": "A short-term extreme oversold reading within a longer-term uptrend indicates temporary liquidity exhaustion. Counter-party market makers will step in to provide liquidity, bouncing the price. It persists because retail capitulates at local bottoms.",
+      "indicators": [
+        "sma_200",
+        "rsi_2"
+      ],
+      "entry_long": [
+        "close > sma_200 AND rsi_2 < 50"
+      ],
+      "entry_short": [
+        "close < sma_200 AND rsi_2 > 20"
+      ],
+      "exit_target": "close > SMA(close, 5)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix < 25",
+        "only 09:30-14:30",
+        "skip if volume < SMA(volume, 20)",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Severe gap risk if holding near end of day",
+        "Underperforms heavily in strong momentum sell-offs",
+        "Requires high liquidity to avoid slippage on limit orders"
+      ],
+      "prior_art": "Connors RSI 2-period strategy"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "name": "rsi_connors_pullback_v49",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "pullback"
+      ],
+      "thesis": "A short-term extreme oversold reading within a longer-term uptrend indicates temporary liquidity exhaustion. Counter-party market makers will step in to provide liquidity, bouncing the price. It persists because retail capitulates at local bottoms.",
+      "indicators": [
+        "sma_200",
+        "rsi_2"
+      ],
+      "entry_long": [
+        "close > sma_200 AND rsi_2 < 50"
+      ],
+      "entry_short": [
+        "close < sma_200 AND rsi_2 > 30"
+      ],
+      "exit_target": "close > SMA(close, 5)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "none",
+        "only 09:30-14:30",
+        "skip if volume < SMA(volume, 20)",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Severe gap risk if holding near end of day",
+        "Underperforms heavily in strong momentum sell-offs",
+        "Requires high liquidity to avoid slippage on limit orders"
+      ],
+      "prior_art": "Connors RSI 2-period strategy"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "name": "rsi_extreme_reversion_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "rsi",
+        "extreme",
+        "mean-reversion",
+        "oversold-overbought",
+        "intraday"
+      ],
+      "thesis": "RSI(2) on 1-min bars reaches extreme levels (<5 or >95) relatively frequently and these extremes revert quickly. The very short 2-period RSI captures momentum exhaustion at the micro level \u2014 when RSI(2) < 5, price has closed lower than the previous close for 2 consecutive bars with large magnitude, ",
+      "indicators": [
+        "RSI_2",
+        "RSI_14",
+        "VWAP",
+        "ATR"
+      ],
+      "entry_long": [
+        "RSI(close, 2) < 5",
+        "RSI(close, 14) > 30 AND RSI(close, 14) < 70",
+        "close > VWAP * 0.99",
+        "India_VIX < 25"
+      ],
+      "entry_short": [
+        "RSI(close, 2) > 95",
+        "RSI(close, 14) > 30 AND RSI(close, 14) < 70",
+        "close < VWAP * 1.01",
+        "India_VIX < 25"
+      ],
+      "exit_target": "RSI(close, 2) crosses 60 (longs) or crosses 40 (shorts) \u2014 momentum normalized",
+      "exit_stop": "0.2% from entry (tight stop for short-duration trades)",
+      "filters": [
+        "India_VIX < 25; RSI extremes are less reliable in panic",
+        "no entries before 09:30 or after 14:45 (fast trades ok late in day)",
+        "volume on extreme bar > 0.8x SMA(volume, 20)",
+        "RSI(14) between 30-70 ensures we are not fighting a strong trend",
+        "bid-ask spread < 0.04% (tight spread essential for scalp-like trades)"
+      ],
+      "weaknesses": [
+        "Very high trade frequency (4-8/day) means costs eat the edge \u2014 need extremely tight execution",
+        "RSI(2) on 1-min bars is essentially a 2-bar momentum oscillator, extremely noisy, prone to whipsaws",
+        "Average winner is smaller than average loser (W:L = 0.8) \u2014 relies heavily on high win rate; a slight win rate drop makes strategy unprofitable"
+      ],
+      "prior_art": "Larry Connors & Cesar Alvarez ('Short-Term Trading Strategies That Work') extensively studied RSI(2) for daily bars. Connors found RSI(2)<5 had ~85% reversion rate on daily S&P 500 stocks. Adaptation "
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "name": "rsi_extreme_reversion_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "rsi",
+        "oversold"
+      ],
+      "thesis": "Extreme RSI readings (< 15 or > 85) on 1-min bars in liquid large-caps signal exhaustion of short-term momentum. Retail traders overshoot due to panic/greed, and institutional algorithms provide liquidity at extremes. The inefficiency persists because most RSI-based strategies use 14-period on daily",
+      "indicators": [
+        "rsi_7",
+        "vwap_dist",
+        "rel_volume",
+        "atr_14"
+      ],
+      "entry_long": [
+        "rsi_7 < 15",
+        "vwap_dist < -30",
+        "rel_volume > 1.5",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "rsi_7 > 85",
+        "vwap_dist > 30",
+        "rel_volume > 1.5",
+        "vix < 22"
+      ],
+      "exit_target": "rsi_7 crosses 50 (midline)",
+      "exit_stop": "1.0 * atr_14 from entry",
+      "filters": [
+        "vix < 22",
+        "no trades first 10 min or last 15 min",
+        "rel_volume > 1.5 \u2014 need genuine participation not thin tape",
+        "none",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "RSI < 15 can persist for dozens of bars in genuine selloffs \u2014 the 'catching a falling knife' problem",
+        "High trade frequency means costs compound; need very tight slippage management",
+        "7-period RSI on 1-min is extremely noisy \u2014 false extremes in low-volume periods"
+      ],
+      "prior_art": "Connors RSI short-term mean reversion; adapted to 1-min Indian equities"
+    },
+    {
+      "fp": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "name": "connors_rsi_extreme_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "connors_rsi",
+        "oversold"
+      ],
+      "thesis": "Connors RSI combines three oscillators (RSI, streak RSI, percentile rank) into a composite that identifies extreme short-term oversold conditions. When CRSI < 10 on liquid stocks near VWAP, the bounce probability is elevated because the sell-off is typically driven by short-term momentum traders who",
+      "indicators": [
+        "rsi_3",
+        "streak",
+        "streak_rsi",
+        "pct_rank",
+        "crsi"
+      ],
+      "entry_long": [
+        "crsi < 10",
+        "close < vwap",
+        "close > vwap - 0.5%",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "crsi > 90",
+        "close > vwap",
+        "close < vwap + 0.5%",
+        "vix < 22"
+      ],
+      "exit_target": "vwap touch OR crsi crosses 50",
+      "exit_stop": "0.35% from entry",
+      "filters": [
+        "vix < 22",
+        "no trades first 30 min or last 30 min",
+        "volume > SMA(volume, 20)",
+        "prefer longs when nifty > SMA(nifty, 60)",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "CRSI on 1-min bars is extremely noisy. The 3-bar RSI oscillates wildly \u2014 signals fire frequently and many are false.",
+        "Thin profit factor (1.13) means a small increase in costs or slippage turns the strategy negative.",
+        "In trending markets, CRSI can stay at extremes for 50+ bars \u2014 the 'extreme' signal is not extreme at all, it's the trend."
+      ],
+      "prior_art": "Connors RSI \u2014 Larry Connors / TradingMarkets. Well-published. Adapted to intraday 1-min from original daily/swing timeframe."
+    },
+    {
+      "fp": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "name": "rsi_reversal_v1",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "momentum"
+      ],
+      "thesis": "This is an RSI-based reversal strategy. It bets that extreme RSI readings signal temporary exhaustion\u301012\u2020L169-L178\u3011. For example, RSI<30 in an oversold dip often precedes a bounce, and RSI>70 an overbought top. The inefficiency stems from behavioral overreaction: traders oversell/overbuy in short te",
+      "indicators": [
+        "rsi14",
+        "ema200"
+      ],
+      "entry_long": [
+        "rsi14 < 30 AND close < ema200"
+      ],
+      "entry_short": [
+        "rsi14 > 70 AND close > ema200"
+      ],
+      "exit_target": "fixed 0.4%",
+      "exit_stop": "fixed 0.2%",
+      "filters": [
+        "vix < 25",
+        "",
+        "volume > avg_20",
+        "",
+        ""
+      ],
+      "weaknesses": [
+        "In strong trends, RSI can remain in extreme zone for long (momentum trap)",
+        "False signals when RSI stays high/low during news events",
+        "Profit factor near 1.0 means small edge and high sensitivity to costs"
+      ],
+      "prior_art": "Classic RSI reversal"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+      "name": "williams_r_reversion_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "williams-r",
+        "mean-reversion",
+        "range-extreme",
+        "momentum-exhaustion",
+        "intraday"
+      ],
+      "thesis": "Williams %R with a 20-period lookback on 1-min bars identifies when price is at the extreme of its 20-bar range (below -90 or above -10). Unlike stochastic, Williams %R is unsmoothed, making it faster to react to turning points but also noisier. The key insight is combining %R extremes with a volume",
+      "indicators": [
+        "williams_r",
+        "volume_spike",
+        "VWAP",
+        "ATR_14",
+        "wr_slope"
+      ],
+      "entry_long": [
+        "williams_r < -90",
+        "volume_spike > 2.0",
+        "close > VWAP * 0.99",
+        "India_VIX < 25"
+      ],
+      "entry_short": [
+        "williams_r > -10",
+        "volume_spike > 2.0",
+        "close < VWAP * 1.01",
+        "India_VIX < 25"
+      ],
+      "exit_target": "williams_r crosses -50 (mid-range) OR 0.25% profit",
+      "exit_stop": "0.2% from entry",
+      "filters": [
+        "India_VIX < 25",
+        "no entries before 09:30 or after 14:45",
+        "volume spike > 2x on the extreme bar (essential for signal quality)",
+        "VWAP proximity filter: only trade within \u00b11% of VWAP (avoid trending extremes)",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Williams %R is unsmoothed \u2014 very noisy on 1-min bars; extreme readings can occur on a single large bar",
+        "The volume spike requirement (2x) filters out many valid signals; conversely, volume spikes can be caused by a single block deal, not capitulation",
+        "Essentially the same signal as Stochastic(20,1,1) inverted \u2014 not truly independent from other oscillator-based strategies"
+      ],
+      "prior_art": "Williams %R by Larry Williams (1973). Standard TA indicator. Less popular than RSI/Stochastic in Indian markets, which is actually an advantage. Volume spike confirmation on oscillator extremes is dis"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "cosine": 0.9992
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "cosine": 0.9979
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "cosine": 0.9975
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "cosine": 0.9971
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "cosine": 0.9952
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "cosine": 0.9945
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "cosine": 0.992
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "cosine": 0.9916
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "cosine": 0.9909
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "cosine": 0.9909
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "cosine": 0.9908
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "cosine": 0.9905
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "cosine": 0.9869
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "cosine": 0.9867
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "cosine": 0.9863
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "cosine": 0.8265
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.8248
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "cosine": 0.8131
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "cosine": 0.7984
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+      "cosine": 0.7636
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "cosine": 0.7622
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.7476
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.7464
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+      "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "cosine": 0.7461
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.7457
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.7452
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.7448
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "cosine": 0.7425
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "cosine": 0.7399
+    },
+    {
+      "family": "mean_reversion pullback oversold",
+      "family_slug": "mean_reversion_pullback_oversold",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+      "cosine": 0.7386
+    }
+  ]
+}

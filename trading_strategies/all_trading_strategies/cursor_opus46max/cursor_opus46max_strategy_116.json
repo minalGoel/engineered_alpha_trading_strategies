@@ -1,0 +1,127 @@
+{
+  "name": "industry_group_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "relative_value",
+    "mean_reversion",
+    "industry_group",
+    "cross_sectional"
+  ],
+  "thesis": "Within tightly correlated industry sub-groups (e.g., private banks, PSU banks, IT services, generic pharma), individual stock returns tend to revert to the group mean within the same trading day. When a stock deviates >15 bps from its industry group average return, the deviation is likely noise (order flow imbalance, temporary liquidity events) rather than stock-specific news. The inefficiency persists because: (1) most traders analyze stocks individually, not relative to their industry group, (2) constructing real-time industry group baskets requires infrastructure, (3) the reversion window is 10-30 minutes — too slow for HFTs, too fast for fundamentals-driven traders. In Indian markets, industry groups have historically high within-group correlations (0.6-0.8 for private banks, 0.5-0.7 for IT services) making this signal reliable.",
+  "universe": "6 industry groups: private banks (5), PSU banks (5), IT services (4), generic pharma (4), cement (4), auto OEMs (4)",
+  "stock_filter": "Top 4-5 stocks by market cap in each industry group, ADV > ₹20 crore",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "10-30 min",
+  "max_hold_bars": 30,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Bank",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "industry group constituent list and weights (equal-weighted)"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "group_avg_return",
+      "formula": "mean(cum_return_bps) across all stocks in industry group from 09:15",
+      "params": {
+        "weighting": "equal"
+      }
+    },
+    {
+      "name": "stock_deviation",
+      "formula": "stock_cum_return_bps - group_avg_return",
+      "params": {}
+    },
+    {
+      "name": "deviation_zscore",
+      "formula": "(stock_deviation - SMA(stock_deviation, 30)) / STDEV(stock_deviation, 30)",
+      "params": {
+        "lookback": 30
+      }
+    },
+    {
+      "name": "group_correlation",
+      "formula": "average pairwise rolling_corr(stock_i, stock_j, 60) within group",
+      "params": {
+        "lookback": 60
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "deviation_zscore < -2.0 (stock underperforming group by > 2 std)",
+        "stock_deviation < -15 bps (meaningful in bps terms)",
+        "group_correlation > 0.5 (group is correlated, reversion expected)",
+        "stock has no specific news today"
+      ],
+      "confirmation": "deviation_zscore starts rising (crosses above -1.7 from below -2.0)"
+    },
+    "short": {
+      "conditions": [
+        "deviation_zscore > 2.0 (stock outperforming group by > 2 std)",
+        "stock_deviation > 15 bps",
+        "group_correlation > 0.5",
+        "stock has no specific news today"
+      ],
+      "confirmation": "deviation_zscore starts falling (crosses below 1.7 from above 2.0)"
+    },
+    "entry_price": "limit order at midprice on confirmation bar"
+  },
+  "exit": {
+    "target": "stock_deviation reverts to 0 (stock returns to group average)",
+    "stop_loss": "deviation_zscore extends to ±3.0 (deviation widening — likely news-driven)",
+    "trailing_stop": "none (target is full reversion to group mean)",
+    "time_stop": "exit after 30 bars (30 min)",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "group_correlation drops below 0.3 (group dispersion, reversion fails)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹1L on divergent stock (directional on the stock, hedged by group mean expectation)",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "no VIX filter (intra-group reversion works across vol regimes)",
+    "time_filter": "skip first 15 min (group relationships establishing) and last 15 min",
+    "volume_filter": "divergent stock volume > 50th percentile of its typical volume",
+    "trend_filter": "no trend filter (relative reversion is trend-independent)",
+    "spread_filter": "divergent stock bid-ask < 8 bps",
+    "event_filter": "skip stocks with scheduled results, AGMs, or corporate actions today",
+    "other_filters": [
+      "skip if divergent stock is the only one moving (all others flat — it's the divergent stock that has news)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Low — within-group mean reversion is driven by structural correlation in fundamentals. As long as companies in the same industry share common drivers (rates for banks, INR for IT), the signal persists."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Stock-specific news (analyst upgrade/downgrade, management commentary, deal wins) can cause legitimate divergence that doesn't revert. The 'no news' filter is imperfect.",
+    "Within-group correlation is not constant — on result season days, correlations drop as individual earnings drive stocks, reducing signal reliability.",
+    "Equal-weighted group averages may not be appropriate when one stock dominates the group by market cap (e.g., HDFC Bank in private banks)."
+  ],
+  "prior_art": "Gatev, Goetzmann & Rouwenhorst (2006) 'Pairs Trading: Performance of a Relative-Value Arbitrage Rule' — the foundational statistical arbitrage paper. Avellaneda & Lee (2010) 'Statistical Arbitrage in the US Equities Market'. In India, Bhushan & Singh (2014) test pairs trading in NSE.",
+  "notes": "Maintain a daily updated list of industry group constituents. Stocks may be added or removed from groups based on business changes (e.g., HDFC merged with HDFC Bank, changing the private bank group). Use a 20-day rolling correlation to validate group membership before each session."
+}

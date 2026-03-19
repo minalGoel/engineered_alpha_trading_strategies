@@ -1,0 +1,120 @@
+{
+  "name": "rsi_extreme_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "mean_reversion",
+    "rsi",
+    "oversold"
+  ],
+  "thesis": "Extreme RSI readings (< 15 or > 85) on 1-min bars in liquid large-caps signal exhaustion of short-term momentum. Retail traders overshoot due to panic/greed, and institutional algorithms provide liquidity at extremes. The inefficiency persists because most RSI-based strategies use 14-period on daily charts — the 1-minute version with extreme thresholds catches micro-panics that aren't visible on higher timeframes. Speed of mean reversion on 1-min makes this hard to execute manually.",
+  "universe": "nifty50",
+  "stock_filter": "top 25 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:25-15:00",
+  "hold_time": "5-20 bars",
+  "max_hold_bars": 30,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_7",
+      "formula": "RSI(close, 7)",
+      "lookback": 7,
+      "purpose": "short-term momentum exhaustion"
+    },
+    {
+      "name": "vwap_dist",
+      "formula": "(close - vwap) / vwap * 10000",
+      "lookback": 1,
+      "purpose": "distance from VWAP in bps"
+    },
+    {
+      "name": "rel_volume",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "participation filter"
+    },
+    {
+      "name": "atr_14",
+      "formula": "ATR(high, low, close, 14)",
+      "lookback": 14,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "rsi_7 < 15",
+        "vwap_dist < -30",
+        "rel_volume > 1.5",
+        "vix < 22"
+      ],
+      "confirmation": "rsi_7 crosses above 15 on next bar"
+    },
+    "short": {
+      "conditions": [
+        "rsi_7 > 85",
+        "vwap_dist > 30",
+        "rel_volume > 1.5",
+        "vix < 22"
+      ],
+      "confirmation": "rsi_7 crosses below 85 on next bar"
+    },
+    "entry_price": "market on confirmation"
+  },
+  "exit": {
+    "target": "rsi_7 crosses 50 (midline)",
+    "stop_loss": "1.0 * atr_14 from entry",
+    "trailing_stop": "none — target is fast enough",
+    "time_stop": "exit after 30 bars regardless",
+    "eod_rule": "flatten",
+    "signal_exit": "rsi_7 crosses 50"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 6000,
+    "max_portfolio_heat_pct": 2.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no trades first 10 min or last 15 min",
+    "volume_filter": "rel_volume > 1.5 — need genuine participation not thin tape",
+    "trend_filter": "none",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on results day for the specific stock",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.62,
+    "avg_winner_to_loser": 0.95,
+    "profit_factor_estimate": 1.55,
+    "edge_decay_risk": "medium — behavioral bias is persistent but RSI is widely watched"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "RSI < 15 can persist for dozens of bars in genuine selloffs — the 'catching a falling knife' problem",
+    "High trade frequency means costs compound; need very tight slippage management",
+    "7-period RSI on 1-min is extremely noisy — false extremes in low-volume periods"
+  ],
+  "prior_art": "Connors RSI short-term mean reversion; adapted to 1-min Indian equities",
+  "notes": "Test with RSI periods 5, 7, 9 to find optimal for Nifty50 universe. Consider cumulative RSI variant."
+}

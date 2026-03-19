@@ -1,0 +1,125 @@
+{
+  "name": "vix_mean_reversion_intraday_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "volatility",
+    "vix",
+    "mean_reversion",
+    "intraday"
+  ],
+  "thesis": "India VIX itself mean-reverts within the trading day. When VIX drops > 3% from its opening value by mid-morning, it tends to recover partially, and vice versa. This intraday VIX pattern creates a tradeable signal for Nifty50 stocks: when VIX drops sharply (complacency), go short high-beta stocks anticipating VIX bounce and stock weakness. When VIX spikes sharply intraday, go long anticipating VIX fadedown. The edge exists because VIX is primarily traded via options, and the intraday VIX dynamics are a byproduct of options market maker hedging, creating predictable mean-reversion windows.",
+  "universe": "nifty50",
+  "stock_filter": "top 10 by beta to Nifty50",
+  "timeframe": "1min",
+  "session": "10:00-14:30",
+  "hold_time": "30-120 bars",
+  "max_hold_bars": 150,
+  "trades_per_day": "0-1",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vix_open",
+      "formula": "VIX value at 09:15",
+      "lookback": 1,
+      "purpose": "VIX opening reference"
+    },
+    {
+      "name": "vix_change_from_open",
+      "formula": "(vix - vix_open) / vix_open * 100",
+      "lookback": 1,
+      "purpose": "VIX % change from open"
+    },
+    {
+      "name": "vix_ema_30",
+      "formula": "EMA(vix, 30)",
+      "lookback": 30,
+      "purpose": "intraday VIX trend"
+    },
+    {
+      "name": "stock_beta",
+      "formula": "rolling 20-day beta of stock to Nifty50",
+      "lookback": "20 days",
+      "purpose": "sensitivity to VIX moves"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vix_change_from_open > 3 (VIX has spiked > 3% intraday — fear spike)",
+        "vix > vix_ema_30 (VIX above its intraday average — room to mean revert down)",
+        "nifty50 down < -0.5% from open"
+      ],
+      "confirmation": "VIX starts declining (vix < vix[3] — 3-bar VIX downtick)"
+    },
+    "short": {
+      "conditions": [
+        "vix_change_from_open < -3 (VIX has dropped > 3% intraday — complacency)",
+        "vix < vix_ema_30",
+        "nifty50 up > 0.5% from open"
+      ],
+      "confirmation": "VIX starts rising (vix > vix[3] — 3-bar VIX uptick)"
+    },
+    "entry_price": "market on confirmation"
+  },
+  "exit": {
+    "target": "0.5% from entry",
+    "stop_loss": "0.35% from entry",
+    "trailing_stop": "trail by 0.25% after +0.35%",
+    "time_stop": "exit by 14:30",
+    "eod_rule": "flatten",
+    "signal_exit": "vix_change_from_open returns to ±1% (VIX normalized)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.35,
+    "position_sizing": "vol_adjusted — inversely proportional to current VIX",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "core to strategy — only trade when VIX moves > 3% from its open",
+    "time_filter": "no entries before 10:00 (let VIX stabilize) or after 14:30",
+    "volume_filter": "target stocks must have normal volume",
+    "trend_filter": "counter-trend by design — VIX spike = long; VIX drop = short",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on budget day, RBI policy, expiry day",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.41,
+    "edge_decay_risk": "low — VIX intraday dynamics are driven by options market structure, slow to change"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "VIX spikes > 3% intraday are infrequent — maybe 5-8 times per month; low trade frequency",
+    "In genuine crisis (geopolitical, COVID), VIX spike is one-way and doesn't revert same day",
+    "High-beta stocks during VIX spikes have wider spreads, increasing slippage to 4+ bps"
+  ],
+  "prior_art": "VIX intraday mean reversion — documented in US market (CBOE VIX). India VIX adaptation.",
+  "notes": "This is a selective strategy — only fires on volatile days. Good complement to calmer strategies."
+}

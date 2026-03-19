@@ -1,0 +1,126 @@
+{
+  "name": "intraday_volatility_breakout_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "volatility",
+    "breakout",
+    "atr"
+  ],
+  "thesis": "When a stock's intraday ATR on 1-min bars suddenly expands (ATR_10 > 2 * ATR_60), it signals the start of a regime change from low-vol to high-vol. The direction of the first volatility expansion bar tends to persist for 10-30 more bars because the trigger (news, block deal, institutional flow) takes time to fully disseminate. Edge persists because detecting real-time volatility expansion requires continuous monitoring of ATR ratios across stocks, which most traders don't do.",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "10-30 bars",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "atr_10",
+      "formula": "ATR(high, low, close, 10)",
+      "lookback": 10,
+      "purpose": "short-term volatility"
+    },
+    {
+      "name": "atr_60",
+      "formula": "ATR(high, low, close, 60)",
+      "lookback": 60,
+      "purpose": "longer-term volatility baseline"
+    },
+    {
+      "name": "vol_expansion",
+      "formula": "atr_10 / atr_60",
+      "lookback": 60,
+      "purpose": "volatility expansion ratio"
+    },
+    {
+      "name": "bar_direction",
+      "formula": "sign(close - open)",
+      "lookback": 1,
+      "purpose": "direction of expansion bar"
+    },
+    {
+      "name": "rel_volume",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "volume confirmation"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vol_expansion > 2.0 (sudden vol expansion)",
+        "bar_direction == 1 (bullish expansion)",
+        "rel_volume > 2.0 (volume confirms it's real)",
+        "close > vwap"
+      ],
+      "confirmation": "enter on next bar open after expansion signal"
+    },
+    "short": {
+      "conditions": [
+        "vol_expansion > 2.0",
+        "bar_direction == -1 (bearish expansion)",
+        "rel_volume > 2.0",
+        "close < vwap"
+      ],
+      "confirmation": "enter on next bar open after expansion signal"
+    },
+    "entry_price": "market on next bar open"
+  },
+  "exit": {
+    "target": "1.5 * atr_10 from entry",
+    "stop_loss": "1.0 * atr_10 from entry",
+    "trailing_stop": "trail by 0.8 * atr_10 after +1.0 * atr_10",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "vol_expansion drops below 1.5 (volatility normalizing)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "vol_adjusted — smaller when atr_10 is large",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 28 (some vol is good, but extreme chaos is not)",
+    "time_filter": "no entries first 15 min or last 30 min",
+    "volume_filter": "rel_volume > 2.0 on expansion bar",
+    "trend_filter": "trade in direction of expansion only",
+    "spread_filter": "skip if spread > 0.12% (spreads widen during vol expansion)",
+    "event_filter": "skip on stock-specific result days (vol expansion is expected, not tradeable)",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.38,
+    "edge_decay_risk": "low — volatility clustering is a well-established market property (GARCH)"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Volatility expansion without directional persistence = whipsaw; common during news-driven spikes",
+    "Higher slippage (4 bps) during high-vol bars reduces effective edge",
+    "ATR_10 on 1-min can spike due to a single large bar and then normalize immediately — false signal"
+  ],
+  "prior_art": "Volatility breakout (Keltner Channel concept) — adapted for ATR-ratio-based detection on 1-min",
+  "notes": "Consider adding Keltner Channels or Donchian Channels as visual reference for the expansion."
+}

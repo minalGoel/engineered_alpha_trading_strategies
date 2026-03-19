@@ -1,0 +1,710 @@
+{
+  "family": "volatility vix mean_reversion",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "name": "vix_filtered_index_trend_v126",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "index",
+        "trend_following"
+      ],
+      "thesis": "When VIX is low, index trends tend to be slow and steady. When VIX is high, trends are erratic but offer massive reward/risk. Filtering trend breakouts by VIX regime prevents trading noisy chop. Exists due to systemic risk pricing.",
+      "indicators": [
+        "ema_9",
+        "ema_21",
+        "india_vix"
+      ],
+      "entry_long": [
+        "india_vix > 14 AND CROSSOVER(ema_9, ema_21) AND close > VWAP(close)"
+      ],
+      "entry_short": [
+        "india_vix > 14 AND CROSSUNDER(ema_9, ema_21) AND close < VWAP(close)"
+      ],
+      "exit_target": "30 * ATR(14) from entry",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix between 12-22",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "VIX is forward-filled and can be lagged intraday",
+        "High VIX means wider stop losses are required, reducing position size",
+        "Whipsaw risk in contracting volatility environments"
+      ],
+      "prior_art": "VIX-adjusted Moving Average Crossover"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "name": "vix_filtered_index_trend_v133",
+      "universe": "nifty200",
+      "timeframe": "15min",
+      "tags": [
+        "index",
+        "trend_following"
+      ],
+      "thesis": "When VIX is low, index trends tend to be slow and steady. When VIX is high, trends are erratic but offer massive reward/risk. Filtering trend breakouts by VIX regime prevents trading noisy chop. Exists due to systemic risk pricing.",
+      "indicators": [
+        "ema_9",
+        "ema_21",
+        "india_vix"
+      ],
+      "entry_long": [
+        "india_vix > 20 AND CROSSOVER(ema_9, ema_21) AND close > VWAP(close)"
+      ],
+      "entry_short": [
+        "india_vix > 20 AND CROSSUNDER(ema_9, ema_21) AND close < VWAP(close)"
+      ],
+      "exit_target": "30 * ATR(14) from entry",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix > 15",
+        "only 09:30-14:30",
+        "rel_volume > 1.2",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "VIX is forward-filled and can be lagged intraday",
+        "High VIX means wider stop losses are required, reducing position size",
+        "Whipsaw risk in contracting volatility environments"
+      ],
+      "prior_art": "VIX-adjusted Moving Average Crossover"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "name": "vix_filtered_index_trend_v124",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "index",
+        "trend_following"
+      ],
+      "thesis": "When VIX is low, index trends tend to be slow and steady. When VIX is high, trends are erratic but offer massive reward/risk. Filtering trend breakouts by VIX regime prevents trading noisy chop. Exists due to systemic risk pricing.",
+      "indicators": [
+        "ema_9",
+        "ema_21",
+        "india_vix"
+      ],
+      "entry_long": [
+        "india_vix > 21 AND CROSSOVER(ema_9, ema_21) AND close > VWAP(close)"
+      ],
+      "entry_short": [
+        "india_vix > 21 AND CROSSUNDER(ema_9, ema_21) AND close < VWAP(close)"
+      ],
+      "exit_target": "20 * ATR(14) from entry",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "none",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "VIX is forward-filled and can be lagged intraday",
+        "High VIX means wider stop losses are required, reducing position size",
+        "Whipsaw risk in contracting volatility environments"
+      ],
+      "prior_art": "VIX-adjusted Moving Average Crossover"
+    },
+    {
+      "fp": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "name": "vix_regime_breakout_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "regime",
+        "mean_reversion"
+      ],
+      "thesis": "When India VIX spikes sharply intraday (>10% increase from prior close), it signals fear-driven selling. Historically, these spikes are short-lived and mean-revert within hours. The inefficiency exists because retail traders panic-sell during VIX spikes, creating temporary dislocations in liquid nam",
+      "indicators": [
+        "vix_change_pct",
+        "vix_intraday_high",
+        "vix_pullback",
+        "nifty_return_60"
+      ],
+      "entry_long": [
+        "vix_change_pct > 10",
+        "vix_pullback > 3",
+        "nifty_return_60 < -0.5",
+        "close > low of last 10 bars"
+      ],
+      "entry_short": [
+        "NOT_APPLICABLE"
+      ],
+      "exit_target": "vwap touch OR 0.5% from entry",
+      "exit_stop": "0.7% from entry",
+      "filters": [
+        "vix spike > 10% from prior close (entry condition, not a filter)",
+        "no entry before 10:00 (let panic settle) or after 14:30",
+        "volume must be > 1.5x average (confirming real selling, not thin drift)",
+        "N/A \u2014 counter-trend by design",
+        "skip if spread > 0.15% (too illiquid during panic)"
+      ],
+      "weaknesses": [
+        "VIX spikes caused by genuine regime change (war, financial crisis) do NOT mean-revert intraday. The VIX 30 cap helps but isn't foolproof. 2020 March would have been a bloodbath.",
+        "Low frequency: signal fires maybe 2-4 times per month. Not enough trades for statistical significance in short backtests.",
+        "Slippage during VIX spikes is extreme \u2014 5 bps may be optimistic. Real fills in panicky markets can be 10+ bps."
+      ],
+      "prior_art": "VIX mean-reversion is well-known in options literature. Adapted to equity intraday context. See CBOE research papers."
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "name": "vix_mean_reversion_intraday_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "vix",
+        "mean_reversion",
+        "intraday"
+      ],
+      "thesis": "India VIX itself mean-reverts within the trading day. When VIX drops > 3% from its opening value by mid-morning, it tends to recover partially, and vice versa. This intraday VIX pattern creates a tradeable signal for Nifty50 stocks: when VIX drops sharply (complacency), go short high-beta stocks ant",
+      "indicators": [
+        "vix_open",
+        "vix_change_from_open",
+        "vix_ema_30",
+        "stock_beta",
+        "atr_20"
+      ],
+      "entry_long": [
+        "vix_change_from_open > 3 (VIX has spiked > 3% intraday \u2014 fear spike)",
+        "vix > vix_ema_30 (VIX above its intraday average \u2014 room to mean revert down)",
+        "nifty50 down < -0.5% from open"
+      ],
+      "entry_short": [
+        "vix_change_from_open < -3 (VIX has dropped > 3% intraday \u2014 complacency)",
+        "vix < vix_ema_30",
+        "nifty50 up > 0.5% from open"
+      ],
+      "exit_target": "0.5% from entry",
+      "exit_stop": "0.35% from entry",
+      "filters": [
+        "core to strategy \u2014 only trade when VIX moves > 3% from its open",
+        "no entries before 10:00 (let VIX stabilize) or after 14:30",
+        "target stocks must have normal volume",
+        "counter-trend by design \u2014 VIX spike = long; VIX drop = short",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "VIX spikes > 3% intraday are infrequent \u2014 maybe 5-8 times per month; low trade frequency",
+        "In genuine crisis (geopolitical, COVID), VIX spike is one-way and doesn't revert same day",
+        "High-beta stocks during VIX spikes have wider spreads, increasing slippage to 4+ bps"
+      ],
+      "prior_art": "VIX intraday mean reversion \u2014 documented in US market (CBOE VIX). India VIX adaptation."
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "name": "vix_regime_switch_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "vix",
+        "regime",
+        "tactical"
+      ],
+      "thesis": "India VIX mean-reverts after extreme readings. When VIX spikes above its 20-day Bollinger Band upper (> 2 SD), it signals peak fear, and Nifty50 stocks tend to bounce within 1-2 sessions. Conversely, when VIX drops below its lower band, complacency sets in and a correction follows. Intraday, you can",
+      "indicators": [
+        "vix_bb_upper",
+        "vix_bb_lower",
+        "vix_change_60",
+        "nifty_return_60",
+        "atr_20"
+      ],
+      "entry_long": [
+        "vix > vix_bb_upper (VIX is elevated \u2014 fear regime)",
+        "vix_change_60 < 0 (VIX starting to decline from peak)",
+        "nifty_return_60 > -0.5 (index not in freefall)"
+      ],
+      "entry_short": [
+        "vix < vix_bb_lower (VIX is depressed \u2014 complacency regime)",
+        "vix_change_60 > 0 (VIX starting to rise from trough)",
+        "nifty_return_60 < 0.5 (index not in melt-up)"
+      ],
+      "exit_target": "0.6% from entry (larger target because of multi-hour hold)",
+      "exit_stop": "0.4% from entry",
+      "filters": [
+        "core to strategy \u2014 trade only when VIX is at extremes",
+        "no entries first 30 min (let VIX stabilize) or last 30 min",
+        "normal \u2014 no special requirement",
+        "nifty_return_60 acts as trend filter",
+        "skip if spread > 0.1% (wider during high VIX)"
+      ],
+      "weaknesses": [
+        "Very low frequency \u2014 VIX extremes happen maybe 2-3 times per month; long idle periods",
+        "During genuine crises (COVID, geopolitical), VIX can stay elevated for weeks \u2014 mean reversion is delayed",
+        "High-beta stocks during VIX spikes have wide spreads and volatile fills \u2014 slippage is 4+ bps"
+      ],
+      "prior_art": "VIX mean reversion \u2014 well-documented in US markets (VXX trading). India VIX version is less studied."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "name": "vix_mean_reversion_v1",
+      "universe": "NIFTYBEES or top-5 NIFTY 50 constituents by weight on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "vix",
+        "mean_reversion",
+        "fear_spike",
+        "intraday"
+      ],
+      "thesis": "India VIX exhibits strong intraday mean-reversion after spikes. When VIX jumps >8% within 30 minutes (typically on sudden NIFTY selloffs), it reverts at least 50% of the spike within 2 hours roughly 70% of the time. This is because VIX spikes are driven by panic option buying (puts), which creates a",
+      "indicators": [],
+      "entry_long": [
+        "VIX_spike == True (VIX jumped >8% in 30 mins)",
+        "VIX_z > 1.5 (VIX elevated vs 20-day history)",
+        "NIFTY_drawdown < -0.5% (NIFTY has pulled back meaningfully)",
+        "NIFTY_RSI_14 < 35 (NIFTY oversold on 1-min)"
+      ],
+      "entry_short": [
+        "VIX_30min_change < -6 (VIX crushed >6% in 30 mins \u2014 complacency spike)",
+        "VIX_z < -1.0 (VIX unusually low)",
+        "NIFTY at session highs (extended)"
+      ],
+      "exit_target": "VIX reverts 50% of spike (VIX_30min_change halves) OR NIFTY recovers 50% of drawdown",
+      "exit_stop": "VIX makes new session high (spike continuing) OR NIFTY drops another 0.5% from entry",
+      "filters": [
+        "core signal \u2014 requires VIX spike >8% in 30 mins",
+        "VIX spikes after 14:00 IST less likely to revert within session; prefer morning spikes",
+        "NIFTY option volume must be elevated (confirming VIX spike is real, not stale data)",
+        "NIFTY must not have broken a major support level (200-SMA on daily) \u2014 structural breaks don't revert",
+        "bid-ask on entry vehicle < 0.08% (spreads widen during VIX spikes)"
+      ],
+      "weaknesses": [
+        "The strategy buys the dip during fear spikes \u2014 during genuine crises (2020 COVID, 2022 Russia-Ukraine), VIX spikes DON'T revert and the strategy takes large losses on consecutive signals",
+        "VIX spike frequency is low (8%+ spikes in 30 min happen ~3-5 times per month), making this capital-inefficient as a standalone strategy",
+        "Wider bid-ask spreads during VIX spikes increase effective slippage to 5-8 bps per side, significantly cutting into the edge"
+      ],
+      "prior_art": "Whaley (2000) VIX as fear gauge; Daigler & Rossi (2006) VIX mean reversion. Simon & Campasano (2014) VIX futures roll and mean reversion."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "name": "vix_regime_switch_v1",
+      "universe": "NIFTY 50 constituents on NSE (top 20 by liquidity)",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "vix",
+        "regime",
+        "adaptive",
+        "intraday"
+      ],
+      "thesis": "India VIX transitions between regimes (low <13, normal 13-18, elevated 18-25, crisis >25) and the optimal intraday strategy differs by regime. In low-VIX regimes, mean-reversion strategies dominate (tight ranges, reliable VWAP pulls). In elevated-VIX regimes, momentum and breakout strategies outperf",
+      "indicators": [],
+      "entry_long": [
+        "IF vix_regime == 'low' OR 'normal': close < BB_lower AND RSI_14 < 30 AND ADX_14 < 25 (mean reversion mode)",
+        "IF vix_regime == 'elevated': close > EMA_9 AND EMA_9 > EMA_21 AND ADX_14 > 25 (momentum mode)",
+        "IF vix_regime == 'crisis': NO ENTRY (sit out)"
+      ],
+      "entry_short": [
+        "IF vix_regime == 'low' OR 'normal': close > BB_upper AND RSI_14 > 70 AND ADX_14 < 25 (mean reversion mode)",
+        "IF vix_regime == 'elevated': close < EMA_9 AND EMA_9 < EMA_21 AND ADX_14 > 25 (momentum mode)",
+        "IF vix_regime == 'crisis': NO ENTRY"
+      ],
+      "exit_target": "mean_rev: SMA(close, 20) (midline reversion); momentum: 1.5 * ATR_14 from entry",
+      "exit_stop": "mean_rev: 0.3 * ATR_14 beyond BB; momentum: 0.8 * ATR_14 from entry",
+      "filters": [
+        "core of the strategy \u2014 VIX regime determines sub-strategy; crisis regime (VIX > 25) = no trading",
+        "mean_rev mode: 09:30-14:30; momentum mode: 09:20-15:00",
+        "stock 1-min volume > 0.8x SMA(volume, 20)",
+        "mean_rev mode: ADX < 25 required; momentum mode: ADX > 25 required",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "VIX regime boundaries (13, 18, 25) are arbitrary and may not be optimal; the strategy is sensitive to these thresholds and may generate whipsaw signals near boundaries",
+        "Switching between mean-reversion and momentum sub-strategies mid-day (if VIX crosses a boundary) can cause confusion and partial signals from the prior regime",
+        "The combined strategy has more parameters (7+) than a single-regime strategy, increasing overfitting risk in backtesting"
+      ],
+      "prior_art": "Ang & Bekaert (2004) regime-switching models; Baele et al. (2019) VIX-based strategy timing. Indian VIX regime thresholds calibrated from Banerjee & Sarkar (2006) on India VIX behavior."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "name": "vix_bucket_strategy_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "vix",
+        "bucket",
+        "regime",
+        "volatility",
+        "strategy-selection"
+      ],
+      "thesis": "India VIX provides a forward-looking measure of expected market volatility derived from NIFTY option prices. By bucketing VIX into 4 regimes \u2014 Calm (VIX < 13), Normal (13-18), Elevated (18-24), and Crisis (> 24) \u2014 and assigning a different strategy to each bucket, we adapt to the macroeconomic uncer",
+      "indicators": [
+        "VIX_Bucket",
+        "BB_lower_calm",
+        "BB_upper_calm",
+        "EMA_9",
+        "EMA_21",
+        "Supertrend_elevated"
+      ],
+      "entry_long": [
+        "CALM: close < BB_lower_calm AND close < vwap AND RSI(close,10) < 30",
+        "NORMAL: EMA(close,9) crosses above EMA(close,21) AND close > vwap",
+        "ELEVATED: close > Supertrend(10,4.0) AND close > vwap AND volume > 2*SMA(volume,20)",
+        "CRISIS: NO ENTRY"
+      ],
+      "entry_short": [
+        "CALM: close > BB_upper_calm AND close > vwap AND RSI(close,10) > 70",
+        "NORMAL: EMA(close,9) crosses below EMA(close,21) AND close < vwap",
+        "ELEVATED: close < Supertrend(10,4.0) AND close < vwap AND volume > 2*SMA(volume,20)",
+        "CRISIS: NO ENTRY"
+      ],
+      "exit_target": "CALM: 20 bps; NORMAL: 35 bps; ELEVATED: 60 bps",
+      "exit_stop": "CALM: 12 bps; NORMAL: 20 bps; ELEVATED: 35 bps",
+      "filters": [
+        "VIX_Bucket itself is the primary filter \u2014 CRISIS bucket = no trading",
+        "No entries before 09:25 or after 15:10; CALM can trade until 15:15",
+        "ELEVATED: strict 2x volume required; CALM/NORMAL: SMA(volume,15) sufficient",
+        "NORMAL: NIFTY trend must agree; CALM/ELEVATED: no trend filter",
+        "CALM: spread < 3 bps; NORMAL: < 5 bps; ELEVATED: < 8 bps"
+      ],
+      "weaknesses": [
+        "VIX bucket boundaries (13, 18, 24) are arbitrary and may not represent true regime shifts \u2014 the optimal boundaries likely vary over multi-year cycles as structural volatility changes",
+        "India VIX can jump from 14 to 19 within minutes during a shock, causing an immediate regime switch and forced exit from current position at a loss",
+        "CRISIS bucket (VIX > 24) has historically offered some of the best mean-reversion opportunities, but the strategy avoids them entirely, missing high-conviction trades"
+      ],
+      "prior_art": "VIX-conditional strategies common in US equity options trading; Whaley (2009) on VIX; VIX-based strategy selection discussed in Sinclair's 'Volatility Trading'; India VIX-specific research limited"
+    },
+    {
+      "fp": "all_trading_strategies/grok/Grok_7_of_10.json",
+      "name": "ma_crossover_momentum_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "crossover"
+      ],
+      "thesis": "Exploiting short-term momentum from 9/21 EMA crossover with volume in trending sessions. Inefficiency from lag in retail response to cross. Survives due to index filter and VIX cap preventing whipsaws.",
+      "indicators": [
+        "ema_9",
+        "ema_21"
+      ],
+      "entry_long": [
+        "ema_9 > ema_21",
+        "rel_volume > 1.4",
+        "vix < 20",
+        "nifty_return_5 > 0"
+      ],
+      "entry_short": [
+        "ema_9 < ema_21",
+        "rel_volume > 1.4",
+        "vix < 20",
+        "nifty_return_5 < 0"
+      ],
+      "exit_target": "2 * ATR(14) from entry",
+      "exit_stop": "1 * ATR(14) below entry",
+      "filters": [
+        "vix < 20",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "Regime dependency: choppy markets cause whipsaws",
+        "Slippage on fast moves during cross",
+        "Crowding: MA crossover taught everywhere on X"
+      ],
+      "prior_art": "MA Crossover (listed in StockX India X thread)"
+    },
+    {
+      "fp": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "name": "vix_spike_mean_reversion",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "mean_reversion"
+      ],
+      "thesis": "Exploits 'Volatility Overpricing'. A sudden 5% spike in India VIX within 10 minutes often leads to an over-reaction in Nifty 50 component prices. As VIX stabilizes, the delta-hedging pressure from option writers subsides, leading to a quick price recovery. This is a market microstructure constraint.",
+      "indicators": [
+        "vix_spike",
+        "rsi_14"
+      ],
+      "entry_long": [
+        "vix_spike == True",
+        "rsi_14 < 30",
+        "close < vwap"
+      ],
+      "entry_short": [
+        "vix_spike == True",
+        "rsi_14 > 70",
+        "close > vwap"
+      ],
+      "exit_target": "fixed 0.6%",
+      "exit_stop": "0.3% from entry",
+      "filters": [
+        "vix > 15",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "VIX spikes can lead to sustained crashes (regime change)",
+        "Slippage is high during high VIX"
+      ],
+      "prior_art": "Volatility Alpha"
+    },
+    {
+      "fp": "all_trading_strategies/gemini/gemini_4_of_20.json",
+      "name": "momentum_exhaustion_vix_reversal",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "volatility"
+      ],
+      "thesis": "Exploits behavioral panic/euphoria. When VIX spikes intraday along with a vertical price move, retail traders capitulate. The resulting volume climax exhausts the move. Institutional 'dark pools' absorb the volume at extreme levels, leading to mean reversion.",
+      "indicators": [
+        "rsi_2",
+        "vol_climax"
+      ],
+      "entry_long": [
+        "rsi_2 < 5",
+        "vol_climax == True",
+        "vix > prev_vix"
+      ],
+      "entry_short": [
+        "rsi_2 > 95",
+        "vol_climax == True",
+        "vix > prev_vix"
+      ],
+      "exit_target": "EMA(close, 20) touch",
+      "exit_stop": "1.0 * ATR(14) from entry",
+      "filters": [
+        "vix > 15",
+        "no trades last 30 mins",
+        "rel_vol > 3.0",
+        "none",
+        "spread < 0.1%"
+      ],
+      "weaknesses": [
+        "Catching falling knives",
+        "High slippage on volume climaxes"
+      ],
+      "prior_art": "Connors RSI 2 Strategy"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "cosine": 0.9987
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "cosine": 0.9952
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "cosine": 0.994
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "cosine": 0.9128
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.8848
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "cosine": 0.8777
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "cosine": 0.8589
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "cosine": 0.8546
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.827
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "cosine": 0.823
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.8149
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "fp_b": "all_trading_strategies/grok/Grok_7_of_10.json",
+      "cosine": 0.7913
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "fp_b": "all_trading_strategies/grok/Grok_7_of_10.json",
+      "cosine": 0.7903
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "fp_b": "all_trading_strategies/grok/Grok_7_of_10.json",
+      "cosine": 0.7901
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "cosine": 0.7891
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "cosine": 0.7774
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "cosine": 0.773
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "cosine": 0.7718
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.7665
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.7616
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "cosine": 0.7615
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.7611
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "cosine": 0.7606
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "cosine": 0.7563
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "cosine": 0.755
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+      "cosine": 0.754
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_4_of_20.json",
+      "cosine": 0.7498
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+      "cosine": 0.7476
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "cosine": 0.7467
+    },
+    {
+      "family": "volatility vix mean_reversion",
+      "family_slug": "volatility_vix_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "cosine": 0.7425
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "name": "entropy_regime_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "entropy",
+    "information-theory",
+    "regime",
+    "Shannon",
+    "quantitative"
+  ],
+  "thesis": "Shannon entropy of the distribution of 1-min returns measures the randomness/predictability of price action. Low entropy (returns clustered in a few bins) indicates structured, predictable market behavior — ideal for directional trading. High entropy (returns uniformly distributed) indicates random, unpredictable behavior — no edge. By computing the Shannon entropy of binned 1-min returns over a 50-bar rolling window and entering only during low-entropy periods (entropy < 70th percentile of historical distribution), we filter for predictable regimes. The inefficiency exists because entropy is an information-theoretic concept foreign to traditional technical analysis. Most traders have no concept of return distribution entropy.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr; sufficient tick activity for 1-min bars",
+  "timeframe": "1min",
+  "session": "10:05-15:10 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "historical_entropy_distribution_20d"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "Returns_1min",
+      "params": "ROC(close, 1)",
+      "lookback": 1
+    },
+    {
+      "name": "Entropy_50",
+      "params": "shannon_entropy(histogram(Returns_1min, bins=10, window=50))",
+      "lookback": 50
+    },
+    {
+      "name": "Entropy_Pctile",
+      "params": "percentile_rank(Entropy_50, 20-day historical entropy values)",
+      "lookback": "20 days"
+    },
+    {
+      "name": "Low_Entropy",
+      "params": "True if Entropy_Pctile < 0.30 (bottom 30% of entropy = highly structured)",
+      "lookback": "20 days"
+    },
+    {
+      "name": "Dominant_Direction",
+      "params": "sign(mean(Returns_1min, 50)) — direction of the structured returns",
+      "lookback": 50
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(high, low, close, 14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Low_Entropy == True (structured, predictable regime)",
+        "Dominant_Direction > 0 (structured returns are biased positive)",
+        "close > vwap",
+        "EMA(close, 10) > EMA(close, 20)"
+      ],
+      "confirmation": "Low_Entropy persists for at least 5 consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "Low_Entropy == True",
+        "Dominant_Direction < 0 (structured returns are biased negative)",
+        "close < vwap",
+        "EMA(close, 10) < EMA(close, 20)"
+      ],
+      "confirmation": "Low_Entropy persists for at least 5 consecutive bars"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "1.2 * ATR(14) from entry",
+    "stop_loss": "0.8 * ATR(14) from entry",
+    "trailing_stop": "After 0.8 * ATR(14) profit, trail at 0.4 * ATR(14) from high-water mark",
+    "time_stop": "60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Entropy_Pctile rises above 0.70 (regime shifting to high entropy / random)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "Risk-based: position = capital * 0.3% / (0.8 * ATR(14))",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25",
+    "time_filter": "No entries before 10:05 (need 50 bars for entropy computation) or after 15:10",
+    "volume_filter": "Volume on entry bar > SMA(volume, 20)",
+    "trend_filter": "None — entropy-based filtering replaces trend filter",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "Number of non-zero bins in histogram must be >= 5 (sufficient diversity for meaningful entropy)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Low — entropy computation from information theory is uncommon in trading; the concept is academically rigorous but practically obscure"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Entropy computed on 50 1-min returns with 10 bins means most bins have 5 or fewer observations — the histogram is sparse, making the entropy estimate unreliable and sensitive to bin width choice",
+    "Low-entropy periods can coincide with low-volume lunch hours (12:00-13:00 IST) where returns are clustered near zero not because of structure but because of inactivity — false low-entropy signal",
+    "The 20-day historical entropy distribution used for percentile ranking may shift significantly during earnings season or macro events, invalidating the calibration"
+  ],
+  "prior_art": "Shannon (1948) information theory; Bandt & Pompe (2002) on permutation entropy for time series; Risso (2008) on entropy and stock market crashes; Hou & Li (2014) on information entropy and stock returns",
+  "notes": "Consider using permutation entropy instead of Shannon entropy on binned returns — permutation entropy is more robust to small sample sizes and does not require arbitrary binning. Sample entropy (SampEn) is another alternative."
+}

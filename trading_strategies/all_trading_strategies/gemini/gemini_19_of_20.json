@@ -1,0 +1,93 @@
+{
+  "name": "volume_spike_exhaustion_fade",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": ["mean_reversion"],
+  "thesis": "Exploits 'exhaustion gaps'. A massive volume spike (5x average) on a 1-min bar without a significant price breakout usually indicates a 'climax' where all buyers/sellers are exhausted. This typically leads to a mean reversion as the order book refills. This is a market microstructure phenomenon.",
+  "universe": "fno",
+  "stock_filter": "top 10 by volume",
+  "timeframe": "1min",
+  "session": "10:30-14:30",
+  "hold_time": "5-15 bars",
+  "max_hold_bars": 30,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 20,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": false,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vol_spike",
+      "formula": "volume > sma(volume, 50) * 5",
+      "lookback": 50,
+      "purpose": "trigger"
+    },
+    {
+      "name": "range_check",
+      "formula": "abs(close - open) / (high - low) < 0.3",
+      "lookback": 0,
+      "purpose": "exhaustion_check"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": ["vol_spike == True", "close < close[1]", "range_check == True"],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": ["vol_spike == True", "close > close[1]", "range_check == True"],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "fixed 0.25%",
+    "stop_loss": "0.15% from entry",
+    "trailing_stop": "none",
+    "time_stop": "10 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "mid-session",
+    "volume_filter": "none",
+    "trend_filter": "none",
+    "spread_filter": "spread < 0.01%",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 20.0,
+    "win_rate_estimate": 0.65,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 2.23,
+    "edge_decay_risk": "high — structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 1,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Spikes can be part of a high-frequency wash trade",
+    "Requires extremely low slippage to be profitable"
+  ],
+  "prior_art": "Microstructure Exhaustion Alpha",
+  "notes": "Targeted at the most liquid FnO names only."
+}

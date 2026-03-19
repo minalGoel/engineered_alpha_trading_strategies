@@ -1,0 +1,141 @@
+{
+  "name": "lunch_hour_range_compression_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "microstructure",
+    "time_of_day",
+    "range",
+    "compression"
+  ],
+  "thesis": "NSE stocks experience a predictable volume and volatility drop during 12:00-13:30 (lunch hour). Range compresses significantly. The breakout from this compressed range at 13:30-14:00 tends to be directional and sustained because afternoon institutional flow (mutual fund NAV trades, FII block deals) adds momentum. Entry at 13:30 in the direction of the initial breakout captures the post-lunch trend. Edge persists because the lunch hour pattern is structural to Indian market participation patterns.",
+  "universe": "nifty50",
+  "stock_filter": "top 20 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "12:00-15:00",
+  "hold_time": "30-90 bars",
+  "max_hold_bars": 120,
+  "trades_per_day": "0-1",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "lunch_high",
+      "formula": "MAX(high, 12:00 to 13:30)",
+      "lookback": 90,
+      "purpose": "lunch hour range high"
+    },
+    {
+      "name": "lunch_low",
+      "formula": "MIN(low, 12:00 to 13:30)",
+      "lookback": 90,
+      "purpose": "lunch hour range low"
+    },
+    {
+      "name": "lunch_range",
+      "formula": "lunch_high - lunch_low",
+      "lookback": 90,
+      "purpose": "compression degree"
+    },
+    {
+      "name": "morning_direction",
+      "formula": "sign(close_at_12:00 - open_of_day)",
+      "lookback": 1,
+      "purpose": "morning trend context"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > lunch_high",
+        "time >= 13:30",
+        "morning_direction == 1 (morning was bullish)",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "bar closes above lunch_high with volume"
+    },
+    "short": {
+      "conditions": [
+        "close < lunch_low",
+        "time >= 13:30",
+        "morning_direction == -1",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "bar closes below lunch_low with volume"
+    },
+    "entry_price": "market on breakout bar close"
+  },
+  "exit": {
+    "target": "1.0 * lunch_range from breakout level",
+    "stop_loss": "lunch_midpoint",
+    "trailing_stop": "trail by 0.5 * lunch_range after target",
+    "time_stop": "exit by 15:00",
+    "eod_rule": "flatten",
+    "signal_exit": "close crosses back inside lunch range"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "compute lunch range 12:00-13:30; enter after 13:30",
+    "volume_filter": "breakout bar volume > SMA(volume, 20)",
+    "trend_filter": "morning_direction must align with breakout direction",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "none",
+    "other_filters": [
+      "lunch_range must be < 0.3% of price (genuine compression, not wide range)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.52,
+    "edge_decay_risk": "low \u2014 lunch hour low-vol is structural to Indian market participation patterns"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Not all days have a clear lunch compression \u2014 some days are active through lunch",
+    "False breakouts from lunch range are common; morning direction alignment helps but doesn't eliminate",
+    "Only 1 trade per day max \u2014 low frequency"
+  ],
+  "prior_art": "Lunch hour effect \u2014 well-documented in market microstructure. NSE-specific timing.",
+  "notes": "India-specific strategy. Test with different lunch window definitions: 12:00-13:00, 12:00-13:30, 12:30-13:30.",
+  "_filepath": "all_trading_strategies/opus/Opus_36_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_36_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

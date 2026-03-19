@@ -1,0 +1,126 @@
+{
+  "name": "multi_timeframe_confirmation_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "hybrid",
+    "multi_timeframe",
+    "confirmation"
+  ],
+  "thesis": "Using 1-min bars for entry but requiring confirmation from a 5-min or 15-min signal reduces noise dramatically. When a 5-min EMA crossover fires (EMA_9 > EMA_21 on 5-min bars) AND the 1-min RSI(7) is oversold (< 25), you're entering a 5-min trend on a 1-min pullback. The higher timeframe confirms direction; the lower timeframe optimizes entry. Edge persists because most traders use a single timeframe and either get poor entries (higher TF only) or poor direction (lower TF only).",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "10-45 bars",
+  "max_hold_bars": 60,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "ohlcv_5min"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "ema_9_5min",
+      "formula": "EMA(close_5min, 9)",
+      "lookback": "9 bars on 5-min = 45 min",
+      "purpose": "higher TF fast EMA"
+    },
+    {
+      "name": "ema_21_5min",
+      "formula": "EMA(close_5min, 21)",
+      "lookback": "21 bars on 5-min = 105 min",
+      "purpose": "higher TF slow EMA"
+    },
+    {
+      "name": "trend_5min",
+      "formula": "1 if ema_9_5min > ema_21_5min else -1",
+      "lookback": 1,
+      "purpose": "5-min trend direction"
+    },
+    {
+      "name": "rsi_7_1min",
+      "formula": "RSI(close_1min, 7)",
+      "lookback": 7,
+      "purpose": "1-min pullback detection"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "trend_5min == 1 (5-min uptrend)",
+        "rsi_7_1min < 25 (1-min oversold pullback)",
+        "close > vwap"
+      ],
+      "confirmation": "rsi_7_1min crosses above 25 (pullback ending)"
+    },
+    "short": {
+      "conditions": [
+        "trend_5min == -1 (5-min downtrend)",
+        "rsi_7_1min > 75 (1-min overbought pullback)",
+        "close < vwap"
+      ],
+      "confirmation": "rsi_7_1min crosses below 75"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "1.5 * atr_20 from entry",
+    "stop_loss": "1.0 * atr_20 from entry",
+    "trailing_stop": "trail by 0.8 * atr_20 after target",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "trend_5min flips direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "no trades first 15 min or last 30 min",
+    "volume_filter": "volume > 50% of SMA(volume, 20)",
+    "trend_filter": "5-min trend determines direction; 1-min is entry only",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on stock result days",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.52,
+    "edge_decay_risk": "low — multi-timeframe alignment is a robust concept"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "5-min trend can lag — by the time EMA crossover fires on 5-min, the 1-min move may be mostly done",
+    "RSI(7) < 25 on 1-min during a 5-min uptrend is an aggressive pullback — might be the start of a reversal, not a pullback",
+    "Maintaining two timeframe calculations adds implementation complexity"
+  ],
+  "prior_art": "Multi-timeframe trading — Alexander Elder (Triple Screen). Systematic implementation.",
+  "notes": "Test with 3-min and 15-min as the higher timeframe. 5-min is the default middle ground."
+}

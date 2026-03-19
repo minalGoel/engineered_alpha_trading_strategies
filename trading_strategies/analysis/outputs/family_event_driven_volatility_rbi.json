@@ -1,0 +1,105 @@
+{
+  "family": "event_driven volatility rbi",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_122.json",
+      "name": "rbi_policy_reaction_v1",
+      "universe": "BANK NIFTY index (via futures) and top 3 private bank stocks",
+      "timeframe": "1min",
+      "tags": [
+        "event_driven",
+        "RBI",
+        "interest_rate",
+        "banking",
+        "volatility"
+      ],
+      "thesis": "RBI monetary policy announcements (6 per year, typically at 10:00 IST) create a predictable intraday pattern: (1) pre-announcement compression (09:15-10:00) where volatility drops and prices consolidate, (2) knee-jerk reaction (10:00-10:15) where BANK NIFTY moves 50-200 bps in the direction of the s",
+      "indicators": [
+        "banknifty_reaction",
+        "reaction_peak",
+        "retracement_pct",
+        "vix_spike",
+        "gilt_yield_change"
+      ],
+      "entry_long": [
+        "PHASE 3 (10:15-10:45): banknifty_reaction < -50 bps (sold off on hawkish surprise) AND retracement_pct > 0.3 (already started bouncing)",
+        "OR PHASE 4 (10:45-12:00): banknifty_reaction > 0 (dovish surprise) AND close > VWAP AND gilt_yield_change < -3 bps (yields confirming dovishness)"
+      ],
+      "entry_short": [
+        "PHASE 3: banknifty_reaction > 50 bps (rallied on dovish surprise) AND retracement_pct > 0.3",
+        "OR PHASE 4: banknifty_reaction < 0 (hawkish surprise) AND close < VWAP AND gilt_yield_change > 3 bps"
+      ],
+      "exit_target": "Phase 3: 50% retracement of reaction move. Phase 4: 30 bps from entry",
+      "exit_stop": "Phase 3: reaction_peak extends (new extreme). Phase 4: 15 bps from entry",
+      "filters": [
+        "no VIX filter (VIX spike is part of the signal, not a filter)",
+        "only trade on RBI policy announcement days (6 per year)",
+        "BANK NIFTY volume > 1.5x normal on policy day (confirmed interest)",
+        "Phase 3 is contrarian (fade); Phase 4 follows confirmed trend",
+        "BANK NIFTY futures spread < 0.1% (spreads widen on policy day)"
+      ],
+      "weaknesses": [
+        "Only 6 trade days per year (RBI policy meetings) \u2014 the strategy cannot be a primary income source and contributes minimally to annual P&L.",
+        "The Phase 3/Phase 4 framework assumes a standard reaction pattern, but emergency meetings or coordinated global central bank actions create non-standard patterns.",
+        "Slippage on RBI policy days is significantly higher than normal \u2014 the 3 bps assumption is optimistic; actual slippage may be 5-10 bps during peak reaction."
+      ],
+      "prior_art": "Lucca & Moench (2015) 'The Pre-FOMC Announcement Drift' \u2014 the Fed equivalent of this strategy. Bernanke & Kuttner (2005) 'What Explains the Stock Market's Reaction to Federal Reserve Policy?'. In Indi"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_129.json",
+      "name": "budget_day_strategy_v1",
+      "universe": "All NIFTY 100 constituents across sectors",
+      "timeframe": "1min",
+      "tags": [
+        "event_driven",
+        "budget",
+        "fiscal_policy",
+        "volatility",
+        "sectors"
+      ],
+      "thesis": "Union Budget day (typically Feb 1) is the single highest-volatility scheduled event in Indian markets. The budget speech starts at 11:00 IST and runs for 90-120 minutes. The intraday pattern: (1) 09:15-11:00: pre-speech compression with low volume, (2) 11:00-12:30: sector-specific knee-jerk reaction",
+      "indicators": [
+        "sector_reaction_bps",
+        "sector_reaction_rank",
+        "reaction_reversion",
+        "vix_change_budget"
+      ],
+      "entry_long": [
+        "sector_reaction_rank >= 8 (bottom 3 sectors \u2014 biggest losers during speech)",
+        "sector_reaction_bps < -100 (lost > 100 bps during speech)",
+        "time >= 12:30 IST (speech largely complete)",
+        "stock_close > stock_low_of_day * 1.001 (not making new lows)"
+      ],
+      "entry_short": [
+        "sector_reaction_rank <= 2 (top 2 sectors \u2014 biggest winners during speech)",
+        "sector_reaction_bps > 100 (gained > 100 bps during speech)",
+        "time >= 12:30 IST",
+        "stock_close < stock_high_of_day * 0.999 (not making new highs)"
+      ],
+      "exit_target": "30-50% reversion of speech reaction (e.g., if lost 200 bps, target 60-100 bps recovery)",
+      "exit_stop": "reaction extends by 50% beyond speech extreme (e.g., if lost 200 bps, stop at 300 bps loss)",
+      "filters": [
+        "no VIX filter on budget day (VIX will be elevated by definition)",
+        "entry only in 12:30-13:30 window; exit by 15:15",
+        "sector stocks trading at > 2x normal volume (confirms interest)",
+        "fade extreme sector movers (contrarian by design)",
+        "bid-ask < 20 bps (wider tolerance on budget day)"
+      ],
+      "weaknesses": [
+        "Only 1 trade day per year. The strategy's contribution to annual P&L is minimal unless the edge per trade is very large (~50 bps) and size is scaled up.",
+        "Distinguishing structural budget changes (new tax, sector deregulation) from cyclical allocations (higher capex for one year) is qualitative and hard to automate.",
+        "Slippage on budget day is extreme \u2014 true slippage may be 10-20 bps, not 3 bps. The edge math assumes normal slippage which is unrealistic."
+      ],
+      "prior_art": "Cutler, Poterba & Summers (1989) 'What Moves Stock Prices?' \u2014 event-driven returns. In India, Gupta & Kundu (2006) study budget day stock market reactions. Mohanty (2013) analyzes fiscal policy impact"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "event_driven volatility rbi",
+      "family_slug": "event_driven_volatility_rbi",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_122.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_129.json",
+      "cosine": 0.6522
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "name": "heikin_ashi_trend_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "advanced_technical",
+    "heikin_ashi",
+    "trend_following",
+    "noise_reduction"
+  ],
+  "thesis": "Heikin Ashi (HA) candles smooth price action by averaging: HA_close = (O+H+L+C)/4, HA_open = (prev_HA_open + prev_HA_close)/2, HA_high = max(H, HA_open, HA_close), HA_low = min(L, HA_open, HA_close). The smoothing creates cleaner trends with fewer reversals, making trend identification on noisy 1-min bars more reliable. Key HA signals: (1) consecutive green HA candles with no lower wick = strong uptrend, (2) HA candles with both wicks = indecision/reversal, (3) consecutive red HA with no upper wick = strong downtrend. The inefficiency exists because: (1) most Indian retail traders use regular candles on 1-min charts, getting whipsawed by noise, (2) HA smoothing reveals the 'true' trend by filtering single-bar spikes that trigger false signals on regular charts, (3) HA color changes lag regular candles by 1-2 bars, but this lag is a feature — it confirms real reversals, not noise.",
+  "universe": "NIFTY 50 constituents + NIFTY 50 index",
+  "stock_filter": "ADV > ₹40 crore",
+  "timeframe": "1min",
+  "session": "09:25-15:15 IST",
+  "hold_time": "5-20 min",
+  "max_hold_bars": 20,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 10,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "HA_close",
+      "formula": "(open + high + low + close) / 4",
+      "params": {}
+    },
+    {
+      "name": "HA_open",
+      "formula": "(prev_HA_open + prev_HA_close) / 2",
+      "params": {}
+    },
+    {
+      "name": "HA_color",
+      "formula": "'green' if HA_close > HA_open else 'red'",
+      "params": {}
+    },
+    {
+      "name": "HA_strength",
+      "formula": "'strong_up' if HA_color == 'green' AND HA_low == HA_open (no lower wick); 'strong_down' if HA_color == 'red' AND HA_high == HA_open (no upper wick); 'weak' otherwise",
+      "params": {}
+    },
+    {
+      "name": "HA_trend_count",
+      "formula": "consecutive count of same HA_color",
+      "params": {}
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "HA_color changes from 'red' to 'green' (color reversal)",
+        "HA_strength == 'strong_up' on the first green bar (no lower wick — conviction)",
+        "close > VWAP (actual price confirms HA signal)",
+        "HA_trend_count >= 2 for green (at least 2 consecutive green HA bars)"
+      ],
+      "confirmation": "EMA(close, 9) > EMA(close, 21) on actual (non-HA) price (dual confirmation)"
+    },
+    "short": {
+      "conditions": [
+        "HA_color changes from 'green' to 'red'",
+        "HA_strength == 'strong_down' on the first red bar (no upper wick)",
+        "close < VWAP",
+        "HA_trend_count >= 2 for red"
+      ],
+      "confirmation": "EMA(close, 9) < EMA(close, 21) on actual price"
+    },
+    "entry_price": "market order at confirmation bar close (using actual close, not HA close)"
+  },
+  "exit": {
+    "target": "20 bps from entry (actual price, not HA price)",
+    "stop_loss": "10 bps from entry",
+    "trailing_stop": "HA color changes to opposite (red for longs, green for shorts) — HA trailing stop",
+    "time_stop": "exit after 20 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "HA_strength changes to 'weak' (HA candle has both wicks — indecision)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.1,
+    "position_sizing": "₹1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX between 12 and 25 (need trends, not dead or chaotic markets)",
+    "time_filter": "no trades first 10 min or last 15 min",
+    "volume_filter": "volume on color change bar > SMA(volume, 10)",
+    "trend_filter": "HA trend direction must align with 50-bar EMA slope on actual price",
+    "spread_filter": "bid-ask < 5 bps",
+    "event_filter": "no filter (HA naturally smooths event-driven spikes)",
+    "other_filters": [
+      "skip if previous HA trend was < 3 bars long (choppy, color changes are noise)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 1.7,
+    "profit_factor_estimate": 1.28,
+    "edge_decay_risk": "Medium — Heikin Ashi is well-known but the specific entry criteria (color change + no-wick strength + EMA confirmation) create a more selective signal than simple HA color following."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "HA candles are derived from actual prices, not market-observable. The HA_open is synthetic and can't be traded — all entries/exits must use actual prices, creating a disconnect between signal and execution.",
+    "HA smoothing inherently lags actual price action by 1-2 bars. In fast-moving markets, the entry is already 5-10 bps late, reducing the reward-to-risk ratio.",
+    "The 'no lower wick = strong uptrend' rule is overly strict on 1-min bars — many genuine trends have occasional bars with tiny lower wicks that break the signal."
+  ],
+  "prior_art": "Munehisa Homma — historical Japanese candlestick analysis. Valcu (2004) 'Using Heikin Ashi Technique' in Technical Analysis of Stocks & Commodities. In India, HA charts are available on Zerodha Kite and are taught in basic technical analysis courses.",
+  "notes": "CRITICAL: all order placement must use actual prices, not HA prices. HA prices are synthetic and not market-observable. The strategy uses HA for SIGNAL GENERATION only and actual prices for EXECUTION. This distinction is often missed by traders who place limit orders at HA levels. Consider relaxing the 'no wick' rule to 'wick < 20% of HA body' to allow minor wicks in strong trends."
+}

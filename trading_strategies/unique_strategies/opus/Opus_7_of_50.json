@@ -1,0 +1,161 @@
+{
+  "name": "intraday_rsi_divergence_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "mean_reversion",
+    "divergence",
+    "rsi"
+  ],
+  "thesis": "Bullish/bearish RSI divergence on 1-min charts (price makes new low/high but RSI doesn't) signals exhaustion of the current micro-move. This works because momentum is decelerating even as price extends, typically caused by one-sided retail flow hitting diminishing institutional absorption. The pattern is well-known on daily charts but under-utilized on 1-min because visual divergence detection is hard to automate. A systematic detector with strict quantitative criteria captures this edge.",
+  "universe": "fno",
+  "stock_filter": "top 40 FnO stocks by avg daily turnover, exclude stocks with avg spread > 0.08%",
+  "timeframe": "1min",
+  "session": "09:30-14:45",
+  "hold_time": "5-30 bars",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_9",
+      "formula": "RSI(close, 9)",
+      "lookback": 9,
+      "purpose": "divergence detection"
+    },
+    {
+      "name": "swing_low_price",
+      "formula": "lowest low in past 20 bars",
+      "lookback": 20,
+      "purpose": "price swing detection"
+    },
+    {
+      "name": "swing_high_price",
+      "formula": "highest high in past 20 bars",
+      "lookback": 20,
+      "purpose": "price swing detection"
+    },
+    {
+      "name": "prev_swing_low_price",
+      "formula": "lowest low in bars 20-40 ago",
+      "lookback": 40,
+      "purpose": "prior swing for comparison"
+    },
+    {
+      "name": "prev_swing_high_price",
+      "formula": "highest high in bars 20-40 ago",
+      "lookback": 40,
+      "purpose": "prior swing for comparison"
+    },
+    {
+      "name": "rsi_at_swing_low",
+      "formula": "RSI(close, 9) at swing_low_price bar",
+      "lookback": 20,
+      "purpose": "RSI at current swing"
+    },
+    {
+      "name": "rsi_at_prev_swing_low",
+      "formula": "RSI(close, 9) at prev_swing_low_price bar",
+      "lookback": 40,
+      "purpose": "RSI at prior swing"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "swing_low_price < prev_swing_low_price (lower low in price)",
+        "rsi_at_swing_low > rsi_at_prev_swing_low (higher low in RSI = bullish divergence)",
+        "rsi_9 < 35",
+        "close > swing_low_price (price bouncing off the new low)"
+      ],
+      "confirmation": "close > open on signal bar (green candle at divergence low)"
+    },
+    "short": {
+      "conditions": [
+        "swing_high_price > prev_swing_high_price (higher high in price)",
+        "rsi_at_swing_high < rsi_at_prev_swing_high (lower high in RSI = bearish divergence)",
+        "rsi_9 > 65",
+        "close < swing_high_price"
+      ],
+      "confirmation": "close < open on signal bar (red candle at divergence high)"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "0.4% from entry or midpoint of the prior swing range",
+    "stop_loss": "0.3% beyond the divergence swing point",
+    "trailing_stop": "move SL to breakeven after +0.2%",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "rsi_9 crosses 50 from entry side"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "volume at divergence swing > SMA(volume, 20)",
+    "trend_filter": "none \u2014 divergence is a counter-trend signal by nature",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on stock-specific news days",
+    "other_filters": [
+      "minimum 15 bars between swing points for valid divergence"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.35,
+    "profit_factor_estimate": 1.46,
+    "edge_decay_risk": "medium \u2014 pattern is well-known but hard to automate, keeping competition low"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Swing point detection on 1-min is noisy \u2014 many false divergences in choppy markets",
+    "Lower win rate (52%) means long losing streaks are possible, testing risk limits",
+    "Divergence can persist for 50+ bars before resolving \u2014 time stop may cut winners short"
+  ],
+  "prior_art": "RSI divergence \u2014 classic Wilder-era concept. Systematic 1-min implementation is less common.",
+  "notes": "Consider using a more robust swing detection algorithm (e.g., fractals or ZigZag indicator).",
+  "_filepath": "all_trading_strategies/opus/Opus_7_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_7_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "divergence mean_reversion rsi",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/opus/Opus_48_of_50.json",
+      "all_trading_strategies/claude_project/claude_project_9_of_25.json"
+    ],
+    "different_pairs": []
+  }
+}

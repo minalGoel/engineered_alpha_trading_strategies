@@ -1,0 +1,109 @@
+{
+  "family": "institutional large-order flow-detection",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_030.json",
+      "name": "institutional_flow_momentum_v1",
+      "universe": "NIFTY 100 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "institutional",
+        "large-order",
+        "flow-detection",
+        "momentum",
+        "intraday"
+      ],
+      "thesis": "Large individual bar volume spikes (>5x SMA(volume,20)) that move price by >0.2% in one direction likely represent institutional block execution or large algo orders. These create temporary momentum because: (1) the large order itself moves the price, (2) other algos detect the large print and follo",
+      "indicators": [
+        "vol_spike",
+        "bar_return",
+        "abs_bar_return",
+        "VWAP",
+        "ATR_14",
+        "price_impact"
+      ],
+      "entry_long": [
+        "vol_spike > 5.0",
+        "bar_return > 0.2",
+        "close > VWAP",
+        "close > open (green bar)"
+      ],
+      "entry_short": [
+        "vol_spike > 5.0",
+        "bar_return < -0.2",
+        "close < VWAP",
+        "close < open (red bar)"
+      ],
+      "exit_target": "0.4% from entry",
+      "exit_stop": "0.2% from entry OR price crosses back to the open of the spike bar (impact fully reversed)",
+      "filters": [
+        "no specific filter \u2014 institutional flows occur regardless of VIX",
+        "no entries before 09:30 or after 14:30",
+        "vol_spike > 5x is the core filter (very strict)",
+        "VWAP direction should confirm the spike direction",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Not all volume spikes are institutional \u2014 could be ETF rebalancing, bulk deal, or single large retail order",
+        "The 5x volume threshold is very strict, reducing trade frequency to 1-2 per day across the universe",
+        "Entry is 2 bars after the spike \u2014 by then, initial price impact may have already decayed, entering after the best move"
+      ],
+      "prior_art": "Institutional flow detection: Kyle (1985) informed trading model. Volume spike analysis: Karpoff (1987) 'Relation Between Price Changes and Trading Volume'. Momentum ignition: Brogaard et al. (2014) '"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_102.json",
+      "name": "trade_size_clustering_v1",
+      "universe": "NIFTY 50 + NIFTY NEXT 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "microstructure",
+        "trade_size",
+        "clustering",
+        "institutional_flow"
+      ],
+      "thesis": "Institutional orders in Indian equities are often split into round-lot sizes (multiples of 100 or 500 shares) via TWAP/VWAP algorithms. When we detect clusters of trades at consistent round-lot sizes within a rolling window, it signals institutional accumulation or distribution. The inefficiency per",
+      "indicators": [
+        "round_lot_ratio",
+        "large_trade_pct",
+        "cluster_direction",
+        "VWAP_deviation"
+      ],
+      "entry_long": [
+        "round_lot_ratio > 0.4",
+        "large_trade_pct > 0.3",
+        "cluster_direction > 0",
+        "close >= VWAP"
+      ],
+      "entry_short": [
+        "round_lot_ratio > 0.4",
+        "large_trade_pct > 0.3",
+        "cluster_direction < 0",
+        "close <= VWAP"
+      ],
+      "exit_target": "30 bps from entry",
+      "exit_stop": "15 bps from entry",
+      "filters": [
+        "no filter (institutional flow persists across volatility regimes)",
+        "skip first 5 min and last 10 min of session",
+        "1-min volume > 50th percentile of session volume",
+        "align with NIFTY 50 intraday trend (above/below index VWAP)",
+        "bid-ask spread < 8 bps"
+      ],
+      "weaknesses": [
+        "Tick-level trade data in India is expensive and not available via standard Zerodha API. NSE TBT data feed required, adding infrastructure cost.",
+        "Institutional algos are increasingly randomizing trade sizes to avoid detection, directly degrading the round_lot_ratio signal quality.",
+        "False positives from retail traders who also trade round lots (especially in lower-priced stocks where 100 shares is a small notional)."
+      ],
+      "prior_art": "Easley, Lopez de Prado & O'Hara (2012) 'Flow Toxicity and Liquidity' (VPIN). Hasbrouck (2007) 'Empirical Market Microstructure' covers trade classification. Kyle (1985) 'Continuous Auctions and Inside"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "institutional large-order flow-detection",
+      "family_slug": "institutional_large_order_flow_detection",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_030.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_102.json",
+      "cosine": 0.6853
+    }
+  ]
+}

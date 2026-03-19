@@ -1,0 +1,2970 @@
+[
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.8388
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.8285
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "cosine": 0.8171
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "cosine": 0.7976
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "fp_b": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "cosine": 0.7764
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "cosine": 0.7691
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "cosine": 0.7539
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "cosine": 0.7402
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "fp_b": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "cosine": 0.7337
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "cosine": 0.7299
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "cosine": 0.7234
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "fp_b": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "cosine": 0.7202
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "cosine": 0.7099
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "fp_b": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "cosine": 0.7075
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.7031
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "cosine": 0.6948
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "cosine": 0.6942
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_17_of_50.json",
+    "cosine": 0.6877
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "cosine": 0.6826
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "cosine": 0.6704
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.6292
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.626
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "cosine": 0.6118
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+    "cosine": 0.6064
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.6056
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "cosine": 0.5928
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_22_of_50.json",
+    "cosine": 0.5907
+  },
+  {
+    "family": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "cosine": 0.573
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_18_of_20.json",
+    "cosine": 0.8745
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_13_of_50.json",
+    "cosine": 0.8298
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+    "cosine": 0.7845
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json",
+    "cosine": 0.781
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_18_of_20.json",
+    "cosine": 0.7558
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+    "fp_b": "all_trading_strategies/opus/Opus_13_of_50.json",
+    "cosine": 0.7532
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json",
+    "fp_b": "all_trading_strategies/opus/Opus_13_of_50.json",
+    "cosine": 0.747
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/gemini/gemini_18_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_13_of_50.json",
+    "cosine": 0.7244
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_18_of_20.json",
+    "cosine": 0.6809
+  },
+  {
+    "family": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+    "cosine": 0.6793
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+    "cosine": 0.9992
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+    "cosine": 0.9979
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+    "cosine": 0.9975
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "cosine": 0.9971
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "cosine": 0.9952
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+    "cosine": 0.9945
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+    "cosine": 0.992
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+    "cosine": 0.9916
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "cosine": 0.9909
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+    "cosine": 0.9909
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "cosine": 0.9908
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "cosine": 0.9905
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+    "cosine": 0.9869
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+    "cosine": 0.9867
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+    "cosine": 0.9863
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+    "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+    "cosine": 0.8265
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.8248
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+    "cosine": 0.8131
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+    "cosine": 0.7984
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+    "cosine": 0.7636
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+    "cosine": 0.7622
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.7476
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.7464
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+    "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+    "cosine": 0.7461
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.7457
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.7452
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.7448
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_4_of_10.json",
+    "cosine": 0.7425
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+    "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+    "cosine": 0.7399
+  },
+  {
+    "family": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+    "fp_b": "all_trading_strategies/opus/Opus_3_of_50.json",
+    "cosine": 0.7386
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+    "cosine": 0.9984
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+    "cosine": 0.9983
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+    "cosine": 0.9974
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_9_of_50.json",
+    "cosine": 0.8084
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.8002
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_9_of_50.json",
+    "cosine": 0.7985
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.7951
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "cosine": 0.7845
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+    "fp_b": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "cosine": 0.7833
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "cosine": 0.7775
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "cosine": 0.7607
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_9_of_50.json",
+    "cosine": 0.7542
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.7422
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_9_of_50.json",
+    "cosine": 0.7411
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.7407
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.7405
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "cosine": 0.7326
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_9_of_50.json",
+    "cosine": 0.7323
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "cosine": 0.7157
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "cosine": 0.7149
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "cosine": 0.7146
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.7107
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+    "cosine": 0.7086
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+    "cosine": 0.7069
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "cosine": 0.7069
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "cosine": 0.7066
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+    "cosine": 0.7052
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_3_of_10.json",
+    "cosine": 0.7023
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+    "fp_b": "all_trading_strategies/grok/Grok_1_of_10.json",
+    "cosine": 0.6922
+  },
+  {
+    "family": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_2_of_20.json",
+    "cosine": 0.6769
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json",
+    "cosine": 0.7887
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+    "cosine": 0.7798
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+    "cosine": 0.7129
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json",
+    "cosine": 0.7041
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+    "cosine": 0.6978
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+    "cosine": 0.691
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json",
+    "cosine": 0.6772
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json",
+    "cosine": 0.6407
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json",
+    "cosine": 0.6323
+  },
+  {
+    "family": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json",
+    "cosine": 0.632
+  },
+  {
+    "family": "keltner volatility trend_following",
+    "family_slug": "keltner_volatility_trend_following",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+    "cosine": 0.7989
+  },
+  {
+    "family": "keltner volatility trend_following",
+    "family_slug": "keltner_volatility_trend_following",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+    "fp_b": "all_trading_strategies/opus/Opus_27_of_50.json",
+    "cosine": 0.7381
+  },
+  {
+    "family": "keltner volatility trend_following",
+    "family_slug": "keltner_volatility_trend_following",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_27_of_50.json",
+    "cosine": 0.7329
+  },
+  {
+    "family": "mean_reversion microstructure psychological_level",
+    "family_slug": "mean_reversion_microstructure_psychologi",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_17_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_9_of_20.json",
+    "cosine": 0.6512
+  },
+  {
+    "family": "momentum factor composite",
+    "family_slug": "momentum_factor_composite",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_18_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_155.json",
+    "cosine": 0.7123
+  },
+  {
+    "family": "momentum factor composite",
+    "family_slug": "momentum_factor_composite",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_155.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_156.json",
+    "cosine": 0.7063
+  },
+  {
+    "family": "momentum factor composite",
+    "family_slug": "momentum_factor_composite",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_18_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_156.json",
+    "cosine": 0.6033
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/gpt/GPT_6_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+    "cosine": 0.803
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+    "cosine": 0.7924
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_6_of_10.json",
+    "cosine": 0.7869
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+    "cosine": 0.7814
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_6_of_10.json",
+    "cosine": 0.7707
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+    "cosine": 0.7665
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+    "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+    "cosine": 0.7635
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/gpt/GPT_6_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+    "cosine": 0.7471
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/opus/Opus_15_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+    "cosine": 0.7457
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_6_of_10.json",
+    "cosine": 0.7323
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+    "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+    "cosine": 0.7206
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/opus/Opus_10_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+    "cosine": 0.7178
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+    "cosine": 0.716
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/gpt/GPT_6_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+    "cosine": 0.7073
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+    "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+    "cosine": 0.6724
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+    "cosine": 0.6686
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+    "cosine": 0.6639
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+    "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+    "cosine": 0.6283
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/opus/Opus_10_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+    "cosine": 0.6136
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+    "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+    "cosine": 0.6083
+  },
+  {
+    "family": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+    "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+    "cosine": 0.5366
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_002.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_003.json",
+    "cosine": 0.9991
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_010.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "cosine": 0.9987
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.9986
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.9982
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "cosine": 0.9981
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "cosine": 0.998
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.998
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+    "cosine": 0.998
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "cosine": 0.998
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.9978
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "cosine": 0.9977
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "cosine": 0.9975
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+    "cosine": 0.9975
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_010.json",
+    "cosine": 0.9975
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.9973
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+    "cosine": 0.9972
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+    "cosine": 0.9971
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+    "cosine": 0.997
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "cosine": 0.9965
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "cosine": 0.9949
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+    "cosine": 0.9948
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "cosine": 0.9948
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.9947
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "cosine": 0.9945
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+    "cosine": 0.9944
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_010.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.9944
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+    "cosine": 0.9941
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_010.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+    "cosine": 0.994
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+    "cosine": 0.994
+  },
+  {
+    "family": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+    "cosine": 0.9938
+  },
+  {
+    "family": "vwap momentum trend",
+    "family_slug": "vwap_momentum_trend",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_20_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_005.json",
+    "cosine": 0.7774
+  },
+  {
+    "family": "macd momentum mean_reversion",
+    "family_slug": "macd_momentum_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json",
+    "cosine": 0.7558
+  },
+  {
+    "family": "macd momentum mean_reversion",
+    "family_slug": "macd_momentum_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json",
+    "cosine": 0.7077
+  },
+  {
+    "family": "macd momentum mean_reversion",
+    "family_slug": "macd_momentum_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+    "cosine": 0.6762
+  },
+  {
+    "family": "donchian breakout trend_following",
+    "family_slug": "donchian_breakout_trend_following",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_23_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_025.json",
+    "cosine": 0.7625
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_29_of_50.json",
+    "cosine": 0.8689
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "fp_b": "all_trading_strategies/opus/Opus_29_of_50.json",
+    "cosine": 0.8549
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_062.json",
+    "fp_b": "all_trading_strategies/opus/Opus_30_of_50.json",
+    "cosine": 0.8527
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_031.json",
+    "cosine": 0.8497
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_031.json",
+    "fp_b": "all_trading_strategies/opus/Opus_29_of_50.json",
+    "cosine": 0.8393
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "cosine": 0.8389
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_29_of_50.json",
+    "cosine": 0.8382
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_031.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "cosine": 0.8364
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_6_of_50.json",
+    "cosine": 0.8327
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "cosine": 0.8247
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/opus/Opus_29_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_6_of_50.json",
+    "cosine": 0.8225
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+    "fp_b": "all_trading_strategies/opus/Opus_6_of_50.json",
+    "cosine": 0.8215
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "cosine": 0.8128
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/grok/Grok_2_of_10.json",
+    "cosine": 0.8068
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "fp_b": "all_trading_strategies/grok/Grok_2_of_10.json",
+    "cosine": 0.8065
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "cosine": 0.7976
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+    "fp_b": "all_trading_strategies/opus/Opus_31_of_50.json",
+    "cosine": 0.7939
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "fp_b": "all_trading_strategies/opus/Opus_31_of_50.json",
+    "cosine": 0.7846
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_069.json",
+    "cosine": 0.7831
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_065.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_070.json",
+    "cosine": 0.7827
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_3_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_6_of_50.json",
+    "cosine": 0.7816
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_009.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_062.json",
+    "cosine": 0.7812
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_3_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_9_of_10.json",
+    "cosine": 0.7794
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "cosine": 0.7747
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/claude_project/claude_project_3_of_25.json",
+    "cosine": 0.7743
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_062.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+    "cosine": 0.774
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_062.json",
+    "cosine": 0.7732
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+    "fp_b": "all_trading_strategies/grok/Grok_2_of_10.json",
+    "cosine": 0.7714
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_009.json",
+    "fp_b": "all_trading_strategies/opus/Opus_6_of_50.json",
+    "cosine": 0.7707
+  },
+  {
+    "family": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_6_of_50.json",
+    "cosine": 0.7704
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.8296
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "cosine": 0.8176
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "cosine": 0.8056
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "cosine": 0.8029
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.8007
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "cosine": 0.7928
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "cosine": 0.7782
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "cosine": 0.7511
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "cosine": 0.7487
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "cosine": 0.7431
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "cosine": 0.7326
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "cosine": 0.7186
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.7047
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "cosine": 0.7014
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "cosine": 0.6974
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "cosine": 0.6908
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "cosine": 0.6768
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "cosine": 0.6759
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+    "cosine": 0.6757
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "cosine": 0.6724
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/opus/Opus_11_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.6713
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "cosine": 0.6709
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "cosine": 0.6568
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.634
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+    "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "cosine": 0.6031
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_1_of_10.json",
+    "cosine": 0.5993
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.577
+  },
+  {
+    "family": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "fp_a": "all_trading_strategies/opus/Opus_14_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+    "cosine": 0.5611
+  },
+  {
+    "family": "stat_arb relative_strength pairs",
+    "family_slug": "stat_arb_relative_strength_pairs",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_5_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_054.json",
+    "cosine": 0.7218
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+    "cosine": 0.9987
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+    "cosine": 0.9952
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+    "cosine": 0.994
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+    "cosine": 0.9128
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.8848
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+    "cosine": 0.8777
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+    "cosine": 0.8589
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+    "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+    "cosine": 0.8546
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.827
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+    "cosine": 0.823
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.8149
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+    "fp_b": "all_trading_strategies/grok/Grok_7_of_10.json",
+    "cosine": 0.7913
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+    "fp_b": "all_trading_strategies/grok/Grok_7_of_10.json",
+    "cosine": 0.7903
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+    "fp_b": "all_trading_strategies/grok/Grok_7_of_10.json",
+    "cosine": 0.7901
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+    "cosine": 0.7891
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+    "cosine": 0.7774
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+    "cosine": 0.773
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "cosine": 0.7718
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.7665
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.7616
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "cosine": 0.7615
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.7611
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "cosine": 0.7606
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+    "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+    "cosine": 0.7563
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "cosine": 0.755
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+    "fp_b": "all_trading_strategies/opus/Opus_25_of_50.json",
+    "cosine": 0.754
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_4_of_20.json",
+    "cosine": 0.7498
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+    "fp_b": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "cosine": 0.7476
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_17_of_20.json",
+    "cosine": 0.7467
+  },
+  {
+    "family": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+    "cosine": 0.7425
+  },
+  {
+    "family": "breakout volume volume_profile",
+    "family_slug": "breakout_volume_volume_profile",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_040.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_8_of_10.json",
+    "cosine": 0.8186
+  },
+  {
+    "family": "breakout volume volume_profile",
+    "family_slug": "breakout_volume_volume_profile",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_7_of_25.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_8_of_10.json",
+    "cosine": 0.7271
+  },
+  {
+    "family": "breakout volume volume_profile",
+    "family_slug": "breakout_volume_volume_profile",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_7_of_25.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_040.json",
+    "cosine": 0.7119
+  },
+  {
+    "family": "stat_arb lead_lag cross_asset",
+    "family_slug": "stat_arb_lead_lag_cross_asset",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_8_of_25.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_13_of_20.json",
+    "cosine": 0.767
+  },
+  {
+    "family": "divergence mean_reversion rsi",
+    "family_slug": "divergence_mean_reversion_rsi",
+    "fp_a": "all_trading_strategies/opus/Opus_48_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_7_of_50.json",
+    "cosine": 0.7834
+  },
+  {
+    "family": "divergence mean_reversion rsi",
+    "family_slug": "divergence_mean_reversion_rsi",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_9_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_7_of_50.json",
+    "cosine": 0.7562
+  },
+  {
+    "family": "divergence mean_reversion rsi",
+    "family_slug": "divergence_mean_reversion_rsi",
+    "fp_a": "all_trading_strategies/claude_project/claude_project_9_of_25.json",
+    "fp_b": "all_trading_strategies/opus/Opus_48_of_50.json",
+    "cosine": 0.6925
+  },
+  {
+    "family": "volatility breakout momentum",
+    "family_slug": "volatility_breakout_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_082.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_7_of_20.json",
+    "cosine": 0.768
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+    "cosine": 0.9988
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+    "cosine": 0.9986
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+    "cosine": 0.9985
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+    "cosine": 0.9933
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+    "cosine": 0.993
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+    "cosine": 0.9926
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+    "cosine": 0.784
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+    "cosine": 0.7824
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+    "cosine": 0.7811
+  },
+  {
+    "family": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+    "cosine": 0.78
+  },
+  {
+    "family": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "fp_a": "all_trading_strategies/gemini/gemini_19_of_20.json",
+    "fp_b": "all_trading_strategies/opus/Opus_8_of_50.json",
+    "cosine": 0.7677
+  },
+  {
+    "family": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_19_of_20.json",
+    "cosine": 0.7026
+  },
+  {
+    "family": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+    "fp_b": "all_trading_strategies/grok/Grok_3_of_10.json",
+    "cosine": 0.6916
+  },
+  {
+    "family": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+    "fp_b": "all_trading_strategies/opus/Opus_8_of_50.json",
+    "cosine": 0.6848
+  },
+  {
+    "family": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "fp_a": "all_trading_strategies/grok/Grok_3_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_8_of_50.json",
+    "cosine": 0.648
+  },
+  {
+    "family": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "fp_a": "all_trading_strategies/gemini/gemini_19_of_20.json",
+    "fp_b": "all_trading_strategies/grok/Grok_3_of_10.json",
+    "cosine": 0.6122
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "cosine": 0.9986
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "cosine": 0.9984
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "cosine": 0.998
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "cosine": 0.9978
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "cosine": 0.9973
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "cosine": 0.9973
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "cosine": 0.9966
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "cosine": 0.9962
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "cosine": 0.9962
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "cosine": 0.996
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "cosine": 0.9954
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "cosine": 0.9953
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "cosine": 0.9951
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "cosine": 0.9945
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "cosine": 0.9945
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "cosine": 0.9924
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "cosine": 0.9922
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "cosine": 0.9921
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "cosine": 0.992
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "cosine": 0.9907
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "cosine": 0.9887
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_3_of_20.json",
+    "cosine": 0.757
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7103
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7083
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7076
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7072
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7071
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7067
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+    "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+    "cosine": 0.7039
+  },
+  {
+    "family": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_3_of_20.json",
+    "cosine": 0.6856
+  },
+  {
+    "family": "breakout momentum volatility",
+    "family_slug": "breakout_momentum_volatility",
+    "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_squeeze_release_breakout_001.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_5_of_20.json",
+    "cosine": 0.7218
+  },
+  {
+    "family": "z-score statistical mean-reversion",
+    "family_slug": "z_score_statistical_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_002.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_013.json",
+    "cosine": 0.7756
+  },
+  {
+    "family": "vwap intraday crossover",
+    "family_slug": "vwap_intraday_crossover",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+    "cosine": 0.7541
+  },
+  {
+    "family": "vwap intraday crossover",
+    "family_slug": "vwap_intraday_crossover",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+    "cosine": 0.7112
+  },
+  {
+    "family": "vwap intraday crossover",
+    "family_slug": "vwap_intraday_crossover",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+    "cosine": 0.6904
+  },
+  {
+    "family": "vwap rsi confluence",
+    "family_slug": "vwap_rsi_confluence",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+    "fp_b": "all_trading_strategies/opus/Opus_41_of_50.json",
+    "cosine": 0.7855
+  },
+  {
+    "family": "vwap rsi confluence",
+    "family_slug": "vwap_rsi_confluence",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+    "fp_b": "all_trading_strategies/opus/Opus_41_of_50.json",
+    "cosine": 0.7374
+  },
+  {
+    "family": "vwap rsi confluence",
+    "family_slug": "vwap_rsi_confluence",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+    "cosine": 0.7353
+  },
+  {
+    "family": "momentum relative-strength index-relative",
+    "family_slug": "momentum_relative_strength_index_relativ",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+    "fp_b": "all_trading_strategies/opus/Opus_12_of_50.json",
+    "cosine": 0.7898
+  },
+  {
+    "family": "momentum relative-strength index-relative",
+    "family_slug": "momentum_relative_strength_index_relativ",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+    "cosine": 0.7455
+  },
+  {
+    "family": "momentum relative-strength index-relative",
+    "family_slug": "momentum_relative_strength_index_relativ",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+    "fp_b": "all_trading_strategies/opus/Opus_12_of_50.json",
+    "cosine": 0.6567
+  },
+  {
+    "family": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "fp_a": "all_trading_strategies/gpt/GPT_5_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_2_of_50.json",
+    "cosine": 0.8279
+  },
+  {
+    "family": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_011.json",
+    "fp_b": "all_trading_strategies/gpt/GPT_5_of_10.json",
+    "cosine": 0.8178
+  },
+  {
+    "family": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_011.json",
+    "fp_b": "all_trading_strategies/opus/Opus_2_of_50.json",
+    "cosine": 0.7137
+  },
+  {
+    "family": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "fp_a": "all_trading_strategies/gpt/GPT_5_of_10.json",
+    "fp_b": "all_trading_strategies/grok/Grok_5_of_10.json",
+    "cosine": 0.6793
+  },
+  {
+    "family": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "fp_a": "all_trading_strategies/grok/Grok_5_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_2_of_50.json",
+    "cosine": 0.6556
+  },
+  {
+    "family": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_011.json",
+    "fp_b": "all_trading_strategies/grok/Grok_5_of_10.json",
+    "cosine": 0.6287
+  },
+  {
+    "family": "range high-low mean-reversion",
+    "family_slug": "range_high_low_mean_reversion",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_016.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_153.json",
+    "cosine": 0.6864
+  },
+  {
+    "family": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+    "cosine": 0.7714
+  },
+  {
+    "family": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+    "cosine": 0.749
+  },
+  {
+    "family": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+    "cosine": 0.742
+  },
+  {
+    "family": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+    "cosine": 0.7296
+  },
+  {
+    "family": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+    "cosine": 0.6826
+  },
+  {
+    "family": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+    "cosine": 0.6336
+  },
+  {
+    "family": "volume-weighted momentum vol-price-trend",
+    "family_slug": "volume_weighted_momentum_vol_price_trend",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_028.json",
+    "fp_b": "all_trading_strategies/opus/Opus_35_of_50.json",
+    "cosine": 0.6838
+  },
+  {
+    "family": "institutional large-order flow-detection",
+    "family_slug": "institutional_large_order_flow_detection",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_030.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_102.json",
+    "cosine": 0.6853
+  },
+  {
+    "family": "hull-ma weighted-ma low-lag",
+    "family_slug": "hull_ma_weighted_ma_low_lag",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_035.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_15_of_20.json",
+    "cosine": 0.7002
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+    "cosine": 0.8501
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+    "cosine": 0.8472
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+    "cosine": 0.7771
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+    "cosine": 0.7758
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+    "cosine": 0.7673
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+    "cosine": 0.7534
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+    "cosine": 0.7492
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+    "cosine": 0.7418
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json",
+    "cosine": 0.7385
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+    "cosine": 0.7357
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json",
+    "cosine": 0.7333
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json",
+    "cosine": 0.7322
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+    "cosine": 0.7185
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+    "cosine": 0.7076
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json",
+    "cosine": 0.6974
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+    "cosine": 0.6959
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+    "cosine": 0.6868
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json",
+    "cosine": 0.6731
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+    "cosine": 0.6591
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+    "cosine": 0.6584
+  },
+  {
+    "family": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json",
+    "cosine": 0.6478
+  },
+  {
+    "family": "consolidation breakout intraday",
+    "family_slug": "consolidation_breakout_intraday",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_041.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_044.json",
+    "cosine": 0.6953
+  },
+  {
+    "family": "pivot-points support-resistance breakout",
+    "family_slug": "pivot_points_support_resistance_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_042.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_148.json",
+    "cosine": 0.7016
+  },
+  {
+    "family": "fibonacci retracement breakout",
+    "family_slug": "fibonacci_retracement_breakout",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_046.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_20_of_20.json",
+    "cosine": 0.7256
+  },
+  {
+    "family": "index-correlated nifty-confirmed breakout",
+    "family_slug": "index_correlated_nifty_confirmed_breakou",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_120.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_164.json",
+    "cosine": 0.8112
+  },
+  {
+    "family": "index-correlated nifty-confirmed breakout",
+    "family_slug": "index_correlated_nifty_confirmed_breakou",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_048.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_164.json",
+    "cosine": 0.7088
+  },
+  {
+    "family": "index-correlated nifty-confirmed breakout",
+    "family_slug": "index_correlated_nifty_confirmed_breakou",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_048.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_120.json",
+    "cosine": 0.6328
+  },
+  {
+    "family": "multi-timeframe 1min-5min alignment",
+    "family_slug": "multi_timeframe_1min_5min_alignment",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_049.json",
+    "fp_b": "all_trading_strategies/opus/Opus_45_of_50.json",
+    "cosine": 0.7333
+  },
+  {
+    "family": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+    "cosine": 0.7679
+  },
+  {
+    "family": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+    "cosine": 0.7304
+  },
+  {
+    "family": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+    "cosine": 0.7256
+  },
+  {
+    "family": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+    "cosine": 0.7043
+  },
+  {
+    "family": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+    "cosine": 0.6875
+  },
+  {
+    "family": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+    "cosine": 0.6748
+  },
+  {
+    "family": "cointegration stat_arb engle_granger",
+    "family_slug": "cointegration_stat_arb_engle_granger",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_058.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_185.json",
+    "cosine": 0.7659
+  },
+  {
+    "family": "correlation stat_arb regime_change",
+    "family_slug": "correlation_stat_arb_regime_change",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_059.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_177.json",
+    "cosine": 0.7291
+  },
+  {
+    "family": "stat_arb exchange_arb cross_listed",
+    "family_slug": "stat_arb_exchange_arb_cross_listed",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_060.json",
+    "fp_b": "all_trading_strategies/opus/Opus_21_of_50.json",
+    "cosine": 0.7757
+  },
+  {
+    "family": "gap intraday gap_fill",
+    "family_slug": "gap_intraday_gap_fill",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+    "cosine": 0.8358
+  },
+  {
+    "family": "gap intraday gap_fill",
+    "family_slug": "gap_intraday_gap_fill",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json",
+    "cosine": 0.7332
+  },
+  {
+    "family": "gap intraday gap_fill",
+    "family_slug": "gap_intraday_gap_fill",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json",
+    "cosine": 0.6587
+  },
+  {
+    "family": "gap relative_strength index_comparison",
+    "family_slug": "gap_relative_strength_index_comparison",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_067.json",
+    "fp_b": "all_trading_strategies/opus/Opus_32_of_50.json",
+    "cosine": 0.7555
+  },
+  {
+    "family": "momentum gap sector_leader",
+    "family_slug": "momentum_gap_sector_leader",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_115.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_186.json",
+    "cosine": 0.7661
+  },
+  {
+    "family": "momentum gap sector_leader",
+    "family_slug": "momentum_gap_sector_leader",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_068.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_115.json",
+    "cosine": 0.6966
+  },
+  {
+    "family": "momentum gap sector_leader",
+    "family_slug": "momentum_gap_sector_leader",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_068.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_186.json",
+    "cosine": 0.6064
+  },
+  {
+    "family": "volatility intraday implied_vol",
+    "family_slug": "volatility_intraday_implied_vol",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_074.json",
+    "fp_b": "all_trading_strategies/opus/Opus_28_of_50.json",
+    "cosine": 0.7663
+  },
+  {
+    "family": "volatility intraday implied_vol",
+    "family_slug": "volatility_intraday_implied_vol",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_085.json",
+    "fp_b": "all_trading_strategies/opus/Opus_28_of_50.json",
+    "cosine": 0.6943
+  },
+  {
+    "family": "volatility intraday implied_vol",
+    "family_slug": "volatility_intraday_implied_vol",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_074.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_085.json",
+    "cosine": 0.6253
+  },
+  {
+    "family": "intraday volatility low_vol_anomaly",
+    "family_slug": "intraday_volatility_low_vol_anomaly",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json",
+    "cosine": 0.7723
+  },
+  {
+    "family": "intraday volatility low_vol_anomaly",
+    "family_slug": "intraday_volatility_low_vol_anomaly",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+    "cosine": 0.6726
+  },
+  {
+    "family": "intraday volatility low_vol_anomaly",
+    "family_slug": "intraday_volatility_low_vol_anomaly",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json",
+    "cosine": 0.6275
+  },
+  {
+    "family": "hmm volatility regime_detection",
+    "family_slug": "hmm_volatility_regime_detection",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_083.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_166.json",
+    "cosine": 0.7745
+  },
+  {
+    "family": "orb intraday opening_range",
+    "family_slug": "orb_intraday_opening_range",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json",
+    "cosine": 0.736
+  },
+  {
+    "family": "orb intraday opening_range",
+    "family_slug": "orb_intraday_opening_range",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json",
+    "cosine": 0.6871
+  },
+  {
+    "family": "orb intraday opening_range",
+    "family_slug": "orb_intraday_opening_range",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+    "cosine": 0.6735
+  },
+  {
+    "family": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+    "fp_b": "all_trading_strategies/opus/Opus_46_of_50.json",
+    "cosine": 0.7792
+  },
+  {
+    "family": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+    "cosine": 0.7398
+  },
+  {
+    "family": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+    "cosine": 0.7244
+  },
+  {
+    "family": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+    "cosine": 0.7152
+  },
+  {
+    "family": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+    "fp_b": "all_trading_strategies/opus/Opus_46_of_50.json",
+    "cosine": 0.7077
+  },
+  {
+    "family": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+    "fp_b": "all_trading_strategies/opus/Opus_46_of_50.json",
+    "cosine": 0.644
+  },
+  {
+    "family": "orb intraday failure",
+    "family_slug": "orb_intraday_failure",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_098.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_099.json",
+    "cosine": 0.7583
+  },
+  {
+    "family": "orb intraday failure",
+    "family_slug": "orb_intraday_failure",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_094.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_099.json",
+    "cosine": 0.7446
+  },
+  {
+    "family": "orb intraday failure",
+    "family_slug": "orb_intraday_failure",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_094.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_098.json",
+    "cosine": 0.6877
+  },
+  {
+    "family": "microstructure price_impact mean_reversion",
+    "family_slug": "microstructure_price_impact_mean_reversi",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_105.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_108.json",
+    "cosine": 0.6656
+  },
+  {
+    "family": "sector_rotation momentum relative_strength",
+    "family_slug": "sector_rotation_momentum_relative_streng",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_111.json",
+    "fp_b": "all_trading_strategies/opus/Opus_19_of_50.json",
+    "cosine": 0.8007
+  },
+  {
+    "family": "relative_value mean_reversion industry_group",
+    "family_slug": "relative_value_mean_reversion_industry_g",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_116.json",
+    "fp_b": "all_trading_strategies/opus/Opus_20_of_50.json",
+    "cosine": 0.6836
+  },
+  {
+    "family": "event_driven volatility rbi",
+    "family_slug": "event_driven_volatility_rbi",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_122.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_129.json",
+    "cosine": 0.6522
+  },
+  {
+    "family": "expiry event_driven options",
+    "family_slug": "expiry_event_driven_options",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_123.json",
+    "fp_b": "all_trading_strategies/opus/Opus_37_of_50.json",
+    "cosine": 0.7885
+  },
+  {
+    "family": "momentum hybrid adaptive",
+    "family_slug": "momentum_hybrid_adaptive",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+    "fp_b": "all_trading_strategies/opus/Opus_42_of_50.json",
+    "cosine": 0.8398
+  },
+  {
+    "family": "momentum hybrid adaptive",
+    "family_slug": "momentum_hybrid_adaptive",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+    "cosine": 0.6806
+  },
+  {
+    "family": "momentum hybrid adaptive",
+    "family_slug": "momentum_hybrid_adaptive",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+    "fp_b": "all_trading_strategies/opus/Opus_42_of_50.json",
+    "cosine": 0.6731
+  },
+  {
+    "family": "mean-variance markowitz optimal-timing",
+    "family_slug": "mean_variance_markowitz_optimal_timing",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_159.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_175.json",
+    "cosine": 0.6561
+  },
+  {
+    "family": "ensemble hybrid meta-strategy",
+    "family_slug": "ensemble_hybrid_meta_strategy",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_160.json",
+    "fp_b": "all_trading_strategies/opus/Opus_50_of_50.json",
+    "cosine": 0.7523
+  },
+  {
+    "family": "quantitative entropy information-theory",
+    "family_slug": "quantitative_entropy_information_theory",
+    "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_174.json",
+    "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_188.json",
+    "cosine": 0.7417
+  },
+  {
+    "family": "mean_reversion momentum event_driven",
+    "family_slug": "mean_reversion_momentum_event_driven",
+    "fp_a": "all_trading_strategies/gemini/gemini_10_of_20.json",
+    "fp_b": "all_trading_strategies/gemini/gemini_6_of_20.json",
+    "cosine": 0.7239
+  },
+  {
+    "family": "breakout volatility narrow_range",
+    "family_slug": "breakout_volatility_narrow_range",
+    "fp_a": "all_trading_strategies/gemini/gemini_14_of_20.json",
+    "fp_b": "all_trading_strategies/grok/Grok_8_of_10.json",
+    "cosine": 0.8253
+  },
+  {
+    "family": "momentum index market",
+    "family_slug": "momentum_index_market",
+    "fp_a": "all_trading_strategies/gpt/GPT_10_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_49_of_50.json",
+    "cosine": 0.751
+  },
+  {
+    "family": "momentum index market",
+    "family_slug": "momentum_index_market",
+    "fp_a": "all_trading_strategies/opus/Opus_18_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_49_of_50.json",
+    "cosine": 0.7
+  },
+  {
+    "family": "momentum index market",
+    "family_slug": "momentum_index_market",
+    "fp_a": "all_trading_strategies/gpt/GPT_10_of_10.json",
+    "fp_b": "all_trading_strategies/opus/Opus_18_of_50.json",
+    "cosine": 0.6963
+  },
+  {
+    "family": "reversal s_r mean_reversion",
+    "family_slug": "reversal_s_r_mean_reversion",
+    "fp_a": "all_trading_strategies/grok/Grok_10_of_10.json",
+    "fp_b": "all_trading_strategies/grok/Grok_6_of_10.json",
+    "cosine": 0.6998
+  },
+  {
+    "family": "time_of_day microstructure closing_auction",
+    "family_slug": "time_of_day_microstructure_closing_aucti",
+    "fp_a": "all_trading_strategies/opus/Opus_34_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_38_of_50.json",
+    "cosine": 0.7706
+  },
+  {
+    "family": "time_of_day microstructure closing_auction",
+    "family_slug": "time_of_day_microstructure_closing_aucti",
+    "fp_a": "all_trading_strategies/opus/Opus_34_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_39_of_50.json",
+    "cosine": 0.7641
+  },
+  {
+    "family": "time_of_day microstructure closing_auction",
+    "family_slug": "time_of_day_microstructure_closing_aucti",
+    "fp_a": "all_trading_strategies/opus/Opus_38_of_50.json",
+    "fp_b": "all_trading_strategies/opus/Opus_39_of_50.json",
+    "cosine": 0.6098
+  }
+]

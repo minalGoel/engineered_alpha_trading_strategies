@@ -1,0 +1,142 @@
+{
+  "name": "atr_channel_breakout_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "volatility",
+    "breakout",
+    "channel",
+    "atr"
+  ],
+  "thesis": "Keltner Channel breakouts (close > EMA_20 + 2*ATR_20) with declining VIX signal legitimate expansion, not noise. The ATR-based channel adapts to current volatility, making breakouts more meaningful than fixed-percentage levels. Edge exists because Keltner Channels are less popular than Bollinger Bands in India, reducing crowding. Institutional flow that causes a genuine channel breakout persists for 15-45 bars.",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "15-45 bars",
+  "max_hold_bars": 60,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_20",
+      "formula": "EMA(close, 20)",
+      "lookback": 20,
+      "purpose": "channel midline"
+    },
+    {
+      "name": "kc_upper",
+      "formula": "EMA(close, 20) + 2 * ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "upper channel"
+    },
+    {
+      "name": "kc_lower",
+      "formula": "EMA(close, 20) - 2 * ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "lower channel"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "channel width and stops"
+    },
+    {
+      "name": "rel_volume",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "volume confirmation"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > kc_upper",
+        "rel_volume > 2.0",
+        "vix < 22",
+        "close > vwap"
+      ],
+      "confirmation": "bar closes above kc_upper with strong volume"
+    },
+    "short": {
+      "conditions": [
+        "close < kc_lower",
+        "rel_volume > 2.0",
+        "vix < 22",
+        "close < vwap"
+      ],
+      "confirmation": "bar closes below kc_lower with strong volume"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "1.5 * atr_20 from entry",
+    "stop_loss": "ema_20 (channel midline)",
+    "trailing_stop": "trail by 1.0 * atr_20 after +1.0 * atr_20",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "close crosses back inside channel"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no entries first 15 min or last 30 min",
+    "volume_filter": "rel_volume > 2.0 on breakout bar",
+    "trend_filter": "none \u2014 breakout determines direction",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on expiry day",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.46,
+    "avg_winner_to_loser": 1.7,
+    "profit_factor_estimate": 1.45,
+    "edge_decay_risk": "low \u2014 ATR-based channels adapt to conditions; less prone to overfitting"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Channel breakout on 1-min can be noisy \u2014 many false breakouts during lunch hour",
+    "Stop at ema_20 can be far from entry if ATR is large, increasing risk per trade",
+    "In low-vol environments, channel is narrow and breakouts are frequent but meaningless"
+  ],
+  "prior_art": "Keltner Channel breakout \u2014 Chester Keltner / Linda Raschke. Well-established.",
+  "notes": "Test with 1.5x and 2.5x ATR multipliers for channel width optimization.",
+  "_filepath": "all_trading_strategies/opus/Opus_27_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_27_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "keltner volatility trend_following",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+      "all_trading_strategies/claude_project/claude_project_16_of_25.json"
+    ],
+    "different_pairs": []
+  }
+}

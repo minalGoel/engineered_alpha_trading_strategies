@@ -1,0 +1,135 @@
+{
+  "name": "index_constituent_spread_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "stat_arb",
+    "index",
+    "constituent",
+    "mean_reversion"
+  ],
+  "thesis": "When a Nifty50 constituent deviates significantly from the index's intraday move (stock return vs beta-adjusted index return), it tends to converge. This is because index-level buying/selling (via ETFs and index futures) creates uniform pressure on all constituents, but execution lags cause some stocks to respond slower. The slow responders eventually catch up. Edge persists because computing real-time beta-adjusted residuals for 50 stocks requires continuous recalculation infrastructure.",
+  "universe": "nifty50",
+  "stock_filter": "all Nifty 50 constituents, ranked by beta-adjusted residual",
+  "timeframe": "1min",
+  "session": "09:30-14:45",
+  "hold_time": "15-60 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "rolling_beta_20day"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "stock_return_60",
+      "formula": "(close - close[60]) / close[60] * 100",
+      "lookback": 60,
+      "purpose": "stock's 60-bar return"
+    },
+    {
+      "name": "index_return_60",
+      "formula": "(nifty50_close - nifty50_close[60]) / nifty50_close[60] * 100",
+      "lookback": 60,
+      "purpose": "index's 60-bar return"
+    },
+    {
+      "name": "beta_adj_expected",
+      "formula": "rolling_beta_20day * index_return_60",
+      "lookback": 60,
+      "purpose": "expected stock return given index"
+    },
+    {
+      "name": "residual",
+      "formula": "stock_return_60 - beta_adj_expected",
+      "lookback": 60,
+      "purpose": "excess return over beta-adjusted expectation"
+    },
+    {
+      "name": "residual_zscore",
+      "formula": "(residual - SMA(residual, 120)) / STDDEV(residual, 120)",
+      "lookback": 120,
+      "purpose": "standardized residual"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "residual_zscore < -2.0 (stock underperforming index excessively)",
+        "vix < 22",
+        "abs(index_return_60) < 1.0 (not a macro shock day)"
+      ],
+      "confirmation": "residual_zscore turns upward (starts reverting)"
+    },
+    "short": {
+      "conditions": [
+        "residual_zscore > 2.0 (stock outperforming index excessively)",
+        "vix < 22",
+        "abs(index_return_60) < 1.0"
+      ],
+      "confirmation": "residual_zscore turns downward"
+    },
+    "entry_price": "market on confirmation"
+  },
+  "exit": {
+    "target": "residual_zscore crosses 0",
+    "stop_loss": "residual_zscore reaches ±3.0 or 0.5% absolute loss",
+    "trailing_stop": "move stop to breakeven when z-score crosses ±1.0",
+    "time_stop": "exit after 90 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "residual_zscore crosses 0"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "beta_adjusted — position size inversely proportional to beta",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 6000,
+    "max_portfolio_heat_pct": 2.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "skip if stock volume < 50% of 20-bar avg",
+    "trend_filter": "abs(index_return_60) < 1.0% — avoid extreme index days",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip stock on results day; skip on expiry day",
+    "other_filters": [
+      "skip stocks that just got added/removed from the index (beta unstable)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.05,
+    "profit_factor_estimate": 1.45,
+    "edge_decay_risk": "medium — structural but ETF arbitrageurs are getting faster"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "This is a single-leg trade (not hedged with index) so you have directional risk if index moves",
+    "Beta estimation error on rolling 20-day window can cause false residual signals",
+    "On stock-specific news days, the residual is driven by genuine information, not mean-reverting flow"
+  ],
+  "prior_art": "Index vs constituent spread trading — used by index arbitrage desks globally",
+  "notes": "Consider adding index futures hedge (short Nifty futures when long constituent) for purer alpha."
+}

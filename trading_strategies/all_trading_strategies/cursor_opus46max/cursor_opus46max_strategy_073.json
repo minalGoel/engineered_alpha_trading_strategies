@@ -1,0 +1,108 @@
+{
+  "name": "atr_breakout_volatility_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "volatility",
+    "ATR",
+    "breakout",
+    "channel",
+    "intraday"
+  ],
+  "thesis": "ATR-based channel breakouts (price exceeding N * ATR from a reference level) on 1-min bars capture genuine volatility expansion events. Unlike fixed-point breakouts, ATR channels adapt to each stock's current volatility regime, making them robust across different volatility environments. When price breaks above/below 2.0 * ATR(14) from the session's developing mean, it signals a shift from noise to signal — the move is statistically significant given the stock's current volatility. The inefficiency exists because most retail traders use fixed price levels (round numbers, prior day's H/L) for breakouts, ignoring that the significance threshold varies with volatility.",
+  "universe": "NIFTY 50 constituents on NSE",
+  "stock_filter": "daily avg volume > ₹200cr; ATR_14_daily > 1% (sufficient volatility for breakouts)",
+  "timeframe": "1min",
+  "session": "09:20-15:10 IST",
+  "hold_time": "15-60 mins typical",
+  "max_hold_bars": 90,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    "ATR_14 = ATR(high, low, close, 14) on 1-min bars",
+    "session_mean = SMA(close, from_session_open_bars)",
+    "upper_channel = session_mean + 2.0 * ATR_14",
+    "lower_channel = session_mean - 2.0 * ATR_14",
+    "ATR_expansion = ATR_14 / SMA(ATR_14, 60)  # ATR expansion ratio",
+    "volume_ratio = volume / SMA(volume, 20)",
+    "ADX_14 = ADX(high, low, close, 14)",
+    "close_position_in_range = (close - low_20) / (high_20 - low_20 + 0.01)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > upper_channel (breakout above 2.0 * ATR channel)",
+        "ATR_expansion > 1.2 (volatility expanding, not contracting)",
+        "volume_ratio > 1.5 (volume confirming breakout)",
+        "ADX_14 > 20 (trending, not choppy)"
+      ],
+      "confirmation": "breakout bar closes in upper 25% of its range (strong bar close)"
+    },
+    "short": {
+      "conditions": [
+        "close < lower_channel (breakdown below 2.0 * ATR channel)",
+        "ATR_expansion > 1.2",
+        "volume_ratio > 1.5",
+        "ADX_14 > 20"
+      ],
+      "confirmation": "breakdown bar closes in lower 25% of its range"
+    },
+    "entry_price": "market order on breakout/breakdown bar close"
+  },
+  "exit": {
+    "target": "3.0 * ATR_14 from entry (1.5x the channel width as continuation target)",
+    "stop_loss": "price re-enters channel (closes below upper_channel for longs, above lower_channel for shorts) OR 1.0 * ATR_14 from entry",
+    "trailing_stop": "after 1.5 * ATR_14 gain, trail at 0.75 * ATR_14 from highest/lowest close",
+    "time_stop": "exit if held > 60 mins without hitting 50% of target",
+    "eod_rule": "flatten by 15:10 IST",
+    "signal_exit": "if ATR_expansion drops below 1.0 (volatility contracting), exit — breakout losing steam"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "ATR-normalized: shares = (capital * 0.005) / (1.0 * ATR_14 * close)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX > 13 (need vol for breakouts); VIX < 25 (not chaotic)",
+    "time_filter": "best breakout windows: 09:20-10:30 and 13:30-15:00; avoid lunch lull",
+    "volume_filter": "breakout bar volume > 1.5x 20-bar SMA volume",
+    "trend_filter": "ADX_14 > 20 at time of breakout (directional movement present)",
+    "spread_filter": "bid-ask < 0.05%",
+    "event_filter": "skip if breakout coincides with broad market news event (false breakout risk higher)",
+    "other_filters": [
+      "skip if 3+ ATR channel breakouts already triggered today for this stock (over-traded)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 27,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.55,
+    "profit_factor_estimate": 1.68,
+    "edge_decay_risk": "low — ATR-based breakouts are adaptive and less subject to parameter decay than fixed-level breakouts"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The 2.0 * ATR multiplier is a single parameter with high sensitivity — at 1.5x many more false breakouts trigger, at 2.5x the entry is too late and most of the move is done",
+    "On range-bound days (ADX < 20 but briefly spiking to 20+), the ADX filter lets through false signals that mean-revert quickly",
+    "Session_mean as the channel center is noisy early in the session (first 30 mins) — channels are too narrow and generate spurious breakout signals"
+  ],
+  "prior_art": "Keltner (1960) channels; Wilder (1978) ATR. Modern ATR channel breakouts from Kaufman (2013) adaptive trading systems. Chande (1997) on volatility-adaptive systems.",
+  "notes": "Edge math: 0.52 * 60bps - 0.48 * 30bps = 31.2 - 14.4 = 16.8bps gross. Costs ~9bps RT. Net ~7.8bps/trade * 3 trades = ~23.4bps daily. The edge is entirely in the winner:loser ratio (1.55:1); win rate is near coin-flip. Discipline on stops is critical — every false breakout must be cut quickly."
+}

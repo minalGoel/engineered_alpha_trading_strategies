@@ -1,0 +1,141 @@
+{
+  "name": "post_halt_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "special-situation",
+    "trading-halt",
+    "momentum",
+    "circuit-breaker",
+    "event"
+  ],
+  "thesis": "When a stock hits its upper or lower circuit limit and trading is halted on NSE/BSE, there is an information asymmetry: the halt indicates extreme demand/supply imbalance, but the price has been artificially frozen. When the halt is lifted (or on the next trading session if the halt persists to close), the first 5-10 minutes show strong momentum continuation in ~65% of cases as the pent-up order flow resolves. The inefficiency exists because retail traders fear post-halt volatility and avoid trading, while institutional participants with faster systems capture the continuation. For partial halts (stock reopens after 45-min cooling period), the reopening bar provides a tradeable momentum signal.",
+  "universe": "All NSE F&O stocks that hit circuit limits intraday",
+  "stock_filter": "ADV(20) > \u20b925 Cr; stock must have been halted due to price movement (not regulatory/technical halt); F&O listed",
+  "timeframe": "1min",
+  "session": "Halt reopening time to 15:15 IST",
+  "hold_time": "5-20 min",
+  "max_hold_bars": 30,
+  "trades_per_day": "0-2 (event-dependent)",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "halt_notification_feed",
+      "pre_halt_price",
+      "circuit_limit_type"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "Halt_Direction",
+      "params": "+1 if upper circuit hit; -1 if lower circuit hit",
+      "lookback": "event"
+    },
+    {
+      "name": "Pre_Halt_Momentum",
+      "params": "ROC(close, 15) at the time of halt (how fast was the move)",
+      "lookback": 15
+    },
+    {
+      "name": "Reopen_Gap",
+      "params": "(reopen_price - halt_price) / halt_price * 10000 in bps",
+      "lookback": "event"
+    },
+    {
+      "name": "Reopen_Volume_Ratio",
+      "params": "volume_first_5_bars_post_halt / ADV(20) * 375 (normalized)",
+      "lookback": 5
+    },
+    {
+      "name": "Order_Imbalance",
+      "params": "(bid_quantity - ask_quantity) / (bid_quantity + ask_quantity) at reopen",
+      "lookback": "event"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Halt_Direction == +1 (upper circuit was hit \u2014 bullish halt)",
+        "Reopen_Gap >= 0 (stock reopens at or above halt price \u2014 demand persists)",
+        "Order_Imbalance > 0.3 (bids dominate asks at reopening)",
+        "Reopen_Volume_Ratio > 2.0 (high volume at reopening \u2014 genuine interest)"
+      ],
+      "confirmation": "First 2 bars after reopen close above reopen_price (momentum sustained)"
+    },
+    "short": {
+      "conditions": [
+        "Halt_Direction == -1 (lower circuit was hit \u2014 bearish halt)",
+        "Reopen_Gap <= 0 (stock reopens at or below halt price \u2014 supply persists)",
+        "Order_Imbalance < -0.3 (asks dominate bids at reopening)",
+        "Reopen_Volume_Ratio > 2.0"
+      ],
+      "confirmation": "First 2 bars after reopen close below reopen_price"
+    },
+    "entry_price": "market order after 2-bar confirmation post-reopen"
+  },
+  "exit": {
+    "target": "50 bps from entry (post-halt moves tend to be large)",
+    "stop_loss": "30 bps from entry (quick exit if halt momentum fades)",
+    "trailing_stop": "After 30 bps profit, trail at 15 bps from high-water mark",
+    "time_stop": "30 bars (30 min \u2014 post-halt momentum dissipates quickly)",
+    "eod_rule": "flatten",
+    "signal_exit": "Order_Imbalance flips sign (demand/supply balance reverses)"
+  },
+  "risk": {
+    "capital_per_trade": 75000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "Reduced size \u20b975K due to higher volatility; decrease to \u20b950K if VIX > 20",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; during market-wide panic (VIX > 25), circuit breaks may be systemic and continuation less reliable",
+    "time_filter": "Halt reopen must be at least 30 min before market close (reopen after 14:45 IST: skip)",
+    "volume_filter": "Reopen_Volume_Ratio > 2.0 (sufficient volume to confirm genuine interest, not just market makers)",
+    "trend_filter": "NIFTY 50 direction should agree with halt direction (bull market + upper circuit = stronger; bear market + upper circuit = weaker signal)",
+    "spread_filter": "Post-reopen bid-ask spread < 15 bps (wider than normal due to uncertainty)",
+    "event_filter": "Skip if halt is due to corporate action (bonus, split) rather than market forces",
+    "other_filters": [
+      "Stock must not have hit circuit on previous day (avoid serial circuit hitters where price discovery is impaired)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "Low \u2014 trading halts are episodic and unpredictable; each event is unique; difficult to build systematic algo around rare events, which reduces competition"
+  },
+  "costs": {
+    "slippage_bps_per_side": 5,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Trading halts are rare events (0-3 per day across entire F&O universe) \u2014 the strategy may go days without a signal, making it unviable as a standalone strategy",
+    "Post-halt spreads are significantly wider (10-20 bps vs normal 3-5 bps), increasing slippage costs and potentially eating the edge",
+    "Lower circuit halts in particular can be caused by genuinely bad news (fraud, regulatory action) where the momentum continuation is a trap \u2014 the stock may be down for fundamental reasons with further downside"
+  ],
+  "prior_art": "Corwin & Lipson (2000) on trading halts; Lee, Ready & Seguin (1994) on volume and volatility around halts; Indian circuit breaker mechanism studied by NSE working papers; post-halt drift documented in various markets",
+  "notes": "This strategy should be combined with other strategies as part of a portfolio approach given its low frequency. Consider using options instead of equity for post-halt trades to define risk more precisely. The order book data at reopen is critical for assessing demand/supply balance.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_196.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_196.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

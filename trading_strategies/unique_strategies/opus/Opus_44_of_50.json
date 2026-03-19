@@ -1,0 +1,130 @@
+{
+  "name": "pairs_plus_vix_overlay_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "hybrid",
+    "pairs",
+    "vix",
+    "stat_arb",
+    "overlay"
+  ],
+  "thesis": "Standard pairs trading (e.g., HDFCBANK/ICICIBANK) is enhanced by a VIX overlay: only enter pairs trades when VIX is in a 'calm' regime (< 16). During low-VIX environments, correlation between sector pairs is higher and spread mean reversion is faster and more reliable. When VIX > 20, correlations break down and pairs diverge for fundamental reasons. The VIX filter reduces the number of trades but dramatically improves win rate. Edge persists because most pairs traders don't use a vol-regime filter.",
+  "universe": "custom",
+  "stock_filter": "pre-defined pairs: HDFCBANK/ICICIBANK, TCS/INFY, RELIANCE/ONGC, SBIN/BANKBARODA",
+  "timeframe": "1min",
+  "session": "09:30-14:45",
+  "hold_time": "15-90 bars",
+  "max_hold_bars": 120,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "hedge_ratios"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "spread_zscore",
+      "formula": "(log(price_A) - hedge_ratio * log(price_B) - spread_mean) / spread_std",
+      "lookback": 120,
+      "purpose": "pairs spread"
+    },
+    {
+      "name": "vix_level",
+      "formula": "current India VIX value",
+      "lookback": 1,
+      "purpose": "regime filter"
+    },
+    {
+      "name": "spread_halflife",
+      "formula": "ADF regression halflife on rolling 500 bars",
+      "lookback": 500,
+      "purpose": "convergence speed"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "spread_zscore < -2.0",
+        "vix < 16 (calm regime only)",
+        "spread_halflife < 45 bars"
+      ],
+      "confirmation": "spread starts reverting"
+    },
+    "short": {
+      "conditions": [
+        "spread_zscore > 2.0",
+        "vix < 16",
+        "spread_halflife < 45 bars"
+      ],
+      "confirmation": "spread starts reverting"
+    },
+    "entry_price": "market on both legs simultaneously"
+  },
+  "exit": {
+    "target": "spread_zscore crosses 0",
+    "stop_loss": "spread_zscore reaches \u00b13.0",
+    "trailing_stop": "move stop to BE when z-score crosses \u00b11.0",
+    "time_stop": "exit after 120 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "spread_zscore crosses 0 OR vix crosses 18 (vol rising, exit early)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "hedge_ratio_adjusted",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.5
+  },
+  "filters": {
+    "vix_filter": "vix < 16 \u2014 strict calm-regime requirement",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "both legs > 50% of 20-bar avg volume",
+    "trend_filter": "none \u2014 market neutral",
+    "spread_filter": "skip if either leg spread > 0.08%",
+    "event_filter": "skip if either stock has results; skip on RBI day",
+    "other_filters": [
+      "exit if VIX crosses 18 during trade \u2014 regime changing"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.68,
+    "avg_winner_to_loser": 0.8,
+    "profit_factor_estimate": 1.7,
+    "edge_decay_risk": "medium \u2014 pairs with VIX filter is a known concept but underimplemented"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "VIX < 16 is a strict filter \u2014 may only be active 30-40% of trading days",
+    "Two-leg cost is double (~25 bps per pair trade round trip)",
+    "Calm-regime mean reversion edge is small \u2014 relies on high win rate with small winners"
+  ],
+  "prior_art": "Pairs trading with volatility regime filter \u2014 enhancing Gatev et al. with regime overlay",
+  "notes": "This is the 'quality over quantity' version of pairs trading. Fewer trades, higher quality.",
+  "_filepath": "all_trading_strategies/opus/Opus_44_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_44_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

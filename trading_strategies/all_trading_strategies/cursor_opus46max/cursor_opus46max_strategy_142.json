@@ -1,0 +1,138 @@
+{
+  "name": "elliott_impulse_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "advanced_technical",
+    "elliott_wave",
+    "impulse",
+    "wave_counting",
+    "trend"
+  ],
+  "thesis": "A simplified Elliott Wave impulse detection: instead of full 5-3 wave counting (which is subjective and unreliable on 1-min bars), we detect WAVE 3 characteristics — the strongest, most tradeable wave. Wave 3 has specific measurable properties: (1) it's the longest wave (>1.618x Wave 1 length), (2) volume is highest during Wave 3, (3) RSI reaches its most extreme reading during Wave 3. We identify a potential Wave 3 by detecting: a completed Wave 1 (impulse) + Wave 2 (retracement of 38.2-61.8% of Wave 1) + breakout above Wave 1 high with surge in volume. The trade enters at the Wave 2 completion / Wave 3 beginning and targets the 1.618 Fibonacci extension of Wave 1. The inefficiency exists because Elliott Wave is typically applied on daily/weekly charts; the 1-min application captures institutional order flow waves that repeat 3-5 times per session.",
+  "universe": "NIFTY 50 constituents + NIFTY 50 index",
+  "stock_filter": "ADV > ₹50 crore, intraday range > 0.5% average",
+  "timeframe": "1min",
+  "session": "09:25-15:15 IST",
+  "hold_time": "10-30 min (Wave 3 duration)",
+  "max_hold_bars": 30,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "wave1_detection",
+      "formula": "impulse move > 15 bps within 5-10 bars, identified by zigzag(0.1%)",
+      "params": {
+        "min_bps": 15,
+        "min_bars": 5,
+        "max_bars": 10
+      }
+    },
+    {
+      "name": "wave2_retracement",
+      "formula": "(wave1_high - wave2_low) / (wave1_high - wave1_low) for bullish pattern",
+      "params": {
+        "valid_range": [
+          0.382,
+          0.618
+        ]
+      }
+    },
+    {
+      "name": "wave3_breakout",
+      "formula": "close > wave1_high (bullish) or close < wave1_low (bearish)",
+      "params": {}
+    },
+    {
+      "name": "volume_surge_w3",
+      "formula": "volume_1min / SMA(volume_1min, 20) at wave3 breakout bar",
+      "params": {
+        "lookback": 20
+      }
+    },
+    {
+      "name": "RSI_14",
+      "formula": "RSI(close, 14)",
+      "params": {
+        "period": 14
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "wave1_detection == bullish (upward impulse identified)",
+        "wave2_retracement between 0.382 and 0.618 of wave1",
+        "wave3_breakout == True (close > wave1 high)",
+        "volume_surge_w3 > 1.5 (volume confirms breakout)"
+      ],
+      "confirmation": "RSI_14 > 50 AND RSI_14 > RSI_14[1] (momentum confirming)"
+    },
+    "short": {
+      "conditions": [
+        "wave1_detection == bearish (downward impulse identified)",
+        "wave2_retracement between 0.382 and 0.618 of wave1",
+        "wave3_breakout == True (close < wave1 low)",
+        "volume_surge_w3 > 1.5"
+      ],
+      "confirmation": "RSI_14 < 50 AND RSI_14 < RSI_14[1]"
+    },
+    "entry_price": "market order at wave3 breakout confirmation"
+  },
+  "exit": {
+    "target": "1.618 * wave1_length extension from wave2 end (standard Wave 3 target)",
+    "stop_loss": "wave2 low (bullish) or wave2 high (bearish) violated (wave count invalid)",
+    "trailing_stop": "10 bps trailing after 1.0 * wave1_length achieved",
+    "time_stop": "exit after 30 bars (wave3 should complete quickly)",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "RSI_14 reaches extreme (>80 for long, <20 for short) — wave3 likely exhausting"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹1L per trade, scale to ₹1.5L if wave1_length > 30 bps (strong pattern)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX > 12 AND < 25 (need some vol for wave patterns but not chaotic)",
+    "time_filter": "no trades first 10 min or last 15 min",
+    "volume_filter": "volume_surge at breakout > 1.5x average",
+    "trend_filter": "wave direction aligned with 50-bar EMA slope on 1-min chart",
+    "spread_filter": "bid-ask < 5 bps",
+    "event_filter": "skip on high-impact news days (wave patterns are noise during events)",
+    "other_filters": [
+      "wave1 must have completed within last 20 bars (fresh pattern, not stale)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Medium — Elliott Wave is subjective on higher timeframes but the simplified 3-indicator approach (impulse + retracement + breakout) is more systematic. The edge is in the automation, not the theory."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Elliott Wave counting is inherently subjective — even the simplified version has ambiguity in identifying wave boundaries on noisy 1-min data.",
+    "The 0.382-0.618 retracement range for Wave 2 is wide. Many random pullbacks will qualify, generating false Wave 3 signals.",
+    "Wave 3 targets (1.618 extension) may not be reached intraday for lower-volatility stocks, causing frequent time-stop exits with partial gains."
+  ],
+  "prior_art": "Elliott (1938) 'The Wave Principle'. Prechter & Frost (2001) 'Elliott Wave Principle'. Neely (1990) 'Mastering Elliott Wave'. In India, Elliott Wave is popular in technical analysis circles but systematic automated implementation is rare.",
+  "notes": "The key simplification: we don't count all 5 waves. We only identify Wave 1 (impulse), Wave 2 (retracement), and trade the Wave 3 extension. Waves 4 and 5 are ignored. This avoids the primary criticism of Elliott Wave — subjective wave counting — by reducing the pattern to three objective measurements."
+}

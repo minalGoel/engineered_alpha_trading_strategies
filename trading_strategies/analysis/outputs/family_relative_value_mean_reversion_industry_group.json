@@ -1,0 +1,104 @@
+{
+  "family": "relative_value mean_reversion industry_group",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_116.json",
+      "name": "industry_group_reversion_v1",
+      "universe": "6 industry groups: private banks (5), PSU banks (5), IT services (4), generic pharma (4), cement (4), auto OEMs (4)",
+      "timeframe": "1min",
+      "tags": [
+        "relative_value",
+        "mean_reversion",
+        "industry_group",
+        "cross_sectional"
+      ],
+      "thesis": "Within tightly correlated industry sub-groups (e.g., private banks, PSU banks, IT services, generic pharma), individual stock returns tend to revert to the group mean within the same trading day. When a stock deviates >15 bps from its industry group average return, the deviation is likely noise (ord",
+      "indicators": [
+        "group_avg_return",
+        "stock_deviation",
+        "deviation_zscore",
+        "group_correlation"
+      ],
+      "entry_long": [
+        "deviation_zscore < -2.0 (stock underperforming group by > 2 std)",
+        "stock_deviation < -15 bps (meaningful in bps terms)",
+        "group_correlation > 0.5 (group is correlated, reversion expected)",
+        "stock has no specific news today"
+      ],
+      "entry_short": [
+        "deviation_zscore > 2.0 (stock outperforming group by > 2 std)",
+        "stock_deviation > 15 bps",
+        "group_correlation > 0.5",
+        "stock has no specific news today"
+      ],
+      "exit_target": "stock_deviation reverts to 0 (stock returns to group average)",
+      "exit_stop": "deviation_zscore extends to \u00b13.0 (deviation widening \u2014 likely news-driven)",
+      "filters": [
+        "no VIX filter (intra-group reversion works across vol regimes)",
+        "skip first 15 min (group relationships establishing) and last 15 min",
+        "divergent stock volume > 50th percentile of its typical volume",
+        "no trend filter (relative reversion is trend-independent)",
+        "divergent stock bid-ask < 8 bps"
+      ],
+      "weaknesses": [
+        "Stock-specific news (analyst upgrade/downgrade, management commentary, deal wins) can cause legitimate divergence that doesn't revert. The 'no news' filter is imperfect.",
+        "Within-group correlation is not constant \u2014 on result season days, correlations drop as individual earnings drive stocks, reducing signal reliability.",
+        "Equal-weighted group averages may not be appropriate when one stock dominates the group by market cap (e.g., HDFC Bank in private banks)."
+      ],
+      "prior_art": "Gatev, Goetzmann & Rouwenhorst (2006) 'Pairs Trading: Performance of a Relative-Value Arbitrage Rule' \u2014 the foundational statistical arbitrage paper. Avellaneda & Lee (2010) 'Statistical Arbitrage in "
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_20_of_50.json",
+      "name": "basket_spread_mean_reversion_v1",
+      "universe": "custom",
+      "timeframe": "1min",
+      "tags": [
+        "stat_arb",
+        "basket",
+        "relative_value"
+      ],
+      "thesis": "A basket of 5 highly correlated private bank stocks (HDFCBANK, ICICIBANK, KOTAKBANK, AXISBANK, INDUSINDBK) tends to move together. When one stock's intraday return deviates by > 2 SD from the basket's average return, it reverts. This is a more robust version of pairs trading because the basket reduc",
+      "indicators": [
+        "stock_return_30",
+        "basket_avg_return_30",
+        "basket_std_return_30",
+        "stock_zscore",
+        "atr_20"
+      ],
+      "entry_long": [
+        "stock_zscore < -2.0 (stock lagging basket significantly)",
+        "basket_avg_return_30 > -0.3 (basket not in freefall)",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "stock_zscore > 2.0 (stock leading basket significantly)",
+        "basket_avg_return_30 < 0.3 (basket not in melt-up)",
+        "vix < 22"
+      ],
+      "exit_target": "stock_zscore crosses 0 (converges to basket avg)",
+      "exit_stop": "stock_zscore reaches \u00b13.5 or 0.4% absolute loss",
+      "filters": [
+        "vix < 22",
+        "no trades first 15 min or last 15 min",
+        "outlier stock must have normal volume (volume > 50% of 20-bar avg)",
+        "none \u2014 relative value, not directional",
+        "skip if outlier stock spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Single-leg trade (not hedged against basket) so directional risk remains",
+        "Stock-specific news (e.g., NPA announcement for one bank) causes permanent divergence, not mean reversion",
+        "Only 5 stocks in the basket \u2014 limited trade frequency; maybe 1-2 signals per day"
+      ],
+      "prior_art": "Basket relative value trading \u2014 common on institutional stat arb desks. Indian private banks are a known pair group."
+    }
+  ],
+  "pairs": [
+    {
+      "family": "relative_value mean_reversion industry_group",
+      "family_slug": "relative_value_mean_reversion_industry_g",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_116.json",
+      "fp_b": "all_trading_strategies/opus/Opus_20_of_50.json",
+      "cosine": 0.6836
+    }
+  ]
+}

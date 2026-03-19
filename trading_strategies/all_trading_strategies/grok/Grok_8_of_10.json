@@ -1,0 +1,103 @@
+{
+  "name": "nr7_breakout_v1",
+  "version": "0.1.0",
+  "author": "aggregated_from_x_indian_traders",
+  "tags": [
+    "breakout",
+    "narrow_range"
+  ],
+  "thesis": "Exploiting volatility expansion after NR7 (narrowest 7-day range) on 1-min. Inefficiency from compression buildup ignored by retail. Not arbitraged because needs volume + index filter; costs high for false breaks.",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO",
+  "timeframe": "1min",
+  "session": "09:20-15:15",
+  "hold_time": "15-45 bars",
+  "max_hold_bars": 60,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": false,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "nr7_flag"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "nr7_flag",
+      "formula": "today range is narrowest in last 7 days",
+      "lookback": 7,
+      "purpose": "setup"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "nr7_flag == True",
+        "close > high_1min",
+        "rel_volume > 2.0",
+        "vix < 22"
+      ],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": [
+        "nr7_flag == True",
+        "close < low_1min",
+        "rel_volume > 2.0",
+        "vix < 22"
+      ],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "2 * ATR(14)",
+    "stop_loss": "NR7 low/high",
+    "trailing_stop": "none",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 450000,
+    "max_risk_per_trade_pct": 0.35,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 30000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "none",
+    "volume_filter": "none",
+    "trend_filter": "none",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.51,
+    "avg_winner_to_loser": 2.3,
+    "profit_factor_estimate": 2.4,
+    "edge_decay_risk": "low \u2014 structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Regime dependency: low-vol periods produce no expansion",
+    "Liquidity constraints: NR7 often in illiquid names",
+    "Crowding: NR7/4 setups classic on X"
+  ],
+  "prior_art": "NR7 breaking system (SanJeet X post)",
+  "notes": "Requires daily range comparison."
+}

@@ -1,0 +1,125 @@
+{
+  "name": "momentum_reversal_regime_switch_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "hybrid",
+    "momentum",
+    "mean_reversion",
+    "regime"
+  ],
+  "thesis": "Markets alternate between momentum and mean-reversion regimes. This strategy uses ADX to detect the regime and switches between trend-following (ADX > 25) and mean-reversion (ADX < 18) approaches. In trending regimes: buy pullbacks to EMA(20). In range-bound regimes: fade VWAP extremes. The key insight is that the WRONG strategy in the wrong regime loses money — so regime detection is the alpha, not the individual entry rules. Edge persists because most traders pick one style and stick with it regardless of regime.",
+  "universe": "nifty50",
+  "stock_filter": "top 20 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "15-90 bars depending on regime",
+  "max_hold_bars": 120,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "adx_14",
+      "formula": "ADX(high, low, close, 14)",
+      "lookback": 14,
+      "purpose": "regime classification"
+    },
+    {
+      "name": "ema_20",
+      "formula": "EMA(close, 20)",
+      "lookback": 20,
+      "purpose": "trend pullback level"
+    },
+    {
+      "name": "vwap_zscore",
+      "formula": "(close - vwap) / rolling_std(close - vwap, 60)",
+      "lookback": 60,
+      "purpose": "mean reversion signal"
+    },
+    {
+      "name": "rsi_14",
+      "formula": "RSI(close, 14)",
+      "lookback": 14,
+      "purpose": "momentum filter"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "TRENDING REGIME (adx_14 > 25): close > ema_20 AND low touches ema_20 AND rsi_14 > 40 AND close > vwap",
+        "RANGE REGIME (adx_14 < 18): vwap_zscore < -1.5 AND rsi_14 < 35"
+      ],
+      "confirmation": "trending: bounce off EMA20; range: vwap_zscore turning up"
+    },
+    "short": {
+      "conditions": [
+        "TRENDING REGIME (adx_14 > 25): close < ema_20 AND high touches ema_20 AND rsi_14 < 60 AND close < vwap",
+        "RANGE REGIME (adx_14 < 18): vwap_zscore > 1.5 AND rsi_14 > 65"
+      ],
+      "confirmation": "trending: rejection at EMA20; range: vwap_zscore turning down"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "trending: 2.0 * atr_20; range: vwap_zscore crosses 0",
+    "stop_loss": "trending: 1.0 * atr_20; range: 1.2 * atr_20",
+    "trailing_stop": "trending: trail by 1.0 * atr_20 after target; range: move SL to BE after +0.2%",
+    "time_stop": "trending: 120 bars; range: 60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "trending: close below ema_20; range: vwap_zscore crosses 0"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 25",
+    "time_filter": "no trades first 15 min or last 30 min",
+    "volume_filter": "volume > 50% of SMA(volume, 20)",
+    "trend_filter": "ADX is the regime filter itself",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on stock result days",
+    "other_filters": [
+      "ADX between 18-25 is a dead zone — no trades"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.52,
+    "edge_decay_risk": "low — regime-aware trading is more robust than single-style"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "ADX dead zone (18-25) means no trading during transitions — but transitions are where regime is most unclear",
+    "ADX on 1-min is slow to react — regime may have shifted before ADX reflects it",
+    "Two separate strategy logics increase complexity and parameter count (overfitting risk)"
+  ],
+  "prior_art": "Regime-switching models — Hamilton (1989). Practical implementation with ADX as regime proxy.",
+  "notes": "Consider using a HMM (Hidden Markov Model) or ML classifier for more sophisticated regime detection."
+}

@@ -1,0 +1,169 @@
+{
+  "family": "vwap rsi confluence",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+      "name": "vwap_rsi_confluence_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "vwap",
+        "rsi",
+        "confluence",
+        "mean-reversion",
+        "double-confirmation"
+      ],
+      "thesis": "Combining VWAP deviation with RSI extremes creates a double confirmation filter that dramatically reduces false signals. When price is >0.5% below VWAP AND RSI(14) < 30, the stock is both underpriced relative to institutional fair value AND oversold on momentum. The confluence of two independent sig",
+      "indicators": [
+        "VWAP",
+        "vwap_dev_pct",
+        "RSI_14",
+        "RSI_slope",
+        "ATR"
+      ],
+      "entry_long": [
+        "vwap_dev_pct < -0.5",
+        "RSI(close, 14) < 30",
+        "India_VIX < 22",
+        "volume > SMA(volume, 20)"
+      ],
+      "entry_short": [
+        "vwap_dev_pct > 0.5",
+        "RSI(close, 14) > 70",
+        "India_VIX < 22",
+        "volume > SMA(volume, 20)"
+      ],
+      "exit_target": "VWAP line (vwap_dev_pct crosses 0) OR RSI crosses 50, whichever first",
+      "exit_stop": "0.4% from entry OR RSI makes new extreme (below 25 for longs, above 75 for shorts)",
+      "filters": [
+        "India_VIX < 22; confluence signals in panic markets are unreliable",
+        "no entries before 09:45 (RSI needs warmup) or after 14:30",
+        "volume > 1x 20-bar SMA",
+        "prefer longs when NIFTY 50 is not in a downtrend (NIFTY > EMA(NIFTY, 20))",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Signal is rare \u2014 both VWAP deviation >0.5% AND RSI <30 simultaneously may occur only 1-2 times per day across entire universe",
+        "RSI on 1-min bars is extremely noisy; 14-period RSI on 1-min = 14 minutes of data, which is short for reliable RSI readings",
+        "During strong sell-offs, both conditions persist for extended periods \u2014 entry timing within the confluence zone is still difficult"
+      ],
+      "prior_art": "Multi-indicator confluence is standard TA practice. VWAP + RSI is mentioned in various trading education (SMB Capital, Investors Underground). The specific thresholds (0.5% deviation + RSI<30) and the"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_41_of_50.json",
+      "name": "vwap_rsi_volume_confluence_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "hybrid",
+        "vwap",
+        "rsi",
+        "volume",
+        "confluence"
+      ],
+      "thesis": "Individual signals (VWAP deviation, RSI extreme, volume surge) are noisy alone. But when all three fire simultaneously \u2014 price > 1.5 SD below VWAP AND RSI(7) < 20 AND volume > 3x average \u2014 the probability of mean reversion is dramatically higher. This 3-factor confluence reduces false positives by ~",
+      "indicators": [
+        "vwap_zscore",
+        "rsi_7",
+        "vol_ratio",
+        "atr_20"
+      ],
+      "entry_long": [
+        "vwap_zscore < -1.5",
+        "rsi_7 < 20",
+        "vol_ratio > 3.0",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "vwap_zscore > 1.5",
+        "rsi_7 > 80",
+        "vol_ratio > 3.0",
+        "vix < 22"
+      ],
+      "exit_target": "vwap_zscore crosses 0 OR rsi_7 crosses 50",
+      "exit_stop": "1.2 * atr_20 from entry",
+      "filters": [
+        "vix < 22",
+        "no trades first 15 min or last 15 min",
+        "vol_ratio > 3.0 is a core condition",
+        "none \u2014 mean reversion",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Extremely rare signal \u2014 all three conditions firing simultaneously may happen 1-2 times per week across all 30 stocks",
+        "During genuine panic selloffs, all three fire but the stock keeps falling \u2014 stop loss is essential",
+        "Confluence requirement means you miss many trades where 2 of 3 conditions hold (and those might also be profitable)"
+      ],
+      "prior_art": "Multi-factor signal confluence \u2014 systematic trading concept. Specific VWAP+RSI+Volume combo is novel."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+      "name": "vwap_rsi_volume_hybrid_v1",
+      "universe": "NIFTY Next 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "hybrid",
+        "vwap",
+        "rsi",
+        "volume",
+        "mean-reversion",
+        "multi-factor"
+      ],
+      "thesis": "Intraday price tends to revert toward VWAP, but naked VWAP mean-reversion suffers from high false-positive rates. Adding RSI as an oversold/overbought filter and requiring abnormal volume (>1.5x 20-bar average) as confirmation materially improves hit rate. The inefficiency persists because most reta",
+      "indicators": [
+        "VWAP",
+        "RSI",
+        "Volume_Ratio",
+        "VWAP_Distance"
+      ],
+      "entry_long": [
+        "close < vwap AND VWAP_Distance < -40",
+        "RSI(close, 14) < 30",
+        "Volume_Ratio > 1.5"
+      ],
+      "entry_short": [
+        "close > vwap AND VWAP_Distance > 40",
+        "RSI(close, 14) > 70",
+        "Volume_Ratio > 1.5"
+      ],
+      "exit_target": "close crosses vwap (VWAP_Distance crosses zero from entry side)",
+      "exit_stop": "0.4% from entry price (40 bps hard stop)",
+      "filters": [
+        "India VIX < 25; if VIX > 20, halve position size",
+        "No new entries after 15:00 IST; no entries before 09:20 IST",
+        "Skip if stock 5-min volume < 50% of 20-day average for that 5-min bucket",
+        "NIFTY 50 not down > 1.5% from previous close (avoid crash days)",
+        "Bid-ask spread < 5 bps at time of entry"
+      ],
+      "weaknesses": [
+        "Triple confirmation is restrictive \u2014 may generate only 1-2 signals per day across entire universe, leading to significant opportunity cost",
+        "RSI(14) on 1-min bars is noisy and can whipsaw rapidly; 14-bar lookback on 1-min data captures only 14 minutes of price action",
+        "VWAP mean-reversion breaks down on strong trend days (e.g., post-RBI policy, budget days) where price can stay 100+ bps from VWAP for hours"
+      ],
+      "prior_art": "Berkowitz et al. (2005) on VWAP execution; Connors & Alvarez RSI(2) mean-reversion; various retail strategies combining VWAP+RSI on TradingView"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "vwap rsi confluence",
+      "family_slug": "vwap_rsi_confluence",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+      "fp_b": "all_trading_strategies/opus/Opus_41_of_50.json",
+      "cosine": 0.7855
+    },
+    {
+      "family": "vwap rsi confluence",
+      "family_slug": "vwap_rsi_confluence",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+      "fp_b": "all_trading_strategies/opus/Opus_41_of_50.json",
+      "cosine": 0.7374
+    },
+    {
+      "family": "vwap rsi confluence",
+      "family_slug": "vwap_rsi_confluence",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+      "cosine": 0.7353
+    }
+  ]
+}

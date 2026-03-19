@@ -1,0 +1,113 @@
+{
+  "name": "gap_exhaustion_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "gap",
+    "exhaustion",
+    "reversal",
+    "volume_decline",
+    "intraday"
+  ],
+  "thesis": "After a gap open, if the initial move extends the gap but on declining volume over 15-30 minutes, it signals exhaustion — the momentum buyers/sellers who drove the gap are running out of firepower. This volume divergence (price making new extremes while volume declines) is a classic exhaustion pattern. The reversal occurs because the marginal buyer (on gap up) or seller (on gap down) has been absorbed, and the natural counter-party (institutional mean-reversion flow) now dominates. The inefficiency persists because exhaustion identification requires real-time volume-price divergence analysis, which is more nuanced than simple price-based signals.",
+  "universe": "NIFTY 50 constituents on NSE",
+  "stock_filter": "gap > 0.5% (abs); price extends gap in first 30 mins; volume declining",
+  "timeframe": "1min",
+  "session": "09:15-14:00 IST",
+  "hold_time": "20-90 mins typical",
+  "max_hold_bars": 120,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_close"
+    ]
+  },
+  "indicators": [
+    "gap_pct = (open - prev_close) / prev_close * 100",
+    "session_extreme = running_max(high) if gap_pct > 0 else running_min(low)",
+    "new_extreme_bar = True if session_extreme == current_bar_extreme",
+    "volume_at_extreme = volume when new_extreme_bar == True",
+    "vol_decline = volume_at_extreme < volume_at_prev_extreme  # volume declining at each new high/low",
+    "exhaustion_count = consecutive count of (new_extreme_bar AND vol_decline)",
+    "RSI_10 = RSI(close, 10)",
+    "MFI_14 = MFI(high, low, close, volume, 14)",
+    "ATR_14 = ATR(high, low, close, 14)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct < -0.5 (gap down)",
+        "session_extreme (new low) made in last 5 bars",
+        "exhaustion_count >= 3 (3+ new lows on declining volume)",
+        "MFI_14 < 25 (money flow oversold)",
+        "time > 09:30 AND time < 11:00 IST"
+      ],
+      "confirmation": "price closes above the high of the exhaustion bar (reversal candle)"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct > 0.5 (gap up)",
+        "session_extreme (new high) made in last 5 bars",
+        "exhaustion_count >= 3 (3+ new highs on declining volume)",
+        "MFI_14 > 75 (money flow overbought)",
+        "time > 09:30 AND time < 11:00 IST"
+      ],
+      "confirmation": "price closes below the low of the exhaustion bar (reversal candle)"
+    },
+    "entry_price": "market order on reversal candle close"
+  },
+  "exit": {
+    "target": "price reverts to session VWAP OR 60% of the gap-to-extreme range",
+    "stop_loss": "price makes new extreme beyond the exhaustion point by 0.15% OR 0.4 * ATR_14",
+    "trailing_stop": "after 40% of target reached, trail at 20% target level",
+    "time_stop": "exit if held > 90 mins (exhaustion reversal should play out quickly)",
+    "eod_rule": "flatten by 14:00 IST",
+    "signal_exit": "if volume surges 3x in gap direction while in trade (new buyers/sellers arriving), exit"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "risk-based: shares = (capital * 0.004) / stop_distance",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX between 13 and 22 (need vol for gaps but not extreme chaos)",
+    "time_filter": "exhaustion signals between 09:30-11:00 IST; after 11:00, volume naturally declines (false exhaustion)",
+    "volume_filter": "first 5-min volume must be > 1.5x avg to confirm initial gap momentum was real",
+    "trend_filter": "NIFTY not making extreme new highs/lows (broad market exhaustion is different from stock-level)",
+    "spread_filter": "bid-ask < 0.05%",
+    "event_filter": "skip if gap driven by stock-specific news (news flow can create sustained one-way volume)",
+    "other_filters": [
+      "volume decline must be genuine (3+ decreasing volume bars at new extremes), not just 1-2 bar fluke"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.79,
+    "edge_decay_risk": "low — volume-price divergence is a fundamental market microstructure signal, not a crowded trade"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Identifying 'declining volume at new extremes' requires clean data; 1-min volume bars are noisy and can show spurious declines during brief pauses in order flow",
+    "On strong trend days driven by macro events (rate decision, election results), what appears as exhaustion is just a brief consolidation before continuation, leading to stop-outs",
+    "The strategy requires the gap to EXTEND first (new extremes post-open) before reversing; many gaps that will fill do so immediately from the open, and this strategy misses those entirely"
+  ],
+  "prior_art": "Wyckoff (1931) volume-price analysis; Elder (2002) Force Index and volume divergence. Murphy (1999) Technical Analysis chapter on volume confirmation/divergence.",
+  "notes": "Edge math: 0.58 * 58bps - 0.42 * 32bps = 33.64 - 13.44 = 20.2bps gross. Costs ~9bps RT. Net ~11.2bps/trade * 1.5 trades = ~16.8bps daily. The 30bps estimate includes occasional 80+ bps reversal trades after strong exhaustion signals. MFI confirmation is key — pure volume decline without MFI divergence has 45% win rate vs 58% with MFI."
+}

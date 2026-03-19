@@ -1,0 +1,125 @@
+{
+  "name": "wavelet_decomposition_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "wavelet",
+    "decomposition",
+    "multi-scale",
+    "signal-processing",
+    "quantitative"
+  ],
+  "thesis": "Financial price series contain information at multiple time scales — noise at the shortest scales, intraday trends at medium scales, and session-level direction at longer scales. Wavelet decomposition (Daubechies db4, 3-level) separates these scales cleanly, unlike moving averages which blur all frequencies together. By reconstructing the price using only the level-2 and level-3 detail coefficients (capturing 4-bar to 16-bar cycles), we extract the 'tradeable frequency' while discarding both noise (level-1) and slow drift (approximation). Trading signals are generated from the denoised price crossover with the original price. The inefficiency exists because wavelet analysis requires signal processing knowledge foreign to most traders.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr; sufficient 1-min data for wavelet decomposition (at least 64 bars)",
+  "timeframe": "1min",
+  "session": "10:20-15:10 IST",
+  "hold_time": "10-30 min (aligned with level-2/3 cycle length)",
+  "max_hold_bars": 45,
+  "trades_per_day": "3-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "Wavelet_Denoised",
+      "params": "pywt.wavedec(close, 'db4', level=3); zero out cD1 coefficients; reconstruct via pywt.waverec",
+      "lookback": 64
+    },
+    {
+      "name": "Denoised_Slope",
+      "params": "linreg_slope(Wavelet_Denoised, 5) * 10000 (bps per bar)",
+      "lookback": 5
+    },
+    {
+      "name": "Denoised_vs_Raw",
+      "params": "(close - Wavelet_Denoised) / close * 10000 (divergence in bps)",
+      "lookback": 64
+    },
+    {
+      "name": "Detail_Energy_L2",
+      "params": "sum(cD2^2) / sum(all_coefficients^2) — proportion of energy at level 2",
+      "lookback": 64
+    },
+    {
+      "name": "VWAP_Distance",
+      "params": "(close - vwap) / vwap * 10000",
+      "lookback": "session"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close crosses above Wavelet_Denoised (raw price emerging above denoised trend)",
+        "Denoised_Slope > 3 bps/bar (denoised trend is up)",
+        "Detail_Energy_L2 > 0.20 (sufficient energy at tradeable frequency — market is moving)",
+        "close > vwap"
+      ],
+      "confirmation": "close > Wavelet_Denoised for 2 consecutive bars after crossover"
+    },
+    "short": {
+      "conditions": [
+        "close crosses below Wavelet_Denoised",
+        "Denoised_Slope < -3 bps/bar (denoised trend is down)",
+        "Detail_Energy_L2 > 0.20",
+        "close < vwap"
+      ],
+      "confirmation": "close < Wavelet_Denoised for 2 consecutive bars after crossover"
+    },
+    "entry_price": "market order after confirmation"
+  },
+  "exit": {
+    "target": "35 bps from entry",
+    "stop_loss": "20 bps from entry",
+    "trailing_stop": "After 20 bps profit, trail at 12 bps from high-water mark",
+    "time_stop": "45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Denoised_Slope crosses zero against position direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "Fixed ₹1L; scale to ₹1.25L if Detail_Energy_L2 > 0.35 (strong cycle at tradeable frequency)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25",
+    "time_filter": "No entries before 10:20 (need 64 bars for wavelet decomposition) or after 15:10",
+    "volume_filter": "Volume > SMA(volume, 20) on entry bar",
+    "trend_filter": "Denoised_Slope of NIFTY 50 must agree with trade direction",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "Wavelet decomposition must use at least 64 data points for 3-level db4 decomposition"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.15,
+    "profit_factor_estimate": 1.41,
+    "edge_decay_risk": "Low — wavelet decomposition is from signal processing, not finance; very few traders implement it for real-time trading; the denoising provides genuinely cleaner signals than EMAs"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Wavelet decomposition on a rolling window introduces boundary effects — the most recent coefficients are least reliable, which is precisely where trading signals are generated",
+    "The 64-bar minimum window means no trading until 10:20 IST, missing the morning session; and each recomputation on the full window adds latency",
+    "Choosing db4 wavelet and 3-level decomposition is somewhat arbitrary — different wavelets (Haar, Symlet) and levels produce different decompositions, and there's no principled way to select the 'right' one for financial data"
+  ],
+  "prior_art": "Ramsey & Lampart (1998) on wavelets in economics; Gençay et al. (2001) 'An Introduction to Wavelets and Other Filtering Methods in Finance and Economics'; wavelet denoising for trading signals in Addison (2002)",
+  "notes": "Consider using the stationary wavelet transform (SWT) instead of the discrete wavelet transform (DWT) to avoid boundary effects. The pywt library in Python provides both. Also consider maximal overlap DWT (MODWT) for shift-invariant decomposition."
+}

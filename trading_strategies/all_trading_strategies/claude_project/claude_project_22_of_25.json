@@ -1,0 +1,122 @@
+{
+  "name": "sector_etf_spread_reversion_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "stat_arb",
+    "sector",
+    "mean_reversion"
+  ],
+  "thesis": "The spread between a stock and its sector index (e.g., a bank stock vs Bank NIFTY) mean-reverts intraday because sector-wide flows affect all constituents, and temporary divergences reflect order flow timing rather than information. The inefficiency exists because sector index data isn't typically used in stock-level trading decisions by retail. Not fully arbitraged because hedging with sector indices requires futures which adds complexity.",
+  "universe": "fno",
+  "stock_filter": "Bank NIFTY constituents with ADV > ₹50cr",
+  "timeframe": "1min",
+  "session": "09:30-15:00",
+  "hold_time": "15-90 bars",
+  "max_hold_bars": 120,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "banknifty",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "banknifty_1min_returns"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "stock_return_20",
+      "formula": "(close - close[20]) / close[20] * 100",
+      "lookback": 20,
+      "purpose": "stock return over 20 bars"
+    },
+    {
+      "name": "sector_return_20",
+      "formula": "(banknifty - banknifty[20]) / banknifty[20] * 100",
+      "lookback": 20,
+      "purpose": "sector return over 20 bars"
+    },
+    {
+      "name": "sector_residual",
+      "formula": "stock_return_20 - beta_to_sector * sector_return_20",
+      "lookback": 0,
+      "purpose": "residual relative to sector"
+    },
+    {
+      "name": "residual_zscore",
+      "formula": "zscore(sector_residual, 90)",
+      "lookback": 90,
+      "purpose": "normalized residual"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "residual_zscore < -1.8",
+        "vix < 24",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "residual_zscore < -1.8 for 2 consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "residual_zscore > 1.8",
+        "vix < 24",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "residual_zscore > 1.8 for 2 consecutive bars"
+    },
+    "entry_price": "market on confirmation"
+  },
+  "exit": {
+    "target": "residual_zscore crosses 0",
+    "stop_loss": "0.5% from entry OR residual_zscore hits ±3.0",
+    "trailing_stop": "none",
+    "time_stop": "exit after 120 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "residual_zscore crosses 0"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 12000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 24",
+    "time_filter": "no trades first 15 min or last 20 min",
+    "volume_filter": "volume > 80% of 20-bar avg",
+    "trend_filter": "none — sector-neutral by design",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on RBI policy day",
+    "other_filters": [
+      "skip if stock has stock-specific news"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 0.85,
+    "profit_factor_estimate": 1.13,
+    "edge_decay_risk": "medium — structural but depends on sector cohesion"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Sector residual is directional (no hedge). You're exposed to both stock-specific and market-wide risk. Without a Bank NIFTY futures hedge, it's not true stat arb.",
+    "Beta to sector is unstable intraday — using a fixed beta estimate from daily data introduces model risk.",
+    "On days with stock-specific news (credit rating change, earnings), the residual divergence is information-driven and won't revert."
+  ],
+  "prior_art": "Sector relative value trading. Standard in institutional equity long-short. Simplified to intraday single-stock without hedge.",
+  "notes": "Ideally pair with Bank NIFTY futures short for true sector-neutral. Without hedge, treat as directional with relative value entry signal."
+}

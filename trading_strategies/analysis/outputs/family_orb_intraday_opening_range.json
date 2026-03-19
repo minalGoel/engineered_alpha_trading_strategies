@@ -1,0 +1,154 @@
+{
+  "family": "orb intraday opening_range",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+      "name": "orb_30min_volume_v1",
+      "universe": "NIFTY 50 constituents on NSE (top 15 by liquidity)",
+      "timeframe": "1min",
+      "tags": [
+        "ORB",
+        "opening_range",
+        "30min",
+        "volume_profile",
+        "intraday"
+      ],
+      "thesis": "The 30-minute opening range (09:15-09:45) is the most reliable ORB variant because it captures the full initial auction including mutual fund/FII order execution. Adding volume profile confirmation \u2014 the breakout must occur at or near the point of control (highest volume price) of the 30-min range \u2014",
+      "indicators": [],
+      "entry_long": [
+        "close > ORB_high_30 (breakout above 30-min range)",
+        "close > value_area_high (above value area \u2014 genuine break from accepted value)",
+        "volume_surge > 1.2 (above-average 30-min volume)",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "close < ORB_low_30",
+        "close < value_area_low",
+        "volume_surge > 1.2",
+        "close < vwap"
+      ],
+      "exit_target": "1.5 * ORB_range_30 from ORB_high/low",
+      "exit_stop": "POC_30 (point of control \u2014 if price returns to highest-volume area, thesis fails) OR 0.5 * ORB_range_30 inside range",
+      "filters": [
+        "India_VIX between 13 and 22",
+        "enter between 09:45-11:00 IST (breakout within ~75 mins of range completion)",
+        "opening 30-min total volume > 1.2x 20-day average",
+        "NIFTY 50 direction aligned with breakout direction (macro tailwind)",
+        "bid-ask < 0.04%"
+      ],
+      "weaknesses": [
+        "30-minute ORB provides a late entry (09:45 earliest); on strong gap days, the stock may already be 0.5-1.0% away from open, meaning much of the move is missed",
+        "Volume profile computation requires aggregating volume at each price level within 30 bars, which is data-intensive and may not be available via standard Zerodha API",
+        "The wider 30-min range means wider stops (compared to 5/15-min ORB), requiring more capital per trade to maintain the same risk-per-trade percentage"
+      ],
+      "prior_art": "Market Profile (Steidlmayer & Jones, 1988); Dalton et al. (2007) 'Markets in Profile'. ORB adapted from Crabel (1990) with Market Profile value area overlay."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json",
+      "name": "orb_vwap_confirmation_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "ORB",
+        "VWAP",
+        "dual_confirmation",
+        "institutional_flow",
+        "intraday"
+      ],
+      "thesis": "The standard ORB generates many false breakouts because it only considers price levels. Adding VWAP position as a confirmation filter \u2014 requiring price to be above VWAP for long breakouts and below VWAP for short breakdowns \u2014 filters for breakouts that have institutional flow support. VWAP represent",
+      "indicators": [],
+      "entry_long": [
+        "ORB_VWAP_aligned_long == True (above ORB high AND above VWAP)",
+        "vwap_dev_bps > 5 (meaningfully above VWAP, not just touching)",
+        "volume_ratio > 1.2",
+        "ORB_high_15 > vwap (ORB high itself is above VWAP \u2014 strong structure)"
+      ],
+      "entry_short": [
+        "ORB_VWAP_aligned_short == True (below ORB low AND below VWAP)",
+        "vwap_dev_bps < -5 (meaningfully below VWAP)",
+        "volume_ratio > 1.2",
+        "ORB_low_15 < vwap (ORB low itself is below VWAP)"
+      ],
+      "exit_target": "2.0 * ORB_range_15 from ORB_high/low",
+      "exit_stop": "price crosses VWAP against position (above VWAP for shorts, below for longs) OR ORB_mid",
+      "filters": [
+        "India_VIX between 12 and 22",
+        "enter 09:30-10:30 IST; VWAP is more stable after 30+ mins of trading",
+        "breakout bar volume > 1.2x 20-bar SMA",
+        "VWAP slope positive for long entries, negative for short entries",
+        "bid-ask < 0.04%"
+      ],
+      "weaknesses": [
+        "The VWAP position filter eliminates valid breakouts that occur BEFORE VWAP has adjusted (early morning when VWAP is still near open price and may be above ORB_high temporarily)",
+        "Using VWAP as a dynamic trailing stop means the stop moves against the trade in strong trends (VWAP lags price), potentially giving back significant gains before the stop triggers",
+        "Dual confirmation (ORB + VWAP + 2-bar hold) significantly delays entry; by the time all conditions align, the breakout may be 15-25 bps from the ORB level, reducing reward"
+      ],
+      "prior_art": "Fisher (2002) VWAP-based trading; Crabel (1990) ORB. Combining ORB with VWAP is discussed in Dalton et al. (2007) but not formalized as a systematic strategy."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+      "name": "orb_15min_filtered_v1",
+      "universe": "NIFTY 50 constituents on NSE (top 20 by liquidity)",
+      "timeframe": "1min",
+      "tags": [
+        "ORB",
+        "opening_range",
+        "15min",
+        "VIX_filter",
+        "intraday"
+      ],
+      "thesis": "The 15-minute opening range (09:15-09:30) provides a more reliable breakout level than 5-min ORB because it incorporates the full pre-open order matching and initial price discovery. Adding a VIX filter \u2014 only trading ORB breakouts when India VIX is between 13-20 \u2014 dramatically improves signal quali",
+      "indicators": [],
+      "entry_long": [
+        "close > ORB_high_15 (breakout above 15-min range)",
+        "VIX_at_open >= 13 AND VIX_at_open <= 20 (VIX filter)",
+        "volume_ratio > 1.3 at breakout",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "close < ORB_low_15",
+        "VIX_at_open >= 13 AND VIX_at_open <= 20",
+        "volume_ratio > 1.3 at breakdown",
+        "close < vwap"
+      ],
+      "exit_target": "2.0 * ORB_range_15 from ORB_high (long) or ORB_low (short)",
+      "exit_stop": "ORB_mid (midpoint of 15-min range) OR 0.5 * ORB_range_15 back inside range",
+      "filters": [
+        "CORE FILTER: India_VIX must be 13-20 at 09:30 IST; outside this range, no trades",
+        "enter between 09:30-10:30 IST (breakout within first hour post-range)",
+        "breakout bar volume > 1.3x 20-bar SMA",
+        "NIFTY 50 breaking out in same direction preferred (aligned ORB)",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "The VIX filter (13-20) eliminates ~35% of trading days, reducing signal frequency and capital utilization",
+        "The 2-bar confirmation delay means entering after the initial breakout bar; this can cause entry 5-15 bps above the breakout level, reducing the reward portion of risk-reward",
+        "On days where VIX is near the boundary (e.g., 12.8 or 20.3), the binary filter creates cliff effects \u2014 marginally excluded days may have good setups"
+      ],
+      "prior_art": "Crabel (1990) opening range breakout; Toby (1994) ORB with volatility filter. VIX conditioning inspired by Simon & Campasano (2014)."
+    }
+  ],
+  "pairs": [
+    {
+      "family": "orb intraday opening_range",
+      "family_slug": "orb_intraday_opening_range",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json",
+      "cosine": 0.736
+    },
+    {
+      "family": "orb intraday opening_range",
+      "family_slug": "orb_intraday_opening_range",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json",
+      "cosine": 0.6871
+    },
+    {
+      "family": "orb intraday opening_range",
+      "family_slug": "orb_intraday_opening_range",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+      "cosine": 0.6735
+    }
+  ]
+}

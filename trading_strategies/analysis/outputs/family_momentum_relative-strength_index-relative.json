@@ -1,0 +1,173 @@
+{
+  "family": "momentum relative-strength index-relative",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+      "name": "relative_momentum_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "relative-strength",
+        "momentum",
+        "index-relative",
+        "sector-rotation",
+        "intraday"
+      ],
+      "thesis": "Stocks showing intraday return > 2x NIFTY 50 intraday return (when NIFTY is up) exhibit persistent relative momentum for the remainder of the session. This occurs because institutional allocation decisions (mutual funds, FIIs) that drive one stock to outperform unfold over hours, not minutes. If HDF",
+      "indicators": [
+        "stock_return",
+        "nifty_return",
+        "relative_return",
+        "relative_return_30",
+        "VWAP"
+      ],
+      "entry_long": [
+        "relative_return > 0.5",
+        "relative_return_30 > 0.3",
+        "nifty_return > -0.5 (market not crashing)",
+        "close > VWAP",
+        "bar_count_from_open > 75 (after 10:30)"
+      ],
+      "entry_short": [
+        "relative_return < -0.5",
+        "relative_return_30 < -0.3",
+        "nifty_return < 0.5 (market not rallying hard)",
+        "close < VWAP",
+        "bar_count_from_open > 75"
+      ],
+      "exit_target": "0.5% absolute return on the stock (not relative)",
+      "exit_stop": "0.3% from entry OR relative_return flips sign (stock now underperforming)",
+      "filters": [
+        "no specific filter \u2014 relative momentum is market-condition-agnostic",
+        "no entries before 10:30 (need morning to establish RS) or after 14:30",
+        "volume > 0.8x SMA(volume, 20)",
+        "prefer longs when NIFTY is mildly positive (0-1%); strong trends reduce stock-level alpha",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Relative strength can be entirely driven by a single morning block deal \u2014 not sustained institutional flow",
+        "By 10:30 when the signal fires, much of the day's outperformance may already be priced in (look-ahead problem)",
+        "This is a directional bet on one stock (not hedged) \u2014 exposed to market risk even though it is RS-motivated"
+      ],
+      "prior_art": "Relative strength momentum: Levy (1967), Jegadeesh & Titman (1993) on daily/monthly timeframes. IBD Relative Strength Rating (daily). Intraday RS continuation is less documented. Minervini ('Trade Lik"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_12_of_50.json",
+      "name": "relative_strength_momentum_v1",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "relative_strength",
+        "sector"
+      ],
+      "thesis": "Stocks showing the strongest intraday returns relative to their sector peers in the first 60 minutes tend to continue outperforming for the next 2-3 hours. This is driven by information asymmetry \u2014 when one stock in a sector moves first, institutional flow follows into that specific name. The leader",
+      "indicators": [
+        "return_60bar",
+        "sector_avg_return_60",
+        "relative_strength_60",
+        "rs_rank",
+        "atr_20"
+      ],
+      "entry_long": [
+        "rs_rank > 90 (top 10% relative strength)",
+        "return_60bar > 0.5",
+        "close > vwap",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "rs_rank < 10 (bottom 10% relative strength)",
+        "return_60bar < -0.5",
+        "close < vwap",
+        "vix < 22"
+      ],
+      "exit_target": "0.5% from entry for longs; -0.5% for shorts",
+      "exit_stop": "0.3% against entry",
+      "filters": [
+        "vix < 22",
+        "compute rankings at 10:15; enter at 10:30; exit by 14:30",
+        "stock must have > \u20b910Cr turnover in first hour",
+        "for longs: nifty50 return from open > -0.3% (not a crash day)",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "First-hour leaders can be driven by one-off news that doesn't persist \u2014 mean reversion takes over",
+        "Sector classification matters a lot \u2014 misclassified stocks corrupt the ranking",
+        "On days when entire market is range-bound, relative strength rankings are noise"
+      ],
+      "prior_art": "Intraday momentum (Gao, Han, Li, Zhou 2018) \u2014 academic evidence for first-hour return persistence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+      "name": "vwap_relative_strength_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "vwap",
+        "relative-strength",
+        "index-relative",
+        "momentum",
+        "intraday"
+      ],
+      "thesis": "Comparing a stock's deviation from its VWAP to NIFTY 50's deviation from its VWAP reveals relative strength/weakness. If a stock is above its VWAP by 0.5% while NIFTY is below its VWAP, the stock is showing genuine relative strength \u2014 institutional buying is concentrated in that stock despite broad ",
+      "indicators": [
+        "stock_VWAP",
+        "nifty_VWAP",
+        "stock_vwap_dev",
+        "nifty_vwap_dev",
+        "relative_vwap_strength",
+        "rvs_sma_20"
+      ],
+      "entry_long": [
+        "relative_vwap_strength > 0.5",
+        "relative_vwap_strength > rvs_sma_20",
+        "stock_vwap_dev > 0",
+        "bar_count_from_open > 45"
+      ],
+      "entry_short": [
+        "relative_vwap_strength < -0.5",
+        "relative_vwap_strength < rvs_sma_20",
+        "stock_vwap_dev < 0",
+        "bar_count_from_open > 45"
+      ],
+      "exit_target": "0.6% from entry (ride the relative strength wave)",
+      "exit_stop": "0.3% from entry OR relative_vwap_strength crosses zero (lost relative edge)",
+      "filters": [
+        "no specific VIX filter \u2014 relative strength works across regimes",
+        "no entries before 10:00 (need 45 bars of data) or after 14:30",
+        "stock volume > 0.8x 20-bar SMA",
+        "prefer longs on days where NIFTY is range-bound (not >1% trend), as relative strength is more meaningful",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Requires real-time NIFTY 50 VWAP computation alongside stock VWAP \u2014 double the data infrastructure",
+        "Relative strength can flip quickly if sector rotation occurs mid-day (e.g., IT to banks)",
+        "In strong market trend days (>1.5% NIFTY move), all stocks move together and relative strength signals are noise"
+      ],
+      "prior_art": "Relative Strength (Mansfield, IBD RS rating) is well-established for daily timeframes. Intraday relative strength using VWAP-normalized deviations is less documented. Brian Shannon discusses relative "
+    }
+  ],
+  "pairs": [
+    {
+      "family": "momentum relative-strength index-relative",
+      "family_slug": "momentum_relative_strength_index_relativ",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+      "fp_b": "all_trading_strategies/opus/Opus_12_of_50.json",
+      "cosine": 0.7898
+    },
+    {
+      "family": "momentum relative-strength index-relative",
+      "family_slug": "momentum_relative_strength_index_relativ",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+      "cosine": 0.7455
+    },
+    {
+      "family": "momentum relative-strength index-relative",
+      "family_slug": "momentum_relative_strength_index_relativ",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+      "fp_b": "all_trading_strategies/opus/Opus_12_of_50.json",
+      "cosine": 0.6567
+    }
+  ]
+}

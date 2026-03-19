@@ -1,0 +1,93 @@
+{
+  "name": "prev_day_hl_reversal",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": ["mean_reversion"],
+  "thesis": "Exploits 'liquidity hunting' at major pivots. The Previous Day High (PDH) and Low (PDL) are significant levels where retail traders place stop orders. Price often 'tags' these levels, executes the stops (liquidity grab), and then reverses. Institutional algos fade these moves once liquidity is tapped.",
+  "universe": "nifty100",
+  "stock_filter": "all constituents",
+  "timeframe": "1min",
+  "session": "full_day",
+  "hold_time": "20-50 bars",
+  "max_hold_bars": 100,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "pdh",
+      "formula": "prev_day_high",
+      "lookback": 375,
+      "purpose": "level"
+    },
+    {
+      "name": "pdl",
+      "formula": "prev_day_low",
+      "lookback": 375,
+      "purpose": "level"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": ["low < pdl", "close > pdl", "rsi(14) < 30"],
+      "confirmation": "close > open"
+    },
+    "short": {
+      "conditions": ["high > pdh", "close < pdh", "rsi(14) > 70"],
+      "confirmation": "close < open"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "vwap touch",
+    "stop_loss": "0.4% from entry",
+    "trailing_stop": "none",
+    "time_stop": "40 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "none",
+    "volume_filter": "rel_vol > 1.2",
+    "trend_filter": "none",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 24.5,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "low — structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Breakouts can turn into strong trends",
+    "Level 'piercing' can be deep, hitting the stop loss first"
+  ],
+  "prior_art": "Pivot Point Reversion",
+  "notes": "Classic setup in Indian equity day trading."
+}

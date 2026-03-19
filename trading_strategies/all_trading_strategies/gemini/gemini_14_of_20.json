@@ -1,0 +1,93 @@
+{
+  "name": "narrow_range_7_breakout",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": ["volatility", "breakout"],
+  "thesis": "Exploits the NR7 pattern (Narrowest Range of last 7 days). This indicates extreme volatility compression. Intraday, if an NR7 stock breaks its previous day's high/low, it signifies a 'range expansion' phase. Market microstructure forces (stop hunting) propel the move once the range is broken.",
+  "universe": "nifty100",
+  "stock_filter": "NR7 candidates identified pre-market",
+  "timeframe": "1min",
+  "session": "09:20-11:00",
+  "hold_time": "60-180 bars",
+  "max_hold_bars": 300,
+  "trades_per_day": "1",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "pd_high",
+      "formula": "prev_day_high",
+      "lookback": 375,
+      "purpose": "level"
+    },
+    {
+      "name": "pd_low",
+      "formula": "prev_day_low",
+      "lookback": 375,
+      "purpose": "level"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": ["close > pd_high", "volume > sma(volume, 50)"],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": ["close < pd_low", "volume > sma(volume, 50)"],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "1.5 * (pd_high - pd_low) + entry",
+    "stop_loss": "0.5 * (pd_high - pd_low) distance",
+    "trailing_stop": "move to BE after 0.5% profit",
+    "time_stop": "none",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.6,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 1.2
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "first hour",
+    "volume_filter": "rel_vol > 1.0",
+    "trend_filter": "none",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 33.0,
+    "win_rate_estimate": 0.44,
+    "avg_winner_to_loser": 2.4,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "low — structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "False breakout 'fakeouts'",
+    "NR7 days can sometimes be followed by NR8 days (dead markets)"
+  ],
+  "prior_art": "Toby Crabel NR7",
+  "notes": "Pre-market scanner required for daily range ranking."
+}

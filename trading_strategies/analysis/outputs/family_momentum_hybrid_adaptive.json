@@ -1,0 +1,162 @@
+{
+  "family": "momentum hybrid adaptive",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+      "name": "momentum_reversion_switch_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "regime-switching",
+        "momentum",
+        "mean-reversion",
+        "hybrid",
+        "adaptive"
+      ],
+      "thesis": "Intraday markets alternate between momentum and mean-reversion regimes. During high-ADX periods (ADX(14) > 25), trend-following via EMA crossover outperforms. During low-ADX periods (ADX(14) < 18), Bollinger Band mean-reversion dominates. The inefficiency arises because most strategies are static \u2014 ",
+      "indicators": [
+        "ADX",
+        "EMA_fast",
+        "EMA_slow",
+        "BB_upper",
+        "BB_lower",
+        "BB_mid"
+      ],
+      "entry_long": [
+        "MOMENTUM_REGIME: ADX(14) > 25 AND EMA(close,9) crosses above EMA(close,21) AND close > vwap",
+        "REVERSION_REGIME: ADX(14) < 18 AND close < BB_lower AND close < vwap"
+      ],
+      "entry_short": [
+        "MOMENTUM_REGIME: ADX(14) > 25 AND EMA(close,9) crosses below EMA(close,21) AND close < vwap",
+        "REVERSION_REGIME: ADX(14) < 18 AND close > BB_upper AND close > vwap"
+      ],
+      "exit_target": "MOMENTUM: 50 bps from entry; REVERSION: close crosses BB_mid (SMA(close,20))",
+      "exit_stop": "MOMENTUM: 30 bps; REVERSION: 35 bps",
+      "filters": [
+        "No filter \u2014 strategy is regime-adaptive by design",
+        "No entries in first 5 min (09:15-09:20) or after 15:00 IST",
+        "Stock must have traded > 500 shares in last 5 bars",
+        "None \u2014 strategy adapts to both trending and ranging",
+        "Bid-ask spread < 5 bps"
+      ],
+      "weaknesses": [
+        "ADX(14) on 1-min bars takes ~28 bars to stabilize, losing the first 30 minutes of trading session to indicator warm-up",
+        "Regime classification in the ADX 18-25 'dead zone' is ambiguous \u2014 neither sub-strategy performs well, leading to whipsaws",
+        "Switching cost: each regime transition requires closing existing position and potentially reversing, doubling transaction costs during choppy transitions"
+      ],
+      "prior_art": "Ang & Timmermann (2012) regime-switching models; Kole & van Dijk (2017) on Markov-switching for trading; ADX regime classification is common in technical analysis literature"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_42_of_50.json",
+      "name": "momentum_reversal_regime_switch_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "hybrid",
+        "momentum",
+        "mean_reversion",
+        "regime"
+      ],
+      "thesis": "Markets alternate between momentum and mean-reversion regimes. This strategy uses ADX to detect the regime and switches between trend-following (ADX > 25) and mean-reversion (ADX < 18) approaches. In trending regimes: buy pullbacks to EMA(20). In range-bound regimes: fade VWAP extremes. The key insi",
+      "indicators": [
+        "adx_14",
+        "ema_20",
+        "vwap_zscore",
+        "rsi_14",
+        "atr_20"
+      ],
+      "entry_long": [
+        "TRENDING REGIME (adx_14 > 25): close > ema_20 AND low touches ema_20 AND rsi_14 > 40 AND close > vwap",
+        "RANGE REGIME (adx_14 < 18): vwap_zscore < -1.5 AND rsi_14 < 35"
+      ],
+      "entry_short": [
+        "TRENDING REGIME (adx_14 > 25): close < ema_20 AND high touches ema_20 AND rsi_14 < 60 AND close < vwap",
+        "RANGE REGIME (adx_14 < 18): vwap_zscore > 1.5 AND rsi_14 > 65"
+      ],
+      "exit_target": "trending: 2.0 * atr_20; range: vwap_zscore crosses 0",
+      "exit_stop": "trending: 1.0 * atr_20; range: 1.2 * atr_20",
+      "filters": [
+        "vix < 25",
+        "no trades first 15 min or last 30 min",
+        "volume > 50% of SMA(volume, 20)",
+        "ADX is the regime filter itself",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "ADX dead zone (18-25) means no trading during transitions \u2014 but transitions are where regime is most unclear",
+        "ADX on 1-min is slow to react \u2014 regime may have shifted before ADX reflects it",
+        "Two separate strategy logics increase complexity and parameter count (overfitting risk)"
+      ],
+      "prior_art": "Regime-switching models \u2014 Hamilton (1989). Practical implementation with ADX as regime proxy."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+      "name": "vol_regime_adaptive_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "volatility-regime",
+        "adaptive",
+        "ATR-scaled",
+        "conditional",
+        "regime-adaptive"
+      ],
+      "thesis": "Intraday market behavior differs fundamentally across volatility regimes. In low-vol regimes (ATR percentile < 30), mean-reversion dominates because moves are small and revert quickly. In high-vol regimes (ATR percentile > 70), momentum dominates because large moves carry information and attract ord",
+      "indicators": [
+        "ATR_14",
+        "ATR_Percentile",
+        "Vol_Regime",
+        "BB_lower",
+        "BB_upper",
+        "EMA_9",
+        "EMA_21"
+      ],
+      "entry_long": [
+        "LOW-VOL: Vol_Regime == LOW AND close < BB_lower AND close < vwap (mean-reversion buy)",
+        "HIGH-VOL: Vol_Regime == HIGH AND EMA(close,9) > EMA(close,21) AND close > vwap AND volume > 2 * SMA(volume,20) (momentum buy)"
+      ],
+      "entry_short": [
+        "LOW-VOL: Vol_Regime == LOW AND close > BB_upper AND close > vwap (mean-reversion sell)",
+        "HIGH-VOL: Vol_Regime == HIGH AND EMA(close,9) < EMA(close,21) AND close < vwap AND volume > 2 * SMA(volume,20) (momentum sell)"
+      ],
+      "exit_target": "LOW-VOL: 25 bps; HIGH-VOL: 50 bps",
+      "exit_stop": "LOW-VOL: 15 bps; HIGH-VOL: 30 bps",
+      "filters": [
+        "India VIX < 28; adjust regime thresholds if VIX > 22 (shift ATR percentile buckets up by 10)",
+        "No entries before 09:25 or after 15:10",
+        "HIGH-VOL entries require volume > 2x SMA(volume,20); LOW-VOL has no additional volume filter",
+        "HIGH-VOL: NIFTY trend must agree; LOW-VOL: no trend filter",
+        "Bid-ask spread < 5 bps in LOW-VOL; < 8 bps in HIGH-VOL (wider spreads acceptable)"
+      ],
+      "weaknesses": [
+        "Medium-vol regime (30-70th percentile of ATR) accounts for ~40% of the time, during which the strategy is flat \u2014 significant opportunity cost and underutilization of capital",
+        "Regime transitions from LOW to HIGH can be abrupt (e.g., sudden news) \u2014 the 10-bar stability requirement causes the strategy to miss the most profitable initial bars of a vol spike",
+        "BB(20, 1.5) in low-vol regime uses narrow bands (1.5 sigma vs standard 2.0) \u2014 more signals but also more false signals in low-vol environments where noise dominates"
+      ],
+      "prior_art": "Volatility regime-switching in Ang & Chen (2002); ATR-based position sizing (Van Tharp); volatility clustering (Mandelbrot); regime-conditional mean-reversion/momentum widely discussed in quant litera"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "momentum hybrid adaptive",
+      "family_slug": "momentum_hybrid_adaptive",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+      "fp_b": "all_trading_strategies/opus/Opus_42_of_50.json",
+      "cosine": 0.8398
+    },
+    {
+      "family": "momentum hybrid adaptive",
+      "family_slug": "momentum_hybrid_adaptive",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+      "cosine": 0.6806
+    },
+    {
+      "family": "momentum hybrid adaptive",
+      "family_slug": "momentum_hybrid_adaptive",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+      "fp_b": "all_trading_strategies/opus/Opus_42_of_50.json",
+      "cosine": 0.6731
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "name": "energy_pairs_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "energy",
+    "oil_gas",
+    "OMC",
+    "upstream_downstream"
+  ],
+  "thesis": "India's energy sector has a natural upstream-downstream split: upstream producers (ONGC, Oil India) benefit from high oil prices, while downstream refiner-marketers (IOC, BPCL, HPCL — the 'OMCs') are hurt by high crude because their retail margins get squeezed (government-regulated fuel prices lag crude movements). This creates a NEGATIVE correlation between upstream and downstream on days with significant crude price movements. The pairs trade: when Brent crude moves sharply intraday, go long upstream + short downstream (if crude rises) or vice versa. The inefficiency exists because: (1) retail traders trade all 'oil' stocks the same way, not distinguishing upstream from downstream, (2) the negative correlation only manifests with a 10-20 minute lag as the market processes the crude-margin implication, (3) on non-oil-move days, the stocks are positively correlated (sector sentiment), making the signal regime-dependent.",
+  "universe": "ONGC, Oil India (upstream), IOC, BPCL, HPCL (downstream OMCs), Reliance (refiner but not OMC)",
+  "stock_filter": "ONGC: ADV > ₹100 crore. IOC/BPCL/HPCL: ADV > ₹50 crore each",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "15-60 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Energy",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "Brent crude futures 1-min data (MCX or ICE)",
+      "petrol/diesel retail price data"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "brent_change_bps",
+      "formula": "(brent_close_1min - brent_open_day) / brent_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "upstream_return",
+      "formula": "equal_weighted_mean(ONGC_cum_return, OilIndia_cum_return)",
+      "params": {}
+    },
+    {
+      "name": "downstream_return",
+      "formula": "equal_weighted_mean(IOC_cum_return, BPCL_cum_return, HPCL_cum_return)",
+      "params": {}
+    },
+    {
+      "name": "up_down_spread",
+      "formula": "upstream_return - downstream_return (bps)",
+      "params": {}
+    },
+    {
+      "name": "crude_regime",
+      "formula": "'oil_driven' if abs(brent_change_bps) > 50 else 'non_oil'",
+      "params": {
+        "threshold": 50
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "crude_regime == 'oil_driven'",
+        "brent_change_bps > 50 (crude rising — bullish upstream, bearish downstream)",
+        "up_down_spread < 10 bps (spread hasn't widened yet — upstream hasn't outperformed)",
+        "upstream stocks close > upstream VWAP"
+      ],
+      "confirmation": "up_down_spread starts widening (crosses above 5 bps from below)"
+    },
+    "short": {
+      "conditions": [
+        "crude_regime == 'oil_driven'",
+        "brent_change_bps < -50 (crude falling — bearish upstream, bullish downstream)",
+        "up_down_spread > -10 bps (spread hasn't inverted yet)",
+        "downstream stocks close > downstream VWAP"
+      ],
+      "confirmation": "up_down_spread starts narrowing / inverting"
+    },
+    "entry_price": "market order both legs: long upstream + short downstream (crude up) or vice versa"
+  },
+  "exit": {
+    "target": "up_down_spread reaches ±25 bps (full crude impact priced in)",
+    "stop_loss": "up_down_spread moves 15 bps against position (wrong direction on crude impact)",
+    "trailing_stop": "8 bps trailing after 15 bps spread movement achieved",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "crude_regime changes to 'non_oil' (crude move reverses, thesis invalidated)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹50K upstream leg + ₹50K downstream leg",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "all energy stocks > 0.7x normal volume",
+    "trend_filter": "trade direction must align with crude price direction",
+    "spread_filter": "all stocks bid-ask < 10 bps",
+    "event_filter": "skip on OPEC meeting day, Indian fuel price revision day (OMC margins directly affected)",
+    "other_filters": [
+      "skip if crude_regime is 'non_oil' (no crude catalyst, upstream-downstream correlation is positive, not negative)",
+      "skip if government announces fuel price change today (OMC margins directly reset)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Low — the upstream-downstream margin dynamic is structural. Until Indian fuel pricing is fully deregulated (unlikely politically), OMC margin squeeze during crude spikes will persist."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The crude_regime threshold (50 bps = 0.5% intraday crude move) may not be reached on most days. The strategy fires only on significant crude move days (~30% of trading days).",
+    "Government fuel price interventions (price cuts before elections, subsidy changes) can flip the upstream-downstream dynamic unexpectedly.",
+    "ONGC's gas business and Oil India's exploration portfolio mean they're not pure crude oil plays. The upstream-downstream model is an approximation."
+  ],
+  "prior_art": "Energy sector pairs trading is well-established in US markets (XOP vs XLE). Driesprong, Jacobsen & Maat (2008) 'Striking Oil: Another Puzzle?'. In India, PPAC (Petroleum Planning & Analysis Cell) data on OMC under-recoveries provides the empirical basis for crude-margin inverse relationship.",
+  "notes": "Reliance Industries should NOT be included in the downstream group because its refining margins are market-linked (GRM = gross refining margin, not regulated). RIL is a refiner, not a marketer, and its margin dynamics differ from OMCs. Brent crude data on MCX (CRUDEOIL contract) is available via Kite API for commodities."
+}

@@ -1,0 +1,558 @@
+{
+  "family": "momentum trend_following ema",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "name": "ema_crossover_momentum_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "ema",
+        "crossover",
+        "momentum",
+        "trend-following",
+        "intraday"
+      ],
+      "thesis": "EMA(9) crossing above EMA(21) on 1-min bars signals a short-term momentum shift. The 9-bar EMA captures the last ~9 minutes of sentiment while the 21-bar EMA captures the last ~21 minutes. A cross indicates that short-term buying pressure has overtaken medium-term average price, often signaling the ",
+      "indicators": [
+        "EMA_9",
+        "EMA_21",
+        "ADX_14",
+        "VWAP",
+        "ATR_14"
+      ],
+      "entry_long": [
+        "EMA(close, 9) > EMA(close, 21)",
+        "EMA(close, 9)[t-1] <= EMA(close, 21)[t-1]",
+        "ADX(14) > 25",
+        "close > VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "entry_short": [
+        "EMA(close, 9) < EMA(close, 21)",
+        "EMA(close, 9)[t-1] >= EMA(close, 21)[t-1]",
+        "ADX(14) > 25",
+        "close < VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "exit_target": "0.4% from entry",
+      "exit_stop": "0.2% from entry OR EMA(9) re-crosses EMA(21) in opposite direction",
+      "filters": [
+        "no specific filter \u2014 momentum works across VIX regimes",
+        "no entries before 09:30 or after 14:45",
+        "volume on cross bar > 1x SMA(volume, 20)",
+        "ADX(14) > 25 (only trade in trending conditions)",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Win rate is low (~42%) \u2014 requires psychological discipline to endure losing streaks of 5-8 trades",
+        "EMA crossover on 1-min bars generates many false signals even with ADX filter \u2014 choppy days accumulate losses",
+        "The signal is extremely well-known and taught in every beginner trading course \u2014 crowding risk is high"
+      ],
+      "prior_art": "EMA crossover is perhaps the most widely known trading signal (Murphy, 'Technical Analysis'). ADX as a trend strength filter is from Wilder (1978). The 9/21 EMA pair is commonly used by retail traders"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "name": "ema_crossover_reversion_v1",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "ema",
+        "crossover_fade"
+      ],
+      "thesis": "EMA(9) / EMA(21) crossover signals on 1-min bars in range-bound markets are reliably faded because the crossover lags the actual move by 3-5 bars, meaning late momentum chasers enter at the worst price. By fading these crossovers when the stock is in a defined range (ATR_60 < 1.5 * median ATR_60 ove",
+      "indicators": [
+        "ema_9",
+        "ema_21",
+        "ema_cross_up",
+        "ema_cross_down",
+        "atr_60",
+        "atr_60_median_week",
+        "atr_20"
+      ],
+      "entry_long": [
+        "ema_cross_down == True (bearish cross just fired)",
+        "atr_60 < 1.5 * atr_60_median_week",
+        "close > vwap * 0.995"
+      ],
+      "entry_short": [
+        "ema_cross_up == True (bullish cross just fired)",
+        "atr_60 < 1.5 * atr_60_median_week",
+        "close < vwap * 1.005"
+      ],
+      "exit_target": "0.3% from entry or ema_9 reverts back to pre-crossover side",
+      "exit_stop": "0.35% from entry",
+      "filters": [
+        "none \u2014 range filter handles regime",
+        "no trades first 15 min or last 30 min",
+        "skip if volume < 60% of 20-bar avg",
+        "atr_60 < 1.5 * weekly median (range-bound filter)",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "In genuine breakout days, fading the crossover gets destroyed \u2014 the range filter mitigates but doesn't eliminate",
+        "The 1950-bar lookback for weekly median requires significant warmup data each morning",
+        "2-bar wait for confirmation reduces trade frequency and sometimes means the reversion already happened"
+      ],
+      "prior_art": "Fading EMA crossovers in range-bound conditions \u2014 contrarian take on a classic retail signal"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "name": "intraday_trend_following_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "trend_following",
+        "ema"
+      ],
+      "thesis": "Strong intraday trends in Nifty50 stocks persist due to herding behavior and information cascades. When price is above both EMA(20) and EMA(50) on 1-min, and the 20 is above the 50, pullbacks to the EMA(20) offer high-probability continuation entries. Institutional order flow that initiated the tren",
+      "indicators": [
+        "ema_20",
+        "ema_50",
+        "adx_14",
+        "rsi_14",
+        "atr_20"
+      ],
+      "entry_long": [
+        "ema_20 > ema_50",
+        "adx_14 > 25",
+        "low <= ema_20 * 1.001 (touches or nears EMA 20)",
+        "close > ema_20 (bounces off EMA 20)",
+        "rsi_14 < 65",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "ema_20 < ema_50",
+        "adx_14 > 25",
+        "high >= ema_20 * 0.999",
+        "close < ema_20",
+        "rsi_14 > 35",
+        "close < vwap"
+      ],
+      "exit_target": "2.0 * atr_20 from entry",
+      "exit_stop": "1.0 * atr_20 from entry or close below ema_50 (whichever is tighter)",
+      "filters": [
+        "vix < 25",
+        "no entries in first 30 min (need trend to establish) or last 30 min",
+        "volume > SMA(volume, 20) on pullback bar",
+        "adx_14 > 25 is the trend filter",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Sub-50% win rate means long drawdown periods; need strong conviction to keep trading through losses",
+        "ADX > 25 filter on 1-min bars is slow to react \u2014 trend may reverse before ADX catches up",
+        "On choppy days, false trends form and collapse, generating multiple small losses"
+      ],
+      "prior_art": "EMA pullback trend following \u2014 standard trend-following concept adapted for 1-min intraday"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "name": "first_pullback_after_trend_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "pullback",
+        "continuation"
+      ],
+      "thesis": "The first pullback in a new intraday trend (defined as 0.5%+ move from open in the first 45 min) is the highest-probability continuation entry. Early institutional flow that initiated the trend creates a 'base' of positioned traders. The first pullback attracts profit-takers, but the remaining insti",
+      "indicators": [
+        "return_from_open",
+        "ema_9",
+        "pullback_count",
+        "rsi_14",
+        "atr_20"
+      ],
+      "entry_long": [
+        "return_from_open > 0.5",
+        "pullback_count == 1 (first pullback only)",
+        "close <= ema_9 * 1.001 (price touches EMA 9)",
+        "close > vwap",
+        "rsi_14 > 40 AND rsi_14 < 70"
+      ],
+      "entry_short": [
+        "return_from_open < -0.5",
+        "pullback_count == 1",
+        "close >= ema_9 * 0.999",
+        "close < vwap",
+        "rsi_14 > 30 AND rsi_14 < 60"
+      ],
+      "exit_target": "1.5 * atr_20 from entry",
+      "exit_stop": "1.0 * atr_20 from entry",
+      "filters": [
+        "vix < 25",
+        "entry only 09:45-13:00 (morning trend)",
+        "pullback bar volume < avg volume (light selling = healthy pullback)",
+        "return_from_open > 0.5% is the trend filter",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Defining 'first pullback' algorithmically is tricky \u2014 small wiggles may count as pullbacks falsely",
+        "On V-shaped reversal days, the 'first pullback' is actually the start of a full reversal",
+        "Limited to morning session (before lunch), reducing total opportunity set significantly"
+      ],
+      "prior_art": "First pullback (Al Brooks, Lance Beggs) \u2014 price action concept systematized"
+    },
+    {
+      "fp": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "name": "intraday_momentum_ema_cross_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "trend_following",
+        "ema_crossover"
+      ],
+      "thesis": "Intraday trends in liquid stocks exhibit serial correlation over 30-120 minute windows due to institutional block execution (TWAP/VWAP algos splitting large orders). Once a directional move begins, the algo flow sustains it. The inefficiency exists because most retail traders either trade too-short ",
+      "indicators": [
+        "ema_9",
+        "ema_21",
+        "adx_14",
+        "atr_20",
+        "slope_ema21"
+      ],
+      "entry_long": [
+        "ema_9 > ema_21",
+        "ema_9[t] > ema_9[t-1]",
+        "adx_14 > 20",
+        "close > vwap",
+        "slope_ema21 > 0"
+      ],
+      "entry_short": [
+        "ema_9 < ema_21",
+        "ema_9[t] < ema_9[t-1]",
+        "adx_14 > 20",
+        "close < vwap",
+        "slope_ema21 < 0"
+      ],
+      "exit_target": "2.0 * atr_20 from entry",
+      "exit_stop": "1.0 * atr_20 from entry",
+      "filters": [
+        "vix between 13-28 (too low = no range, too high = whipsaw)",
+        "no new entries after 14:30",
+        "skip if volume < 70% of 20-bar SMA",
+        "align with index direction: long only if nifty50 EMA(9) > EMA(21)",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "EMA crossover is the most lagging entry possible. By the time 9/21 cross, the move is often 40-50% done. On short intraday moves, this leaves little room.",
+        "Whipsaw in rangebound markets destroys P&L. ADX filter helps but ADX itself lags \u2014 by the time ADX drops below 20, you've already taken 2-3 losses.",
+        "Win rate of ~38% means long losing streaks (5-8 consecutive losses). Psychologically brutal for discretionary override risk."
+      ],
+      "prior_art": "Standard dual EMA crossover with ADX filter. Textbook trend-following adapted to intraday. See: Trading Evolved (Clenow), Following the Trend."
+    },
+    {
+      "fp": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "name": "ema_crossover_v1",
+      "universe": "nifty500",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "trend"
+      ],
+      "thesis": "This strategy captures short-term trend flips: when EMA9 crosses EMA21, it signals a momentum shift. Many traders focus on longer signals, so a quick cross can indicate a new trend phase. It exploits that older traders lag behind short-term moves. It persists due to continual market noise and the co",
+      "indicators": [
+        "ema9",
+        "ema21"
+      ],
+      "entry_long": [
+        "close > ema9 AND ema9 > ema21"
+      ],
+      "entry_short": [
+        "close < ema9 AND ema9 < ema21"
+      ],
+      "exit_target": "0.5% from entry",
+      "exit_stop": "0.3% from entry",
+      "filters": [
+        "",
+        "",
+        "volume > avg_10",
+        "",
+        ""
+      ],
+      "weaknesses": [
+        "Frequent whipsaws in sideways markets",
+        "Small targets (0.5%) give tight edge which may be eroded by costs",
+        "Relies on moving averages that lag during sudden moves"
+      ],
+      "prior_art": "Basic EMA crossover"
+    },
+    {
+      "fp": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "name": "adx_strong_trend_pullback",
+      "universe": "nifty100",
+      "timeframe": "1min",
+      "tags": [
+        "trend_following"
+      ],
+      "thesis": "Exploits institutional accumulation. When ADX > 25, the market is in a structural trend. Retail traders attempt to pick tops/bottoms, causing shallow pullbacks to the 20 EMA. These pullbacks are absorbed by trend-following institutional algos. This persistent imbalance creates the edge.",
+      "indicators": [
+        "adx_14",
+        "ema_20"
+      ],
+      "entry_long": [
+        "adx_14 > 25",
+        "plus_di > minus_di",
+        "low <= ema_20",
+        "close > ema_20"
+      ],
+      "entry_short": [
+        "adx_14 > 25",
+        "minus_di > plus_di",
+        "high >= ema_20",
+        "close < ema_20"
+      ],
+      "exit_target": "2 * ATR(14) from entry",
+      "exit_stop": "1.5 * ATR(14) from entry",
+      "filters": [
+        "none",
+        "10:00-14:30",
+        "none",
+        "adx > 25",
+        "none"
+      ],
+      "weaknesses": [
+        "Late-stage trend entries ('buying the end')",
+        "ADX lag in choppy markets"
+      ],
+      "prior_art": "Welles Wilder ADX System"
+    },
+    {
+      "fp": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "name": "sma_crossover_banknifty_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "breakout"
+      ],
+      "thesis": "This strategy targets short-term momentum in liquid Indian instruments. It exploits the inefficiency that aligned moving averages (MA10 > MA29 > MA100) indicate a strong intraday trend (bullish momentum)\u301018\u2020L17-L24\u3011. This exists because institutional flows often drive extended moves after the open, ",
+      "indicators": [
+        "sma_10",
+        "sma_29",
+        "sma_100"
+      ],
+      "entry_long": [
+        "close > sma_10 AND sma_10 > sma_29 AND sma_29 > sma_100"
+      ],
+      "entry_short": [
+        "NOT_APPLICABLE"
+      ],
+      "exit_target": "fixed 0.5%",
+      "exit_stop": "50 points (~0.5%)",
+      "filters": [
+        "vix < 30",
+        "no trades first 5 min",
+        "volume > 1.5 * avg_30min",
+        "index_return_15 > 0",
+        ""
+      ],
+      "weaknesses": [
+        "Underperforms in choppy or range-bound markets (no clear trend)",
+        "Exposure to sudden reversals or gaps (no overnight holdings but intra-day reversals)",
+        "Potential crowding risk from other moving-average traders"
+      ],
+      "prior_art": "Original momentum crossover"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.8296
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "cosine": 0.8176
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "cosine": 0.8056
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "cosine": 0.8029
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.8007
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "cosine": 0.7928
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "cosine": 0.7782
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "cosine": 0.7511
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "cosine": 0.7487
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "cosine": 0.7431
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "cosine": 0.7326
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "cosine": 0.7186
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.7047
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "cosine": 0.7014
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "cosine": 0.6974
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "cosine": 0.6908
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "cosine": 0.6768
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "cosine": 0.6759
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "cosine": 0.6757
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "cosine": 0.6724
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/opus/Opus_11_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.6713
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "cosine": 0.6709
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "cosine": 0.6568
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.634
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "fp_b": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "cosine": 0.6031
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "cosine": 0.5993
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.577
+    },
+    {
+      "family": "momentum trend_following ema",
+      "family_slug": "momentum_trend_following_ema",
+      "fp_a": "all_trading_strategies/opus/Opus_14_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_5_of_50.json",
+      "cosine": 0.5611
+    }
+  ]
+}

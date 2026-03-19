@@ -1,0 +1,11 @@
+polars>=1.0
+numpy>=1.26
+numba>=0.60
+optuna>=3.6
+pandas-ta>=0.3.14b1
+pandas>=2.2
+joblib>=1.4
+scikit-learn>=1.5
+orjson>=3.10
+pyarrow>=17.0
+tqdm>=4.66

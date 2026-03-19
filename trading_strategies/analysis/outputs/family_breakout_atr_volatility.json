@@ -1,0 +1,468 @@
+{
+  "family": "breakout atr volatility",
+  "members": [
+    {
+      "fp": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "name": "atr_breakout_v1",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "breakout",
+        "volatility"
+      ],
+      "thesis": "This strategy targets volatility breakouts: when intraday range expands beyond normal (ATR spikes), price often continues in the breakout direction. It exploits sudden volatility expansions as signals of momentum. The inefficiency is that traders often underestimate quickly expanding ranges, and it ",
+      "indicators": [
+        "atr14",
+        "prev_range"
+      ],
+      "entry_long": [
+        "prev_range > 1.5 * atr14"
+      ],
+      "entry_short": [
+        "prev_range > 1.5 * atr14"
+      ],
+      "exit_target": "1.0% from entry",
+      "exit_stop": "0.5% from entry",
+      "filters": [
+        "",
+        "",
+        "volume > 1.5 * avg_20",
+        "",
+        ""
+      ],
+      "weaknesses": [
+        "Often false alarms during normal volatility spikes",
+        "Late entries (after breakout), can capture smaller portion of move",
+        "High slippage during volatility spikes"
+      ],
+      "prior_art": "Volatility breakout"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "name": "intraday_volatility_breakout_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "breakout",
+        "atr"
+      ],
+      "thesis": "When a stock's intraday ATR on 1-min bars suddenly expands (ATR_10 > 2 * ATR_60), it signals the start of a regime change from low-vol to high-vol. The direction of the first volatility expansion bar tends to persist for 10-30 more bars because the trigger (news, block deal, institutional flow) take",
+      "indicators": [
+        "atr_10",
+        "atr_60",
+        "vol_expansion",
+        "bar_direction",
+        "rel_volume"
+      ],
+      "entry_long": [
+        "vol_expansion > 2.0 (sudden vol expansion)",
+        "bar_direction == 1 (bullish expansion)",
+        "rel_volume > 2.0 (volume confirms it's real)",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "vol_expansion > 2.0",
+        "bar_direction == -1 (bearish expansion)",
+        "rel_volume > 2.0",
+        "close < vwap"
+      ],
+      "exit_target": "1.5 * atr_10 from entry",
+      "exit_stop": "1.0 * atr_10 from entry",
+      "filters": [
+        "vix < 28 (some vol is good, but extreme chaos is not)",
+        "no entries first 15 min or last 30 min",
+        "rel_volume > 2.0 on expansion bar",
+        "trade in direction of expansion only",
+        "skip if spread > 0.12% (spreads widen during vol expansion)"
+      ],
+      "weaknesses": [
+        "Volatility expansion without directional persistence = whipsaw; common during news-driven spikes",
+        "Higher slippage (4 bps) during high-vol bars reduces effective edge",
+        "ATR_10 on 1-min can spike due to a single large bar and then normalize immediately \u2014 false signal"
+      ],
+      "prior_art": "Volatility breakout (Keltner Channel concept) \u2014 adapted for ATR-ratio-based detection on 1-min"
+    },
+    {
+      "fp": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "name": "atr_expansion_breakout_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "breakout",
+        "volatility_expansion",
+        "trend"
+      ],
+      "thesis": "When a single 1-min bar's range exceeds 2x the 20-bar ATR, it signals a volatility expansion event \u2014 often caused by institutional block trades or news catalyst. These expansion bars tend to have follow-through because the force that caused them (large order, news) persists for 15-30 minutes. The in",
+      "indicators": [
+        "bar_range",
+        "atr_20",
+        "range_ratio",
+        "bar_direction"
+      ],
+      "entry_long": [
+        "range_ratio > 2.0",
+        "bar_direction > 0",
+        "volume > SMA(volume, 20) * 2.0",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "range_ratio > 2.0",
+        "bar_direction < 0",
+        "volume > SMA(volume, 20) * 2.0",
+        "close < vwap"
+      ],
+      "exit_target": "1.0 * expansion bar range from entry",
+      "exit_stop": "opposite end of expansion bar",
+      "filters": [
+        "vix < 26",
+        "no trades first 10 min or last 20 min",
+        "expansion bar volume must be > 2x 20-bar average",
+        "prefer expansion in direction of 60-bar EMA",
+        "skip \u2014 spreads are unreliable during expansion events"
+      ],
+      "weaknesses": [
+        "Entry at expansion bar close means you're chasing. Slippage of 5 bps is optimistic \u2014 real fills during fast moves can be 10+ bps.",
+        "Expansion bars caused by fat-finger trades or erroneous prints reverse instantly. No way to distinguish from genuine flow in real-time.",
+        "Stop at opposite end of expansion bar can be wide (the bar itself is 2x ATR), creating large per-trade risk."
+      ],
+      "prior_art": "Volatility expansion / wide-range bar trading. See: Mark Minervini, Linda Raschke (Holy Grail setup)."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "name": "atr_expansion_breakout_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "atr",
+        "expansion",
+        "volatility-breakout",
+        "regime-change",
+        "intraday"
+      ],
+      "thesis": "When the current bar's True Range exceeds 2.5x the ATR(20), it signals a volatility regime change \u2014 the market has shifted from a low-energy state to a high-energy state. If this expansion bar also breaks the session high/low and closes in the direction of the break, it represents a genuine volatili",
+      "indicators": [
+        "TR",
+        "ATR_20",
+        "TR_ratio",
+        "session_high",
+        "session_low",
+        "VWAP",
+        "volume_ratio"
+      ],
+      "entry_long": [
+        "TR_ratio > 2.5 (current bar's TR is 2.5x ATR(20))",
+        "high > session_high[t-1] (new session high on expansion bar)",
+        "close > open (bullish expansion bar)",
+        "(close - low) / (high - low) > 0.6 (closed in upper 40% of bar)",
+        "volume_ratio > 2.0",
+        "close > VWAP"
+      ],
+      "entry_short": [
+        "TR_ratio > 2.5",
+        "low < session_low[t-1] (new session low on expansion bar)",
+        "close < open (bearish expansion bar)",
+        "(high - close) / (high - low) > 0.6 (closed in lower 40% of bar)",
+        "volume_ratio > 2.0",
+        "close < VWAP"
+      ],
+      "exit_target": "2.0 * ATR_20 from entry (ride the expanded volatility regime)",
+      "exit_stop": "expansion bar's midpoint ((high + low) / 2) \u2014 if price reverts to mid-bar, expansion failed",
+      "filters": [
+        "India_VIX < 28; in extreme VIX, expansion bars are common and less meaningful",
+        "no entries before 09:30 or after 14:00",
+        "volume_ratio > 2.0 on expansion bar (must be volume-confirmed, not low-liquidity wide spread)",
+        "VWAP direction alignment",
+        "bid-ask spread < 0.06% (expansion bars may have wider spreads temporarily)"
+      ],
+      "weaknesses": [
+        "Large TR bars can be caused by a single fat finger or erroneous trade \u2014 the volume filter mitigates but does not eliminate this",
+        "The follow-through bar requirement adds a full minute of delay \u2014 in fast moves, the optimal entry is on the expansion bar itself",
+        "ATR_20 on 1-min bars = only 20 minutes of data; early-session ATR may be elevated from open, making 2.5x threshold harder to hit"
+      ],
+      "prior_art": "Volatility breakout is core to many systems: Keltner Channel expansion, Bollinger Band width, TTM Squeeze. Using TR/ATR ratio specifically is discussed by Van Tharp ('Trade Your Way to Financial Freed"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "name": "atr_breakout_volatility_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "ATR",
+        "breakout",
+        "channel",
+        "intraday"
+      ],
+      "thesis": "ATR-based channel breakouts (price exceeding N * ATR from a reference level) on 1-min bars capture genuine volatility expansion events. Unlike fixed-point breakouts, ATR channels adapt to each stock's current volatility regime, making them robust across different volatility environments. When price ",
+      "indicators": [],
+      "entry_long": [
+        "close > upper_channel (breakout above 2.0 * ATR channel)",
+        "ATR_expansion > 1.2 (volatility expanding, not contracting)",
+        "volume_ratio > 1.5 (volume confirming breakout)",
+        "ADX_14 > 20 (trending, not choppy)"
+      ],
+      "entry_short": [
+        "close < lower_channel (breakdown below 2.0 * ATR channel)",
+        "ATR_expansion > 1.2",
+        "volume_ratio > 1.5",
+        "ADX_14 > 20"
+      ],
+      "exit_target": "3.0 * ATR_14 from entry (1.5x the channel width as continuation target)",
+      "exit_stop": "price re-enters channel (closes below upper_channel for longs, above lower_channel for shorts) OR 1.0 * ATR_14 from entry",
+      "filters": [
+        "India_VIX > 13 (need vol for breakouts); VIX < 25 (not chaotic)",
+        "best breakout windows: 09:20-10:30 and 13:30-15:00; avoid lunch lull",
+        "breakout bar volume > 1.5x 20-bar SMA volume",
+        "ADX_14 > 20 at time of breakout (directional movement present)",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "The 2.0 * ATR multiplier is a single parameter with high sensitivity \u2014 at 1.5x many more false breakouts trigger, at 2.5x the entry is too late and most of the move is done",
+        "On range-bound days (ADX < 20 but briefly spiking to 20+), the ADX filter lets through false signals that mean-revert quickly",
+        "Session_mean as the channel center is noisy early in the session (first 30 mins) \u2014 channels are too narrow and generate spurious breakout signals"
+      ],
+      "prior_art": "Keltner (1960) channels; Wilder (1978) ATR. Modern ATR channel breakouts from Kaufman (2013) adaptive trading systems. Chande (1997) on volatility-adaptive systems."
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "name": "narrow_range_breakout_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "breakout",
+        "volatility_contraction"
+      ],
+      "thesis": "NR7 bars (narrowest range in 7 bars) on 1-min data indicate energy coiling before an expansion. When a stock prints an NR7 bar in the context of declining ATR and above-average volume, the next breakout direction tends to be the prevailing trend direction. This is a volatility-expansion trade: low-v",
+      "indicators": [
+        "bar_range",
+        "is_nr7",
+        "atr_20",
+        "atr_20_prev",
+        "ema_20"
+      ],
+      "entry_long": [
+        "is_nr7 == True",
+        "atr_20 < atr_20_prev (ATR declining)",
+        "close > ema_20 (uptrend context)"
+      ],
+      "entry_short": [
+        "is_nr7 == True",
+        "atr_20 < atr_20_prev",
+        "close < ema_20 (downtrend context)"
+      ],
+      "exit_target": "2.0 * NR7 bar range from entry",
+      "exit_stop": "opposite end of NR7 bar (full NR7 range as risk)",
+      "filters": [
+        "none",
+        "no trades first 15 min or last 15 min",
+        "volume on breakout bar > SMA(volume, 10)",
+        "trade in direction of ema_20 only",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "NR7 on 1-min is frequent but many signals are in low-volume dead zones (lunch hour)",
+        "False breakouts: tight range breaks, reverses, and stops you out on the opposite side",
+        "Using NR7 bar range as stop can be extremely tight (< 5 bps), leading to noise-triggered stops"
+      ],
+      "prior_art": "NR7 (Tony Crabel) \u2014 originally daily; adapted here for 1-min intraday"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "name": "momentum_ignition_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "breakout",
+        "volume_surge"
+      ],
+      "thesis": "When a stock breaks a multi-hour range (30+ bars) on a volume surge (> 3x average), stop-loss cascades from trapped range traders amplify the move for 10-30 bars. This is a microstructure phenomenon: range traders accumulate positions near the range boundaries, and their stops cluster just outside. ",
+      "indicators": [
+        "range_high_30",
+        "range_low_30",
+        "range_width",
+        "vol_surge",
+        "bars_in_range",
+        "atr_20"
+      ],
+      "entry_long": [
+        "close > range_high_30",
+        "vol_surge > 3.0",
+        "bars_in_range > 30",
+        "range_width > 0.2 AND range_width < 0.8"
+      ],
+      "entry_short": [
+        "close < range_low_30",
+        "vol_surge > 3.0",
+        "bars_in_range > 30",
+        "range_width > 0.2 AND range_width < 0.8"
+      ],
+      "exit_target": "1.0 * range_width from breakout level",
+      "exit_stop": "0.5 * range_width back inside the range (midpoint of range)",
+      "filters": [
+        "vix > 12 AND vix < 25 (need some vol for breakouts to work, but not chaos)",
+        "no entries after 14:30",
+        "vol_surge > 3.0 is the core entry condition",
+        "for long: nifty50_return_30bar > 0; for short: < 0",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "False breakouts are frequent \u2014 55% of trades lose, requiring strong risk:reward to compensate",
+        "Slippage on breakout bars is higher than normal (4+ bps) due to momentum and competing algos",
+        "The 30-bar range lookback is somewhat arbitrary \u2014 different stocks consolidate on different timeframes"
+      ],
+      "prior_art": "Range breakout with volume confirmation \u2014 Toby Crabel, Linda Raschke, and countless others"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "cosine": 0.803
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "cosine": 0.7924
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "cosine": 0.7869
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "cosine": 0.7814
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "cosine": 0.7707
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "cosine": 0.7665
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "cosine": 0.7635
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "cosine": 0.7471
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "cosine": 0.7457
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "fp_b": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "cosine": 0.7323
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "cosine": 0.7206
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "cosine": 0.7178
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "cosine": 0.716
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "cosine": 0.7073
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "cosine": 0.6724
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "cosine": 0.6686
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "cosine": 0.6639
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "fp_b": "all_trading_strategies/opus/Opus_15_of_50.json",
+      "cosine": 0.6283
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_24_of_50.json",
+      "cosine": 0.6136
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "cosine": 0.6083
+    },
+    {
+      "family": "breakout atr volatility",
+      "family_slug": "breakout_atr_volatility",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "fp_b": "all_trading_strategies/opus/Opus_10_of_50.json",
+      "cosine": 0.5366
+    }
+  ]
+}

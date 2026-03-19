@@ -1,0 +1,101 @@
+{
+    "name": "volume_breakout_v1",
+    "version": "0.1.0",
+    "author": "AI_Quant",
+    "tags": [
+        "breakout",
+        "volume"
+    ],
+    "thesis": "This strategy trades high-volume breakouts. It enters when price breaks a recent high/low accompanied by volume significantly above normal. The inefficiency is that volume surges often precede sustained moves, but many traders focus only on price. It persists because interpreting volume is subjective and large institutional moves can surprise uninformed participants.",
+    "universe": "nifty200",
+    "stock_filter": "top_liquid_nifty200",
+    "timeframe": "1min",
+    "session": "09:20-15:15",
+    "hold_time": "5-15 bars",
+    "max_hold_bars": 15,
+    "trades_per_day": "2-4",
+    "max_trades_per_day": 4,
+    "data": {
+        "ohlcv_1min": true,
+        "vwap": false,
+        "vix": false,
+        "index": "none",
+        "option_chain": false,
+        "order_book": false,
+        "other": []
+    },
+    "indicators": [
+        {
+            "name": "avgvol10",
+            "formula": "SMA(volume, 10)",
+            "lookback": 10,
+            "purpose": "short-term average volume"
+        },
+        {
+            "name": "avgvol30",
+            "formula": "SMA(volume, 30)",
+            "lookback": 30,
+            "purpose": "medium-term average volume"
+        }
+    ],
+    "entry": {
+        "long": {
+            "conditions": [
+                "close > high(5) AND volume > 2 * avgvol10"
+            ],
+            "confirmation": ""
+        },
+        "short": {
+            "conditions": [
+                "close < low(5) AND volume > 2 * avgvol10"
+            ],
+            "confirmation": ""
+        },
+        "entry_price": "market"
+    },
+    "exit": {
+        "target": "1.0% from entry",
+        "stop_loss": "0.5% from entry",
+        "trailing_stop": "none",
+        "time_stop": "exit after 15 bars",
+        "eod_rule": "flatten",
+        "signal_exit": ""
+    },
+    "risk": {
+        "capital_per_trade": 100000,
+        "max_risk_per_trade_pct": 0.5,
+        "position_sizing": "fixed",
+        "max_open_positions": 2,
+        "max_daily_loss_inr": 50000,
+        "max_portfolio_heat_pct": 30.0
+    },
+    "filters": {
+        "vix_filter": "",
+        "time_filter": "no trades first 10 bars",
+        "volume_filter": "none",
+        "trend_filter": "",
+        "spread_filter": "",
+        "event_filter": "none",
+        "other_filters": []
+    },
+    "edge": {
+        "expected_bps": 20,
+        "win_rate_estimate": 0.5,
+        "avg_winner_to_loser": 1.7,
+        "profit_factor_estimate": 1.4,
+        "edge_decay_risk": "medium \u2014 structural"
+    },
+    "costs": {
+        "slippage_bps_per_side": 3,
+        "brokerage": "zerodha_intraday",
+        "stt_bps": 2.5,
+        "exchange_charges_bps": 0.5
+    },
+    "weaknesses": [
+        "High false-breakout rate on volatile days",
+        "Volume surge may be due to news that later reverses",
+        "Range breakouts may be subject to pinch outs after initial move"
+    ],
+    "prior_art": "Volume breakout",
+    "notes": "Combines price breakout with volume confirmation."
+}

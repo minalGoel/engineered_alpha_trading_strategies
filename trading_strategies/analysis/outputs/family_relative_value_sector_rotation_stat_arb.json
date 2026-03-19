@@ -1,0 +1,227 @@
+{
+  "family": "relative_value sector_rotation stat_arb",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "name": "sector_rotation_stat_arb_v1",
+      "universe": "NIFTY Bank ETF (BANKBEES) vs NIFTY IT ETF (ITBEES) on NSE; proxy via top-2 stocks per sector",
+      "timeframe": "1min",
+      "tags": [
+        "stat_arb",
+        "sector_rotation",
+        "relative_value",
+        "cross_sector",
+        "intraday"
+      ],
+      "thesis": "Indian sector indices (NIFTY Bank, NIFTY IT, NIFTY Pharma, NIFTY Auto) exhibit intraday relative value dislocations when macro news differentially impacts sectors but the market over-extrapolates the effect. For example, a rate hike fear pushes banking down 1% while IT (rate-insensitive) moves only ",
+      "indicators": [],
+      "entry_long": [
+        "spread_z < -2.0 (banking underperforming IT more than 2 sigma)",
+        "macro_shock_indicator == True (dislocation triggered by macro event)",
+        "time > 09:45 IST (allow initial volatility to settle)"
+      ],
+      "entry_short": [
+        "spread_z > 2.0 (banking outperforming IT more than 2 sigma)",
+        "macro_shock_indicator == True",
+        "time > 09:45 IST"
+      ],
+      "exit_target": "spread_z crosses 0.5 (partial reversion, don't wait for full)",
+      "exit_stop": "spread_z exceeds 3.5 OR loss > 0.5% of capital",
+      "filters": [
+        "India_VIX between 12 and 25; outside this range sector spreads too noisy",
+        "no new entries after 14:00 IST",
+        "all 4 components must have 1-min volume > 10000 shares",
+        "NIFTY 50 not limit-down or in circuit-breaker territory",
+        "avg bid-ask across 4 legs < 0.05%"
+      ],
+      "weaknesses": [
+        "Four-leg execution increases complexity and total slippage; each additional leg adds ~3bps slippage risk",
+        "Sector spread may not mean-revert if the macro shock is genuinely structural (e.g., sector-specific regulatory change), leading to extended drawdowns",
+        "Low trade frequency (1-2/day, only on macro event days) means the strategy may go days without signals, reducing capital efficiency"
+      ],
+      "prior_art": "Moskowitz & Grinblatt (1999) industry momentum; adapted as intraday mean-reversion of sector spreads. Similar to Lo & MacKinlay (1990) contrarian profits in cross-sections."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "name": "banking_vs_it_rotation_v1",
+      "universe": "BANK NIFTY constituents + NIFTY IT constituents",
+      "timeframe": "1min",
+      "tags": [
+        "sector_rotation",
+        "banking",
+        "IT",
+        "relative_value",
+        "macro"
+      ],
+      "thesis": "BANK NIFTY and NIFTY IT are the two largest sector indices by weight in NIFTY 50 and exhibit a well-documented negative intraday correlation driven by opposing macro sensitivities: banking benefits from rate cuts and domestic growth (INR strength), while IT benefits from INR weakness and global tech",
+      "indicators": [
+        "bank_it_spread",
+        "spread_zscore",
+        "USDINR_direction",
+        "correlation_regime"
+      ],
+      "entry_long": [
+        "spread_zscore < -2.0 (IT outperforming, banking lagging \u2014 expect banking catch-up)",
+        "correlation_regime < 0 (negative correlation regime active)",
+        "USDINR_direction <= 0 (INR not weakening further \u2014 supports banking recovery)"
+      ],
+      "entry_short": [
+        "spread_zscore > 2.0 (banking outperforming, IT lagging \u2014 expect IT catch-up)",
+        "correlation_regime < 0",
+        "USDINR_direction >= 0 (INR not strengthening further \u2014 supports IT recovery)"
+      ],
+      "exit_target": "spread_zscore reverts to 0 (spread mean reversion complete)",
+      "exit_stop": "spread_zscore extends to \u00b13.0 (spread widening, stop out)",
+      "filters": [
+        "India_VIX < 22; in high VIX, both sectors sell off together (positive correlation)",
+        "wait until 10:00 for stable intraday spread; stop new entries after 14:00",
+        "both sector indices trading at > 0.7x normal volume participation",
+        "skip if NIFTY 50 is moving > 1% intraday (macro dominating, rotation suppressed)",
+        "individual stock spreads < 5 bps for all 6 proxy stocks"
+      ],
+      "weaknesses": [
+        "The correlation regime between banking and IT is unstable \u2014 in risk-off events, both sectors sell off together and the rotation trade gets stopped out.",
+        "Using individual stocks as sector proxies introduces stock-specific risk (e.g., HDFC Bank result surprise moves the banking leg without sector-wide implication).",
+        "Very low trade frequency (1-2/day) means the strategy cannot stand alone and must be part of a portfolio of strategies."
+      ],
+      "prior_art": "Granger & Morgenstern (1970) early work on spectral analysis of market relationships. Gatev, Goetzmann & Rouwenhorst (2006) pairs trading framework. In India, Srivastava (2019) studies BANK NIFTY-IT N"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+      "name": "multi_asset_signal_v1",
+      "universe": "NIFTY 50 constituents + Bank NIFTY constituents",
+      "timeframe": "1min",
+      "tags": [
+        "cross-asset",
+        "multi-asset",
+        "vix",
+        "index",
+        "equity",
+        "macro-signal"
+      ],
+      "thesis": "Individual stock movements are driven by both idiosyncratic and systematic factors. By monitoring NIFTY 50, Bank NIFTY, and India VIX simultaneously, we can extract a cross-asset macro signal that identifies regime shifts before they fully propagate to individual stocks. Specifically: when NIFTY ris",
+      "indicators": [
+        "NIFTY_ROC_15",
+        "VIX_ROC_15",
+        "BN_Relative",
+        "Divergence_Signal",
+        "Macro_Score"
+      ],
+      "entry_long": [
+        "NIFTY_ROC_15 < -15 bps AND VIX_ROC_15 < 0 (NIFTY down but VIX also down \u2014 complacent dip)",
+        "Macro_Score > 0 (cross-asset signals favor long)",
+        "Stock close < vwap AND RSI(close, 14) < 40 (stock oversold in dip)"
+      ],
+      "entry_short": [
+        "NIFTY_ROC_15 > 15 bps AND VIX_ROC_15 > 0 (NIFTY up but VIX also up \u2014 hedging divergence)",
+        "Macro_Score < 0 (cross-asset signals favor short)",
+        "Stock close > vwap AND RSI(close, 14) > 60 (stock overbought in rally)"
+      ],
+      "exit_target": "40 bps from entry",
+      "exit_stop": "25 bps from entry",
+      "filters": [
+        "India VIX between 12-28 (outside this range, NIFTY-VIX relationship is non-linear)",
+        "No entries before 09:20 or after 15:15",
+        "Stock volume > SMA(volume, 20)",
+        "None \u2014 strategy explicitly trades divergences from trend",
+        "Bid-ask spread < 5 bps on stock"
+      ],
+      "weaknesses": [
+        "India VIX is updated every 15 seconds, not every second \u2014 the 1-min bar for VIX is constructed from sparse data points, making VIX_ROC_15 noisier than price-based indicators",
+        "NIFTY-VIX divergence is a necessary but not sufficient condition for reversal \u2014 divergences can persist for 1-2 hours in trending markets, leading to premature counter-trend entries",
+        "Selecting a single high-beta stock to express the macro view concentrates idiosyncratic risk; the stock may not respond to the macro signal if it has its own news/events"
+      ],
+      "prior_art": "VIX-equity divergence trading is well-known in US markets (CBOE VIX); Dennis & Mayhew (2002) on implied vol dynamics; India-specific application less documented; Bank NIFTY relative strength used by p"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+      "name": "nifty_banknifty_spread_v1",
+      "universe": "NIFTY 50, BANK NIFTY indices",
+      "timeframe": "1min",
+      "tags": [
+        "relative_value",
+        "index_spread",
+        "NIFTY",
+        "BANKNIFTY",
+        "mean_reversion"
+      ],
+      "thesis": "BANK NIFTY carries ~33% weight in NIFTY 50, creating a tight but imperfect correlation. The intraday return spread between BANK NIFTY and NIFTY 50 exhibits mean-reverting behavior around a slowly drifting mean. When BANK NIFTY outperforms NIFTY 50 by > 30 bps intraday (or vice versa), the spread ten",
+      "indicators": [
+        "nifty_return_cum",
+        "banknifty_return_cum",
+        "nb_spread",
+        "nb_spread_zscore",
+        "spread_velocity"
+      ],
+      "entry_long": [
+        "nb_spread_zscore < -1.5 (NIFTY outperforming BANK NIFTY \u2014 expect BANK NIFTY catch-up)",
+        "spread_velocity < -3 (spread still widening \u2014 wait for it to slow)",
+        "India_VIX < 20"
+      ],
+      "entry_short": [
+        "nb_spread_zscore > 1.5 (BANK NIFTY outperforming NIFTY \u2014 expect compression)",
+        "spread_velocity > 3",
+        "India_VIX < 20"
+      ],
+      "exit_target": "nb_spread_zscore reverts to 0 (full mean reversion)",
+      "exit_stop": "nb_spread_zscore extends to \u00b12.5 (spread diverging beyond threshold)",
+      "filters": [
+        "India_VIX < 20; in high VIX, BANK NIFTY drops faster (higher beta) and spread may not revert",
+        "no trades in first 15 min or last 10 min",
+        "both futures trading at > 0.8x normal volume participation",
+        "skip if NIFTY 50 intraday move > 1.5% (strong trend makes spread directional, not mean-reverting)",
+        "futures bid-ask spread < 0.05% on both legs"
+      ],
+      "weaknesses": [
+        "On RBI policy days or banking-specific regulatory events, BANK NIFTY diverges from NIFTY permanently intraday. The stop loss at z-score \u00b12.5 gets hit on such days.",
+        "Trading two index futures requires significant margin (especially BANK NIFTY at ~\u20b910L notional). The \u20b91L capital allocation may be insufficient for proper sizing.",
+        "The beta-adjustment ratio between BANK NIFTY and NIFTY is time-varying (1.2-1.5) and using a stale beta leads to imperfect hedging."
+      ],
+      "prior_art": "Vidyamurthy (2004) 'Pairs Trading: Quantitative Methods and Analysis' \u2014 seminal text on spread trading. Elliot, van der Hoek & Malcolm (2005) 'Pairs Trading' for mean-reverting spread models. In India"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "relative_value sector_rotation stat_arb",
+      "family_slug": "relative_value_sector_rotation_stat_arb",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "cosine": 0.7679
+    },
+    {
+      "family": "relative_value sector_rotation stat_arb",
+      "family_slug": "relative_value_sector_rotation_stat_arb",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+      "cosine": 0.7304
+    },
+    {
+      "family": "relative_value sector_rotation stat_arb",
+      "family_slug": "relative_value_sector_rotation_stat_arb",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+      "cosine": 0.7256
+    },
+    {
+      "family": "relative_value sector_rotation stat_arb",
+      "family_slug": "relative_value_sector_rotation_stat_arb",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+      "cosine": 0.7043
+    },
+    {
+      "family": "relative_value sector_rotation stat_arb",
+      "family_slug": "relative_value_sector_rotation_stat_arb",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json",
+      "cosine": 0.6875
+    },
+    {
+      "family": "relative_value sector_rotation stat_arb",
+      "family_slug": "relative_value_sector_rotation_stat_arb",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+      "cosine": 0.6748
+    }
+  ]
+}

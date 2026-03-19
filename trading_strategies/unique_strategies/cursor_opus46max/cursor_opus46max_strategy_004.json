@@ -1,0 +1,149 @@
+{
+  "name": "vwap_band_squeeze_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "vwap",
+    "volatility-squeeze",
+    "breakout",
+    "band-width",
+    "intraday"
+  ],
+  "thesis": "VWAP bands (VWAP \u00b1 k * rolling std of price) compress during periods of low intraday volatility, analogous to Bollinger Band squeezes. When band width contracts below the 20th percentile of its own session distribution, it signals coiled energy \u2014 a breakout is imminent. The inefficiency arises because most participants focus on price level relative to VWAP, not the width of the bands. The squeeze identifies moments when supply/demand is temporarily balanced but about to tip. The edge persists because band-width analysis on VWAP is not standard in retail TA, and the signal is rare enough (1-2 per day) that it is not worth automating for large funds.",
+  "universe": "NIFTY 100 constituents on NSE",
+  "stock_filter": "ADV(20) > 60 crore INR AND intraday_range(20) > 1.0%",
+  "timeframe": "1min",
+  "session": "10:00-14:30 IST",
+  "hold_time": "15-45 minutes",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "vwap_band_width_percentile"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "vwap_upper",
+      "params": "VWAP + 2.0 * STDEV(close - VWAP, 20)",
+      "lookback": 20
+    },
+    {
+      "name": "vwap_lower",
+      "params": "VWAP - 2.0 * STDEV(close - VWAP, 20)",
+      "lookback": 20
+    },
+    {
+      "name": "vwap_bw",
+      "params": "(vwap_upper - vwap_lower) / VWAP * 100",
+      "lookback": 20
+    },
+    {
+      "name": "vwap_bw_pctile",
+      "params": "percentile_rank(vwap_bw, session_bars)",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR",
+      "params": "ATR(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vwap_bw_pctile < 20",
+        "close > vwap_upper",
+        "volume > SMA(volume, 20) * 1.5",
+        "close > VWAP"
+      ],
+      "confirmation": "close breaks above vwap_upper with bar range > 1.5 * ATR(14) / sqrt(14)"
+    },
+    "short": {
+      "conditions": [
+        "vwap_bw_pctile < 20",
+        "close < vwap_lower",
+        "volume > SMA(volume, 20) * 1.5",
+        "close < VWAP"
+      ],
+      "confirmation": "close breaks below vwap_lower with bar range > 1.5 * ATR(14) / sqrt(14)"
+    },
+    "entry_price": "market order on breakout bar close"
+  },
+  "exit": {
+    "target": "2.0 * ATR(14) from entry",
+    "stop_loss": "VWAP (midline) \u2014 if price reverts to VWAP, thesis is invalidated",
+    "trailing_stop": "trail at 1.0 * ATR(14) once profit exceeds 1.0 * ATR(14)",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if vwap_bw_pctile rises above 60 (bands expanding means move is maturing)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.7,
+    "position_sizing": "fixed 1L; risk-based sizing to keep loss < 700 INR per trade",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.7
+  },
+  "filters": {
+    "vix_filter": "India_VIX between 12-22 (squeeze breakouts work best in moderate vol)",
+    "time_filter": "entries only 10:00-14:30; squeeze must form after first 45 min of session",
+    "volume_filter": "breakout bar volume > 1.5x 20-bar SMA",
+    "trend_filter": "prefer direction aligned with NIFTY 50 trend (NIFTY above/below its VWAP)",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on budget day, RBI policy",
+    "other_filters": [
+      "skip if squeeze duration < 10 bars (need genuine compression)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.45,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.64,
+    "edge_decay_risk": "low \u2014 band squeeze on VWAP is not a common retail or institutional signal"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "False breakouts from squeezes are common (~55% of the time); requires strict risk management",
+    "Signal is rare (1-2/day) which limits daily P&L and makes the strategy hard to scale",
+    "Band width percentile calculation requires sufficient session data \u2014 unreliable before 10:00 IST"
+  ],
+  "prior_art": "Bollinger Band squeeze (John Bollinger, 'Bollinger on Bollinger Bands') is the direct inspiration. TTM Squeeze by John Carter applies similar logic. Applying squeeze logic to VWAP bands rather than Bollinger Bands is a less common variant. Keltner-inside-Bollinger squeeze is a known alternative.",
+  "notes": "Edge math: 0.45 * 80bps - 0.55 * 40bps = 36 - 22 = 14 bps gross per trade. Costs ~11 bps RT. Net \u2248 3 bps per trade. Marginal but positive. With 1-2 trades/day, expected daily P&L = 3-6 bps on 1L = 30-60 INR/day. Needs volume to be meaningful. Consider increasing capital per trade to 2-3L.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "breakout intraday volatility",
+    "num_within_family_comparisons": 4,
+    "variant_pairs": [],
+    "different_pairs": [
+      "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json"
+    ]
+  }
+}

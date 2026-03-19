@@ -1,0 +1,3728 @@
+[
+  {
+    "family_name": "stat_arb pairs sector",
+    "family_slug": "stat_arb_pairs_sector",
+    "member_indices": [
+      0,
+      13,
+      88,
+      121,
+      122,
+      123,
+      318,
+      324
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+      "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+      "all_trading_strategies/opus/Opus_17_of_50.json",
+      "all_trading_strategies/opus/Opus_22_of_50.json"
+    ],
+    "member_names": [
+      "sector_pair_reversion_v1",
+      "sector_etf_spread_reversion_v1",
+      "relative_reversion_v1",
+      "pairs_trading_bank_v1",
+      "pairs_trading_it_v1",
+      "pairs_trading_auto_v1",
+      "sector_pair_mean_reversion_v1",
+      "it_sector_correlation_arb_v1"
+    ],
+    "size": 8,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+      "all_trading_strategies/claude_project/claude_project_22_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+      "all_trading_strategies/opus/Opus_17_of_50.json",
+      "all_trading_strategies/opus/Opus_22_of_50.json"
+    ],
+    "final_size": 8
+  },
+  {
+    "family_name": "breakout mean_reversion support_resistance",
+    "family_slug": "breakout_mean_reversion_support_resistan",
+    "member_indices": [
+      1,
+      52,
+      113,
+      279,
+      314
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+      "all_trading_strategies/gemini/gemini_18_of_20.json",
+      "all_trading_strategies/opus/Opus_13_of_50.json"
+    ],
+    "member_names": [
+      "prev_day_hl_breakout_v1",
+      "pdh_pdl_fakeout_v141",
+      "previous_day_hl_breakout_v1",
+      "prev_day_hl_reversal",
+      "previous_day_high_low_breakout_v1"
+    ],
+    "size": 5,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+      "all_trading_strategies/gemini/gemini_18_of_20.json",
+      "all_trading_strategies/opus/Opus_13_of_50.json"
+    ],
+    "final_size": 5
+  },
+  {
+    "family_name": "mean_reversion pullback oversold",
+    "family_slug": "mean_reversion_pullback_oversold",
+    "member_indices": [
+      2,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      84,
+      90,
+      295,
+      343
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+      "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "all_trading_strategies/opus/Opus_3_of_50.json"
+    ],
+    "member_names": [
+      "connors_rsi_extreme_v1",
+      "rsi_connors_pullback_v41",
+      "rsi_connors_pullback_v42",
+      "rsi_connors_pullback_v46",
+      "rsi_connors_pullback_v49",
+      "rsi_connors_pullback_v50",
+      "rsi_connors_pullback_v54",
+      "rsi_extreme_reversion_v1",
+      "williams_r_reversion_v1",
+      "rsi_reversal_v1",
+      "rsi_extreme_reversion_v1"
+    ],
+    "size": 11,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_041.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_042.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_046.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_049.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_050.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_054.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json",
+      "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "all_trading_strategies/opus/Opus_3_of_50.json"
+    ],
+    "final_size": 11
+  },
+  {
+    "family_name": "breakout momentum orb",
+    "family_slug": "breakout_momentum_orb",
+    "member_indices": [
+      3,
+      17,
+      34,
+      35,
+      36,
+      283,
+      294,
+      302,
+      360
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+      "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+      "all_trading_strategies/gemini/gemini_2_of_20.json",
+      "all_trading_strategies/gpt/GPT_3_of_10.json",
+      "all_trading_strategies/grok/Grok_1_of_10.json",
+      "all_trading_strategies/opus/Opus_9_of_50.json"
+    ],
+    "member_names": [
+      "first_hour_range_breakout_v1",
+      "orb_15min_v1",
+      "orb_momentum_v22",
+      "orb_momentum_v29",
+      "orb_momentum_v32",
+      "opening_range_breakout_15",
+      "opening_range_breakout_v1",
+      "orb_breakout_v1",
+      "opening_range_breakout_v1"
+    ],
+    "size": 9,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_13_of_25.json",
+      "all_trading_strategies/claude_project/claude_project_2_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_022.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_029.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_032.json",
+      "all_trading_strategies/gemini/gemini_2_of_20.json",
+      "all_trading_strategies/gpt/GPT_3_of_10.json",
+      "all_trading_strategies/grok/Grok_1_of_10.json",
+      "all_trading_strategies/opus/Opus_9_of_50.json"
+    ],
+    "final_size": 9
+  },
+  {
+    "family_name": "breakout intraday volatility",
+    "family_slug": "breakout_intraday_volatility",
+    "member_indices": [
+      4,
+      74,
+      109,
+      142,
+      150
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json"
+    ],
+    "member_names": [
+      "bb_squeeze_breakout_v1",
+      "vwap_band_squeeze_v1",
+      "volatility_contraction_breakout_v1",
+      "bollinger_squeeze_v1",
+      "vol_breakout_squeeze_v1"
+    ],
+    "size": 5,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_14_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_004.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_039.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_072.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_080.json"
+    ],
+    "final_size": 5
+  },
+  {
+    "family_name": "momentum close_auction microstructure",
+    "family_slug": "momentum_close_auction_microstructure",
+    "member_indices": [
+      5
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_15_of_25.json"
+    ],
+    "member_names": [
+      "moc_drift_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_15_of_25.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "keltner volatility trend_following",
+    "family_slug": "keltner_volatility_trend_following",
+    "member_indices": [
+      6,
+      82,
+      329
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+      "all_trading_strategies/opus/Opus_27_of_50.json"
+    ],
+    "member_names": [
+      "keltner_channel_trend_v1",
+      "keltner_channel_reversion_v1",
+      "atr_channel_breakout_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_16_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_012.json",
+      "all_trading_strategies/opus/Opus_27_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "mean_reversion microstructure psychological_level",
+    "family_slug": "mean_reversion_microstructure_psychologi",
+    "member_indices": [
+      7,
+      290
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_17_of_25.json",
+      "all_trading_strategies/gemini/gemini_9_of_20.json"
+    ],
+    "member_names": [
+      "round_number_reversal_v1",
+      "psychological_level_mean_reversion"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_17_of_25.json",
+      "all_trading_strategies/gemini/gemini_9_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "momentum factor composite",
+    "family_slug": "momentum_factor_composite",
+    "member_indices": [
+      8,
+      225,
+      226
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_18_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_155.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_156.json"
+    ],
+    "member_names": [
+      "nifty_intraday_momentum_factor_v1",
+      "factor_momentum_v1",
+      "quality_momentum_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_18_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_155.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_156.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "breakout atr volatility",
+    "family_slug": "breakout_atr_volatility",
+    "member_indices": [
+      9,
+      120,
+      143,
+      297,
+      311,
+      316,
+      326
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "all_trading_strategies/opus/Opus_10_of_50.json",
+      "all_trading_strategies/opus/Opus_15_of_50.json",
+      "all_trading_strategies/opus/Opus_24_of_50.json"
+    ],
+    "member_names": [
+      "atr_expansion_breakout_v1",
+      "atr_expansion_breakout_v1",
+      "atr_breakout_volatility_v1",
+      "atr_breakout_v1",
+      "momentum_ignition_v1",
+      "narrow_range_breakout_v1",
+      "intraday_volatility_breakout_v1"
+    ],
+    "size": 7,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_19_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_050.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_073.json",
+      "all_trading_strategies/gpt/GPT_6_of_10.json",
+      "all_trading_strategies/opus/Opus_10_of_50.json",
+      "all_trading_strategies/opus/Opus_15_of_50.json",
+      "all_trading_strategies/opus/Opus_24_of_50.json"
+    ],
+    "final_size": 7
+  },
+  {
+    "family_name": "vwap mean_reversion intraday",
+    "family_slug": "vwap_mean_reversion_intraday",
+    "member_indices": [
+      10,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      62,
+      63,
+      64,
+      67,
+      68,
+      69,
+      70,
+      71,
+      281,
+      289,
+      293,
+      321,
+      354
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_1_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_010.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_opening_drive_reversal_001.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_opening_range_breakout_002.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_range_day_band_fade_003.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_001.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_002.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_003.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_reclaim_trend_001.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_001.json",
+      "all_trading_strategies/gemini/gemini_1_of_20.json",
+      "all_trading_strategies/gemini/gemini_8_of_20.json",
+      "all_trading_strategies/gpt/GPT_2_of_10.json",
+      "all_trading_strategies/opus/Opus_1_of_50.json",
+      "all_trading_strategies/opus/Opus_4_of_50.json"
+    ],
+    "member_names": [
+      "vwap_mean_reversion_v1",
+      "vwap_mean_reversion_v3",
+      "vwap_mean_reversion_v5",
+      "vwap_mean_reversion_v10",
+      "vwap_mean_reversion_v11",
+      "vwap_mean_reversion_v12",
+      "vwap_mean_reversion_v13",
+      "vwap_mean_reversion_v14",
+      "vwap_mean_reversion_v18",
+      "vwap_mean_reversion_v19",
+      "opening_drive_reversal_001",
+      "opening_range_breakout_002",
+      "range_day_band_fade_003",
+      "vwap_overshoot_fade_001",
+      "vwap_overshoot_fade_002",
+      "vwap_overshoot_fade_003",
+      "vwap_reclaim_trend_001",
+      "vwap_mean_reversion_basic_v1",
+      "vwap_zscore_mean_reversion",
+      "pullback_to_vwap_trend_ride",
+      "vwap_mean_reversion_v1",
+      "vwap_mean_reversion_v1",
+      "vwap_band_reversion_v1"
+    ],
+    "size": 23,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_1_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_003.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_005.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_010.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_011.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_012.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_013.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_014.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_018.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_019.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_opening_drive_reversal_001.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_opening_range_breakout_002.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_range_day_band_fade_003.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_001.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_002.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_overshoot_fade_003.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_vwap_reclaim_trend_001.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_001.json",
+      "all_trading_strategies/gemini/gemini_1_of_20.json",
+      "all_trading_strategies/gemini/gemini_8_of_20.json",
+      "all_trading_strategies/gpt/GPT_2_of_10.json",
+      "all_trading_strategies/opus/Opus_1_of_50.json",
+      "all_trading_strategies/opus/Opus_4_of_50.json"
+    ],
+    "final_size": 23
+  },
+  {
+    "family_name": "vwap momentum trend",
+    "family_slug": "vwap_momentum_trend",
+    "member_indices": [
+      11,
+      75
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_20_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_005.json"
+    ],
+    "member_names": [
+      "vwap_slope_momentum_v1",
+      "vwap_slope_trend_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_20_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_005.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "macd momentum mean_reversion",
+    "family_slug": "macd_momentum_mean_reversion",
+    "member_indices": [
+      12,
+      43,
+      92
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json"
+    ],
+    "member_names": [
+      "macd_histogram_divergence_v1",
+      "macd_trend_continuation_v71",
+      "macd_signal_momentum_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "donchian breakout trend_following",
+    "family_slug": "donchian_breakout_trend_following",
+    "member_indices": [
+      14,
+      95
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_23_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_025.json"
+    ],
+    "member_names": [
+      "donchian_channel_breakout_v1",
+      "price_channel_breakout_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_23_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_025.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "gap momentum intraday",
+    "family_slug": "gap_momentum_intraday",
+    "member_indices": [
+      15,
+      18,
+      61,
+      79,
+      101,
+      132,
+      134,
+      135,
+      139,
+      140,
+      300,
+      303,
+      331,
+      333,
+      334,
+      347,
+      357
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+      "all_trading_strategies/claude_project/claude_project_3_of_25.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_009.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_031.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_062.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_065.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_069.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_070.json",
+      "all_trading_strategies/gpt/GPT_9_of_10.json",
+      "all_trading_strategies/grok/Grok_2_of_10.json",
+      "all_trading_strategies/opus/Opus_29_of_50.json",
+      "all_trading_strategies/opus/Opus_30_of_50.json",
+      "all_trading_strategies/opus/Opus_31_of_50.json",
+      "all_trading_strategies/opus/Opus_43_of_50.json",
+      "all_trading_strategies/opus/Opus_6_of_50.json"
+    ],
+    "member_names": [
+      "gap_continuation_v1",
+      "gap_fill_fade_v1",
+      "gap_fill_stall_001",
+      "vwap_gap_fill_v1",
+      "gap_continuation_momentum_v1",
+      "gap_fill_partial_v1",
+      "gap_continuation_v1",
+      "gap_reversal_volume_v1",
+      "opening_drive_post_gap_v1",
+      "gap_exhaustion_v1",
+      "gap_fade_v1",
+      "gap_momentum_v1",
+      "gap_continuation_momentum_v1",
+      "partial_gap_fill_scalp_v1",
+      "gap_and_go_with_volume_v1",
+      "gap_vwap_momentum_trifecta_v1",
+      "overnight_gap_reversion_v1"
+    ],
+    "size": 17,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+      "all_trading_strategies/claude_project/claude_project_3_of_25.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_009.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_031.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_062.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_065.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_069.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_070.json",
+      "all_trading_strategies/gpt/GPT_9_of_10.json",
+      "all_trading_strategies/grok/Grok_2_of_10.json",
+      "all_trading_strategies/opus/Opus_29_of_50.json",
+      "all_trading_strategies/opus/Opus_30_of_50.json",
+      "all_trading_strategies/opus/Opus_31_of_50.json",
+      "all_trading_strategies/opus/Opus_43_of_50.json",
+      "all_trading_strategies/opus/Opus_6_of_50.json"
+    ],
+    "final_size": 17
+  },
+  {
+    "family_name": "composite multi_factor ensemble",
+    "family_slug": "composite_multi_factor_ensemble",
+    "member_indices": [
+      16
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_25_of_25.json"
+    ],
+    "member_names": [
+      "multi_factor_composite_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_25_of_25.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "momentum trend_following ema",
+    "family_slug": "momentum_trend_following_ema",
+    "member_indices": [
+      19,
+      91,
+      273,
+      292,
+      298,
+      312,
+      315,
+      356
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "all_trading_strategies/opus/Opus_11_of_50.json",
+      "all_trading_strategies/opus/Opus_14_of_50.json",
+      "all_trading_strategies/opus/Opus_5_of_50.json"
+    ],
+    "member_names": [
+      "intraday_momentum_ema_cross_v1",
+      "ema_crossover_momentum_v1",
+      "adx_strong_trend_pullback",
+      "sma_crossover_banknifty_v1",
+      "ema_crossover_v1",
+      "intraday_trend_following_v1",
+      "first_pullback_after_trend_v1",
+      "ema_crossover_reversion_v1"
+    ],
+    "size": 8,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_4_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_021.json",
+      "all_trading_strategies/gemini/gemini_12_of_20.json",
+      "all_trading_strategies/gpt/GPT_1_of_10.json",
+      "all_trading_strategies/gpt/GPT_7_of_10.json",
+      "all_trading_strategies/opus/Opus_11_of_50.json",
+      "all_trading_strategies/opus/Opus_14_of_50.json",
+      "all_trading_strategies/opus/Opus_5_of_50.json"
+    ],
+    "final_size": 8
+  },
+  {
+    "family_name": "stat_arb relative_strength pairs",
+    "family_slug": "stat_arb_relative_strength_pairs",
+    "member_indices": [
+      20,
+      124
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_5_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_054.json"
+    ],
+    "member_names": [
+      "relative_strength_index_divergence_v1",
+      "index_arb_nifty_components_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_5_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_054.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "volatility vix mean_reversion",
+    "family_slug": "volatility_vix_mean_reversion",
+    "member_indices": [
+      21,
+      49,
+      50,
+      51,
+      141,
+      146,
+      240,
+      278,
+      285,
+      308,
+      310,
+      325,
+      327,
+      348
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "all_trading_strategies/gemini/gemini_4_of_20.json",
+      "all_trading_strategies/grok/Grok_7_of_10.json",
+      "all_trading_strategies/grok/Grok_9_of_10.json",
+      "all_trading_strategies/opus/Opus_23_of_50.json",
+      "all_trading_strategies/opus/Opus_25_of_50.json",
+      "all_trading_strategies/opus/Opus_44_of_50.json"
+    ],
+    "member_names": [
+      "vix_regime_breakout_v1",
+      "vix_filtered_index_trend_v124",
+      "vix_filtered_index_trend_v126",
+      "vix_filtered_index_trend_v133",
+      "vix_regime_switch_v1",
+      "vix_mean_reversion_v1",
+      "vix_bucket_strategy_v1",
+      "vix_spike_mean_reversion",
+      "momentum_exhaustion_vix_reversal",
+      "ma_crossover_momentum_v1",
+      "pullback_momentum_v1",
+      "vix_regime_switch_v1",
+      "vix_mean_reversion_intraday_v1",
+      "pairs_plus_vix_overlay_v1"
+    ],
+    "size": 14,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json",
+      "all_trading_strategies/gemini/gemini_17_of_20.json",
+      "all_trading_strategies/gemini/gemini_4_of_20.json",
+      "all_trading_strategies/grok/Grok_7_of_10.json",
+      "all_trading_strategies/grok/Grok_9_of_10.json",
+      "all_trading_strategies/opus/Opus_23_of_50.json",
+      "all_trading_strategies/opus/Opus_25_of_50.json",
+      "all_trading_strategies/opus/Opus_44_of_50.json"
+    ],
+    "final_size": 14
+  },
+  {
+    "family_name": "breakout volume volume_profile",
+    "family_slug": "breakout_volume_volume_profile",
+    "member_indices": [
+      22,
+      110,
+      299
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_7_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_040.json",
+      "all_trading_strategies/gpt/GPT_8_of_10.json"
+    ],
+    "member_names": [
+      "volume_profile_breakout_v1",
+      "volume_breakout_v1",
+      "volume_breakout_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_7_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_040.json",
+      "all_trading_strategies/gpt/GPT_8_of_10.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "stat_arb lead_lag cross_asset",
+    "family_slug": "stat_arb_lead_lag_cross_asset",
+    "member_indices": [
+      23,
+      274
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_8_of_25.json",
+      "all_trading_strategies/gemini/gemini_13_of_20.json"
+    ],
+    "member_names": [
+      "banknifty_lead_lag_v1",
+      "nifty_bank_lag_arbitrage"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_8_of_25.json",
+      "all_trading_strategies/gemini/gemini_13_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "divergence mean_reversion rsi",
+    "family_slug": "divergence_mean_reversion_rsi",
+    "member_indices": [
+      24,
+      352,
+      358
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/claude_project/claude_project_9_of_25.json",
+      "all_trading_strategies/opus/Opus_48_of_50.json",
+      "all_trading_strategies/opus/Opus_7_of_50.json"
+    ],
+    "member_names": [
+      "rsi_divergence_vwap_v1",
+      "divergence_plus_level_confluence_v1",
+      "intraday_rsi_divergence_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/claude_project/claude_project_9_of_25.json",
+      "all_trading_strategies/opus/Opus_48_of_50.json",
+      "all_trading_strategies/opus/Opus_7_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "volatility breakout momentum",
+    "family_slug": "volatility_breakout_momentum",
+    "member_indices": [
+      44,
+      288
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_082.json",
+      "all_trading_strategies/gemini/gemini_7_of_20.json"
+    ],
+    "member_names": [
+      "bollinger_squeeze_breakout_v82",
+      "bollinger_squeeze_breakout"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_082.json",
+      "all_trading_strategies/gemini/gemini_7_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "gap mean_reversion momentum",
+    "family_slug": "gap_mean_reversion_momentum",
+    "member_indices": [
+      45,
+      46,
+      47,
+      48,
+      272
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "all_trading_strategies/gemini/gemini_11_of_20.json"
+    ],
+    "member_names": [
+      "gap_fade_reversion_v103",
+      "gap_fade_reversion_v104",
+      "gap_fade_reversion_v106",
+      "gap_fade_reversion_v116",
+      "gap_momentum_continuation"
+    ],
+    "size": 5,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "all_trading_strategies/gemini/gemini_11_of_20.json"
+    ],
+    "final_size": 5
+  },
+  {
+    "family_name": "price_action mean_reversion breakout",
+    "family_slug": "price_action_mean_reversion_breakout",
+    "member_indices": [
+      53,
+      280,
+      304,
+      359
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+      "all_trading_strategies/gemini/gemini_19_of_20.json",
+      "all_trading_strategies/grok/Grok_3_of_10.json",
+      "all_trading_strategies/opus/Opus_8_of_50.json"
+    ],
+    "member_names": [
+      "inside_bar_breakout_v177",
+      "volume_spike_exhaustion_fade",
+      "open_high_low_v1",
+      "microstructure_volume_reversion_v1"
+    ],
+    "size": 4,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+      "all_trading_strategies/gemini/gemini_19_of_20.json",
+      "all_trading_strategies/grok/Grok_3_of_10.json",
+      "all_trading_strategies/opus/Opus_8_of_50.json"
+    ],
+    "final_size": 4
+  },
+  {
+    "family_name": "momentum stat_arb relative_strength",
+    "family_slug": "momentum_stat_arb_relative_strength",
+    "member_indices": [
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      65,
+      284
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "all_trading_strategies/gemini/gemini_3_of_20.json"
+    ],
+    "member_names": [
+      "index_relative_strength_v181",
+      "index_relative_strength_v182",
+      "index_relative_strength_v183",
+      "index_relative_strength_v187",
+      "index_relative_strength_v189",
+      "index_relative_strength_v192",
+      "index_relative_strength_v200",
+      "relative_strength_breakout_003",
+      "sector_relative_strength_momentum"
+    ],
+    "size": 9,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "all_trading_strategies/gemini/gemini_3_of_20.json"
+    ],
+    "final_size": 9
+  },
+  {
+    "family_name": "breakout momentum volatility",
+    "family_slug": "breakout_momentum_volatility",
+    "member_indices": [
+      66,
+      286
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_squeeze_release_breakout_001.json",
+      "all_trading_strategies/gemini/gemini_5_of_20.json"
+    ],
+    "member_names": [
+      "squeeze_release_breakout_001",
+      "vwap_pinch_breakout"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_squeeze_release_breakout_001.json",
+      "all_trading_strategies/gemini/gemini_5_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "z-score statistical mean-reversion",
+    "family_slug": "z_score_statistical_mean_reversion",
+    "member_indices": [
+      72,
+      83
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_002.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_013.json"
+    ],
+    "member_names": [
+      "vwap_zscore_bounce_v1",
+      "zscore_reversion_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_002.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_013.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "vwap intraday crossover",
+    "family_slug": "vwap_intraday_crossover",
+    "member_indices": [
+      73,
+      76,
+      136
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json"
+    ],
+    "member_names": [
+      "vwap_cross_momentum_v1",
+      "vwap_anchored_support_v1",
+      "gap_to_vwap_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "vwap volume divergence",
+    "family_slug": "vwap_volume_divergence",
+    "member_indices": [
+      77
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_007.json"
+    ],
+    "member_names": [
+      "vwap_volume_divergence_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_007.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "vwap rsi confluence",
+    "family_slug": "vwap_rsi_confluence",
+    "member_indices": [
+      78,
+      221,
+      345
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+      "all_trading_strategies/opus/Opus_41_of_50.json"
+    ],
+    "member_names": [
+      "vwap_rsi_confluence_v1",
+      "vwap_rsi_volume_hybrid_v1",
+      "vwap_rsi_volume_confluence_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_008.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_151.json",
+      "all_trading_strategies/opus/Opus_41_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "momentum relative-strength index-relative",
+    "family_slug": "momentum_relative_strength_index_relativ",
+    "member_indices": [
+      80,
+      97,
+      313
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+      "all_trading_strategies/opus/Opus_12_of_50.json"
+    ],
+    "member_names": [
+      "vwap_relative_strength_v1",
+      "relative_momentum_v1",
+      "relative_strength_momentum_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_010.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_027.json",
+      "all_trading_strategies/opus/Opus_12_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "bollinger mean_reversion volatility",
+    "family_slug": "bollinger_mean_reversion_volatility",
+    "member_indices": [
+      81,
+      296,
+      306,
+      332
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_011.json",
+      "all_trading_strategies/gpt/GPT_5_of_10.json",
+      "all_trading_strategies/grok/Grok_5_of_10.json",
+      "all_trading_strategies/opus/Opus_2_of_50.json"
+    ],
+    "member_names": [
+      "bollinger_mean_reversion_v1",
+      "bollinger_band_reversion_v1",
+      "bollinger_price_action_v1",
+      "bollinger_squeeze_reversion_v1"
+    ],
+    "size": 4,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_011.json",
+      "all_trading_strategies/gpt/GPT_5_of_10.json",
+      "all_trading_strategies/grok/Grok_5_of_10.json",
+      "all_trading_strategies/opus/Opus_2_of_50.json"
+    ],
+    "final_size": 4
+  },
+  {
+    "family_name": "ema deviation mean-reversion",
+    "family_slug": "ema_deviation_mean_reversion",
+    "member_indices": [
+      85
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_015.json"
+    ],
+    "member_names": [
+      "deviation_from_ema_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_015.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "range high-low mean-reversion",
+    "family_slug": "range_high_low_mean_reversion",
+    "member_indices": [
+      86,
+      223
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_016.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_153.json"
+    ],
+    "member_names": [
+      "intraday_range_reversion_v1",
+      "trend_counter_trend_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_016.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_153.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "microstructure imbalance order-flow",
+    "family_slug": "microstructure_imbalance_order_flow",
+    "member_indices": [
+      87,
+      171,
+      173,
+      176
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json"
+    ],
+    "member_names": [
+      "microstructure_reversion_v1",
+      "bid_ask_imbalance_v1",
+      "tick_direction_momentum_v1",
+      "order_flow_imbalance_v1"
+    ],
+    "size": 4,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json"
+    ],
+    "final_size": 4
+  },
+  {
+    "family_name": "stochastic mean-reversion oversold",
+    "family_slug": "stochastic_mean_reversion_oversold",
+    "member_indices": [
+      89
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_019.json"
+    ],
+    "member_names": [
+      "stochastic_reversion_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_019.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "adx trend-strength directional-movement",
+    "family_slug": "adx_trend_strength_directional_movement",
+    "member_indices": [
+      93
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_023.json"
+    ],
+    "member_names": [
+      "adx_trend_strength_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_023.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "roc rate-of-change momentum",
+    "family_slug": "roc_rate_of_change_momentum",
+    "member_indices": [
+      94
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_024.json"
+    ],
+    "member_names": [
+      "roc_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_024.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "composite multi-indicator momentum-score",
+    "family_slug": "composite_multi_indicator_momentum_score",
+    "member_indices": [
+      96
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_026.json"
+    ],
+    "member_names": [
+      "momentum_score_composite_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_026.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "volume-weighted momentum vol-price-trend",
+    "family_slug": "volume_weighted_momentum_vol_price_trend",
+    "member_indices": [
+      98,
+      338
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_028.json",
+      "all_trading_strategies/opus/Opus_35_of_50.json"
+    ],
+    "member_names": [
+      "volume_momentum_v1",
+      "order_flow_imbalance_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_028.json",
+      "all_trading_strategies/opus/Opus_35_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "acceleration second-derivative momentum",
+    "family_slug": "acceleration_second_derivative_momentum",
+    "member_indices": [
+      99
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_029.json"
+    ],
+    "member_names": [
+      "acceleration_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_029.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "institutional large-order flow-detection",
+    "family_slug": "institutional_large_order_flow_detection",
+    "member_indices": [
+      100,
+      172
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_030.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_102.json"
+    ],
+    "member_names": [
+      "institutional_flow_momentum_v1",
+      "trade_size_clustering_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_030.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_102.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "linear-regression channel trend-following",
+    "family_slug": "linear_regression_channel_trend_followin",
+    "member_indices": [
+      102
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_032.json"
+    ],
+    "member_names": [
+      "intraday_trend_channel_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_032.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "parabolic-sar trend-following stop-and-reverse",
+    "family_slug": "parabolic_sar_trend_following_stop_and_r",
+    "member_indices": [
+      103
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_033.json"
+    ],
+    "member_names": [
+      "parabolic_sar_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_033.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "supertrend atr-based trend-following",
+    "family_slug": "supertrend_atr_based_trend_following",
+    "member_indices": [
+      104
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_034.json"
+    ],
+    "member_names": [
+      "supertrend_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_034.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "hull-ma weighted-ma low-lag",
+    "family_slug": "hull_ma_weighted_ma_low_lag",
+    "member_indices": [
+      105,
+      276
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_035.json",
+      "all_trading_strategies/gemini/gemini_15_of_20.json"
+    ],
+    "member_names": [
+      "hull_ma_momentum_v1",
+      "mean_reversion_hull_ma"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_035.json",
+      "all_trading_strategies/gemini/gemini_15_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "orb intraday breakout",
+    "family_slug": "orb_intraday_breakout",
+    "member_indices": [
+      106,
+      107,
+      156,
+      159,
+      160,
+      165,
+      170
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json"
+    ],
+    "member_names": [
+      "opening_range_breakout_v1",
+      "opening_range_breakout_30_v1",
+      "orb_5min_v1",
+      "orb_narrow_range_v1",
+      "orb_wide_range_fade_v1",
+      "orb_gap_combo_v1",
+      "orb_closing_range_v1"
+    ],
+    "size": 7,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_036.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_037.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_086.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_089.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_090.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_095.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_100.json"
+    ],
+    "final_size": 7
+  },
+  {
+    "family_name": "narrow-range nr4 nr7",
+    "family_slug": "narrow_range_nr4_nr7",
+    "member_indices": [
+      108
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_038.json"
+    ],
+    "member_names": [
+      "narrow_range_breakout_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_038.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "consolidation breakout intraday",
+    "family_slug": "consolidation_breakout_intraday",
+    "member_indices": [
+      111,
+      114
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_041.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_044.json"
+    ],
+    "member_names": [
+      "range_expansion_breakout_v1",
+      "consolidation_breakout_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_041.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_044.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "pivot-points support-resistance breakout",
+    "family_slug": "pivot_points_support_resistance_breakout",
+    "member_indices": [
+      112,
+      218
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_042.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_148.json"
+    ],
+    "member_names": [
+      "pivot_point_breakout_v1",
+      "pivot_camarilla_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_042.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_148.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "vwap breakout level-based",
+    "family_slug": "vwap_breakout_level_based",
+    "member_indices": [
+      115
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_045.json"
+    ],
+    "member_names": [
+      "vwap_breakout_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_045.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "fibonacci retracement breakout",
+    "family_slug": "fibonacci_retracement_breakout",
+    "member_indices": [
+      116,
+      282
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_046.json",
+      "all_trading_strategies/gemini/gemini_20_of_20.json"
+    ],
+    "member_names": [
+      "fibonacci_breakout_v1",
+      "fibonacci_intraday_retracement"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_046.json",
+      "all_trading_strategies/gemini/gemini_20_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "pre-market implied-range breakout",
+    "family_slug": "pre_market_implied_range_breakout",
+    "member_indices": [
+      117
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_047.json"
+    ],
+    "member_names": [
+      "premarket_range_breakout_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_047.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "index-correlated nifty-confirmed breakout",
+    "family_slug": "index_correlated_nifty_confirmed_breakou",
+    "member_indices": [
+      118,
+      190,
+      234
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_048.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_120.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_164.json"
+    ],
+    "member_names": [
+      "index_correlated_breakout_v1",
+      "market_breadth_signal_v1",
+      "composite_breadth_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_048.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_120.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_164.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "multi-timeframe 1min-5min alignment",
+    "family_slug": "multi_timeframe_1min_5min_alignment",
+    "member_indices": [
+      119,
+      349
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_049.json",
+      "all_trading_strategies/opus/Opus_45_of_50.json"
+    ],
+    "member_names": [
+      "multi_timeframe_breakout_v1",
+      "multi_timeframe_confirmation_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_049.json",
+      "all_trading_strategies/opus/Opus_45_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "stat_arb etf nav_arbitrage",
+    "family_slug": "stat_arb_etf_nav_arbitrage",
+    "member_indices": [
+      125
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_055.json"
+    ],
+    "member_names": [
+      "etf_nav_arbitrage_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_055.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "relative_value sector_rotation stat_arb",
+    "family_slug": "relative_value_sector_rotation_stat_arb",
+    "member_indices": [
+      126,
+      182,
+      187,
+      233
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json"
+    ],
+    "member_names": [
+      "sector_rotation_stat_arb_v1",
+      "banking_vs_it_rotation_v1",
+      "nifty_banknifty_spread_v1",
+      "multi_asset_signal_v1"
+    ],
+    "size": 4,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json"
+    ],
+    "final_size": 4
+  },
+  {
+    "family_name": "stat_arb beta_neutral market_neutral",
+    "family_slug": "stat_arb_beta_neutral_market_neutral",
+    "member_indices": [
+      127
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_057.json"
+    ],
+    "member_names": [
+      "beta_neutral_stat_arb_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_057.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "cointegration stat_arb engle_granger",
+    "family_slug": "cointegration_stat_arb_engle_granger",
+    "member_indices": [
+      128,
+      255
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_058.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_185.json"
+    ],
+    "member_names": [
+      "cointegration_pairs_v1",
+      "cointegration_residual_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_058.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_185.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "correlation stat_arb regime_change",
+    "family_slug": "correlation_stat_arb_regime_change",
+    "member_indices": [
+      129,
+      247
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_059.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_177.json"
+    ],
+    "member_names": [
+      "correlation_breakdown_arb_v1",
+      "correlation_regime_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_059.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_177.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "stat_arb exchange_arb cross_listed",
+    "family_slug": "stat_arb_exchange_arb_cross_listed",
+    "member_indices": [
+      130,
+      323
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_060.json",
+      "all_trading_strategies/opus/Opus_21_of_50.json"
+    ],
+    "member_names": [
+      "cross_listed_arb_v1",
+      "dual_listing_spread_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_060.json",
+      "all_trading_strategies/opus/Opus_21_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "gap intraday gap_fill",
+    "family_slug": "gap_intraday_gap_fill",
+    "member_indices": [
+      131,
+      133,
+      194
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json"
+    ],
+    "member_names": [
+      "gap_fill_full_v1",
+      "gap_fade_large_v1",
+      "global_cue_reaction_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "gap relative_strength index_comparison",
+    "family_slug": "gap_relative_strength_index_comparison",
+    "member_indices": [
+      137,
+      335
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_067.json",
+      "all_trading_strategies/opus/Opus_32_of_50.json"
+    ],
+    "member_names": [
+      "gap_relative_index_v1",
+      "index_gap_constituent_lag_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_067.json",
+      "all_trading_strategies/opus/Opus_32_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "momentum gap sector_leader",
+    "family_slug": "momentum_gap_sector_leader",
+    "member_indices": [
+      138,
+      185,
+      256
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_068.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_115.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_186.json"
+    ],
+    "member_names": [
+      "gap_sector_leader_v1",
+      "sector_leader_follower_v1",
+      "granger_causality_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_068.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_115.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_186.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "volatility intraday implied_vol",
+    "family_slug": "volatility_intraday_implied_vol",
+    "member_indices": [
+      144,
+      155,
+      330
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_074.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_085.json",
+      "all_trading_strategies/opus/Opus_28_of_50.json"
+    ],
+    "member_names": [
+      "implied_vs_realized_vol_v1",
+      "vol_surface_signal_v1",
+      "implied_vol_dislocation_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_074.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_085.json",
+      "all_trading_strategies/opus/Opus_28_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "volatility garch clustering",
+    "family_slug": "volatility_garch_clustering",
+    "member_indices": [
+      145
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_075.json"
+    ],
+    "member_names": [
+      "vol_clustering_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_075.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "intraday volatility low_vol_anomaly",
+    "family_slug": "intraday_volatility_low_vol_anomaly",
+    "member_indices": [
+      147,
+      154,
+      227
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json"
+    ],
+    "member_names": [
+      "low_vol_momentum_v1",
+      "overnight_vol_carry_v1",
+      "smart_beta_intraday_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "volatility mean_reversion vol_scaled",
+    "family_slug": "volatility_mean_reversion_vol_scaled",
+    "member_indices": [
+      148
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_078.json"
+    ],
+    "member_names": [
+      "vol_adjusted_reversion_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_078.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "volatility u_shape intraday_pattern",
+    "family_slug": "volatility_u_shape_intraday_pattern",
+    "member_indices": [
+      149
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_079.json"
+    ],
+    "member_names": [
+      "intraday_vol_pattern_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_079.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "volatility straddle synthetic",
+    "family_slug": "volatility_straddle_synthetic",
+    "member_indices": [
+      151
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_081.json"
+    ],
+    "member_names": [
+      "straddle_proxy_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_081.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "volatility vol_of_vol second_order",
+    "family_slug": "volatility_vol_of_vol_second_order",
+    "member_indices": [
+      152
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_082.json"
+    ],
+    "member_names": [
+      "vol_of_vol_signal_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_082.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "hmm volatility regime_detection",
+    "family_slug": "hmm_volatility_regime_detection",
+    "member_indices": [
+      153,
+      236
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_083.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_166.json"
+    ],
+    "member_names": [
+      "regime_detection_vol_v1",
+      "hmm_regime_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_083.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_166.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "orb intraday opening_range",
+    "family_slug": "orb_intraday_opening_range",
+    "member_indices": [
+      157,
+      158,
+      163
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json"
+    ],
+    "member_names": [
+      "orb_15min_filtered_v1",
+      "orb_30min_volume_v1",
+      "orb_vwap_confirmation_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_087.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_088.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_093.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "orb intraday index_aligned",
+    "family_slug": "orb_intraday_index_aligned",
+    "member_indices": [
+      161,
+      162,
+      167,
+      350
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+      "all_trading_strategies/opus/Opus_46_of_50.json"
+    ],
+    "member_names": [
+      "orb_index_aligned_v1",
+      "orb_sector_momentum_v1",
+      "orb_multi_stock_v1",
+      "orb_plus_sector_filter_v1"
+    ],
+    "size": 4,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+      "all_trading_strategies/opus/Opus_46_of_50.json"
+    ],
+    "final_size": 4
+  },
+  {
+    "family_name": "orb intraday failure",
+    "family_slug": "orb_intraday_failure",
+    "member_indices": [
+      164,
+      168,
+      169
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_094.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_098.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_099.json"
+    ],
+    "member_names": [
+      "orb_failure_trade_v1",
+      "orb_pullback_entry_v1",
+      "orb_retest_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_094.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_098.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_099.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "orb atr_scaled adaptive_targets",
+    "family_slug": "orb_atr_scaled_adaptive_targets",
+    "member_indices": [
+      166
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_096.json"
+    ],
+    "member_names": [
+      "orb_atr_scaled_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_096.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "microstructure volume_clock time_deformation",
+    "family_slug": "microstructure_volume_clock_time_deforma",
+    "member_indices": [
+      174
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_104.json"
+    ],
+    "member_names": [
+      "volume_clock_signal_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_104.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "microstructure price_impact mean_reversion",
+    "family_slug": "microstructure_price_impact_mean_reversi",
+    "member_indices": [
+      175,
+      178
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_105.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_108.json"
+    ],
+    "member_names": [
+      "price_impact_reversion_v1",
+      "liquidity_provision_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_105.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_108.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "microstructure adverse_selection vpin",
+    "family_slug": "microstructure_adverse_selection_vpin",
+    "member_indices": [
+      177
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_107.json"
+    ],
+    "member_names": [
+      "adverse_selection_filter_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_107.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "microstructure trade_arrival intensity",
+    "family_slug": "microstructure_trade_arrival_intensity",
+    "member_indices": [
+      179
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_109.json"
+    ],
+    "member_names": [
+      "trade_arrival_rate_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_109.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "microstructure bid_ask_spread volatility_prediction",
+    "family_slug": "microstructure_bid_ask_spread_volatility",
+    "member_indices": [
+      180
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_110.json"
+    ],
+    "member_names": [
+      "spread_dynamics_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_110.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "sector_rotation momentum relative_strength",
+    "family_slug": "sector_rotation_momentum_relative_streng",
+    "member_indices": [
+      181,
+      320
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_111.json",
+      "all_trading_strategies/opus/Opus_19_of_50.json"
+    ],
+    "member_names": [
+      "sector_momentum_rotation_v1",
+      "sector_rotation_intraday_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_111.json",
+      "all_trading_strategies/opus/Opus_19_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "relative_value large_cap mid_cap",
+    "family_slug": "relative_value_large_cap_mid_cap",
+    "member_indices": [
+      183
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_113.json"
+    ],
+    "member_names": [
+      "large_vs_mid_cap_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_113.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "relative_value fno cash_segment",
+    "family_slug": "relative_value_fno_cash_segment",
+    "member_indices": [
+      184
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_114.json"
+    ],
+    "member_names": [
+      "fno_vs_cash_rotation_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_114.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "relative_value mean_reversion industry_group",
+    "family_slug": "relative_value_mean_reversion_industry_g",
+    "member_indices": [
+      186,
+      322
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_116.json",
+      "all_trading_strategies/opus/Opus_20_of_50.json"
+    ],
+    "member_names": [
+      "industry_group_reversion_v1",
+      "basket_spread_mean_reversion_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_116.json",
+      "all_trading_strategies/opus/Opus_20_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "sector_rotation defensive cyclical",
+    "family_slug": "sector_rotation_defensive_cyclical",
+    "member_indices": [
+      188
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_118.json"
+    ],
+    "member_names": [
+      "defensive_cyclical_switch_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_118.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "sector_rotation vwap divergence",
+    "family_slug": "sector_rotation_vwap_divergence",
+    "member_indices": [
+      189
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_119.json"
+    ],
+    "member_names": [
+      "sector_vwap_divergence_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_119.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "event_driven earnings pead",
+    "family_slug": "event_driven_earnings_pead",
+    "member_indices": [
+      191
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_121.json"
+    ],
+    "member_names": [
+      "earnings_surprise_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_121.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "event_driven volatility rbi",
+    "family_slug": "event_driven_volatility_rbi",
+    "member_indices": [
+      192,
+      199
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_122.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_129.json"
+    ],
+    "member_names": [
+      "rbi_policy_reaction_v1",
+      "budget_day_strategy_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_122.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_129.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "expiry event_driven options",
+    "family_slug": "expiry_event_driven_options",
+    "member_indices": [
+      193,
+      340
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_123.json",
+      "all_trading_strategies/opus/Opus_37_of_50.json"
+    ],
+    "member_names": [
+      "expiry_day_pattern_v1",
+      "expiry_day_premium_decay_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_123.json",
+      "all_trading_strategies/opus/Opus_37_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "event_driven block_deal bulk_deal",
+    "family_slug": "event_driven_block_deal_bulk_deal",
+    "member_indices": [
+      195
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_125.json"
+    ],
+    "member_names": [
+      "block_deal_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_125.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "event_driven corporate_action dividend",
+    "family_slug": "event_driven_corporate_action_dividend",
+    "member_indices": [
+      196
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_126.json"
+    ],
+    "member_names": [
+      "corporate_action_arb_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_126.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "event_driven index_rebalance passive_flow",
+    "family_slug": "event_driven_index_rebalance_passive_flo",
+    "member_indices": [
+      197
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_127.json"
+    ],
+    "member_names": [
+      "index_rebalance_flow_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_127.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "event_driven settlement monthly_expiry",
+    "family_slug": "event_driven_settlement_monthly_expiry",
+    "member_indices": [
+      198
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_128.json"
+    ],
+    "member_names": [
+      "monthly_settlement_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_128.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "event_driven circuit_limit magnet_effect",
+    "family_slug": "event_driven_circuit_limit_magnet_effect",
+    "member_indices": [
+      200
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_130.json"
+    ],
+    "member_names": [
+      "circuit_breaker_proximity_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_130.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading reliance conglomerate",
+    "family_slug": "pairs_trading_reliance_conglomerate",
+    "member_indices": [
+      201
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_131.json"
+    ],
+    "member_names": [
+      "reliance_vs_ril_subsidiaries_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_131.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading hdfc banking",
+    "family_slug": "pairs_trading_hdfc_banking",
+    "member_indices": [
+      202
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_132.json"
+    ],
+    "member_names": [
+      "hdfc_twins_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_132.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading tata conglomerate",
+    "family_slug": "pairs_trading_tata_conglomerate",
+    "member_indices": [
+      203
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_133.json"
+    ],
+    "member_names": [
+      "tata_group_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_133.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading psu_bank government_owned",
+    "family_slug": "pairs_trading_psu_bank_government_owned",
+    "member_indices": [
+      204
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_134.json"
+    ],
+    "member_names": [
+      "psu_bank_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_134.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading pharma generic",
+    "family_slug": "pairs_trading_pharma_generic",
+    "member_indices": [
+      205
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_135.json"
+    ],
+    "member_names": [
+      "pharma_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_135.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading cement infrastructure",
+    "family_slug": "pairs_trading_cement_infrastructure",
+    "member_indices": [
+      206
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_136.json"
+    ],
+    "member_names": [
+      "cement_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_136.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading metal steel",
+    "family_slug": "pairs_trading_metal_steel",
+    "member_indices": [
+      207
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_137.json"
+    ],
+    "member_names": [
+      "metal_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_137.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading fmcg consumer_staples",
+    "family_slug": "pairs_trading_fmcg_consumer_staples",
+    "member_indices": [
+      208
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_138.json"
+    ],
+    "member_names": [
+      "fmcg_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_138.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading telecom duopoly",
+    "family_slug": "pairs_trading_telecom_duopoly",
+    "member_indices": [
+      209
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_139.json"
+    ],
+    "member_names": [
+      "telecom_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_139.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pairs_trading energy oil_gas",
+    "family_slug": "pairs_trading_energy_oil_gas",
+    "member_indices": [
+      210
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_140.json"
+    ],
+    "member_names": [
+      "energy_pairs_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_140.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical harmonic abcd",
+    "family_slug": "advanced_technical_harmonic_abcd",
+    "member_indices": [
+      211
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_141.json"
+    ],
+    "member_names": [
+      "harmonic_pattern_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_141.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical elliott_wave impulse",
+    "family_slug": "advanced_technical_elliott_wave_impulse",
+    "member_indices": [
+      212
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_142.json"
+    ],
+    "member_names": [
+      "elliott_impulse_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_142.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical market_profile poc",
+    "family_slug": "advanced_technical_market_profile_poc",
+    "member_indices": [
+      213
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_143.json"
+    ],
+    "member_names": [
+      "market_profile_poc_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_143.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical order_block fvg",
+    "family_slug": "advanced_technical_order_block_fvg",
+    "member_indices": [
+      214
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_144.json"
+    ],
+    "member_names": [
+      "order_block_entry_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_144.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical ichimoku cloud",
+    "family_slug": "advanced_technical_ichimoku_cloud",
+    "member_indices": [
+      215
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_145.json"
+    ],
+    "member_names": [
+      "ichimoku_cloud_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_145.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical fractal williams",
+    "family_slug": "advanced_technical_fractal_williams",
+    "member_indices": [
+      216
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_146.json"
+    ],
+    "member_names": [
+      "fractal_breakout_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_146.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical td_sequential demark",
+    "family_slug": "advanced_technical_td_sequential_demark",
+    "member_indices": [
+      217
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_147.json"
+    ],
+    "member_names": [
+      "demark_sequential_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_147.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical heikin_ashi trend_following",
+    "family_slug": "advanced_technical_heikin_ashi_trend_fol",
+    "member_indices": [
+      219
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_149.json"
+    ],
+    "member_names": [
+      "heikin_ashi_trend_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_149.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "advanced_technical elder impulse_system",
+    "family_slug": "advanced_technical_elder_impulse_system",
+    "member_indices": [
+      220
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_150.json"
+    ],
+    "member_names": [
+      "elder_impulse_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_150.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "momentum hybrid adaptive",
+    "family_slug": "momentum_hybrid_adaptive",
+    "member_indices": [
+      222,
+      237,
+      346
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+      "all_trading_strategies/opus/Opus_42_of_50.json"
+    ],
+    "member_names": [
+      "momentum_reversion_switch_v1",
+      "vol_regime_adaptive_v1",
+      "momentum_reversal_regime_switch_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_152.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_167.json",
+      "all_trading_strategies/opus/Opus_42_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "consensus multi-indicator voting",
+    "family_slug": "consensus_multi_indicator_voting",
+    "member_indices": [
+      224
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_154.json"
+    ],
+    "member_names": [
+      "multi_indicator_consensus_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_154.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "risk-parity volatility-weighted multi-stock",
+    "family_slug": "risk_parity_volatility_weighted_multi_st",
+    "member_indices": [
+      228
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_158.json"
+    ],
+    "member_names": [
+      "risk_parity_signal_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_158.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "mean-variance markowitz optimal-timing",
+    "family_slug": "mean_variance_markowitz_optimal_timing",
+    "member_indices": [
+      229,
+      245
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_159.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_175.json"
+    ],
+    "member_names": [
+      "mean_variance_optimal_v1",
+      "rolling_sharpe_adaptive_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_159.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_175.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "ensemble hybrid meta-strategy",
+    "family_slug": "ensemble_hybrid_meta_strategy",
+    "member_indices": [
+      230,
+      355
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_160.json",
+      "all_trading_strategies/opus/Opus_50_of_50.json"
+    ],
+    "member_names": [
+      "ensemble_signal_v1",
+      "adversarial_ensemble_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_160.json",
+      "all_trading_strategies/opus/Opus_50_of_50.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "bayesian probability updating",
+    "family_slug": "bayesian_probability_updating",
+    "member_indices": [
+      231
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_161.json"
+    ],
+    "member_names": [
+      "bayesian_update_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_161.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "adaptive threshold regime",
+    "family_slug": "adaptive_threshold_regime",
+    "member_indices": [
+      232
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_162.json"
+    ],
+    "member_names": [
+      "adaptive_threshold_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_162.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "dynamic-weighting indicator-composite performance-weighted",
+    "family_slug": "dynamic_weighting_indicator_composite_pe",
+    "member_indices": [
+      235
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_165.json"
+    ],
+    "member_names": [
+      "weighted_indicator_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_165.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "adx trend-strength adaptive-parameters",
+    "family_slug": "adx_trend_strength_adaptive_parameters",
+    "member_indices": [
+      238
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_168.json"
+    ],
+    "member_names": [
+      "trend_strength_adaptive_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_168.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "classifier market-state trending",
+    "family_slug": "classifier_market_state_trending",
+    "member_indices": [
+      239
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_169.json"
+    ],
+    "member_names": [
+      "market_state_classifier_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_169.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "autocorrelation regime serial-correlation",
+    "family_slug": "autocorrelation_regime_serial_correlatio",
+    "member_indices": [
+      241
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_171.json"
+    ],
+    "member_names": [
+      "autocorrelation_regime_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_171.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "hurst-exponent fractal regime",
+    "family_slug": "hurst_exponent_fractal_regime",
+    "member_indices": [
+      242
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_172.json"
+    ],
+    "member_names": [
+      "hurst_exponent_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_172.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "fractal dimension complexity",
+    "family_slug": "fractal_dimension_complexity",
+    "member_indices": [
+      243
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_173.json"
+    ],
+    "member_names": [
+      "fractal_dimension_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_173.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "quantitative entropy information-theory",
+    "family_slug": "quantitative_entropy_information_theory",
+    "member_indices": [
+      244,
+      258
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_174.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_188.json"
+    ],
+    "member_names": [
+      "entropy_regime_v1",
+      "maximum_entropy_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_174.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_188.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "drawdown position-scaling risk-management",
+    "family_slug": "drawdown_position_scaling_risk_managemen",
+    "member_indices": [
+      246
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_176.json"
+    ],
+    "member_names": [
+      "drawdown_adaptive_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_176.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "momentum-decay half-life adaptive",
+    "family_slug": "momentum_decay_half_life_adaptive",
+    "member_indices": [
+      248
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_178.json"
+    ],
+    "member_names": [
+      "momentum_decay_adaptive_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_178.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "mean-reversion ou-process speed",
+    "family_slug": "mean_reversion_ou_process_speed",
+    "member_indices": [
+      249
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_179.json"
+    ],
+    "member_names": [
+      "mean_reversion_speed_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_179.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "dynamic-stop regime-dependent atr-scaled",
+    "family_slug": "dynamic_stop_regime_dependent_atr_scaled",
+    "member_indices": [
+      250
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_180.json"
+    ],
+    "member_names": [
+      "dynamic_stop_regime_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_180.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "kalman-filter trend-estimation state-space",
+    "family_slug": "kalman_filter_trend_estimation_state_spa",
+    "member_indices": [
+      251
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_181.json"
+    ],
+    "member_names": [
+      "kalman_filter_trend_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_181.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "wavelet decomposition multi-scale",
+    "family_slug": "wavelet_decomposition_multi_scale",
+    "member_indices": [
+      252
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_182.json"
+    ],
+    "member_names": [
+      "wavelet_decomposition_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_182.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "spectral fourier cycle-detection",
+    "family_slug": "spectral_fourier_cycle_detection",
+    "member_indices": [
+      253
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_183.json"
+    ],
+    "member_names": [
+      "spectral_analysis_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_183.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "pca factor dimensionality-reduction",
+    "family_slug": "pca_factor_dimensionality_reduction",
+    "member_indices": [
+      254
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_184.json"
+    ],
+    "member_names": [
+      "pca_factor_signal_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_184.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "information-ratio alpha tracking-error",
+    "family_slug": "information_ratio_alpha_tracking_error",
+    "member_indices": [
+      257
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_187.json"
+    ],
+    "member_names": [
+      "information_ratio_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_187.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "copula tail-dependence joint-distribution",
+    "family_slug": "copula_tail_dependence_joint_distributio",
+    "member_indices": [
+      259
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_189.json"
+    ],
+    "member_names": [
+      "copula_dependence_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_189.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "robust-regression huber outlier-resistant",
+    "family_slug": "robust_regression_huber_outlier_resistan",
+    "member_indices": [
+      260
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_190.json"
+    ],
+    "member_names": [
+      "robust_regression_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_190.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "quantile-regression extremes conditional-distribution",
+    "family_slug": "quantile_regression_extremes_conditional",
+    "member_indices": [
+      261
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_191.json"
+    ],
+    "member_names": [
+      "quantile_regression_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_191.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "changepoint structural-break cusum",
+    "family_slug": "changepoint_structural_break_cusum",
+    "member_indices": [
+      262
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_192.json"
+    ],
+    "member_names": [
+      "changepoint_detection_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_192.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "kde kernel-density support-resistance",
+    "family_slug": "kde_kernel_density_support_resistance",
+    "member_indices": [
+      263
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_193.json"
+    ],
+    "member_names": [
+      "kernel_density_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_193.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "bootstrap confidence-interval resampling",
+    "family_slug": "bootstrap_confidence_interval_resampling",
+    "member_indices": [
+      264
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_194.json"
+    ],
+    "member_names": [
+      "bootstrap_confidence_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_194.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "lasso feature-selection regularization",
+    "family_slug": "lasso_feature_selection_regularization",
+    "member_indices": [
+      265
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_195.json"
+    ],
+    "member_names": [
+      "lasso_feature_select_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_195.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "special-situation trading-halt momentum",
+    "family_slug": "special_situation_trading_halt_momentum",
+    "member_indices": [
+      266
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_196.json"
+    ],
+    "member_names": [
+      "post_halt_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_196.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "special-situation rights-issue arbitrage",
+    "family_slug": "special_situation_rights_issue_arbitrage",
+    "member_indices": [
+      267
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_197.json"
+    ],
+    "member_names": [
+      "rights_issue_arb_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_197.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "special-situation bonus-issue record-date",
+    "family_slug": "special_situation_bonus_issue_record_dat",
+    "member_indices": [
+      268
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_198.json"
+    ],
+    "member_names": [
+      "bonus_record_date_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_198.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "special-situation fii dii",
+    "family_slug": "special_situation_fii_dii",
+    "member_indices": [
+      269
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_199.json"
+    ],
+    "member_names": [
+      "fii_dii_flow_signal_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_199.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "special-situation ipo new-listing",
+    "family_slug": "special_situation_ipo_new_listing",
+    "member_indices": [
+      270
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_200.json"
+    ],
+    "member_names": [
+      "new_listing_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_200.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "mean_reversion momentum event_driven",
+    "family_slug": "mean_reversion_momentum_event_driven",
+    "member_indices": [
+      271,
+      287
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/gemini/gemini_10_of_20.json",
+      "all_trading_strategies/gemini/gemini_6_of_20.json"
+    ],
+    "member_names": [
+      "afternoon_profit_fade",
+      "european_open_momentum_continuation"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/gemini/gemini_10_of_20.json",
+      "all_trading_strategies/gemini/gemini_6_of_20.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "breakout volatility narrow_range",
+    "family_slug": "breakout_volatility_narrow_range",
+    "member_indices": [
+      275,
+      309
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/gemini/gemini_14_of_20.json",
+      "all_trading_strategies/grok/Grok_8_of_10.json"
+    ],
+    "member_names": [
+      "narrow_range_7_breakout",
+      "nr7_breakout_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/gemini/gemini_14_of_20.json",
+      "all_trading_strategies/grok/Grok_8_of_10.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "momentum trend_following",
+    "family_slug": "momentum_trend_following",
+    "member_indices": [
+      277
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/gemini/gemini_16_of_20.json"
+    ],
+    "member_names": [
+      "multi_ema_ribbon_squeeze"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/gemini/gemini_16_of_20.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "momentum index market",
+    "family_slug": "momentum_index_market",
+    "member_indices": [
+      291,
+      319,
+      353
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/gpt/GPT_10_of_10.json",
+      "all_trading_strategies/opus/Opus_18_of_50.json",
+      "all_trading_strategies/opus/Opus_49_of_50.json"
+    ],
+    "member_names": [
+      "index_momentum_v1",
+      "index_constituent_spread_v1",
+      "index_momentum_stock_selection_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/gpt/GPT_10_of_10.json",
+      "all_trading_strategies/opus/Opus_18_of_50.json",
+      "all_trading_strategies/opus/Opus_49_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "reversal s_r mean_reversion",
+    "family_slug": "reversal_s_r_mean_reversion",
+    "member_indices": [
+      301,
+      307
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/grok/Grok_10_of_10.json",
+      "all_trading_strategies/grok/Grok_6_of_10.json"
+    ],
+    "member_names": [
+      "support_resistance_reversal_v1",
+      "ema200_dip_reversal_v1"
+    ],
+    "size": 2,
+    "final_surviving_members": [
+      "all_trading_strategies/grok/Grok_10_of_10.json",
+      "all_trading_strategies/grok/Grok_6_of_10.json"
+    ],
+    "final_size": 2
+  },
+  {
+    "family_name": "vwap pivot",
+    "family_slug": "vwap_pivot",
+    "member_indices": [
+      305
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/grok/Grok_4_of_10.json"
+    ],
+    "member_names": [
+      "vwap_pivot_rejection_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/grok/Grok_4_of_10.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "momentum short_term pattern",
+    "family_slug": "momentum_short_term_pattern",
+    "member_indices": [
+      317
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_16_of_50.json"
+    ],
+    "member_names": [
+      "three_bar_momentum_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_16_of_50.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "volatility compression breakout",
+    "family_slug": "volatility_compression_breakout",
+    "member_indices": [
+      328
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_26_of_50.json"
+    ],
+    "member_names": [
+      "low_vol_compression_long_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_26_of_50.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "microstructure vwap crossover",
+    "family_slug": "microstructure_vwap_crossover",
+    "member_indices": [
+      336
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_33_of_50.json"
+    ],
+    "member_names": [
+      "vwap_crossover_flow_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_33_of_50.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "time_of_day microstructure closing_auction",
+    "family_slug": "time_of_day_microstructure_closing_aucti",
+    "member_indices": [
+      337,
+      341,
+      342
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_34_of_50.json",
+      "all_trading_strategies/opus/Opus_38_of_50.json",
+      "all_trading_strategies/opus/Opus_39_of_50.json"
+    ],
+    "member_names": [
+      "closing_auction_anticipation_v1",
+      "pre_market_auction_edge_v1",
+      "last_30_min_momentum_v1"
+    ],
+    "size": 3,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_34_of_50.json",
+      "all_trading_strategies/opus/Opus_38_of_50.json",
+      "all_trading_strategies/opus/Opus_39_of_50.json"
+    ],
+    "final_size": 3
+  },
+  {
+    "family_name": "microstructure time_of_day range",
+    "family_slug": "microstructure_time_of_day_range",
+    "member_indices": [
+      339
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_36_of_50.json"
+    ],
+    "member_names": [
+      "lunch_hour_range_compression_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_36_of_50.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "time_of_day seasonal day_of_week",
+    "family_slug": "time_of_day_seasonal_day_of_week",
+    "member_indices": [
+      344
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_40_of_50.json"
+    ],
+    "member_names": [
+      "monday_reversal_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_40_of_50.json"
+    ],
+    "final_size": 1
+  },
+  {
+    "family_name": "hybrid vwap vix",
+    "family_slug": "hybrid_vwap_vix",
+    "member_indices": [
+      351
+    ],
+    "member_filepaths": [
+      "all_trading_strategies/opus/Opus_47_of_50.json"
+    ],
+    "member_names": [
+      "vix_adjusted_mean_reversion_v1"
+    ],
+    "size": 1,
+    "final_surviving_members": [
+      "all_trading_strategies/opus/Opus_47_of_50.json"
+    ],
+    "final_size": 1
+  }
+]

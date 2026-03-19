@@ -1,0 +1,126 @@
+{
+  "name": "overnight_gap_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "mean_reversion",
+    "gap",
+    "opening"
+  ],
+  "thesis": "Small-to-medium gaps (0.3%-1.0%) in Nifty50 stocks tend to fill within the first 90 minutes of trading. This happens because overnight gap pricing is driven by thin pre-market participation and global cue overreaction. Institutional traders who missed the overnight move provide liquidity in the opposite direction once the continuous session opens with full depth. Gaps > 1% are often news-driven and don't fill. This edge persists because gap-fill strategies require fast intraday execution that most retail traders can't implement systematically.",
+  "universe": "nifty50",
+  "stock_filter": "top 30 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:15-10:45",
+  "hold_time": "15-75 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_close"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open_of_day - prev_day_close) / prev_day_close * 100",
+      "lookback": 1,
+      "purpose": "gap magnitude"
+    },
+    {
+      "name": "gap_filled",
+      "formula": "close has touched prev_day_close since open",
+      "lookback": 1,
+      "purpose": "track if gap has filled"
+    },
+    {
+      "name": "rsi_14",
+      "formula": "RSI(close, 14)",
+      "lookback": 14,
+      "purpose": "momentum confirmation"
+    },
+    {
+      "name": "atr_20_daily",
+      "formula": "ATR(high, low, close, 20) on daily bars",
+      "lookback": 20,
+      "purpose": "sizing and gap context"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct < -0.3 AND gap_pct > -1.0",
+        "gap_filled == False",
+        "time > 09:20",
+        "rsi_14 < 40",
+        "vix < 22"
+      ],
+      "confirmation": "first green bar (close > open) after 09:20 with volume > SMA(volume, 10)"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct > 0.3 AND gap_pct < 1.0",
+        "gap_filled == False",
+        "time > 09:20",
+        "rsi_14 > 60",
+        "vix < 22"
+      ],
+      "confirmation": "first red bar (close < open) after 09:20 with volume > SMA(volume, 10)"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "prev_day_close (full gap fill)",
+    "stop_loss": "0.5% beyond the gap direction (i.e., gap extension stop)",
+    "trailing_stop": "move SL to breakeven after 50% of gap is filled",
+    "time_stop": "exit by 10:45 regardless",
+    "eod_rule": "flatten",
+    "signal_exit": "close touches prev_day_close"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "only 09:20-10:45",
+    "volume_filter": "opening 5-min volume > 80% of 20-day avg opening 5-min volume",
+    "trend_filter": "index gap must be < |0.5%| (don't fight macro gaps)",
+    "spread_filter": "skip if spread > 0.1% at open",
+    "event_filter": "skip on budget day, RBI policy, expiry day, result day for stock",
+    "other_filters": [
+      "skip if gap > 1% — likely news-driven, won't fill"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 1.05,
+    "profit_factor_estimate": 1.58,
+    "edge_decay_risk": "low — structural; pre-market pricing mechanics are unlikely to change"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Opening 5 minutes have wide spreads and volatile prices — slippage can be 5+ bps",
+    "News-driven gaps masquerading as 'small gaps' will not fill — event filter helps but isn't foolproof",
+    "Low trade frequency (0-2 per day) means long stretches with no signals, testing patience"
+  ],
+  "prior_art": "Classic gap fill strategy — documented in Connors/Alvarez and others. NSE-specific adaptation.",
+  "notes": "Backtest gap fill rates by gap size bucket (0.3-0.5%, 0.5-0.7%, 0.7-1.0%) to optimize thresholds."
+}

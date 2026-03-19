@@ -1,0 +1,131 @@
+{
+  "name": "relative_strength_index_divergence_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "stat_arb",
+    "relative_strength",
+    "pairs"
+  ],
+  "thesis": "When a liquid NIFTY 50 constituent diverges significantly from NIFTY 50's intraday move (e.g., NIFTY up 0.5% but stock flat or down), it creates a relative value opportunity. The stock tends to catch up as index-tracking flows (ETFs, passive) and arbitrageurs push constituent weights back in line. The inefficiency exists because index rebalancing and ETF creation/redemption flows are not instantaneous — there's a lag. Not fully arbitraged because the spread is small and requires simultaneous stock + index hedging which retail can't efficiently execute.",
+  "universe": "nifty50",
+  "stock_filter": "NIFTY 50 constituents with weight > 1% and ADV > ₹100cr",
+  "timeframe": "1min",
+  "session": "09:30-15:00",
+  "hold_time": "15-90 bars",
+  "max_hold_bars": 120,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "nifty50_1min_returns",
+      "stock_beta_to_nifty_20d"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "stock_return_30",
+      "formula": "(close - close[30]) / close[30] * 100",
+      "lookback": 30,
+      "purpose": "30-bar stock return"
+    },
+    {
+      "name": "index_return_30",
+      "formula": "(nifty50_close - nifty50_close[30]) / nifty50_close[30] * 100",
+      "lookback": 30,
+      "purpose": "30-bar index return"
+    },
+    {
+      "name": "expected_stock_return",
+      "formula": "beta * index_return_30",
+      "lookback": 0,
+      "purpose": "expected return based on beta"
+    },
+    {
+      "name": "residual_return",
+      "formula": "stock_return_30 - expected_stock_return",
+      "lookback": 0,
+      "purpose": "alpha residual"
+    },
+    {
+      "name": "residual_zscore",
+      "formula": "zscore(residual_return, 120)",
+      "lookback": 120,
+      "purpose": "standardized residual for signal"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "residual_zscore < -2.0",
+        "index_return_30 > 0",
+        "rel_volume > 0.8",
+        "vix < 24"
+      ],
+      "confirmation": "residual_zscore must be < -2.0 for 3 consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "residual_zscore > 2.0",
+        "index_return_30 < 0",
+        "rel_volume > 0.8",
+        "vix < 24"
+      ],
+      "confirmation": "residual_zscore must be > 2.0 for 3 consecutive bars"
+    },
+    "entry_price": "market on third confirmation bar close"
+  },
+  "exit": {
+    "target": "residual_zscore crosses 0",
+    "stop_loss": "0.6% from entry or residual_zscore hits -3.5 (for longs)",
+    "trailing_stop": "none — target is zscore reversion",
+    "time_stop": "exit after 120 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when residual_zscore crosses 0"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.6,
+    "position_sizing": "vol_adjusted — scale by inverse of stock ATR",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 12000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 24",
+    "time_filter": "no trades first 15 min or last 20 min",
+    "volume_filter": "stock volume must be > 80% of 20-bar avg",
+    "trend_filter": "prefer trades where stock diverges from index direction",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip if stock has earnings within 2 days",
+    "other_filters": [
+      "skip if stock has sector-specific news (use simple keyword filter on news feed if available)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.0,
+    "profit_factor_estimate": 1.22,
+    "edge_decay_risk": "medium — structural (ETF/passive flows) but alpha decays as passive AUM grows and rebalancing speeds up"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Beta estimation error: using 20-day rolling beta is noisy. If beta is wrong, the residual signal is contaminated. Consider using 60-day beta instead.",
+    "Idiosyncratic events (stock-specific news) cause legitimate divergence from index. Without a real-time news filter, you'll occasionally catch the wrong side of a company-specific move.",
+    "During sector rotation days, entire sectors diverge from NIFTY — multiple names fire simultaneously, creating correlated risk that looks like diversification but isn't."
+  ],
+  "prior_art": "Index arbitrage / relative value. See: Algorithmic Trading (Chan), pairs trading literature. This is a simplified single-stock version.",
+  "notes": "Ideally pair this with a NIFTY futures hedge for true relative value. Without the hedge, it's directional with a relative value entry signal."
+}

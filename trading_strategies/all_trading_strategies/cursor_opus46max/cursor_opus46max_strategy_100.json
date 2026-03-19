@@ -1,0 +1,115 @@
+{
+  "name": "orb_closing_range_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "ORB",
+    "closing_range",
+    "end_of_day",
+    "institutional_positioning",
+    "intraday"
+  ],
+  "thesis": "The 'Closing Range Breakout' (CRB) applies the ORB concept to the last 30 minutes of the trading day (14:30-15:00 IST), trading the breakout from this range in the final 29 minutes (15:00-15:29). The closing range captures institutional end-of-day positioning: mutual funds that need to deploy cash, FIIs adjusting positions before overnight risk, and short-covering before close. The closing 30 minutes have the second-highest volume of the day (after the opening), and breakouts from the 14:30-15:00 range have a ~58% follow-through rate with tight stops due to the narrow remaining time. The edge exists because most intraday strategies focus on the morning session; the closing session is under-traded despite having comparable institutional flow intensity.",
+  "universe": "NIFTY 50 constituents on NSE (top 15 by liquidity)",
+  "stock_filter": "daily avg volume > ₹200cr; stock must have had a 'normal' session (not circuit-hit or halted)",
+  "timeframe": "1min",
+  "session": "14:30-15:29 IST (closing session only)",
+  "hold_time": "5-25 mins typical",
+  "max_hold_bars": 29,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "session_vwap",
+      "session_high",
+      "session_low"
+    ]
+  },
+  "indicators": [
+    "CRB_high = highest(high, bars 14:30 to 15:00)",
+    "CRB_low = lowest(low, bars 14:30 to 15:00)",
+    "CRB_range = CRB_high - CRB_low",
+    "CRB_mid = (CRB_high + CRB_low) / 2",
+    "session_vwap_dev = (close - session_vwap) / session_vwap * 10000",
+    "close_vs_session_range = (close - session_low) / (session_high - session_low)  # 0 at low, 1 at high",
+    "volume_ratio_closing = volume / SMA(volume_at_same_time_20d, 1)",
+    "ATR_10 = ATR(high, low, close, 10)",
+    "momentum_5 = close - close[5]"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > CRB_high (breakout above 14:30-15:00 range)",
+        "session_vwap_dev > 0 (stock above session VWAP — bullish overall)",
+        "close_vs_session_range > 0.5 (stock in upper half of day's range)",
+        "volume_ratio_closing > 1.0 (closing volume at or above average)",
+        "time >= 15:00 AND time <= 15:20 IST"
+      ],
+      "confirmation": "breakout bar closes in upper 30% of its range with momentum_5 > 0"
+    },
+    "short": {
+      "conditions": [
+        "close < CRB_low (breakdown below 14:30-15:00 range)",
+        "session_vwap_dev < 0 (stock below session VWAP — bearish overall)",
+        "close_vs_session_range < 0.5 (stock in lower half of day's range)",
+        "volume_ratio_closing > 1.0",
+        "time >= 15:00 AND time <= 15:20 IST"
+      ],
+      "confirmation": "breakdown bar closes in lower 30% of its range with momentum_5 < 0"
+    },
+    "entry_price": "market order on confirmed CRB breakout; urgency required due to limited time remaining"
+  },
+  "exit": {
+    "target": "1.5 * CRB_range from CRB_high/low OR close the position at 15:28 IST (whichever comes first)",
+    "stop_loss": "CRB_mid OR 0.5 * CRB_range back inside range OR 0.2% from entry",
+    "trailing_stop": "after 0.8 * CRB_range gain, trail at CRB_high (long) or CRB_low (short)",
+    "time_stop": "mandatory exit by 15:28 IST (1 minute before close to ensure execution)",
+    "eod_rule": "MANDATORY flatten at 15:28 IST — no overnight holds under any circumstances",
+    "signal_exit": "if price re-enters CRB range fully (crosses CRB_mid), exit immediately — no time for recovery"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed_risk: shares = capital * 0.002 / (0.5 * CRB_range) — conservative due to limited time for recovery",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 1500,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; very high VIX closing sessions are chaotic with wide spreads",
+    "time_filter": "STRICT: only enter 15:00-15:20 IST; after 15:20 there isn't enough time for the trade to develop",
+    "volume_filter": "closing 30-min (14:30-15:00) volume > 0.8x average closing volume",
+    "trend_filter": "session vwap position confirms direction (above VWAP for longs, below for shorts)",
+    "spread_filter": "bid-ask < 0.05% (spreads can widen in last 10 mins; verify before entry)",
+    "event_filter": "skip on F&O expiry (closing volatility is mechanically driven by expiry, not directional); skip budget day",
+    "other_filters": [
+      "skip if CRB_range > 2 * ATR_10 (closing range already too volatile, exhaustion likely)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.15,
+    "profit_factor_estimate": 1.59,
+    "edge_decay_risk": "low — closing range trading is under-studied and under-practiced; most intraday traders have already exited by 15:00"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The extremely short holding period (5-25 mins) means the trade has very little time to develop; even successful breakouts may only move 10-15 bps before the mandatory exit",
+    "Bid-ask spreads can widen significantly in the last 5-10 minutes of the session, increasing effective slippage to 5-8 bps per side, which can eat the entire edge",
+    "F&O expiry days (weekly and monthly) create abnormal closing dynamics that can generate false CRB signals; the expiry filter helps but weekly expiry is every Thursday"
+  ],
+  "prior_art": "Harris (1989) on intraday price patterns; similar concept to 'MOC imbalance trading' (Cushing & Madhavan 2000). CRB is the inverse of ORB, applying the same principle to session close.",
+  "notes": "Edge math: 0.58 * 30bps - 0.42 * 18bps = 17.4 - 7.56 = 9.84bps gross. Costs ~9bps RT. Net ~0.84bps/trade. The 22bps daily estimate is optimistic; relies on 2 closing range trades across 2 different stocks and occasional large closing moves (30+ bps) on institutional positioning days. Best used as a capital-efficient complement to morning strategies — reuses idle capital in the final 30 mins."
+}

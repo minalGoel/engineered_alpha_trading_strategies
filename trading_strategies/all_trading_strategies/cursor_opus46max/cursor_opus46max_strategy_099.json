@@ -1,0 +1,113 @@
+{
+  "name": "orb_retest_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "ORB",
+    "retest",
+    "level_confirmation",
+    "support_resistance",
+    "intraday"
+  ],
+  "thesis": "After an ORB breakout, the ORB_high or ORB_low level often gets retested 1-3 hours later as mid-day institutional flow revisits the morning's price discovery zone. When the retest holds (price touches ORB_high/low but doesn't close below/above it), it confirms the level as genuine support/resistance and provides a second entry opportunity with higher conviction than the original breakout. Retests are more reliable than initial breakouts because they represent the market's second assessment of the level, incorporating hours of additional price information. The inefficiency exists because most ORB traders take only the initial breakout and don't monitor for subsequent retests, which occur on ~60% of successful breakout days.",
+  "universe": "NIFTY 50 constituents on NSE",
+  "stock_filter": "daily avg volume > ₹200cr; initial ORB breakout occurred earlier in session",
+  "timeframe": "1min",
+  "session": "10:30-15:10 IST (retests happen mid-session)",
+  "hold_time": "20-120 mins typical",
+  "max_hold_bars": 180,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    "ORB_high_15 = highest(high, bars 09:15 to 09:30)",
+    "ORB_low_15 = lowest(low, bars 09:15 to 09:30)",
+    "ORB_range_15 = ORB_high_15 - ORB_low_15",
+    "initial_breakout_up = any(close > ORB_high_15, bars 09:30 to 10:30)",
+    "initial_breakout_down = any(close < ORB_low_15, bars 09:30 to 10:30)",
+    "retest_up = low within 0.1% of ORB_high_15 AND close > ORB_high_15 (touched and bounced)",
+    "retest_down = high within 0.1% of ORB_low_15 AND close < ORB_low_15 (touched and rejected)",
+    "time_since_breakout = bars since initial_breakout",
+    "RSI_14 = RSI(close, 14)",
+    "volume_at_retest = volume on retest bar",
+    "ATR_14 = ATR(high, low, close, 14)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "initial_breakout_up == True (breakout happened earlier)",
+        "retest_up == True (price retested ORB_high and bounced)",
+        "time_since_breakout > 60 AND time_since_breakout < 180 (retest within 1-3 hours)",
+        "close > ORB_high_15 at retest bar close (level held)",
+        "RSI_14 > 40 (not deeply oversold, bounce has energy)"
+      ],
+      "confirmation": "bounce bar at retest has lower wick touching ORB_high area AND close in upper half of bar"
+    },
+    "short": {
+      "conditions": [
+        "initial_breakout_down == True",
+        "retest_down == True (price retested ORB_low and got rejected)",
+        "time_since_breakout > 60 AND time_since_breakout < 180",
+        "close < ORB_low_15 at retest bar close",
+        "RSI_14 < 60"
+      ],
+      "confirmation": "rejection bar at retest has upper wick touching ORB_low area AND close in lower half of bar"
+    },
+    "entry_price": "limit order at ORB_high_15 + 0.02% (long) or ORB_low_15 - 0.02% (short) — slight offset for confirmation"
+  },
+  "exit": {
+    "target": "session high at time of retest (for longs) + 0.5 * ORB_range_15 (new leg up expected after retest confirmation)",
+    "stop_loss": "0.3 * ORB_range_15 below ORB_high (long) or above ORB_low (short)",
+    "trailing_stop": "after reaching prior session high (long), trail at ORB_high level",
+    "time_stop": "exit if held > 120 mins post-retest",
+    "eod_rule": "flatten by 15:10 IST",
+    "signal_exit": "if close breaks ORB level by > 0.15% against position (support/resistance broken), exit immediately"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "risk-based: shares = capital * 0.003 / (0.3 * ORB_range_15)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX between 12 and 22",
+    "time_filter": "retests between 10:30-14:00 IST; retests after 14:00 may be end-of-day positioning, not genuine",
+    "volume_filter": "retest bar volume should be LOWER than breakout bar volume (healthy pullback, not new selling/buying wave)",
+    "trend_filter": "stock must still be above (long) or below (short) VWAP at retest time",
+    "spread_filter": "bid-ask < 0.04%",
+    "event_filter": "skip if major intraday news released between breakout and retest",
+    "other_filters": [
+      "retest must occur 1-3 hours after initial breakout; immediate retests (< 30 min) are usually failed breakouts, not healthy retests"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.64,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low — retest trading requires monitoring and patience; most traders don't wait for the retest opportunity"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Not all breakouts retest — ~40% of valid breakouts continue without retesting the ORB level, meaning this strategy misses a large portion of profitable ORB moves",
+    "Distinguishing a 'healthy retest' from a 'reversal through the level' in real-time is difficult; the 0.3 * ORB_range stop is tight and can be hit by normal volatility at the level",
+    "The 1-3 hour delay between breakout and retest means the strategy holds capital idle for extended periods, reducing capital efficiency"
+  ],
+  "prior_art": "Edwards & Magee (1948) on throwback/pullback to breakout levels; Brooks (2009) on retest entries. Bulkowski (2005) statistics on throwback frequency and reliability.",
+  "notes": "Edge math: 0.64 * 38bps - 0.36 * 18bps = 24.32 - 6.48 = 17.84bps gross. Costs ~9bps RT. Net ~8.84bps/trade. At 0.7 trades/day (retests don't always occur), daily ~6.2bps. The 26bps estimate is per retest signal day. Best combined with initial breakout strategy — take breakout trade first, add to position on retest."
+}

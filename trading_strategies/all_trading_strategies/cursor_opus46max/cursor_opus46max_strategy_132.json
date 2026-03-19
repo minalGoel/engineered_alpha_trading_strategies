@@ -1,0 +1,129 @@
+{
+  "name": "hdfc_twins_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "HDFC",
+    "banking",
+    "insurance",
+    "conglomerate"
+  ],
+  "thesis": "The HDFC ecosystem includes HDFC Bank (banking), HDFC Life (life insurance), HDFC AMC (asset management), and HDFC Ergo (general insurance, unlisted). Post the HDFC Ltd - HDFC Bank merger (Jul 2023), the ecosystem dynamics changed but common brand sentiment, cross-selling synergies, and overlapping investor base maintain high correlations. HDFC Bank and HDFC Life exhibit 0.50-0.65 daily correlation. When HDFC Bank moves sharply due to banking-sector news (RBI policy, NPA data), HDFC Life initially follows but often overshoots because retail traders incorrectly treat insurance as 'banking'. Similarly, HDFC AMC (fee-based AUM business) should decouple from HDFC Bank rate sensitivity but doesn't. These divergences revert within 20-45 minutes as informed participants correct the mispricing.",
+  "universe": "HDFC Bank, HDFC Life, HDFC AMC",
+  "stock_filter": "HDFC Bank: ADV > ₹1000 crore. HDFC Life: ADV > ₹100 crore. HDFC AMC: ADV > ₹30 crore",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Bank, NIFTY Financial Services",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "India 10Y gilt yield for rate sensitivity analysis"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "hdfcbank_return",
+      "formula": "(HDFCBANK_close - HDFCBANK_open_day) / HDFCBANK_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "hdfclife_return",
+      "formula": "(HDFCLIFE_close - HDFCLIFE_open_day) / HDFCLIFE_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "pair_spread_life",
+      "formula": "hdfcbank_return - beta_life * hdfclife_return",
+      "params": {
+        "beta_life": "rolling_regression_beta(HDFCBANK, HDFCLIFE, 60)"
+      }
+    },
+    {
+      "name": "spread_zscore_life",
+      "formula": "(pair_spread_life - SMA(pair_spread_life, 45)) / STDEV(pair_spread_life, 45)",
+      "params": {
+        "lookback": 45
+      }
+    },
+    {
+      "name": "banking_news_flag",
+      "formula": "1 if BANK_NIFTY_abs_return_30min > 30 bps AND NIFTY50_abs_return_30min < 15 bps else 0",
+      "params": {}
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "spread_zscore_life < -1.8 (HDFC Bank underperforming HDFC Life — expect catch-up)",
+        "banking_news_flag == 1 (banking-specific move, HDFC Life shouldn't follow as much)",
+        "HDFCBANK close > HDFCBANK VWAP * 0.998"
+      ],
+      "confirmation": "spread_zscore_life turns upward (crosses above -1.5)"
+    },
+    "short": {
+      "conditions": [
+        "spread_zscore_life > 1.8 (HDFC Bank outperforming HDFC Life excessively)",
+        "banking_news_flag == 1",
+        "HDFCLIFE close < HDFCLIFE VWAP * 1.002"
+      ],
+      "confirmation": "spread_zscore_life turns downward (crosses below 1.5)"
+    },
+    "entry_price": "market order on both legs simultaneously"
+  },
+  "exit": {
+    "target": "spread_zscore_life reverts to ±0.3",
+    "stop_loss": "spread_zscore_life extends to ±2.8",
+    "trailing_stop": "none",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "banking_news_flag turns to 0 (sector-specific move exhausted)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹50K per leg, beta-adjusted",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22",
+    "time_filter": "no trades in first 15 min or last 15 min",
+    "volume_filter": "both stocks > 0.7x normal volume participation",
+    "trend_filter": "pair is market-neutral; no trend filter needed",
+    "spread_filter": "HDFC Bank < 3 bps; HDFC Life < 8 bps bid-ask",
+    "event_filter": "skip on HDFC Bank/Life result days, RBI policy day (all HDFC stocks move together)",
+    "other_filters": [
+      "skip if HDFC AMC has specific news (use HDFC Life as pair, not AMC)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Medium — HDFC brand linkage is strong but the businesses are fundamentally different (lending vs insurance vs AMC). Over time, as HDFC Life and HDFC AMC develop independent identities, the correlation may weaken."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Post HDFC Ltd merger, the HDFC ecosystem correlation structure has fundamentally changed. Historical data pre-merger may not be representative.",
+    "HDFC Life and HDFC AMC have significantly lower liquidity than HDFC Bank, creating execution challenges and asymmetric slippage.",
+    "The banking_news_flag is a heuristic — not all BANK NIFTY moves are due to banking-specific news; global risk-off can move banks without being banking-specific."
+  ],
+  "prior_art": "Gatev et al. (2006) pairs trading framework. In India, HDFC twins was one of the most popular pair trades before the merger. Post-merger, the pair dynamics are being rediscovered by the trading community. SEBI circular on HDFC merger scheme.",
+  "notes": "Consider also tracking HDFC AMC as a third pair leg for triangular relative value. HDFC AMC is more sensitive to market AUM levels (NIFTY performance) than to banking rates. A 3-stock basket can diversify the pair risk. Re-estimate betas weekly as the post-merger relationship stabilizes."
+}

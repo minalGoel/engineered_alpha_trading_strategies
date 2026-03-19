@@ -1,0 +1,130 @@
+{
+  "name": "order_flow_imbalance_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "microstructure",
+    "order_flow",
+    "cumulative_delta",
+    "trend_following"
+  ],
+  "thesis": "Cumulative order flow imbalance (OFI) — the running sum of signed trade volume classified as buyer-initiated or seller-initiated — predicts short-term price direction. When OFI diverges from price (e.g., OFI rising while price is flat), it signals latent buying pressure that will soon manifest in price. In Indian equities, the OFI signal is particularly valuable because: (1) NSE's continuous matching engine processes ~15,000 orders/sec creating rich flow data, (2) retail participation (~45% of cash turnover) is heavily momentum-driven, amplifying OFI trends, (3) the absence of designated market makers in most stocks means OFI reflects genuine directional pressure rather than market-making inventory management.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV > ₹50 crore, daily trade count > 50,000",
+  "timeframe": "1min",
+  "session": "09:20-15:20 IST",
+  "hold_time": "3-8 min",
+  "max_hold_bars": 8,
+  "trades_per_day": "6-12",
+  "max_trades_per_day": 15,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "trade-level data with buy/sell classification via Lee-Ready"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "OFI_1min",
+      "formula": "sum(signed_volume) per 1-min bar where signed_volume = +qty if buyer_initiated else -qty",
+      "params": {
+        "classification": "Lee-Ready with 1-tick delay"
+      }
+    },
+    {
+      "name": "cumulative_OFI",
+      "formula": "cumsum(OFI_1min) from session start, reset daily",
+      "params": {
+        "reset": "daily_at_0915"
+      }
+    },
+    {
+      "name": "OFI_momentum",
+      "formula": "EMA(OFI_1min, 5) - EMA(OFI_1min, 15)",
+      "params": {
+        "fast_period": 5,
+        "slow_period": 15
+      }
+    },
+    {
+      "name": "OFI_price_divergence",
+      "formula": "sign(OFI_momentum) != sign(close - close[5])",
+      "params": {
+        "price_lookback": 5
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "OFI_momentum > 0",
+        "cumulative_OFI > 0",
+        "OFI_price_divergence == True AND OFI_momentum > 0 (flow says buy, price hasn't moved)",
+        "close > VWAP * 0.999"
+      ],
+      "confirmation": "OFI_1min > 0 for 2 of last 3 bars"
+    },
+    "short": {
+      "conditions": [
+        "OFI_momentum < 0",
+        "cumulative_OFI < 0",
+        "OFI_price_divergence == True AND OFI_momentum < 0",
+        "close < VWAP * 1.001"
+      ],
+      "confirmation": "OFI_1min < 0 for 2 of last 3 bars"
+    },
+    "entry_price": "market order at signal bar close"
+  },
+  "exit": {
+    "target": "20 bps from entry",
+    "stop_loss": "10 bps from entry",
+    "trailing_stop": "6 bps trailing after 12 bps profit",
+    "time_stop": "exit after 8 bars",
+    "eod_rule": "flatten all positions by 15:20 IST",
+    "signal_exit": "OFI_momentum crosses zero against position direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.1,
+    "position_sizing": "fixed ₹1L, increase to ₹1.5L when OFI_momentum magnitude > 2 * std(OFI_momentum, 60)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; reduce size 50% when 18 < VIX < 22",
+    "time_filter": "skip first 5 min and last 10 min",
+    "volume_filter": "1-min volume > 50th percentile of day's volume distribution",
+    "trend_filter": "OFI direction aligns with NIFTY 50 intraday direction",
+    "spread_filter": "bid-ask spread < 5 bps",
+    "event_filter": "reduce size on F&O expiry days",
+    "other_filters": [
+      "skip if cumulative_OFI changes sign > 5 times today (choppy flow)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.7,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Medium — OFI is well-established in academic literature but requires implementation effort. Edge may compress as algo platforms democratize order flow analytics in India."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Lee-Ready trade classification has ~15-20% misclassification rate, directly corrupting the OFI signal. In fast-moving markets, accuracy drops further.",
+    "Cumulative OFI is susceptible to large single-trade outliers (e.g., a block deal) that can flip the signal without genuine change in market sentiment.",
+    "The divergence signal (flow says X but price says Y) may simply reflect informed sellers distributing into buying flow, making the 'buy' signal a trap."
+  ],
+  "prior_art": "Cont, Stoikov & Talreja (2010) 'A Stochastic Model for Order Book Dynamics'. Chordia & Subrahmanyam (2004) 'Order Imbalance and Individual Stock Returns'. Bouchaud et al. (2004) 'Fluctuations and Response in Financial Markets'.",
+  "notes": "The OFI_price_divergence is the key alpha signal — when flow and price agree, the trade is just momentum following. The divergence trades are fewer but higher quality. Consider weighting the OFI by trade size to emphasize institutional flow."
+}

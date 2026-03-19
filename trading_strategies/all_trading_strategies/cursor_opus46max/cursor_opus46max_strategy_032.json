@@ -1,0 +1,130 @@
+{
+  "name": "intraday_trend_channel_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "linear-regression",
+    "channel",
+    "trend-following",
+    "regression",
+    "intraday"
+  ],
+  "thesis": "A linear regression channel fitted on the last 60 bars (1 hour) of 1-min data identifies the intraday trend direction and deviations from the trend line. Trading involves buying at the lower channel boundary when the overall regression slope is positive (uptrend with pullback to support), and selling at the upper boundary when slope is negative. The edge exists because linear regression channels dynamically adapt to the intraday trend — unlike fixed EMAs or Bollinger Bands, the channel tilts with the trend and provides more accurate support/resistance levels. The inefficiency persists because computing rolling linear regression with 2 standard deviation bands in real-time is computationally non-trivial and not available as a default indicator in most Indian broking platforms.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND close > 100 INR",
+  "timeframe": "1min",
+  "session": "10:15-14:30 IST",
+  "hold_time": "15-45 minutes",
+  "max_hold_bars": 45,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "linreg_value",
+      "params": "linreg(close, 60)",
+      "lookback": 60
+    },
+    {
+      "name": "linreg_slope",
+      "params": "linreg_slope(close, 60)",
+      "lookback": 60
+    },
+    {
+      "name": "linreg_std",
+      "params": "STDEV(close - linreg(close, 60), 60)",
+      "lookback": 60
+    },
+    {
+      "name": "linreg_upper",
+      "params": "linreg_value + 2.0 * linreg_std",
+      "lookback": 60
+    },
+    {
+      "name": "linreg_lower",
+      "params": "linreg_value - 2.0 * linreg_std",
+      "lookback": 60
+    },
+    {
+      "name": "channel_position",
+      "params": "(close - linreg_lower) / (linreg_upper - linreg_lower)",
+      "lookback": 60
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "linreg_slope > 0 (uptrend channel)",
+        "channel_position < 0.15 (near lower boundary)",
+        "close > linreg_lower (not broken below channel)",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "close > open on the touch bar (bounce from lower channel in uptrend)"
+    },
+    "short": {
+      "conditions": [
+        "linreg_slope < 0 (downtrend channel)",
+        "channel_position > 0.85 (near upper boundary)",
+        "close < linreg_upper (not broken above channel)",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "close < open on the touch bar (rejection from upper channel in downtrend)"
+    },
+    "entry_price": "limit order at linreg channel boundary, else market on confirmation bar close"
+  },
+  "exit": {
+    "target": "linreg_value (regression midline — half-channel reversion)",
+    "stop_loss": "close below linreg_lower - 0.5 * linreg_std (channel break for longs)",
+    "trailing_stop": "trail at 0.5 * linreg_std once past regression midline",
+    "time_stop": "45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if linreg_slope flips sign (trend reversal)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed 1L; risk-normalize using channel width",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "no specific filter",
+    "time_filter": "no entries before 10:15 (need 60 bars of data) or after 14:30",
+    "volume_filter": "volume > 0.8x SMA(volume, 20)",
+    "trend_filter": "linreg_slope must have consistent sign for 30+ bars (stable trend, not oscillating)",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on macro event days",
+    "other_filters": [
+      "R-squared of regression must be > 0.7 (trend channel must be a good fit to the data)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.66,
+    "edge_decay_risk": "low — rolling linear regression channels are not standard retail tools"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "60-bar linear regression is computationally heavy and the channel parameters change every bar — instability in parameters",
+    "R-squared filter is essential but values on 1-min data are typically low (0.3-0.5), making 0.7 threshold very restrictive",
+    "Channel breaks (when they occur) are violent — the stop at 0.5 * linreg_std beyond the band may be triggered before the exit order executes"
+  ],
+  "prior_art": "Linear regression channels are discussed by Raff ('Raff Regression Channel'). Standard deviation channels around regression lines are in Gilbert Raff's work. Applied to intraday with R-squared filtering is less common. The concept overlaps with Keltner Channels but uses regression instead of EMA as midline.",
+  "notes": "Edge math: 0.56 * 40bps - 0.44 * 31bps = 22.4 - 13.6 = 8.8 bps gross. Costs ~11 bps. Net ≈ -2.2 bps. Marginally negative. The R-squared filter is the differentiator — if it reliably selects stocks in clean channels, win rate should be 0.60+: 0.60*40 - 0.40*31 = 24 - 12.4 = 11.6 bps, net ~0.6 bps."
+}

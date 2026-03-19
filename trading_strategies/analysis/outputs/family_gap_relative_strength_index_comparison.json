@@ -1,0 +1,98 @@
+{
+  "family": "gap relative_strength index_comparison",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_067.json",
+      "name": "gap_relative_index_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "gap",
+        "relative_strength",
+        "index_comparison",
+        "alpha",
+        "intraday"
+      ],
+      "thesis": "When a stock gaps significantly more than its parent index (e.g., RELIANCE gaps -1.5% but NIFTY only gaps -0.3%), the excess gap (stock gap minus index gap) tends to mean-revert within the session. The excess gap represents stock-specific over-reaction layered on top of the market move. By isolating",
+      "indicators": [],
+      "entry_long": [
+        "excess_gap < -0.5 (stock gapped down more than beta-adjusted index)",
+        "rel_RSI < 30 (stock oversold relative to index)",
+        "time > 09:25 IST",
+        "stock_beta > 0.5 AND stock_beta < 2.0 (stable beta)"
+      ],
+      "entry_short": [
+        "excess_gap > 0.5 (stock gapped up more than beta-adjusted index)",
+        "rel_RSI > 70",
+        "time > 09:25 IST",
+        "stock_beta > 0.5 AND stock_beta < 2.0"
+      ],
+      "exit_target": "excess_gap_filled_pct > 0.6 (60% of excess gap filled)",
+      "exit_stop": "excess_gap extends by 40% from open OR relative_return loss > 0.4%",
+      "filters": [
+        "India_VIX < 22",
+        "enter between 09:25-10:30 IST",
+        "stock first-15-min volume > 1.2x average",
+        "NIFTY not in extreme trend (> 2% move) to maintain beta stability",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "Beta estimation from 60-day daily data may not reflect the true intraday beta, especially during volatile sessions when correlations break down",
+        "The 'no stock-specific news' filter is subjective and difficult to automate \u2014 some information leaks through chat groups and social media before formal announcements",
+        "If the excess gap is caused by a large institutional block deal (which may not be publicly known), the position can be in the wrong direction for extended periods"
+      ],
+      "prior_art": "Jegadeesh & Titman (1993) decomposition of returns into systematic and idiosyncratic. Daniel & Moskowitz (2016) on momentum crashes. Gap-specific adaptation is novel."
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_32_of_50.json",
+      "name": "index_gap_constituent_lag_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "gap",
+        "index",
+        "lag",
+        "stat_arb"
+      ],
+      "thesis": "When Nifty50 gaps significantly (> 0.5%), some constituents gap less than their beta would suggest \u2014 these 'laggards' tend to catch up in the first 30 minutes as ETF creation/redemption and index arbitrage forces push them toward fair value. The inefficiency exists because pre-market participation i",
+      "indicators": [
+        "index_gap_pct",
+        "stock_gap_pct",
+        "expected_gap",
+        "gap_shortfall"
+      ],
+      "entry_long": [
+        "index_gap_pct > 0.5",
+        "gap_shortfall < -0.3 (stock gapped up less than expected by > 30 bps)"
+      ],
+      "entry_short": [
+        "index_gap_pct < -0.5",
+        "gap_shortfall > 0.3 (stock gapped down less than expected by > 30 bps)"
+      ],
+      "exit_target": "stock reaches expected_gap level (gap_shortfall crosses 0)",
+      "exit_stop": "0.4% against entry",
+      "filters": [
+        "none",
+        "entry at 09:20; exit by 10:00",
+        "stock must open with volume (not halted)",
+        "index gap direction determines trade direction",
+        "skip if opening spread > 0.15%"
+      ],
+      "weaknesses": [
+        "Opening slippage is 5+ bps \u2014 eats into already thin edge",
+        "Beta estimation error causes false shortfall signals",
+        "Stock may have gapped less for a valid reason (stock-specific news that doesn't justify full beta gap)"
+      ],
+      "prior_art": "Index constituent gap catch-up \u2014 ETF arbitrage / index rebalancing concept"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "gap relative_strength index_comparison",
+      "family_slug": "gap_relative_strength_index_comparison",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_067.json",
+      "fp_b": "all_trading_strategies/opus/Opus_32_of_50.json",
+      "cosine": 0.7555
+    }
+  ]
+}

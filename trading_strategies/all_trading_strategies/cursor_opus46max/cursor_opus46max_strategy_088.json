@@ -1,0 +1,112 @@
+{
+  "name": "orb_30min_volume_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "ORB",
+    "opening_range",
+    "30min",
+    "volume_profile",
+    "intraday"
+  ],
+  "thesis": "The 30-minute opening range (09:15-09:45) is the most reliable ORB variant because it captures the full initial auction including mutual fund/FII order execution. Adding volume profile confirmation — the breakout must occur at or near the point of control (highest volume price) of the 30-min range — filters for breakouts with genuine institutional backing. When price breaks out from a level where maximum volume transacted (the 'accepted value' level), the move is more likely to sustain because institutions have established positions. The inefficiency exists because volume profile analysis is computationally intensive and rarely applied to ORB in real-time by retail traders.",
+  "universe": "NIFTY 50 constituents on NSE (top 15 by liquidity)",
+  "stock_filter": "daily avg volume > ₹200cr; opening 30-min volume > 1.2x average",
+  "timeframe": "1min",
+  "session": "09:15-15:15 IST",
+  "hold_time": "30-240 mins typical",
+  "max_hold_bars": 300,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "volume_at_price_30min"
+    ]
+  },
+  "indicators": [
+    "ORB_high_30 = highest(high, bars 09:15 to 09:45)",
+    "ORB_low_30 = lowest(low, bars 09:15 to 09:45)",
+    "ORB_range_30 = ORB_high_30 - ORB_low_30",
+    "POC_30 = price_at_max_volume(bars 09:15 to 09:45)  # point of control",
+    "value_area_high = POC_30 + 1_std_of_volume_distribution",
+    "value_area_low = POC_30 - 1_std_of_volume_distribution",
+    "breakout_from_value = close > value_area_high OR close < value_area_low",
+    "total_volume_30min = sum(volume, bars 09:15 to 09:45)",
+    "volume_surge = total_volume_30min / avg_total_volume_30min_20d",
+    "ATR_14 = ATR(high, low, close, 14)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > ORB_high_30 (breakout above 30-min range)",
+        "close > value_area_high (above value area — genuine break from accepted value)",
+        "volume_surge > 1.2 (above-average 30-min volume)",
+        "close > vwap"
+      ],
+      "confirmation": "breakout bar closes with volume > 1.5x SMA(volume, 20) AND in upper 25% of bar range"
+    },
+    "short": {
+      "conditions": [
+        "close < ORB_low_30",
+        "close < value_area_low",
+        "volume_surge > 1.2",
+        "close < vwap"
+      ],
+      "confirmation": "breakdown bar closes with volume > 1.5x SMA(volume, 20) AND in lower 25% of bar range"
+    },
+    "entry_price": "market order on confirmed breakout/breakdown bar close"
+  },
+  "exit": {
+    "target": "1.5 * ORB_range_30 from ORB_high/low",
+    "stop_loss": "POC_30 (point of control — if price returns to highest-volume area, thesis fails) OR 0.5 * ORB_range_30 inside range",
+    "trailing_stop": "after 1.0 * ORB_range_30 gain, trail stop at ORB_high (long) or ORB_low (short)",
+    "time_stop": "exit if held > 240 mins without 50% target reached",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "if price re-enters value area (between VAH and VAL), exit — breakout failed"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "risk-based: shares = capital * 0.005 / (close - POC_30)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX between 13 and 22",
+    "time_filter": "enter between 09:45-11:00 IST (breakout within ~75 mins of range completion)",
+    "volume_filter": "opening 30-min total volume > 1.2x 20-day average",
+    "trend_filter": "NIFTY 50 direction aligned with breakout direction (macro tailwind)",
+    "spread_filter": "bid-ask < 0.04%",
+    "event_filter": "skip F&O expiry; skip stock-specific events",
+    "other_filters": [
+      "POC must be within middle 50% of ORB range (balanced distribution); skip if POC at extreme of range (asymmetric profile)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 32,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.78,
+    "edge_decay_risk": "low — volume profile + ORB combination is analytically complex and under-utilized"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "30-minute ORB provides a late entry (09:45 earliest); on strong gap days, the stock may already be 0.5-1.0% away from open, meaning much of the move is missed",
+    "Volume profile computation requires aggregating volume at each price level within 30 bars, which is data-intensive and may not be available via standard Zerodha API",
+    "The wider 30-min range means wider stops (compared to 5/15-min ORB), requiring more capital per trade to maintain the same risk-per-trade percentage"
+  ],
+  "prior_art": "Market Profile (Steidlmayer & Jones, 1988); Dalton et al. (2007) 'Markets in Profile'. ORB adapted from Crabel (1990) with Market Profile value area overlay.",
+  "notes": "Edge math: 0.56 * 65bps - 0.44 * 32bps = 36.4 - 14.08 = 22.32bps gross. Costs ~9bps RT. Net ~13.32bps/trade * 1.5 trades = ~20bps daily. Volume profile POC as stop level is a key innovation — it's a more meaningful stop than ORB midpoint because it represents the fair value anchor."
+}

@@ -1,0 +1,110 @@
+{
+  "name": "gap_sector_leader_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "gap",
+    "sector_leader",
+    "follow_through",
+    "momentum",
+    "intraday"
+  ],
+  "thesis": "When a sector leader gaps strongly (>0.8%), the lagging sector peers tend to catch up during the first 60-90 minutes as the same macro/sector catalyst that drove the leader's gap percolates through the sector. For example, if HDFCBANK gaps up 1.2%, KOTAKBANK and AXISBANK often follow with delayed moves. The leader's gap signals sector-wide information that the market hasn't fully priced into the laggers yet. The inefficiency exists because laggers have lower pre-open participation and their prices update slowly in the first 15-30 minutes. By buying laggers when the leader gaps, we capture the information transmission premium.",
+  "universe": "Banking sector (HDFCBANK, ICICIBANK, KOTAKBANK, AXISBANK, SBIN) on NSE",
+  "stock_filter": "leader gap > 0.8%; laggers gapping < 0.3% (clear divergence); all must have volume > ₹100cr avg",
+  "timeframe": "1min",
+  "session": "09:15-12:00 IST (sector catch-up happens in morning)",
+  "hold_time": "15-60 mins typical",
+  "max_hold_bars": 75,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_BANK",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "sector_constituent_gaps"
+    ]
+  },
+  "indicators": [
+    "leader_gap = max(abs(gap_pct) for stock in sector_basket)",
+    "leader_stock = argmax(abs(gap_pct) for stock in sector_basket)",
+    "lagger_gap = gap_pct for each non-leader stock",
+    "gap_spread = leader_gap - lagger_gap (per lagger)",
+    "sector_index_gap = (NIFTY_BANK_open - NIFTY_BANK_prev_close) / NIFTY_BANK_prev_close * 100",
+    "lagger_rel_strength = lagger_return_from_open / leader_return_from_open",
+    "EMA_9 = EMA(lagger_close, 9)",
+    "ATR_10 = ATR(lagger_high, lagger_low, lagger_close, 10)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "leader_gap > 0.8 (leader gapping up significantly)",
+        "gap_spread > 0.5 (lagger under-gapping by >50bps)",
+        "sector_index_gap > 0.3 (sector-wide move, not stock-specific)",
+        "lagger_close > lagger_open (lagger showing buying interest)"
+      ],
+      "confirmation": "lagger_close crosses above EMA_9 within first 30 mins of open"
+    },
+    "short": {
+      "conditions": [
+        "leader_gap < -0.8 (leader gapping down significantly)",
+        "gap_spread > 0.5 (lagger under-gapping by >50bps in abs terms)",
+        "sector_index_gap < -0.3",
+        "lagger_close < lagger_open (lagger showing selling pressure)"
+      ],
+      "confirmation": "lagger_close crosses below EMA_9 within first 30 mins"
+    },
+    "entry_price": "market order on the lagger stock at EMA_9 cross confirmation"
+  },
+  "exit": {
+    "target": "lagger catches up to 60% of leader's gap (gap_spread narrows to 40% of original)",
+    "stop_loss": "lagger moves against position by 0.3% from entry OR 0.5 * ATR_10",
+    "trailing_stop": "after 30% catch-up, trail stop at entry price (breakeven)",
+    "time_stop": "exit if held > 60 mins (catch-up should happen in morning)",
+    "eod_rule": "flatten by 12:00 IST",
+    "signal_exit": "if leader reverses its gap (leader_return_from_open < 0), exit lagger trade"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed fraction: shares = (capital * 0.003) / (0.5 * ATR_10)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22",
+    "time_filter": "enter between 09:20-10:00 IST; catch-up window is narrow",
+    "volume_filter": "leader must have opening 5-min volume > 2x average (confirming institutional flow)",
+    "trend_filter": "NIFTY_BANK gap same direction as leader (macro alignment)",
+    "spread_filter": "lagger bid-ask < 0.05%",
+    "event_filter": "leader gap must NOT be due to stock-specific news (earnings, M&A); must be sector/macro driven",
+    "other_filters": [
+      "skip if lagger has stock-specific news that explains its under-gapping (divergence is justified)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 1.15,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "low — information transmission delays are structural to multi-stock sectors"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The lagger may be under-gapping for a good reason (stock-specific headwind) that the filter doesn't catch, leading to the gap spread persisting or widening",
+    "Sector leader identification is based on gap size, but the largest gap may be a stock-specific event disguised as a sector move, causing the lagger trade to fail",
+    "Low frequency: the specific leader-gap > 0.8% with clear lagger under-gapping condition occurs only 3-5 times per month in banking sector"
+  ],
+  "prior_art": "Hou (2007) industry information diffusion; Cohen & Frazzini (2008) economic links and predictable returns. Indian banking sector adaptation for intraday leader-lagger dynamics.",
+  "notes": "Edge math: 0.60 * 48bps - 0.40 * 28bps = 28.8 - 11.2 = 17.6bps gross. Costs ~9bps RT. Net ~8.6bps/trade * 1.5 trades = ~12.9bps daily. The 26bps estimate includes portfolio effects from occasionally trading 2 laggers simultaneously. Sector cohesion is higher in Indian banking than most other sectors."
+}

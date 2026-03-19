@@ -1,0 +1,142 @@
+{
+  "name": "connors_rsi_extreme_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "mean_reversion",
+    "connors_rsi",
+    "oversold"
+  ],
+  "thesis": "Connors RSI combines three oscillators (RSI, streak RSI, percentile rank) into a composite that identifies extreme short-term oversold conditions. When CRSI < 10 on liquid stocks near VWAP, the bounce probability is elevated because the sell-off is typically driven by short-term momentum traders who will quickly reverse. Inefficiency persists because CRSI is less commonly used than standard RSI, and the signal is infrequent enough that most automated systems don't bother.",
+  "universe": "fno",
+  "stock_filter": "NIFTY 100 with ADV > \u20b950cr",
+  "timeframe": "1min",
+  "session": "09:45-14:30",
+  "hold_time": "10-45 bars",
+  "max_hold_bars": 60,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_3",
+      "formula": "RSI(close, 3)",
+      "lookback": 3,
+      "purpose": "short-term RSI component"
+    },
+    {
+      "name": "streak",
+      "formula": "consecutive up/down close count",
+      "lookback": 0,
+      "purpose": "streak length"
+    },
+    {
+      "name": "streak_rsi",
+      "formula": "RSI(streak, 2)",
+      "lookback": 2,
+      "purpose": "streak RSI component"
+    },
+    {
+      "name": "pct_rank",
+      "formula": "percentile_rank(close_return_1bar, 100)",
+      "lookback": 100,
+      "purpose": "return percentile component"
+    },
+    {
+      "name": "crsi",
+      "formula": "(rsi_3 + streak_rsi + pct_rank) / 3",
+      "lookback": 0,
+      "purpose": "Connors RSI composite"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "crsi < 10",
+        "close < vwap",
+        "close > vwap - 0.5%",
+        "vix < 22"
+      ],
+      "confirmation": "crsi rises above 10 on next bar (turning signal)"
+    },
+    "short": {
+      "conditions": [
+        "crsi > 90",
+        "close > vwap",
+        "close < vwap + 0.5%",
+        "vix < 22"
+      ],
+      "confirmation": "crsi drops below 90 on next bar"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "vwap touch OR crsi crosses 50",
+    "stop_loss": "0.35% from entry",
+    "trailing_stop": "move SL to breakeven after +0.2%",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when crsi crosses 50"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.35,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 8000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no trades first 30 min or last 30 min",
+    "volume_filter": "volume > SMA(volume, 20)",
+    "trend_filter": "prefer longs when nifty > SMA(nifty, 60)",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on expiry",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 0.75,
+    "profit_factor_estimate": 1.13,
+    "edge_decay_risk": "medium \u2014 behavioral, Connors RSI is published but less widely used intraday"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "CRSI on 1-min bars is extremely noisy. The 3-bar RSI oscillates wildly \u2014 signals fire frequently and many are false.",
+    "Thin profit factor (1.13) means a small increase in costs or slippage turns the strategy negative.",
+    "In trending markets, CRSI can stay at extremes for 50+ bars \u2014 the 'extreme' signal is not extreme at all, it's the trend."
+  ],
+  "prior_art": "Connors RSI \u2014 Larry Connors / TradingMarkets. Well-published. Adapted to intraday 1-min from original daily/swing timeframe.",
+  "notes": "The daily version of Connors RSI has more backtested support. The 1-min adaptation is speculative \u2014 needs careful validation.",
+  "_filepath": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "mean_reversion pullback oversold",
+    "num_within_family_comparisons": 3,
+    "variant_pairs": [
+      "all_trading_strategies/gpt/GPT_4_of_10.json",
+      "all_trading_strategies/opus/Opus_3_of_50.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json"
+    ],
+    "different_pairs": []
+  }
+}

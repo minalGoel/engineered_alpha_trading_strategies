@@ -1,0 +1,127 @@
+{
+  "name": "tata_group_pairs_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "Tata",
+    "conglomerate",
+    "cross_holding",
+    "relative_value"
+  ],
+  "thesis": "The Tata group (30+ listed entities) has high within-group correlation driven by common brand sentiment, cross-holding structure (Tata Sons ownership), and shared investor base. TCS (IT) and Tata Motors (auto) are the two largest by market cap but have low fundamental correlation (IT exports vs domestic auto). However, 'Tata premium' sentiment creates intraday co-movement — when TCS rallies strongly, Tata Motors gets a sympathy bid from retail traders. The divergence between fundamental drivers (TCS tracks IT sector, Tata Motors tracks auto/JLR) and sentiment linkage (both trade on Tata brand) creates a pairs opportunity. Additionally, Tata Steel and Tata Power share macro sensitivity to industrial growth, providing a tighter pair. The inefficiency exists because retail traders apply 'Tata brand premium' uniformly, ignoring business-specific drivers.",
+  "universe": "TCS, Tata Motors, Tata Steel, Tata Power, Titan, Tata Consumer",
+  "stock_filter": "TCS: ADV > ₹800 crore. Others: ADV > ₹50 crore. Select pairs based on rolling correlation",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "Tata group news/sentiment indicator",
+      "sectoral return data for TCS (IT) and Tata Motors (auto)"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "pair_correlation",
+      "formula": "rolling_corr(stock_A_1min_return, stock_B_1min_return, 60)",
+      "params": {
+        "lookback": 60
+      }
+    },
+    {
+      "name": "pair_spread",
+      "formula": "stock_A_cum_return - beta_AB * stock_B_cum_return",
+      "params": {
+        "beta_lookback": 60
+      }
+    },
+    {
+      "name": "spread_zscore",
+      "formula": "(pair_spread - SMA(pair_spread, 45)) / STDEV(pair_spread, 45)",
+      "params": {
+        "lookback": 45
+      }
+    },
+    {
+      "name": "group_sentiment",
+      "formula": "median(cum_return) across all 6 Tata group stocks",
+      "params": {}
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "spread_zscore < -2.0 (stock A underperforming stock B in pair)",
+        "pair_correlation > 0.3 (pair is currently correlated, reversion expected)",
+        "group_sentiment direction aligns with stock A expected recovery"
+      ],
+      "confirmation": "spread_zscore starts rising (crosses above -1.7)"
+    },
+    "short": {
+      "conditions": [
+        "spread_zscore > 2.0 (stock A outperforming stock B)",
+        "pair_correlation > 0.3",
+        "group_sentiment direction aligns with stock A expected decline"
+      ],
+      "confirmation": "spread_zscore starts falling (crosses below 1.7)"
+    },
+    "entry_price": "market order both legs: long underperformer + short outperformer"
+  },
+  "exit": {
+    "target": "spread_zscore reverts to ±0.3",
+    "stop_loss": "spread_zscore extends to ±3.0",
+    "trailing_stop": "none (target is full spread reversion)",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "pair_correlation drops below 0.1 (stocks decoupling, pair thesis invalid)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹50K per leg, beta-adjusted. Use TCS-Tata Motors pair as primary (most liquid)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22",
+    "time_filter": "no trades in first 15 min or last 15 min",
+    "volume_filter": "both pair stocks > 0.7x normal volume",
+    "trend_filter": "no trend filter (market-neutral pair)",
+    "spread_filter": "both stocks bid-ask < 8 bps",
+    "event_filter": "skip if either stock has company-specific news/results today",
+    "other_filters": [
+      "skip TCS-Tata Motors pair on IT sector result days or auto sales data days"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Low-Medium — Tata group cross-correlation is driven by brand sentiment which is persistent. However, as businesses diverge (TCS vs JLR), fundamental drivers may overwhelm sentiment linkage."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "TCS and Tata Motors have very different business drivers (IT exports vs auto/JLR). The 'Tata sentiment' linkage can break for extended periods when sector-specific factors dominate.",
+    "Tata Motors' DVR (differential voting rights) shares add complexity — some correlation is between Tata Motors ordinary and DVR, not with TCS.",
+    "The 6-stock group sentiment indicator weights all Tata stocks equally, but TCS (₹13L crore market cap) dominates group sentiment while Tata Power (₹1L crore) has minimal influence."
+  ],
+  "prior_art": "Gatev et al. (2006) pairs framework. In India, Tata group pair trading is common knowledge among institutional traders. Bose (2007) studies Indian conglomerate stock correlations. Tata Sons cross-holding structure documented in annual reports.",
+  "notes": "Best pairs within Tata group by correlation: (1) Tata Steel - Tata Power (industrial, 0.5-0.6 correlation), (2) TCS - Titan (premium brand consumer, 0.3-0.4), (3) Tata Motors - Tata Steel (cyclical, 0.4-0.5). TCS-Tata Motors is low correlation but high liquidity, making it the primary pair for intraday."
+}

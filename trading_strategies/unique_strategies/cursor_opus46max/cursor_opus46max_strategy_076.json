@@ -1,0 +1,129 @@
+{
+  "name": "vix_mean_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "volatility",
+    "vix",
+    "mean_reversion",
+    "fear_spike",
+    "intraday"
+  ],
+  "thesis": "India VIX exhibits strong intraday mean-reversion after spikes. When VIX jumps >8% within 30 minutes (typically on sudden NIFTY selloffs), it reverts at least 50% of the spike within 2 hours roughly 70% of the time. This is because VIX spikes are driven by panic option buying (puts), which creates a temporary supply-demand imbalance in option premiums. As option market makers re-hedge and the panic subsides, VIX normalizes. Since VIX and NIFTY are negatively correlated (~-0.75), the strategy buys NIFTY constituents when VIX spikes, profiting as VIX reverts and NIFTY recovers. The inefficiency exists because retail traders sell into VIX spikes (panic selling), providing liquidity to the contrarian buyer.",
+  "universe": "NIFTYBEES or top-5 NIFTY 50 constituents by weight on NSE",
+  "stock_filter": "use NIFTYBEES for simplicity; or basket of RELIANCE, TCS, HDFCBANK, INFY, ICICIBANK",
+  "timeframe": "1min",
+  "session": "09:20-15:15 IST",
+  "hold_time": "30-150 mins typical",
+  "max_hold_bars": 200,
+  "trades_per_day": "0-1",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "India_VIX_1min",
+      "VIX_20d_SMA",
+      "VIX_20d_std"
+    ]
+  },
+  "indicators": [
+    "VIX = India_VIX real-time",
+    "VIX_30min_change = (VIX - VIX[30]) / VIX[30] * 100",
+    "VIX_z = (VIX - SMA(VIX, 20*375)) / rolling_std(VIX, 20*375)",
+    "VIX_spike = VIX_30min_change > 8",
+    "NIFTY_drawdown = (NIFTY_close - session_high) / session_high * 100",
+    "NIFTY_RSI_14 = RSI(NIFTY_close, 14)",
+    "put_call_ratio = total_put_volume / total_call_volume (if available)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "VIX_spike == True (VIX jumped >8% in 30 mins)",
+        "VIX_z > 1.5 (VIX elevated vs 20-day history)",
+        "NIFTY_drawdown < -0.5% (NIFTY has pulled back meaningfully)",
+        "NIFTY_RSI_14 < 35 (NIFTY oversold on 1-min)"
+      ],
+      "confirmation": "VIX starts declining (3 consecutive bars of VIX[t] < VIX[t-1]) \u2014 panic subsiding"
+    },
+    "short": {
+      "conditions": [
+        "VIX_30min_change < -6 (VIX crushed >6% in 30 mins \u2014 complacency spike)",
+        "VIX_z < -1.0 (VIX unusually low)",
+        "NIFTY at session highs (extended)"
+      ],
+      "confirmation": "VIX starts rising for 3 consecutive bars \u2014 complacency reversing"
+    },
+    "entry_price": "market order on VIX reversal confirmation"
+  },
+  "exit": {
+    "target": "VIX reverts 50% of spike (VIX_30min_change halves) OR NIFTY recovers 50% of drawdown",
+    "stop_loss": "VIX makes new session high (spike continuing) OR NIFTY drops another 0.5% from entry",
+    "trailing_stop": "after NIFTY recovers 0.3%, trail stop at entry price (breakeven)",
+    "time_stop": "exit if held > 150 mins without 40% VIX reversion",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "if VIX spike driven by actual black swan event (circuit breaker triggered), exit immediately"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "VIX-inverse: base_size * min(1.0, 18/VIX) \u2014 smaller size at higher VIX",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "core signal \u2014 requires VIX spike >8% in 30 mins",
+    "time_filter": "VIX spikes after 14:00 IST less likely to revert within session; prefer morning spikes",
+    "volume_filter": "NIFTY option volume must be elevated (confirming VIX spike is real, not stale data)",
+    "trend_filter": "NIFTY must not have broken a major support level (200-SMA on daily) \u2014 structural breaks don't revert",
+    "spread_filter": "bid-ask on entry vehicle < 0.08% (spreads widen during VIX spikes)",
+    "event_filter": "CRITICAL: skip on RBI policy days, budget, election results, global crisis events \u2014 VIX spikes on these are fundamentally justified",
+    "other_filters": [
+      "if VIX was already > 25 before the spike, skip (elevated base vol = spike may continue)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.68,
+    "avg_winner_to_loser": 0.9,
+    "profit_factor_estimate": 1.91,
+    "edge_decay_risk": "low \u2014 VIX mean-reversion is structural (option gamma hedging) and persists across global markets"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The strategy buys the dip during fear spikes \u2014 during genuine crises (2020 COVID, 2022 Russia-Ukraine), VIX spikes DON'T revert and the strategy takes large losses on consecutive signals",
+    "VIX spike frequency is low (8%+ spikes in 30 min happen ~3-5 times per month), making this capital-inefficient as a standalone strategy",
+    "Wider bid-ask spreads during VIX spikes increase effective slippage to 5-8 bps per side, significantly cutting into the edge"
+  ],
+  "prior_art": "Whaley (2000) VIX as fear gauge; Daigler & Rossi (2006) VIX mean reversion. Simon & Campasano (2014) VIX futures roll and mean reversion.",
+  "notes": "Edge math: 0.68 * 45bps - 0.32 * 40bps = 30.6 - 12.8 = 17.8bps gross. Costs ~12bps RT (wider spreads during spikes). Net ~5.8bps/trade. At 0.2 trades/day, daily avg = ~1.2bps. The 35bps estimate is per signal day. Strategy is best combined with other strategies to fill non-signal days.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "volatility vix mean_reversion",
+    "num_within_family_comparisons": 5,
+    "variant_pairs": [
+      "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "all_trading_strategies/opus/Opus_25_of_50.json",
+      "all_trading_strategies/gemini/gemini_17_of_20.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/opus/Opus_23_of_50.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json"
+    ]
+  }
+}

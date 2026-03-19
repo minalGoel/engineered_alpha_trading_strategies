@@ -1,0 +1,93 @@
+{
+  "name": "momentum_exhaustion_vix_reversal",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": ["mean_reversion", "volatility"],
+  "thesis": "Exploits behavioral panic/euphoria. When VIX spikes intraday along with a vertical price move, retail traders capitulate. The resulting volume climax exhausts the move. Institutional 'dark pools' absorb the volume at extreme levels, leading to mean reversion.",
+  "universe": "nifty50",
+  "stock_filter": "top 10 gainers/losers",
+  "timeframe": "1min",
+  "session": "full_day",
+  "hold_time": "10-30 bars",
+  "max_hold_bars": 60,
+  "trades_per_day": "2-3",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": false,
+    "vix": true,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_2",
+      "formula": "RSI(close, 2)",
+      "lookback": 2,
+      "purpose": "extreme_overbought_oversold"
+    },
+    {
+      "name": "vol_climax",
+      "formula": "volume > sma(volume, 50) * 3",
+      "lookback": 50,
+      "purpose": "exhaustion_trigger"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": ["rsi_2 < 5", "vol_climax == True", "vix > prev_vix"],
+      "confirmation": "close > prev_high"
+    },
+    "short": {
+      "conditions": ["rsi_2 > 95", "vol_climax == True", "vix > prev_vix"],
+      "confirmation": "close < prev_low"
+    },
+    "entry_price": "close of signal bar"
+  },
+  "exit": {
+    "target": "EMA(close, 20) touch",
+    "stop_loss": "1.0 * ATR(14) from entry",
+    "trailing_stop": "none",
+    "time_stop": "15 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "rsi_2 crosses 50"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.6,
+    "position_sizing": "fixed",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 1500,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "vix > 15",
+    "time_filter": "no trades last 30 mins",
+    "volume_filter": "rel_vol > 3.0",
+    "trend_filter": "none",
+    "spread_filter": "spread < 0.1%",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 40.0,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.65,
+    "edge_decay_risk": "medium — behavioral"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Catching falling knives",
+    "High slippage on volume climaxes"
+  ],
+  "prior_art": "Connors RSI 2 Strategy",
+  "notes": "Highly dependent on India VIX forward-filling accuracy."
+}

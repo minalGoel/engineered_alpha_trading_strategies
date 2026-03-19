@@ -1,0 +1,144 @@
+{
+  "name": "sector_momentum_rotation_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "sector_rotation",
+    "momentum",
+    "relative_strength",
+    "intraday"
+  ],
+  "thesis": "Intraday sector rotation in Indian markets follows a predictable pattern: the strongest performing sector in the first hour tends to continue outperforming through midday, but reverts in the last hour. This pattern exists because: (1) FII/DII flows often target sectors, not individual stocks, creating sector-wide momentum, (2) retail herding amplifies sector moves through the day via financial media and social media signals, (3) profit-taking and portfolio rebalancing in the last hour creates mean reversion. We buy the top 2 sectors (via their most liquid constituent) in the morning and rotate to laggards in the last 90 minutes. NSE sector indices (NIFTY Bank, IT, Pharma, Auto, Metal, FMCG, Realty, Energy, Infra, PSE) provide real-time sector tracking.",
+  "universe": "NSE sectoral index constituents (top 2 liquid stocks per sector)",
+  "stock_filter": "Top 2 by ADV in each of 10 NSE sectors, ADV > \u20b930 crore",
+  "timeframe": "1min",
+  "session": "10:15-15:20 IST (wait for 1 hour of data to rank sectors)",
+  "hold_time": "30-120 min (two rotation windows: momentum then reversion)",
+  "max_hold_bars": 120,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50, NIFTY Bank, NIFTY IT, NIFTY Pharma, NIFTY Auto, NIFTY Metal, NIFTY FMCG, NIFTY Realty, NIFTY Energy, NIFTY Infra",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "sector index 1-min returns"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "sector_return_1h",
+      "formula": "(sector_index_close - sector_index_close[60]) / sector_index_close[60] * 10000",
+      "params": {
+        "lookback": 60
+      }
+    },
+    {
+      "name": "sector_rank",
+      "formula": "rank(sector_return_1h) across 10 sectors, 1=best, 10=worst",
+      "params": {
+        "n_sectors": 10
+      }
+    },
+    {
+      "name": "sector_momentum_score",
+      "formula": "0.6 * sector_return_1h + 0.4 * sector_return_30min",
+      "params": {
+        "weights": [
+          0.6,
+          0.4
+        ]
+      }
+    },
+    {
+      "name": "rotation_signal",
+      "formula": "'momentum' if time < 13:30 else 'reversion'",
+      "params": {
+        "switch_time": "13:30 IST"
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "(rotation_signal == 'momentum' AND sector_rank <= 2) OR (rotation_signal == 'reversion' AND sector_rank >= 9)",
+        "stock_close > stock_VWAP (momentum phase) OR stock_close < stock_VWAP (reversion phase)",
+        "India_VIX < 22"
+      ],
+      "confirmation": "sector maintaining rank for 2 consecutive 30-min windows"
+    },
+    "short": {
+      "conditions": [
+        "(rotation_signal == 'momentum' AND sector_rank >= 9) OR (rotation_signal == 'reversion' AND sector_rank <= 2)",
+        "stock_close < stock_VWAP (momentum phase) OR stock_close > stock_VWAP (reversion phase)",
+        "India_VIX < 22"
+      ],
+      "confirmation": "sector maintaining rank for 2 consecutive 30-min windows"
+    },
+    "entry_price": "market order at signal confirmation"
+  },
+  "exit": {
+    "target": "30 bps from entry (momentum phase), 25 bps (reversion phase)",
+    "stop_loss": "15 bps from entry",
+    "trailing_stop": "10 bps trailing after 20 bps profit",
+    "time_stop": "exit momentum trades by 13:30, reversion trades by 15:20",
+    "eod_rule": "flatten all positions by 15:20 IST",
+    "signal_exit": "sector_rank changes by > 3 positions (rotation shift)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "\u20b91L per sector trade, max 2 sectors at a time",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; skip in high-vol (all sectors correlated, rotation fails)",
+    "time_filter": "wait until 10:15 for first-hour ranking data",
+    "volume_filter": "sector index volume participation > 0.8x normal",
+    "trend_filter": "momentum phase: NIFTY 50 directional (not range-bound); reversion phase: any",
+    "spread_filter": "individual stock bid-ask < 8 bps",
+    "event_filter": "skip on budget day, RBI policy day (all sectors move together)",
+    "other_filters": [
+      "skip if top and bottom sector return difference < 30 bps (no clear rotation)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Medium \u2014 sector rotation is a well-known phenomenon but intraday rotation timing is less studied. The two-phase approach (momentum then reversion) is non-obvious and provides additional edge."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "On strong trending days (macro events, global risk-on/off), all sectors move together and rotation signals generate noise. The 30 bps minimum dispersion filter helps but doesn't eliminate this.",
+    "The 13:30 switch from momentum to reversion is arbitrary and may not align with actual flow patterns, which vary by day of week and proximity to expiry.",
+    "Using single stocks as sector proxies introduces idiosyncratic risk \u2014 a stock-specific event can distort sector-level signal."
+  ],
+  "prior_art": "Moskowitz & Grinblatt (1999) 'Do Industries Explain Momentum?' establishes sector momentum. Bali, Engle & Murray (2016) cover cross-sectional momentum. In Indian context, Sehgal & Jain (2011) study sector rotation in Indian markets.",
+  "notes": "Consider trading sector ETFs (BANKBEES, NIFTYIT, etc.) instead of individual stocks to reduce idiosyncratic risk. However, ETF liquidity in India is limited for intraday trading. Alternative: use NIFTY sector futures where available.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_111.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_111.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "sector_rotation momentum relative_strength",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/opus/Opus_19_of_50.json"
+    ],
+    "different_pairs": []
+  }
+}

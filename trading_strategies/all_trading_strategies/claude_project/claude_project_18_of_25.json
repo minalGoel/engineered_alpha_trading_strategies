@@ -1,0 +1,117 @@
+{
+  "name": "nifty_intraday_momentum_factor_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "momentum",
+    "cross_sectional",
+    "factor"
+  ],
+  "thesis": "Cross-sectional intraday momentum: stocks that outperformed in the first 90 minutes continue to outperform for the next 90 minutes, and vice versa. This is driven by institutional order-splitting — a large buy order in the morning continues executing through the afternoon. The inefficiency exists because cross-sectional sorting requires real-time ranking of 50 stocks, which most retail platforms can't do. Not fully arbitraged because the edge is thin per-trade and requires trading multiple names simultaneously.",
+  "universe": "nifty50",
+  "stock_filter": "all 50 NIFTY constituents, rank by morning return",
+  "timeframe": "1min",
+  "session": "10:45-14:30",
+  "hold_time": "90-180 bars",
+  "max_hold_bars": 240,
+  "trades_per_day": "6-10",
+  "max_trades_per_day": 12,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "morning_return",
+      "formula": "(close_at_1045 - open_today) / open_today * 100",
+      "lookback": 0,
+      "purpose": "first 90-min return for ranking"
+    },
+    {
+      "name": "morning_rank",
+      "formula": "rank(morning_return) across all 50 stocks, 1=highest",
+      "lookback": 0,
+      "purpose": "cross-sectional rank"
+    },
+    {
+      "name": "rel_volume",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "volume confirmation"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "morning_rank <= 5",
+        "morning_return > 0.3%",
+        "rel_volume > 1.0",
+        "vix < 24"
+      ],
+      "confirmation": "rank computed at 10:45, enter at market"
+    },
+    "short": {
+      "conditions": [
+        "morning_rank >= 46",
+        "morning_return < -0.3%",
+        "rel_volume > 1.0",
+        "vix < 24"
+      ],
+      "confirmation": "rank computed at 10:45, enter at market"
+    },
+    "entry_price": "market at 10:45"
+  },
+  "exit": {
+    "target": "0.5% from entry (per leg)",
+    "stop_loss": "0.4% from entry (per leg)",
+    "trailing_stop": "move SL to breakeven after +0.25%",
+    "time_stop": "exit all at 14:30",
+    "eod_rule": "flatten",
+    "signal_exit": "N/A — hold until time stop or profit/stop"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "equal_weight across top/bottom 5",
+    "max_open_positions": 10,
+    "max_daily_loss_inr": 20000,
+    "max_portfolio_heat_pct": 3.0
+  },
+  "filters": {
+    "vix_filter": "vix < 24",
+    "time_filter": "entry at 10:45, exit by 14:30",
+    "volume_filter": "all stocks must have rel_volume > 1.0",
+    "trend_filter": "none — long/short balanced",
+    "spread_filter": "skip stocks with spread > 0.1%",
+    "event_filter": "skip stocks with earnings today, skip budget/RBI days entirely",
+    "other_filters": [
+      "minimum 0.3% absolute morning return to qualify for top/bottom",
+      "skip if morning return is driven by single large gap (open price outlier)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.25,
+    "profit_factor_estimate": 1.25,
+    "edge_decay_risk": "medium — structural (institutional order flow) but studied in literature"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "10 simultaneous positions at Zerodha = ₹400+ brokerage per day. Need consistent edge to justify the fixed cost overhead.",
+    "Morning momentum can reverse at exactly the entry time (10:45) due to profit-taking. The 90-min lookback is arbitrary.",
+    "Long/short construction is imperfect — NIFTY 50 is not truly market-neutral when you're long top 5 and short bottom 5. Sector concentration risk."
+  ],
+  "prior_art": "Intraday cross-sectional momentum. Academic: Gao et al. (2018) on intraday momentum patterns. Also: Jegadeesh/Titman adapted to intraday.",
+  "notes": "Capital-intensive. Needs ₹10L+ allocation. Not suitable for small accounts."
+}

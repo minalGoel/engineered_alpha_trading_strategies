@@ -1,0 +1,131 @@
+{
+  "name": "multi_factor_composite_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "composite",
+    "multi_factor",
+    "ensemble"
+  ],
+  "thesis": "Individual indicators are noisy. Combining multiple orthogonal signals — VWAP deviation, RSI, relative volume, index alignment, and VIX regime — into a composite score improves signal quality by diversifying across information sources. The inefficiency exists because most traders use 1-2 indicators and don't systematically combine signals with proper weighting. Not fully arbitraged because the specific combination and weights are unique to this implementation, and the composite approach is harder to reverse-engineer.",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO by turnover, ADV > ₹60cr",
+  "timeframe": "1min",
+  "session": "09:45-14:30",
+  "hold_time": "15-90 bars",
+  "max_hold_bars": 120,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap_zscore",
+      "formula": "zscore(close - vwap, 60)",
+      "lookback": 60,
+      "purpose": "VWAP deviation signal (weight: 0.30)"
+    },
+    {
+      "name": "rsi_14_scaled",
+      "formula": "(RSI(close, 14) - 50) / 50",
+      "lookback": 14,
+      "purpose": "RSI scaled to [-1, 1] (weight: 0.20)"
+    },
+    {
+      "name": "rel_volume_scaled",
+      "formula": "clip(volume / SMA(volume, 20) - 1, -1, 1)",
+      "lookback": 20,
+      "purpose": "relative volume signal (weight: 0.15)"
+    },
+    {
+      "name": "index_alignment",
+      "formula": "sign(nifty_close - nifty_vwap) * abs(nifty_return_15)",
+      "lookback": 15,
+      "purpose": "index directional signal (weight: 0.20)"
+    },
+    {
+      "name": "vix_regime",
+      "formula": "clip((20 - vix) / 10, -1, 1)",
+      "lookback": 0,
+      "purpose": "VIX regime score (weight: 0.15)"
+    },
+    {
+      "name": "composite_score",
+      "formula": "0.30*vwap_zscore + 0.20*rsi_14_scaled + 0.15*rel_volume_scaled + 0.20*index_alignment + 0.15*vix_regime",
+      "lookback": 0,
+      "purpose": "combined signal"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "composite_score < -1.5",
+        "at least 3 of 5 sub-signals are negative"
+      ],
+      "confirmation": "composite_score must be < -1.5 for 3 consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "composite_score > 1.5",
+        "at least 3 of 5 sub-signals are positive"
+      ],
+      "confirmation": "composite_score must be > 1.5 for 3 consecutive bars"
+    },
+    "entry_price": "market on third confirmation bar close"
+  },
+  "exit": {
+    "target": "composite_score crosses 0",
+    "stop_loss": "0.5% from entry OR composite_score hits ±3.0",
+    "trailing_stop": "move SL to breakeven after composite_score crosses ±0.5",
+    "time_stop": "exit after 120 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when composite_score crosses 0"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "confidence_scaled — size proportional to abs(composite_score)",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 12000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "included in composite score — no separate filter",
+    "time_filter": "no trades first 30 min or last 30 min",
+    "volume_filter": "included in composite score",
+    "trend_filter": "included in composite score (index alignment)",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on expiry, RBI, budget",
+    "other_filters": [
+      "require at least 3 of 5 sub-signals to agree (consensus check)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.29,
+    "edge_decay_risk": "low — diversified across signal types, harder to crowdedly compete with"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The weights (0.30, 0.20, etc.) are arbitrary initial guesses. Without proper optimization (which risks overfitting), the composite may not be better than individual signals.",
+    "More parameters = more overfitting risk. 5 sub-signals * 2 params each = 10+ tunable parameters. This is at the edge of overfitting territory.",
+    "Composite signals are opaque — when the strategy loses, it's hard to diagnose which component failed. Debugging is harder than single-indicator strategies.",
+    "Signal correlation: if VWAP deviation and RSI are both capturing the same mean-reversion tendency, the 'diversification' is illusory."
+  ],
+  "prior_art": "Multi-factor model. Standard in quant equity (Barra, Axioma). See: Finding Alphas (Kakushadze), Advances in Financial ML (de Prado) on feature combination.",
+  "notes": "Use PCA or factor analysis to verify that sub-signals are actually orthogonal. If correlation > 0.5 between any two, merge or drop one. Walk-forward optimization of weights monthly with 6-month lookback."
+}

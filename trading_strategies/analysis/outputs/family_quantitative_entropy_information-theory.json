@@ -1,0 +1,111 @@
+{
+  "family": "quantitative entropy information-theory",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_174.json",
+      "name": "entropy_regime_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "entropy",
+        "information-theory",
+        "regime",
+        "Shannon",
+        "quantitative"
+      ],
+      "thesis": "Shannon entropy of the distribution of 1-min returns measures the randomness/predictability of price action. Low entropy (returns clustered in a few bins) indicates structured, predictable market behavior \u2014 ideal for directional trading. High entropy (returns uniformly distributed) indicates random,",
+      "indicators": [
+        "Returns_1min",
+        "Entropy_50",
+        "Entropy_Pctile",
+        "Low_Entropy",
+        "Dominant_Direction",
+        "ATR_14"
+      ],
+      "entry_long": [
+        "Low_Entropy == True (structured, predictable regime)",
+        "Dominant_Direction > 0 (structured returns are biased positive)",
+        "close > vwap",
+        "EMA(close, 10) > EMA(close, 20)"
+      ],
+      "entry_short": [
+        "Low_Entropy == True",
+        "Dominant_Direction < 0 (structured returns are biased negative)",
+        "close < vwap",
+        "EMA(close, 10) < EMA(close, 20)"
+      ],
+      "exit_target": "1.2 * ATR(14) from entry",
+      "exit_stop": "0.8 * ATR(14) from entry",
+      "filters": [
+        "India VIX < 25",
+        "No entries before 10:05 (need 50 bars for entropy computation) or after 15:10",
+        "Volume on entry bar > SMA(volume, 20)",
+        "None \u2014 entropy-based filtering replaces trend filter",
+        "Bid-ask spread < 5 bps"
+      ],
+      "weaknesses": [
+        "Entropy computed on 50 1-min returns with 10 bins means most bins have 5 or fewer observations \u2014 the histogram is sparse, making the entropy estimate unreliable and sensitive to bin width choice",
+        "Low-entropy periods can coincide with low-volume lunch hours (12:00-13:00 IST) where returns are clustered near zero not because of structure but because of inactivity \u2014 false low-entropy signal",
+        "The 20-day historical entropy distribution used for percentile ranking may shift significantly during earnings season or macro events, invalidating the calibration"
+      ],
+      "prior_art": "Shannon (1948) information theory; Bandt & Pompe (2002) on permutation entropy for time series; Risso (2008) on entropy and stock market crashes; Hou & Li (2014) on information entropy and stock retur"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_188.json",
+      "name": "maximum_entropy_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "maximum-entropy",
+        "distribution",
+        "non-parametric",
+        "quantitative",
+        "tail-risk"
+      ],
+      "thesis": "The maximum entropy distribution consistent with observed mean and variance of 1-min returns provides the least biased estimate of the true return distribution. When the observed return falls in the extreme tails of this maximum entropy distribution (beyond the 5th or 95th percentile), it is genuine",
+      "indicators": [
+        "Return_1min",
+        "Rolling_Mean",
+        "Rolling_Var",
+        "Rolling_Skew",
+        "MaxEnt_P5",
+        "MaxEnt_P95",
+        "MaxEnt_Tail_Event"
+      ],
+      "entry_long": [
+        "Return_1min < MaxEnt_P5 (extreme negative return \u2014 genuinely unusual under MaxEnt)",
+        "close < vwap (VWAP confirmation of being oversold)",
+        "Rolling_Skew > -1.0 (distribution not too negatively skewed \u2014 left tail events revert)"
+      ],
+      "entry_short": [
+        "Return_1min > MaxEnt_P95 (extreme positive return \u2014 genuinely unusual under MaxEnt)",
+        "close > vwap",
+        "Rolling_Skew < 1.0 (distribution not too positively skewed)"
+      ],
+      "exit_target": "30 bps from entry",
+      "exit_stop": "20 bps from entry (tight \u2014 if extreme persists, exit quickly)",
+      "filters": [
+        "India VIX < 22 (in high VIX, 'extreme' returns happen frequently, reducing the signal quality)",
+        "No entries before 10:15 (need 60 bars for moment estimation) or after 15:10",
+        "Volume on extreme bar > 1.5 * SMA(volume, 20) (volume confirms the extreme move)",
+        "abs(EMA(NIFTY_50, 20) slope) < 3 bps/bar (calm market \u2014 extremes more likely to revert)",
+        "Bid-ask spread < 5 bps"
+      ],
+      "weaknesses": [
+        "MaxEnt distribution fitting with 3 constraints (mean, variance, skewness) on 60 data points is numerically sensitive \u2014 the optimization can fail to converge or produce degenerate solutions",
+        "Extreme return events on 1-min bars are often driven by single large orders (block trades) that do not revert \u2014 the mean-reversion assumption fails for information-driven extremes",
+        "The target/stop ratio of 30/20 = 1.5 with 57% win rate gives gross edge of 30*0.57 - 20*0.43 = 8.5 bps per side; after ~9 bps costs, edge is marginal at best"
+      ],
+      "prior_art": "Jaynes (1957) maximum entropy principle; Buchen & Kelly (1996) on maximum entropy distributions in finance; application to trading signals is novel but builds on established statistical theory"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "quantitative entropy information-theory",
+      "family_slug": "quantitative_entropy_information_theory",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_174.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_188.json",
+      "cosine": 0.7417
+    }
+  ]
+}

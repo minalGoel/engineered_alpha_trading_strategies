@@ -1,0 +1,161 @@
+{
+  "family": "macd momentum mean_reversion",
+  "members": [
+    {
+      "fp": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+      "name": "macd_histogram_divergence_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "divergence",
+        "macd"
+      ],
+      "thesis": "MACD histogram divergence (price makes new low but MACD histogram doesn't) signals momentum exhaustion before price reverses. Unlike RSI divergence, MACD histogram captures the rate of change of momentum, making it a leading indicator. The inefficiency exists because MACD divergence requires real-ti",
+      "indicators": [
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "price_pivot_low",
+        "hist_at_pivot"
+      ],
+      "entry_long": [
+        "price_pivot_low[t] < price_pivot_low[t-1]",
+        "hist_at_pivot[t] > hist_at_pivot[t-1]",
+        "close < vwap",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "price_pivot_high[t] > price_pivot_high[t-1]",
+        "hist_at_pivot[t] < hist_at_pivot[t-1]",
+        "close > vwap",
+        "vix < 22"
+      ],
+      "exit_target": "vwap touch OR 0.4% from entry",
+      "exit_stop": "0.3% from entry",
+      "filters": [
+        "vix < 22",
+        "no trades first 30 min or last 30 min",
+        "volume at divergence pivot > SMA(volume, 20)",
+        "none \u2014 counter-trend by design",
+        "skip if spread > 0.1%"
+      ],
+      "weaknesses": [
+        "MACD on 1-min bars with 12/26/9 parameters is extremely lagging \u2014 by the time divergence confirms and histogram crosses zero, the reversal may be 70%+ done.",
+        "Profit factor of 1.08 is barely above breakeven. Slippage model errors would make this negative.",
+        "Divergence detection is inherently ambiguous \u2014 different pivot definitions produce different signals. Hard to validate out-of-sample."
+      ],
+      "prior_art": "MACD histogram divergence. Alexander Elder's 'Trading for a Living'. Textbook setup."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json",
+      "name": "macd_signal_momentum_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "macd",
+        "signal-line",
+        "momentum",
+        "histogram",
+        "intraday"
+      ],
+      "thesis": "MACD(12,26,9) on 1-min bars generates a momentum signal when the MACD line crosses the signal line, but the key edge comes from the MACD histogram acceleration: when the histogram is not only positive but INCREASING (histogram[t] > histogram[t-1] > histogram[t-2]), momentum is accelerating and the t",
+      "indicators": [
+        "MACD_line",
+        "MACD_signal",
+        "MACD_hist",
+        "hist_accel",
+        "VWAP"
+      ],
+      "entry_long": [
+        "MACD_line > MACD_signal",
+        "MACD_hist > 0",
+        "MACD_hist[t] > MACD_hist[t-1] > MACD_hist[t-2]",
+        "close > VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "entry_short": [
+        "MACD_line < MACD_signal",
+        "MACD_hist < 0",
+        "MACD_hist[t] < MACD_hist[t-1] < MACD_hist[t-2]",
+        "close < VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "exit_target": "0.4% from entry OR MACD histogram deceleration (hist_accel < 0 for longs)",
+      "exit_stop": "0.25% from entry OR MACD line crosses below signal line",
+      "filters": [
+        "no specific filter",
+        "no entries before 09:30 (MACD needs warmup) or after 14:45",
+        "volume > 1x 20-bar SMA on entry bar",
+        "VWAP alignment required (long above VWAP, short below)",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "MACD(12,26,9) was designed for daily bars \u2014 on 1-min bars, the lookbacks are very short (26 min) and noisy",
+        "Histogram acceleration can be caused by a single large bar, creating false acceleration signals",
+        "The 3-bar acceleration requirement means entry is delayed \u2014 by the time signal fires, much of the move may be done"
+      ],
+      "prior_art": "MACD by Gerald Appel (1979). Signal line crossover is standard. MACD histogram analysis is from Thomas Aspray (1986). Histogram acceleration as a distinct signal is discussed by Elder ('Trading for a "
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+      "name": "macd_trend_continuation_v71",
+      "universe": "nifty200",
+      "timeframe": "15min",
+      "tags": [
+        "trend_following",
+        "momentum"
+      ],
+      "thesis": "Momentum breeds momentum in intraday equities. When the MACD line crosses the signal line in the direction of the primary trend, it flags an acceleration of institutional buying/selling. Exists due to autocorrelated order flow.",
+      "indicators": [
+        "ema_50",
+        "macd_line",
+        "macd_signal"
+      ],
+      "entry_long": [
+        "close > ema_50 AND CROSSOVER(macd_line, macd_signal) AND macd_line < 0"
+      ],
+      "entry_short": [
+        "close < ema_50 AND CROSSUNDER(macd_line, macd_signal) AND macd_line > 0"
+      ],
+      "exit_target": "21 * ATR(14) from entry",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix between 12-22",
+        "only 09:30-14:30",
+        "skip if volume < SMA(volume, 20)",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Whipsaws heavily in range-bound markets",
+        "Late entry compared to pure price action breakouts",
+        "Susceptible to sudden mean-reverting algorithmic spikes"
+      ],
+      "prior_art": "Standard MACD Trend Strategy"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "macd momentum mean_reversion",
+      "family_slug": "macd_momentum_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json",
+      "cosine": 0.7558
+    },
+    {
+      "family": "macd momentum mean_reversion",
+      "family_slug": "macd_momentum_mean_reversion",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json",
+      "cosine": 0.7077
+    },
+    {
+      "family": "macd momentum mean_reversion",
+      "family_slug": "macd_momentum_mean_reversion",
+      "fp_a": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json",
+      "cosine": 0.6762
+    }
+  ]
+}

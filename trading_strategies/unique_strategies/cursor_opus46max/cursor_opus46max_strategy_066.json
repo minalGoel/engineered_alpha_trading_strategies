@@ -1,0 +1,124 @@
+{
+  "name": "gap_to_vwap_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "gap",
+    "vwap",
+    "mean_reversion",
+    "institutional_flow",
+    "intraday"
+  ],
+  "thesis": "After a gap open, the developing session VWAP acts as a gravitational attractor because institutional algorithms (TWAP/VWAP algos) that were scheduled to execute at VWAP will naturally pull price toward it. When price opens away from VWAP and diverges further, the institutional reversion pressure builds. By entering when the gap creates a >20 bps deviation from developing VWAP and waiting for the first sign of VWAP convergence, we ride the institutional flow back to VWAP. The edge persists because retail traders ignore VWAP and trade on price action alone, while institutional VWAP algos are the dominant intraday flow.",
+  "universe": "NIFTY 50 constituents on NSE",
+  "stock_filter": "daily avg volume > \u20b9200cr; gap > 0.3% (abs); VWAP deviation > 20bps at entry time",
+  "timeframe": "1min",
+  "session": "09:20-14:30 IST",
+  "hold_time": "10-60 mins typical",
+  "max_hold_bars": 90,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_vwap",
+      "prev_day_close"
+    ]
+  },
+  "indicators": [
+    "gap_pct = (open - prev_close) / prev_close * 100",
+    "vwap_dev_bps = (close - vwap) / vwap * 10000",
+    "vwap_slope = linear_regression_slope(vwap, 10)  # VWAP direction",
+    "price_vwap_cross_count = count_crosses(close, vwap, last_30_bars)",
+    "RSI_10 = RSI(close, 10)",
+    "volume_profile_poc = price_at_max_volume(last_30_bars)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vwap_dev_bps < -20 (price below VWAP by >20bps)",
+        "gap_pct < 0 (gap down, price extended below VWAP)",
+        "RSI_10 < 35",
+        "vwap_slope > 0 OR vwap_slope is flattening (VWAP not dropping sharply)"
+      ],
+      "confirmation": "price crosses above EMA(close, 5) from below while still below VWAP"
+    },
+    "short": {
+      "conditions": [
+        "vwap_dev_bps > 20 (price above VWAP by >20bps)",
+        "gap_pct > 0 (gap up, price extended above VWAP)",
+        "RSI_10 > 65",
+        "vwap_slope < 0 OR vwap_slope is flattening"
+      ],
+      "confirmation": "price crosses below EMA(close, 5) from above while still above VWAP"
+    },
+    "entry_price": "limit order at EMA(close, 5) cross price"
+  },
+  "exit": {
+    "target": "price touches VWAP (vwap_dev_bps crosses 0)",
+    "stop_loss": "vwap_dev_bps exceeds 40bps against position OR 0.4% from entry",
+    "trailing_stop": "once within 5bps of VWAP, trail stop at 15bps from best deviation",
+    "time_stop": "exit if held > 60 mins",
+    "eod_rule": "flatten by 14:30 IST",
+    "signal_exit": "if price_vwap_cross_count > 3 in last 30 bars (choppy, no trend to VWAP), exit"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed fraction: shares = (capital * 0.004) / stop_distance",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 20; high VIX causes wider VWAP deviations that may not revert",
+    "time_filter": "best entry window 09:25-11:00 IST; afternoon VWAP reversion is weaker",
+    "volume_filter": "current 1-min volume > 0.7x SMA(volume, 20)",
+    "trend_filter": "developing VWAP slope not > 0.5 bps/min (strong trend makes VWAP a moving target)",
+    "spread_filter": "bid-ask < 0.04%",
+    "event_filter": "skip earnings day stocks; skip stocks with circuit limit hits",
+    "other_filters": [
+      "skip if stock has crossed VWAP 5+ times already today (choppy, no edge)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.66,
+    "avg_winner_to_loser": 0.95,
+    "profit_factor_estimate": 1.84,
+    "edge_decay_risk": "low \u2014 VWAP reversion is driven by institutional execution algorithms and will persist as long as VWAP benchmarking exists"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "On strong trend days, VWAP itself moves in the trend direction, so price 'touching VWAP' may happen at a worse level than entry, creating a false win that's actually a loss on the trade",
+    "The 20bps VWAP deviation threshold generates many signals in volatile sessions but these are lower quality because the VWAP is still developing and noisy in the first 30 minutes",
+    "Developing VWAP in the first 30 minutes is heavily influenced by the gap itself, making early signals unreliable (circular reference problem)"
+  ],
+  "prior_art": "Berkowitz et al. (1988) VWAP benchmark; adapted for intraday gap trading. Biais et al. (1995) on price discovery and VWAP convergence.",
+  "notes": "Edge math: 0.66 * 28bps - 0.34 * 25bps = 18.48 - 8.5 = 9.98bps gross. Costs ~9bps RT. Net ~1bps/trade * 3 trades = 3bps daily. The 25bps estimate is optimistic; requires capturing 3-4 high-quality VWAP reversion trades per day. Works best in the 09:30-11:00 window.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "vwap intraday crossover",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json"
+    ],
+    "different_pairs": []
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "name": "kernel_density_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "KDE",
+    "kernel-density",
+    "support-resistance",
+    "non-parametric",
+    "quantitative"
+  ],
+  "thesis": "Traditional support and resistance levels are drawn subjectively by traders. Kernel Density Estimation (KDE) provides an objective, non-parametric method to identify price levels where trading volume or price visits are concentrated. By computing a Gaussian KDE on the close prices of the last 120 bars, the density peaks (modes) represent natural support/resistance levels. When price approaches a high-density level from above (support), we buy. When price approaches from below (resistance), we sell. The inefficiency exists because KDE is a statistical technique unfamiliar to most traders who rely on subjective line-drawing. KDE-based levels are mathematically defined and reproducible, eliminating confirmation bias.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr; intraday price range > 0.5% (sufficient price variation for meaningful KDE)",
+  "timeframe": "1min",
+  "session": "11:15-15:10 IST",
+  "hold_time": "10-30 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "KDE",
+      "params": "GaussianKDE(close[-120:], bandwidth='silverman') — KDE of last 120 bar closes",
+      "lookback": 120
+    },
+    {
+      "name": "KDE_Modes",
+      "params": "local maxima of KDE — price levels with highest density (support/resistance)",
+      "lookback": 120
+    },
+    {
+      "name": "Nearest_Support",
+      "params": "highest KDE mode below current close",
+      "lookback": 120
+    },
+    {
+      "name": "Nearest_Resistance",
+      "params": "lowest KDE mode above current close",
+      "lookback": 120
+    },
+    {
+      "name": "KDE_Density_at_Price",
+      "params": "KDE.evaluate(close) — density at current price level",
+      "lookback": 120
+    },
+    {
+      "name": "Mode_Strength",
+      "params": "KDE density at mode / mean KDE density — relative importance of level",
+      "lookback": 120
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close is within 0.1% of Nearest_Support (approaching support from above)",
+        "Mode_Strength(Nearest_Support) > 1.5 (support level is strong — high density)",
+        "close > Nearest_Support (not yet broken below)",
+        "RSI(close, 14) < 40 (approaching oversold near support)"
+      ],
+      "confirmation": "Price bounces: close > close[1 bar ago] AND close > close[2 bars ago] (two consecutive upticks at support)"
+    },
+    "short": {
+      "conditions": [
+        "close is within 0.1% of Nearest_Resistance (approaching resistance from below)",
+        "Mode_Strength(Nearest_Resistance) > 1.5",
+        "close < Nearest_Resistance (not yet broken above)",
+        "RSI(close, 14) > 60 (approaching overbought near resistance)"
+      ],
+      "confirmation": "Price rejects: close < close[1 bar ago] AND close < close[2 bars ago] (two consecutive downticks at resistance)"
+    },
+    "entry_price": "market order after bounce/rejection confirmation"
+  },
+  "exit": {
+    "target": "Opposite KDE mode (support → next resistance level above; resistance → next support level below)",
+    "stop_loss": "0.15% beyond the KDE mode (support broken by 0.15% = failed support, exit)",
+    "trailing_stop": "After 20 bps profit, trail at 12 bps from high-water mark",
+    "time_stop": "45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Price breaks through the KDE mode by > 0.1% (level failed)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "Fixed ₹1L; scale with Mode_Strength: ₹1.25L if strength > 2.0",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22; support/resistance levels are less reliable in high-vol environments",
+    "time_filter": "No entries before 11:15 (need 120 bars for KDE) or after 15:10",
+    "volume_filter": "Volume-weighted KDE preferred; if not, volume on entry bar > SMA(volume, 15)",
+    "trend_filter": "No strong trend: abs(EMA(close,30) slope) < 2 bps/bar (S/R levels work in ranging markets)",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "At least 2 distinct KDE modes must be identified (otherwise price distribution is unimodal and S/R levels are meaningless)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 23,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 0.95,
+    "profit_factor_estimate": 1.31,
+    "edge_decay_risk": "Medium — KDE-based S/R is a rigorous version of subjective S/R trading; the statistical approach is cleaner but the underlying concept (price memory at high-volume levels) is well-known"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "KDE bandwidth selection (Silverman's rule) assumes Gaussian-like data — financial close prices can have bimodal or irregular distributions that require manual bandwidth tuning",
+    "The 120-bar lookback means KDE modes reflect the last 2 hours of price action — if the stock was trending, the modes will be spread widely and may not represent meaningful S/R levels",
+    "Support/resistance trading has a negative risk-reward profile (tight targets between modes, wider stops when levels break) — the 0.95 avg winner/loser ratio means the strategy depends heavily on maintaining its 58% win rate"
+  ],
+  "prior_art": "KDE in statistics (Rosenblatt 1956, Parzen 1962); volume profile (Market Profile by Steidlmayer); KDE for S/R identification discussed in some quant blogs but not widely in academic literature",
+  "notes": "Consider using volume-weighted KDE (weighting each close price observation by its bar volume) for more meaningful S/R levels — high-volume price levels are more significant than low-volume ones. The scipy.stats.gaussian_kde module provides efficient implementation."
+}

@@ -1,0 +1,139 @@
+{
+  "name": "previous_day_high_low_breakout_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "momentum",
+    "breakout",
+    "levels"
+  ],
+  "thesis": "Previous day's high and low are the most-watched support/resistance levels by both retail and institutional traders. When price breaks these levels with conviction (volume + close beyond level), stop-loss triggers from the prior day's trapped traders create momentum. The inefficiency exists because PDH/PDL are anchoring points for human decision-making — behavioral finance research confirms that round levels and recent extremes attract disproportionate order clustering.",
+  "universe": "nifty50",
+  "stock_filter": "top 25 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "15-60 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_high",
+      "prev_day_low"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "pdh",
+      "formula": "previous day high",
+      "lookback": 1,
+      "purpose": "resistance breakout level"
+    },
+    {
+      "name": "pdl",
+      "formula": "previous day low",
+      "lookback": 1,
+      "purpose": "support breakdown level"
+    },
+    {
+      "name": "dist_from_pdh",
+      "formula": "(close - pdh) / pdh * 10000",
+      "lookback": 1,
+      "purpose": "bps from PDH"
+    },
+    {
+      "name": "dist_from_pdl",
+      "formula": "(close - pdl) / pdl * 10000",
+      "lookback": 1,
+      "purpose": "bps from PDL"
+    },
+    {
+      "name": "vol_surge",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "conviction filter"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > pdh",
+        "dist_from_pdh > 5 AND dist_from_pdh < 30 (clean break, not overextended)",
+        "vol_surge > 2.0",
+        "close > vwap",
+        "vix < 22"
+      ],
+      "confirmation": "two consecutive bars closing above pdh"
+    },
+    "short": {
+      "conditions": [
+        "close < pdl",
+        "dist_from_pdl < -5 AND dist_from_pdl > -30",
+        "vol_surge > 2.0",
+        "close < vwap",
+        "vix < 22"
+      ],
+      "confirmation": "two consecutive bars closing below pdl"
+    },
+    "entry_price": "market on second confirmation bar close"
+  },
+  "exit": {
+    "target": "0.5% from entry",
+    "stop_loss": "pdh - 0.1% (for longs) or pdl + 0.1% (for shorts)",
+    "trailing_stop": "move SL to breakeven after +0.3%",
+    "time_stop": "exit after 90 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "close crosses back inside PDH/PDL"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no entries in first 15 min or last 30 min",
+    "volume_filter": "vol_surge > 2.0 on breakout bar",
+    "trend_filter": "nifty50 trending in same direction as the trade",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on expiry day, stock results day",
+    "other_filters": [
+      "skip if prior day range was < 50% of 20-day avg range (dead day = unreliable levels)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.5,
+    "edge_decay_risk": "low — PDH/PDL is a universal anchoring bias that won't disappear"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "False breakouts at PDH/PDL are extremely common — 50% win rate means half the time it fails",
+    "On inside days (today's range inside yesterday's), PDH/PDL may never be tested",
+    "If many stocks break PDH/PDL simultaneously, it's a macro-driven day and edge comes from market direction, not the level"
+  ],
+  "prior_art": "Previous Day High/Low breakout — Linda Raschke, Mark Fisher. Ancient setup.",
+  "notes": "Consider combining with pre-market auction data for better breakout conviction."
+}

@@ -1,0 +1,170 @@
+{
+  "family": "vwap intraday crossover",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+      "name": "vwap_cross_momentum_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "vwap",
+        "crossover",
+        "momentum",
+        "trend-following",
+        "intraday"
+      ],
+      "thesis": "When price crosses above VWAP on elevated volume after being below for 20+ bars, it signals a regime shift: the marginal buyer is now paying above the session's volume-weighted fair value. Institutional VWAP-tracking algorithms that were selling now become buyers, creating a positive feedback loop. ",
+      "indicators": [
+        "VWAP",
+        "bars_below_vwap",
+        "bars_above_vwap",
+        "volume_surge",
+        "EMA_fast"
+      ],
+      "entry_long": [
+        "close > VWAP",
+        "close[t-1] < VWAP[t-1]",
+        "bars_below_vwap >= 20",
+        "volume_surge > 2.0",
+        "EMA(close, 5) > EMA(close, 5)[t-1]"
+      ],
+      "entry_short": [
+        "close < VWAP",
+        "close[t-1] > VWAP[t-1]",
+        "bars_above_vwap >= 20",
+        "volume_surge > 2.0",
+        "EMA(close, 5) < EMA(close, 5)[t-1]"
+      ],
+      "exit_target": "0.4% from entry price",
+      "exit_stop": "VWAP (re-cross back below/above VWAP) OR 0.25% from entry, whichever is hit first",
+      "filters": [
+        "no filter \u2014 momentum works in all VIX regimes",
+        "no entries before 09:45 (let VWAP stabilize) or after 14:45",
+        "volume surge > 2x 10-bar SMA on cross bar",
+        "prefer longs when NIFTY 50 is green for the day, shorts when red",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "In range-bound days, VWAP gets crossed many times \u2014 strategy generates false signals and accumulates losses",
+        "The 20-bar requirement means missing the first (most powerful) VWAP cross of the day",
+        "Volume surge threshold of 2x may be too aggressive, filtering out valid signals in low-vol stocks"
+      ],
+      "prior_art": "VWAP crossover is a staple of retail day trading (Bellafiore, 'One Good Trade'). Academic work by Berkowitz et al. (1988) established VWAP as a benchmark. The cross-with-dwell-time filter (20 bars bel"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+      "name": "gap_to_vwap_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "gap",
+        "vwap",
+        "mean_reversion",
+        "institutional_flow",
+        "intraday"
+      ],
+      "thesis": "After a gap open, the developing session VWAP acts as a gravitational attractor because institutional algorithms (TWAP/VWAP algos) that were scheduled to execute at VWAP will naturally pull price toward it. When price opens away from VWAP and diverges further, the institutional reversion pressure bu",
+      "indicators": [],
+      "entry_long": [
+        "vwap_dev_bps < -20 (price below VWAP by >20bps)",
+        "gap_pct < 0 (gap down, price extended below VWAP)",
+        "RSI_10 < 35",
+        "vwap_slope > 0 OR vwap_slope is flattening (VWAP not dropping sharply)"
+      ],
+      "entry_short": [
+        "vwap_dev_bps > 20 (price above VWAP by >20bps)",
+        "gap_pct > 0 (gap up, price extended above VWAP)",
+        "RSI_10 > 65",
+        "vwap_slope < 0 OR vwap_slope is flattening"
+      ],
+      "exit_target": "price touches VWAP (vwap_dev_bps crosses 0)",
+      "exit_stop": "vwap_dev_bps exceeds 40bps against position OR 0.4% from entry",
+      "filters": [
+        "India_VIX < 20; high VIX causes wider VWAP deviations that may not revert",
+        "best entry window 09:25-11:00 IST; afternoon VWAP reversion is weaker",
+        "current 1-min volume > 0.7x SMA(volume, 20)",
+        "developing VWAP slope not > 0.5 bps/min (strong trend makes VWAP a moving target)",
+        "bid-ask < 0.04%"
+      ],
+      "weaknesses": [
+        "On strong trend days, VWAP itself moves in the trend direction, so price 'touching VWAP' may happen at a worse level than entry, creating a false win that's actually a loss on the trade",
+        "The 20bps VWAP deviation threshold generates many signals in volatile sessions but these are lower quality because the VWAP is still developing and noisy in the first 30 minutes",
+        "Developing VWAP in the first 30 minutes is heavily influenced by the gap itself, making early signals unreliable (circular reference problem)"
+      ],
+      "prior_art": "Berkowitz et al. (1988) VWAP benchmark; adapted for intraday gap trading. Biais et al. (1995) on price discovery and VWAP convergence."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+      "name": "vwap_anchored_support_v1",
+      "universe": "NIFTY 200 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "vwap",
+        "anchored",
+        "support-resistance",
+        "multi-day",
+        "intraday"
+      ],
+      "thesis": "Anchored VWAP from significant prior events (earnings release, 52-week high/low, large gap day) acts as a persistent institutional memory of fair value from that event. When current price approaches an anchored VWAP from a major event, institutional participants who entered near that event face brea",
+      "indicators": [
+        "session_VWAP",
+        "anchored_VWAP",
+        "distance_to_anchored",
+        "RSI",
+        "volume_ratio"
+      ],
+      "entry_long": [
+        "abs(distance_to_anchored) < 0.15",
+        "close > anchored_VWAP",
+        "close[t-1] <= anchored_VWAP[t-1]",
+        "volume_ratio > 1.3",
+        "RSI(close, 14) > 40 AND RSI(close, 14) < 60"
+      ],
+      "entry_short": [
+        "abs(distance_to_anchored) < 0.15",
+        "close < anchored_VWAP",
+        "close[t-1] >= anchored_VWAP[t-1]",
+        "volume_ratio > 1.3",
+        "RSI(close, 14) > 40 AND RSI(close, 14) < 60"
+      ],
+      "exit_target": "0.5% from entry (bounce target)",
+      "exit_stop": "0.25% beyond anchored_VWAP (through the level means thesis is wrong)",
+      "filters": [
+        "India_VIX < 25; anchored levels are less reliable in panic regimes",
+        "no entries in first 15 or last 15 min of session",
+        "volume on approach bar > 1.3x 20-bar SMA",
+        "prefer trades where anchored VWAP direction matches session VWAP direction",
+        "bid-ask spread < 0.05%"
+      ],
+      "weaknesses": [
+        "Requires maintaining a calendar of events and computing multi-day anchored VWAPs \u2014 significant data engineering overhead",
+        "Anchored VWAP levels that are too old (>30 days) lose their institutional memory relevance",
+        "Signal is rare \u2014 only triggers when price approaches a specific level, may have 0 trade days frequently"
+      ],
+      "prior_art": "Anchored VWAP was popularized by Brian Shannon ('Technical Analysis Using Multiple Timeframes') and is available on TradingView. Institutional use of anchored VWAP is discussed by DeMark and others. T"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "vwap intraday crossover",
+      "family_slug": "vwap_intraday_crossover",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+      "cosine": 0.7541
+    },
+    {
+      "family": "vwap intraday crossover",
+      "family_slug": "vwap_intraday_crossover",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+      "cosine": 0.7112
+    },
+    {
+      "family": "vwap intraday crossover",
+      "family_slug": "vwap_intraday_crossover",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json",
+      "cosine": 0.6904
+    }
+  ]
+}

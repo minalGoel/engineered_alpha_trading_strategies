@@ -1,0 +1,130 @@
+{
+  "name": "sector_leader_follower_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "sector_rotation",
+    "lead_lag",
+    "information_diffusion",
+    "momentum"
+  ],
+  "thesis": "Within each NSE sector, information diffuses from the largest, most liquid stock (the 'leader') to smaller constituents (the 'followers') with a 3-10 minute lag. For example, when HDFC Bank (leader) moves sharply, ICICI Bank, Kotak, and Axis Bank (followers) follow with a measurable delay. This lag exists because: (1) institutional algos and news-trading systems focus on the leader first, (2) retail traders watch the leader for confirmation before trading followers, (3) smaller stocks have fewer market participants monitoring them continuously. The strategy buys followers when the leader makes a decisive move in either direction, capturing the lagged information diffusion.",
+  "universe": "NSE sectoral indices — top 5 stocks by market cap in each sector",
+  "stock_filter": "Leader: #1 by market cap in sector. Followers: #2-#5 by market cap, ADV > ₹20 crore",
+  "timeframe": "1min",
+  "session": "09:20-15:20 IST",
+  "hold_time": "3-10 min",
+  "max_hold_bars": 10,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 12,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Bank",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "sector constituent weights",
+      "historical lead-lag correlation matrix"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "leader_return_3bar",
+      "formula": "(leader_close - leader_close[3]) / leader_close[3] * 10000",
+      "params": {
+        "lookback": 3
+      }
+    },
+    {
+      "name": "leader_move_zscore",
+      "formula": "(leader_return_3bar - SMA(leader_return_3bar, 60)) / STDEV(leader_return_3bar, 60)",
+      "params": {
+        "lookback": 60
+      }
+    },
+    {
+      "name": "follower_relative_return",
+      "formula": "follower_return_3bar - leader_return_3bar",
+      "params": {
+        "lookback": 3
+      }
+    },
+    {
+      "name": "historical_beta",
+      "formula": "covariance(follower_1min_return, leader_1min_return, 120) / variance(leader_1min_return, 120)",
+      "params": {
+        "lookback": 120
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "leader_move_zscore > 2.0 (leader made a significant up move)",
+        "follower_relative_return < -5 bps (follower hasn't caught up yet)",
+        "historical_beta > 0.5 (follower historically follows leader)",
+        "follower_close > follower_VWAP * 0.998"
+      ],
+      "confirmation": "follower starts upticking (follower_close > follower_close[1])"
+    },
+    "short": {
+      "conditions": [
+        "leader_move_zscore < -2.0 (leader made a significant down move)",
+        "follower_relative_return > 5 bps (follower hasn't caught up yet)",
+        "historical_beta > 0.5",
+        "follower_close < follower_VWAP * 1.002"
+      ],
+      "confirmation": "follower starts downticking (follower_close < follower_close[1])"
+    },
+    "entry_price": "market order on follower stock at confirmation"
+  },
+  "exit": {
+    "target": "follower catches up to leader (follower_relative_return crosses 0)",
+    "stop_loss": "leader reverses its move (leader_return_3bar crosses 0)",
+    "trailing_stop": "5 bps trailing after 10 bps profit",
+    "time_stop": "exit after 10 bars (if follower doesn't catch up, signal is wrong)",
+    "eod_rule": "flatten by 15:20 IST",
+    "signal_exit": "leader_move_zscore drops below 1.0 (leader move fading)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.12,
+    "position_sizing": "₹1L on follower stock (directional, not hedged)",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25; in high VIX, lead-lag relationships break down",
+    "time_filter": "no trades in first 5 min or last 10 min",
+    "volume_filter": "follower stock 1-min volume > SMA(volume, 20) * 0.7",
+    "trend_filter": "leader and NIFTY 50 moving in same direction (sector move is market-aligned)",
+    "spread_filter": "follower bid-ask < 8 bps",
+    "event_filter": "skip if follower stock has specific news/result today (independent move, not lag)",
+    "other_filters": [
+      "skip if historical_beta < 0.5 (weak relationship)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 23,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Medium — lead-lag relationships are well-known academically but the specific lag times and beta estimates need continuous recalibration. The edge narrows as information diffusion speeds up via social media."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "If the leader's move is stock-specific (not sector-driven), followers won't follow. E.g., HDFC Bank result surprise doesn't predict ICICI Bank move.",
+    "Lead-lag relationships are time-varying and can flip (sometimes ICICI leads HDFC). The fixed leader/follower assignment may be wrong on any given day.",
+    "The directional (unhedged) nature means the strategy has net market exposure, unlike true relative value trades."
+  ],
+  "prior_art": "Lo & MacKinlay (1990) 'When Are Contrarian Profits Due to Stock Market Overreaction?' on lead-lag effects. Hou (2007) 'Industry Information Diffusion and the Lead-lag Effect'. Chordia & Swaminathan (2000) 'Trading Volume and Cross-Autocorrelations in Stock Returns'.",
+  "notes": "Pre-compute the leader for each sector using a 20-day rolling market cap rank. In banking, the leader is typically HDFC Bank. In IT, it's TCS. In pharma, Sun Pharma. Maintain a lookup table of leader-follower pairs and their historical betas."
+}

@@ -1,0 +1,95 @@
+{
+  "family": "reversal s_r mean_reversion",
+  "members": [
+    {
+      "fp": "all_trading_strategies/grok/Grok_10_of_10.json",
+      "name": "support_resistance_reversal_v1",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "reversal",
+        "s_r"
+      ],
+      "thesis": "Exploiting reversals at 2+ day support/resistance with high-low pattern change. Inefficiency from institutional accumulation at levels. Not arbitraged due to multi-day filter + volume + VIX requirement.",
+      "indicators": [
+        "s_r_level",
+        "hl_reversal"
+      ],
+      "entry_long": [
+        "close near s_r_level",
+        "hl_reversal == True",
+        "rel_volume > 1.5",
+        "vix < 20"
+      ],
+      "entry_short": [
+        "close near s_r_level",
+        "hl_reversal == True",
+        "rel_volume > 1.5",
+        "vix < 20"
+      ],
+      "exit_target": "next S/R level",
+      "exit_stop": "0.8 * ATR(20)",
+      "filters": [
+        "vix < 20",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "Regime dependency: strong trends break S/R",
+        "Liquidity constraints: thin stocks at levels",
+        "Crowding: S/R setups core of Gujral style on X"
+      ],
+      "prior_art": "Support/resistance + reversal (Ashwani Gujral X post)"
+    },
+    {
+      "fp": "all_trading_strategies/grok/Grok_6_of_10.json",
+      "name": "ema200_dip_reversal_v1",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "support"
+      ],
+      "thesis": "Exploiting bounces from 200-period EMA on 5-min after multi-day support formation. Inefficiency from retail panic selling at visible levels. Not arbitraged because requires 2-day prior support + volume spike; costs + latency kill it for non-quants.",
+      "indicators": [
+        "ema_200_5min",
+        "multi_day_support"
+      ],
+      "entry_long": [
+        "close > ema_200_5min - 0.5*ATR(20)",
+        "multi_day_support == True",
+        "rel_volume > 1.6",
+        "vix < 19"
+      ],
+      "entry_short": [
+        "NOT_APPLICABLE"
+      ],
+      "exit_target": "1.0 * ATR(20) above entry",
+      "exit_stop": "below ema_200_5min",
+      "filters": [
+        "vix < 19",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "Regime dependency: strong downtrends break 200 EMA",
+        "Liquidity constraints: slower stocks have execution lag",
+        "Crowding: Ashwani Gujral style widely followed on X"
+      ],
+      "prior_art": "200 EMA dip + multi-day support (Ashwani Gujral X post)"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "reversal s_r mean_reversion",
+      "family_slug": "reversal_s_r_mean_reversion",
+      "fp_a": "all_trading_strategies/grok/Grok_10_of_10.json",
+      "fp_b": "all_trading_strategies/grok/Grok_6_of_10.json",
+      "cosine": 0.6998
+    }
+  ]
+}

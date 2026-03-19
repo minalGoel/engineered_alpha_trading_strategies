@@ -1,0 +1,107 @@
+{
+    "name": "orb_momentum_v34",
+    "version": "1.0.0",
+    "author": "QuantGen_Subagent_5",
+    "tags": [
+        "breakout",
+        "momentum"
+    ],
+    "thesis": "The opening 15-30 minutes represent overnight information assimilation. A breakout beyond this range indicates a directional institutional order flow imbalance. It exists because large orders cannot be executed all at once and create sustained trends.",
+    "universe": "fno",
+    "stock_filter": "top 50 by avg volume in universe",
+    "timeframe": "15min",
+    "session": "09:30-15:15",
+    "hold_time": "30-60 bars",
+    "max_hold_bars": 15,
+    "trades_per_day": "2-5",
+    "max_trades_per_day": 8,
+    "data": {
+        "ohlcv_1min": true,
+        "vwap": true,
+        "vix": true,
+        "index": "nifty50",
+        "option_chain": false,
+        "order_book": false,
+        "other": []
+    },
+    "indicators": [
+        {
+            "name": "orb_high",
+            "formula": "HIGHEST(high, 14)",
+            "lookback": 14,
+            "purpose": "range resistance"
+        },
+        {
+            "name": "orb_low",
+            "formula": "LOWEST(low, 14)",
+            "lookback": 14,
+            "purpose": "range support"
+        },
+        {
+            "name": "vwap",
+            "formula": "VWAP(close)",
+            "lookback": 1,
+            "purpose": "trend filter"
+        }
+    ],
+    "entry": {
+        "long": {
+            "conditions": [
+                "close > orb_high AND close > vwap AND volume > SMA(volume, 10)"
+            ],
+            "confirmation": "volume surge"
+        },
+        "short": {
+            "conditions": [
+                "close < orb_low AND close < vwap AND volume > SMA(volume, 10)"
+            ],
+            "confirmation": "volume surge"
+        },
+        "entry_price": "market"
+    },
+    "exit": {
+        "target": "1.7 * ATR(10) from entry",
+        "stop_loss": "1.5 * ATR(14) below entry",
+        "trailing_stop": "move SL to breakeven after +0.5%",
+        "time_stop": "exit after 15 bars",
+        "eod_rule": "flatten",
+        "signal_exit": "none"
+    },
+    "risk": {
+        "capital_per_trade": 200000,
+        "max_risk_per_trade_pct": 1.0,
+        "position_sizing": "vol_adjusted",
+        "max_open_positions": 3,
+        "max_daily_loss_inr": 5000,
+        "max_portfolio_heat_pct": 3.0
+    },
+    "filters": {
+        "vix_filter": "vix > 15",
+        "time_filter": "only 09:30-14:30",
+        "volume_filter": "skip if volume < SMA(volume, 20)",
+        "trend_filter": "none",
+        "spread_filter": "skip if bid-ask > 0.05%",
+        "event_filter": "skip on RBI policy days",
+        "other_filters": []
+    },
+    "edge": {
+        "expected_bps": 20.0,
+        "win_rate_estimate": 0.46,
+        "avg_winner_to_loser": 2.61,
+        "profit_factor_estimate": 2.23,
+        "edge_decay_risk": "medium — behavioral"
+    },
+    "costs": {
+        "slippage_bps_per_side": 3,
+        "brokerage": "zerodha_intraday",
+        "stt_bps": 2.5,
+        "exchange_charges_bps": 0.5
+    },
+    "weaknesses": [
+        "High frequency of False breakouts (fakeouts)",
+        "Difficult to execute near the breakout point due to fast moves",
+        "Decays rapidly in low VIX regimes"
+    ],
+    "prior_art": "Opening Range Breakout (ORB) by Tony Crabel",
+    "notes": "Generated variation 34."
+}

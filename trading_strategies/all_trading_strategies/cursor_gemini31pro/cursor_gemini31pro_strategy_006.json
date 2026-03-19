@@ -1,0 +1,107 @@
+{
+    "name": "vwap_mean_reversion_v6",
+    "version": "1.0.0",
+    "author": "QuantGen_Subagent_2",
+    "tags": [
+        "mean_reversion",
+        "vwap"
+    ],
+    "thesis": "Retail traders often panic sell during intraday flushes, pushing the price far below VWAP. Institutional algorithms are VWAP-benchmarked and will fade extreme deviations, causing mean reversion. It persists due to structural liquidity constraints and behavioral panic.",
+    "universe": "fno",
+    "stock_filter": "top 50 by avg volume in universe",
+    "timeframe": "1min",
+    "session": "09:30-15:15",
+    "hold_time": "5-15 bars",
+    "max_hold_bars": 15,
+    "trades_per_day": "2-5",
+    "max_trades_per_day": 8,
+    "data": {
+        "ohlcv_1min": true,
+        "vwap": true,
+        "vix": true,
+        "index": "nifty50",
+        "option_chain": false,
+        "order_book": false,
+        "other": []
+    },
+    "indicators": [
+        {
+            "name": "vwap",
+            "formula": "VWAP(close)",
+            "lookback": 1,
+            "purpose": "fair value benchmark"
+        },
+        {
+            "name": "vwap_zscore",
+            "formula": "(close - VWAP(close)) / STDDEV(close, 21)",
+            "lookback": 21,
+            "purpose": "measure deviation"
+        },
+        {
+            "name": "rel_volume",
+            "formula": "volume / SMA(volume, 30)",
+            "lookback": 30,
+            "purpose": "detect panic selling"
+        }
+    ],
+    "entry": {
+        "long": {
+            "conditions": [
+                "close < vwap AND vwap_zscore < -2.2 AND rel_volume > 1.4"
+            ],
+            "confirmation": "volume surge"
+        },
+        "short": {
+            "conditions": [
+                "close > vwap AND vwap_zscore > 2.2 AND rel_volume > 1.4"
+            ],
+            "confirmation": "volume surge"
+        },
+        "entry_price": "market"
+    },
+    "exit": {
+        "target": "vwap touch",
+        "stop_loss": "1.5 * ATR(14) below entry",
+        "trailing_stop": "move SL to breakeven after +0.5%",
+        "time_stop": "exit after 15 bars",
+        "eod_rule": "flatten",
+        "signal_exit": "none"
+    },
+    "risk": {
+        "capital_per_trade": 200000,
+        "max_risk_per_trade_pct": 1.0,
+        "position_sizing": "vol_adjusted",
+        "max_open_positions": 3,
+        "max_daily_loss_inr": 5000,
+        "max_portfolio_heat_pct": 3.0
+    },
+    "filters": {
+        "vix_filter": "vix between 12-22",
+        "time_filter": "only 09:30-14:30",
+        "volume_filter": "rel_volume > 1.2",
+        "trend_filter": "none",
+        "spread_filter": "skip if bid-ask > 0.05%",
+        "event_filter": "skip on RBI policy days",
+        "other_filters": []
+    },
+    "edge": {
+        "expected_bps": 20.0,
+        "win_rate_estimate": 0.6,
+        "avg_winner_to_loser": 1.75,
+        "profit_factor_estimate": 2.67,
+        "edge_decay_risk": "medium — behavioral"
+    },
+    "costs": {
+        "slippage_bps_per_side": 3,
+        "brokerage": "zerodha_intraday",
+        "stt_bps": 2.5,
+        "exchange_charges_bps": 0.5
+    },
+    "weaknesses": [
+        "Trending days with zero mean reversion will cause max losses",
+        "VIX spikes invalidate standard deviation bands",
+        "Slippage during extreme panic spikes can ruin entry pricing"
+    ],
+    "prior_art": "Classic VWAP reversion",
+    "notes": "Generated variation 6."
+}

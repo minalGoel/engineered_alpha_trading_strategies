@@ -1,0 +1,127 @@
+{
+  "name": "hull_ma_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "hull-ma",
+    "weighted-ma",
+    "low-lag",
+    "momentum",
+    "intraday"
+  ],
+  "thesis": "The Hull Moving Average (HMA) with period 16 on 1-min bars provides a nearly zero-lag smoothed price signal by using weighted moving averages of different periods combined with a square root transformation. HMA(16) responds to price changes faster than EMA(16) or SMA(16) while maintaining smoothness. When HMA(16) changes direction (slope flip from positive to negative or vice versa), it signals a momentum shift earlier than conventional MAs. The edge exists because HMA is mathematically superior to standard MAs for trend detection (reduced lag by ~50%) but is not widely known among Indian retail traders who predominantly use EMA/SMA. The inefficiency persists because HMA requires custom computation (WMA of WMA with sqrt period) — it is not available as a default indicator on most Indian platforms.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND daily_volatility(20) > 1.0%",
+  "timeframe": "1min",
+  "session": "09:30-14:30 IST",
+  "hold_time": "10-30 minutes",
+  "max_hold_bars": 30,
+  "trades_per_day": "3-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "HMA_16",
+      "params": "WMA(2*WMA(close,8) - WMA(close,16), int(sqrt(16))=4)",
+      "lookback": 16
+    },
+    {
+      "name": "HMA_slope",
+      "params": "HMA_16[t] - HMA_16[t-1]",
+      "lookback": 1
+    },
+    {
+      "name": "HMA_slope_prev",
+      "params": "HMA_16[t-1] - HMA_16[t-2]",
+      "lookback": 2
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "HMA_slope > 0",
+        "HMA_slope_prev <= 0 (HMA just turned up — slope flip)",
+        "close > HMA_16",
+        "close > VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "HMA_slope > 0 for 2 consecutive bars after the flip (avoid single-bar noise flip)"
+    },
+    "short": {
+      "conditions": [
+        "HMA_slope < 0",
+        "HMA_slope_prev >= 0 (HMA just turned down — slope flip)",
+        "close < HMA_16",
+        "close < VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "HMA_slope < 0 for 2 consecutive bars after the flip"
+    },
+    "entry_price": "market order on 2nd consecutive slope-confirmed bar close"
+  },
+  "exit": {
+    "target": "0.35% from entry",
+    "stop_loss": "0.2% from entry OR HMA_slope re-flips (direction reversal)",
+    "trailing_stop": "trail at 0.12% once profit > 0.2%",
+    "time_stop": "30 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when HMA_slope crosses zero (direction change)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "no specific filter",
+    "time_filter": "no entries before 09:30 or after 14:30",
+    "volume_filter": "volume > 1x SMA(volume, 20)",
+    "trend_filter": "VWAP direction alignment",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on expiry day",
+    "other_filters": [
+      "skip if HMA has flipped >5 times in last 30 bars (range-bound, HMA is useless)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.48,
+    "edge_decay_risk": "low — HMA is less well-known than EMA/SMA in India; computational barrier exists"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "HMA(16) on 1-min bars responds to only 16 minutes of data — too short for meaningful trend detection in slow-moving stocks",
+    "The low-lag property means HMA also has more false flips than EMA — it is responsive to noise, not just signal",
+    "Conceptually, HMA is just a smoother MA — it does not provide fundamentally different information from other MAs, just earlier (noisier) signals"
+  ],
+  "prior_art": "Hull Moving Average by Alan Hull (2005). Designed to reduce lag in moving averages. Formula: HMA = WMA(2*WMA(n/2) - WMA(n), sqrt(n)). Less commonly used in Indian markets compared to EMA/SMA. Hull himself demonstrated the indicator on daily and weekly charts, not 1-min bars.",
+  "notes": "Edge math: 0.48 * 35bps - 0.52 * 22bps = 16.8 - 11.4 = 5.4 bps gross. Costs ~11 bps. Net ≈ -5.6 bps. Negative. HMA's theoretical advantage (low lag) does not translate to profitable standalone strategy on 1-min bars after Indian market costs. The math suggests using HMA as a directional filter for other entry mechanisms (e.g., HMA direction + VWAP reversion entry)."
+}

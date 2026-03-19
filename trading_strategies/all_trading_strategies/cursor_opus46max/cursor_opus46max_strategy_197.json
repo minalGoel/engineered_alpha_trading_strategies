@@ -1,0 +1,128 @@
+{
+  "name": "rights_issue_arb_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "special-situation",
+    "rights-issue",
+    "arbitrage",
+    "pricing",
+    "event"
+  ],
+  "thesis": "When a company announces a rights issue, the stock price should theoretically drop by the theoretical ex-rights price (TERP) on the ex-date. However, empirical evidence from NSE shows that the actual price adjustment is often incomplete on the ex-date — stocks either overshoot (drop more than TERP implies) or undershoot (drop less). By computing the TERP-implied price and comparing it to the actual opening price on the ex-date, we can identify mispricing. Overshoot = buy (price dropped too much, will recover toward TERP). Undershoot = short (price hasn't fully adjusted, will drop further toward TERP). The inefficiency exists because TERP computation requires understanding of rights issue mechanics, and the ex-date adjustment is confused by retail investors who don't understand dilution.",
+  "universe": "NSE-listed stocks with active rights issue (ex-date within trading session)",
+  "stock_filter": "ADV(20) > ₹25 Cr; rights issue ratio must be at least 1:10 (material dilution); F&O listed preferred",
+  "timeframe": "1min",
+  "session": "09:15-15:15 IST on rights ex-date",
+  "hold_time": "30-120 min",
+  "max_hold_bars": 180,
+  "trades_per_day": "0-1 (event-dependent — rights issues are infrequent)",
+  "max_trades_per_day": 1,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "rights_issue_details",
+      "TERP_calculation",
+      "rights_issue_ratio",
+      "rights_price"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "TERP",
+      "params": "(prev_close * old_shares + rights_price * new_shares) / (old_shares + new_shares)",
+      "lookback": "event"
+    },
+    {
+      "name": "Actual_Open",
+      "params": "first bar open on ex-date",
+      "lookback": "event"
+    },
+    {
+      "name": "Mispricing_Bps",
+      "params": "(Actual_Open - TERP) / TERP * 10000",
+      "lookback": "event"
+    },
+    {
+      "name": "VWAP_ExDate",
+      "params": "cumulative VWAP from ex-date open",
+      "lookback": "session"
+    },
+    {
+      "name": "Volume_Ratio",
+      "params": "volume / ADV(20) * 375 (normalized for time of day)",
+      "lookback": 20
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Mispricing_Bps < -30 (stock opened > 30 bps below TERP — overshoot, cheap)",
+        "Volume_Ratio > 1.5 in first 15 bars (active trading, not illiquid)",
+        "NIFTY_50 not down > 1% (market not in broad selloff)"
+      ],
+      "confirmation": "Price starts recovering: close > open of ex-date after initial dip AND close > VWAP_ExDate"
+    },
+    "short": {
+      "conditions": [
+        "Mispricing_Bps > 30 (stock opened > 30 bps above TERP — undershoot, expensive)",
+        "Volume_Ratio > 1.5 in first 15 bars",
+        "NIFTY_50 not up > 1%"
+      ],
+      "confirmation": "Price starts declining: close < open of ex-date AND close < VWAP_ExDate"
+    },
+    "entry_price": "market order after confirmation (typically within first 30 bars)"
+  },
+  "exit": {
+    "target": "Close converges to TERP (Mispricing_Bps → 0, abs < 10 bps)",
+    "stop_loss": "Mispricing worsens to -60 bps for longs / +60 bps for shorts (double entry deviation)",
+    "trailing_stop": "After 20 bps profit, trail at 15 bps from high-water mark",
+    "time_stop": "180 bars (3 hours) — rights mispricing should correct within first half of session",
+    "eod_rule": "flatten",
+    "signal_exit": "Mispricing within ± 10 bps of TERP (converged)"
+  },
+  "risk": {
+    "capital_per_trade": 75000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "₹75K per trade due to event-specific uncertainty",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; high VIX makes rights issue mispricing harder to distinguish from general volatility",
+    "time_filter": "Entry only in first 60 bars of ex-date session; after that, mispricing is likely intentional",
+    "volume_filter": "Volume_Ratio > 1.5 (sufficient trading activity to confirm price discovery)",
+    "trend_filter": "NIFTY 50 must be within ± 1% of previous close (neutral market environment)",
+    "spread_filter": "Bid-ask spread < 10 bps (wider than usual on ex-date is acceptable)",
+    "event_filter": "Must be a rights issue ex-date specifically; not applicable to bonus/split ex-dates",
+    "other_filters": [
+      "Rights issue must be underwritten (ensures completion); avoid unsubscribed rights issues"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.59,
+    "edge_decay_risk": "Low — rights issues are infrequent (5-15 per year among liquid stocks); each event requires manual TERP computation; low competition from systematic traders"
+  },
+  "costs": {
+    "slippage_bps_per_side": 5,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Rights issues are extremely infrequent in liquid stocks — the strategy may generate 0-1 trades per month, making it impractical as a standalone strategy",
+    "TERP computation assumes the market fully values the rights subscription — but if the market believes the rights issue signals financial distress, the 'correct' post-rights price may be below TERP",
+    "Wider spreads on ex-date (8-15 bps typical) eat into the mispricing edge; actual slippage may be 5+ bps per side rather than the usual 3 bps"
+  ],
+  "prior_art": "Rights issue pricing in Eckbo & Masulis (1992); Indian rights issue studies by NSE Centre for Excellence in Market Microstructure; TERP methodology in corporate finance textbooks",
+  "notes": "This strategy is best operated as a special-situations overlay to a primary systematic strategy. TERP calculation must account for the rights ratio and rights price precisely. Consider using options to hedge the position if the stock is in F&O."
+}

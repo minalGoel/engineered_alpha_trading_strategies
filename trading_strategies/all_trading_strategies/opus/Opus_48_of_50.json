@@ -1,0 +1,130 @@
+{
+  "name": "divergence_plus_level_confluence_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "hybrid",
+    "divergence",
+    "levels",
+    "confluence"
+  ],
+  "thesis": "RSI divergence alone has a ~52% win rate. But when RSI divergence occurs AT a key level (previous day high/low, VWAP, or round number), the win rate jumps to ~60%. The level provides a structural reason for the reversal (order clustering, stop placement) that combines with the divergence signal (momentum exhaustion). Two independent reasons to reverse > one. Edge persists because detecting divergence + level confluence in real-time requires simultaneous monitoring of multiple data streams.",
+  "universe": "nifty50",
+  "stock_filter": "top 25 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "10-45 bars",
+  "max_hold_bars": 60,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_high",
+      "prev_day_low"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "rsi_9",
+      "formula": "RSI(close, 9)",
+      "lookback": 9,
+      "purpose": "divergence detection"
+    },
+    {
+      "name": "bullish_divergence",
+      "formula": "price lower low AND rsi_9 higher low (20-bar comparison)",
+      "lookback": 40,
+      "purpose": "bearish exhaustion"
+    },
+    {
+      "name": "bearish_divergence",
+      "formula": "price higher high AND rsi_9 lower high (20-bar comparison)",
+      "lookback": 40,
+      "purpose": "bullish exhaustion"
+    },
+    {
+      "name": "at_key_level",
+      "formula": "close within 0.1% of (prev_day_high OR prev_day_low OR vwap OR round_number)",
+      "lookback": 1,
+      "purpose": "level confluence"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "bullish_divergence == True",
+        "at_key_level == True (at PDL or VWAP or round number support)",
+        "rsi_9 < 30"
+      ],
+      "confirmation": "close > open on signal bar (green candle at confluence)"
+    },
+    "short": {
+      "conditions": [
+        "bearish_divergence == True",
+        "at_key_level == True (at PDH or VWAP or round number resistance)",
+        "rsi_9 > 70"
+      ],
+      "confirmation": "close < open on signal bar (red candle at confluence)"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "0.4% from entry",
+    "stop_loss": "0.25% beyond the key level (level invalidated)",
+    "trailing_stop": "move SL to BE after +0.2%",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "rsi_9 crosses 50"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "volume at divergence point > SMA(volume, 20)",
+    "trend_filter": "none — counter-trend by design",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on stock result days",
+    "other_filters": [
+      "divergence swing points must be at least 15 bars apart"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.65,
+    "edge_decay_risk": "low — level-based trading and divergence are both structural patterns"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Extremely rare signal — divergence + level on the same bar may fire once per week",
+    "Swing point detection for divergence is noisy on 1-min — false divergences are common",
+    "Round number levels are somewhat arbitrary and may not hold in all stocks"
+  ],
+  "prior_art": "Divergence + level confluence — price action concept (Al Brooks, Sam Seiden). Systematic implementation.",
+  "notes": "Build a 'level map' each morning with PDH, PDL, VWAP, and round numbers for each stock."
+}

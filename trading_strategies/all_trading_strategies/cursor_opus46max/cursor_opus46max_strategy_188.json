@@ -1,0 +1,133 @@
+{
+  "name": "maximum_entropy_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "maximum-entropy",
+    "distribution",
+    "non-parametric",
+    "quantitative",
+    "tail-risk"
+  ],
+  "thesis": "The maximum entropy distribution consistent with observed mean and variance of 1-min returns provides the least biased estimate of the true return distribution. When the observed return falls in the extreme tails of this maximum entropy distribution (beyond the 5th or 95th percentile), it is genuinely extreme rather than just 'unusual under a normal assumption.' By calibrating the MaxEnt distribution from rolling moments (mean, variance, skewness) on a 60-bar window and entering when the current return exceeds the MaxEnt 95th percentile (fade) or confirms a MaxEnt breakout (follow), we get statistically rigorous extreme-event signals. The inefficiency is that most traders use normal distribution assumptions (z-scores), which underestimate tail probability and overtrade false extremes.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr",
+  "timeframe": "1min",
+  "session": "10:15-15:10 IST",
+  "hold_time": "10-30 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "Return_1min",
+      "params": "ROC(close, 1)",
+      "lookback": 1
+    },
+    {
+      "name": "Rolling_Mean",
+      "params": "mean(Return_1min, 60)",
+      "lookback": 60
+    },
+    {
+      "name": "Rolling_Var",
+      "params": "var(Return_1min, 60)",
+      "lookback": 60
+    },
+    {
+      "name": "Rolling_Skew",
+      "params": "skewness(Return_1min, 60)",
+      "lookback": 60
+    },
+    {
+      "name": "MaxEnt_P5",
+      "params": "5th percentile of MaxEnt distribution fitted to (Rolling_Mean, Rolling_Var, Rolling_Skew)",
+      "lookback": 60
+    },
+    {
+      "name": "MaxEnt_P95",
+      "params": "95th percentile of MaxEnt distribution",
+      "lookback": 60
+    },
+    {
+      "name": "MaxEnt_Tail_Event",
+      "params": "True if Return_1min < MaxEnt_P5 OR Return_1min > MaxEnt_P95",
+      "lookback": 60
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Return_1min < MaxEnt_P5 (extreme negative return — genuinely unusual under MaxEnt)",
+        "close < vwap (VWAP confirmation of being oversold)",
+        "Rolling_Skew > -1.0 (distribution not too negatively skewed — left tail events revert)"
+      ],
+      "confirmation": "Next bar return > 0 (initial bounce from extreme — uptick confirmation)"
+    },
+    "short": {
+      "conditions": [
+        "Return_1min > MaxEnt_P95 (extreme positive return — genuinely unusual under MaxEnt)",
+        "close > vwap",
+        "Rolling_Skew < 1.0 (distribution not too positively skewed)"
+      ],
+      "confirmation": "Next bar return < 0 (initial fade from extreme — downtick confirmation)"
+    },
+    "entry_price": "market order on confirmation bar close"
+  },
+  "exit": {
+    "target": "30 bps from entry",
+    "stop_loss": "20 bps from entry (tight — if extreme persists, exit quickly)",
+    "trailing_stop": "After 20 bps profit, trail at 10 bps from high-water mark",
+    "time_stop": "45 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Return moves back within MaxEnt_P25 to MaxEnt_P75 range (no longer extreme)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "Fixed ₹1L; reduce to ₹75K if abs(Rolling_Skew) > 1.5 (highly skewed distributions have unreliable tail estimates)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22 (in high VIX, 'extreme' returns happen frequently, reducing the signal quality)",
+    "time_filter": "No entries before 10:15 (need 60 bars for moment estimation) or after 15:10",
+    "volume_filter": "Volume on extreme bar > 1.5 * SMA(volume, 20) (volume confirms the extreme move)",
+    "trend_filter": "abs(EMA(NIFTY_50, 20) slope) < 3 bps/bar (calm market — extremes more likely to revert)",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day (extreme returns are information-driven, not noise)",
+    "other_filters": [
+      "Rolling_Var must be > 0 (sufficient price movement for meaningful distribution fitting)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.0,
+    "profit_factor_estimate": 1.33,
+    "edge_decay_risk": "Low — maximum entropy distribution fitting is an advanced statistical concept; most traders use Gaussian z-scores which are less accurate for heavy-tailed financial returns"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "MaxEnt distribution fitting with 3 constraints (mean, variance, skewness) on 60 data points is numerically sensitive — the optimization can fail to converge or produce degenerate solutions",
+    "Extreme return events on 1-min bars are often driven by single large orders (block trades) that do not revert — the mean-reversion assumption fails for information-driven extremes",
+    "The target/stop ratio of 30/20 = 1.5 with 57% win rate gives gross edge of 30*0.57 - 20*0.43 = 8.5 bps per side; after ~9 bps costs, edge is marginal at best"
+  ],
+  "prior_art": "Jaynes (1957) maximum entropy principle; Buchen & Kelly (1996) on maximum entropy distributions in finance; application to trading signals is novel but builds on established statistical theory",
+  "notes": "Consider using the observed empirical distribution (kernel density estimate) instead of parametric MaxEnt — it's simpler and avoids convergence issues. The MaxEnt approach is theoretically cleaner but practically harder. Also consider adding kurtosis as a 4th constraint for better tail estimation."
+}

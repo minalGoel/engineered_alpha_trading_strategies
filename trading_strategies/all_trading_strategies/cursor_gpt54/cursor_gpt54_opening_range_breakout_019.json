@@ -1,0 +1,152 @@
+{
+  "name": "opening_range_breakout_019",
+  "version": "0.1.0",
+  "author": "gpt-5.4",
+  "tags": [
+    "breakout",
+    "momentum",
+    "opening_range",
+    "trend_following"
+  ],
+  "thesis": "This strategy exploits delayed institutional continuation after the opening range resolves with participation and trend alignment. The inefficiency exists because price discovery is fragmented between the auction, cash open, and slower institutional execution schedules, and it persists because false breaks, slippage, and crowding make the setup difficult to monetize without disciplined filters.",
+  "universe": "nifty500",
+  "stock_filter": "top 200 by 20-day median traded value in NIFTY500, price > 80",
+  "timeframe": "1min",
+  "session": "09:20-11:00",
+  "hold_time": "8-24 bars",
+  "max_hold_bars": 24,
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "opening range levels",
+      "index VWAP deviation"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "VWAP()",
+      "lookback": 390,
+      "purpose": "intraday fair value anchor"
+    },
+    {
+      "name": "atr_14",
+      "formula": "ATR(14)",
+      "lookback": 14,
+      "purpose": "volatility normalization"
+    },
+    {
+      "name": "rel_volume_20",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "participation filter"
+    },
+    {
+      "name": "or_high",
+      "formula": "HIGHEST(high, first 5 market minutes)",
+      "lookback": 5,
+      "purpose": "opening breakout level"
+    },
+    {
+      "name": "or_low",
+      "formula": "LOWEST(low, first 5 market minutes)",
+      "lookback": 5,
+      "purpose": "opening breakout level"
+    },
+    {
+      "name": "ema_short",
+      "formula": "EMA(close, 8)",
+      "lookback": 8,
+      "purpose": "trigger trend"
+    },
+    {
+      "name": "ema_long",
+      "formula": "EMA(close, 20)",
+      "lookback": 20,
+      "purpose": "trend filter"
+    },
+    {
+      "name": "index_vwap_dev",
+      "formula": "(NIFTY50_close - NIFTY50_VWAP) / NIFTY50_VWAP",
+      "lookback": 390,
+      "purpose": "market regime confirmation"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > or_high",
+        "close > vwap",
+        "ema_short > ema_long",
+        "rel_volume_20 >= 1.4",
+        "index_vwap_dev >= 0"
+      ],
+      "confirmation": "close > high[-1]"
+    },
+    "short": {
+      "conditions": [
+        "close < or_low",
+        "close < vwap",
+        "ema_short < ema_long",
+        "rel_volume_20 >= 1.4",
+        "index_vwap_dev <= 0"
+      ],
+      "confirmation": "close < low[-1]"
+    },
+    "entry_price": "close of signal bar"
+  },
+  "exit": {
+    "target": "1.8R fixed target with runner to 2.5R",
+    "stop_loss": "opposite side of breakout bar or 0.9 * ATR(14), whichever is farther",
+    "trailing_stop": "EMA trail after first target",
+    "time_stop": "exit after 24 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when close crosses back through ema_long"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.7,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix between 12-24",
+    "time_filter": "only 09:20-11:00",
+    "volume_filter": "require rel_volume_20 >= 1.4",
+    "trend_filter": "only long when NIFTY50 above VWAP, only short when NIFTY50 below VWAP",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": [
+      "skip if setup occurs after 14:30"
+    ]
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.85,
+    "edge_decay_risk": "high — crowded"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Performance is regime-dependent and weakens materially when session structure changes mid-trade.",
+    "Fast moves can create worse-than-assumed slippage and reduce realized edge versus paper assumptions.",
+    "Crowding risk can compress payoff and make execution quality unstable in the most obvious setups."
+  ],
+  "prior_art": "Classic ORB with VWAP and EMA trend filter",
+  "notes": "Generated in a mixed-model batch under gpt-5.4. Family: opening_range_breakout. Use for research only until walk-forward and paper-trading validation are complete."
+}

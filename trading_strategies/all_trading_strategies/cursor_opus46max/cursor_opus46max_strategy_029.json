@@ -1,0 +1,127 @@
+{
+  "name": "acceleration_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "acceleration",
+    "second-derivative",
+    "momentum",
+    "early-entry",
+    "intraday"
+  ],
+  "thesis": "Momentum acceleration — the second derivative of price — captures the rate at which momentum is changing. When ROC(10) is increasing AND its rate of change is also increasing (ROC of ROC > 0), momentum is accelerating, indicating the trend is in its early/middle stage. When acceleration turns negative while momentum is still positive, the trend is mature and about to decelerate. Entry on positive acceleration captures the sweet spot before peak velocity. The edge exists because most traders react to momentum level (first derivative) rather than momentum change rate (second derivative). Entering during acceleration rather than after peak momentum provides earlier entries with better risk/reward. The edge persists because second-derivative analysis requires comfort with calculus concepts that most retail traders lack.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND intraday_volatility(20) > 0.8%",
+  "timeframe": "1min",
+  "session": "09:30-14:30 IST",
+  "hold_time": "10-30 minutes",
+  "max_hold_bars": 30,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ROC_10",
+      "params": "(close - close[t-10]) / close[t-10] * 100",
+      "lookback": 10
+    },
+    {
+      "name": "ROC_accel",
+      "params": "ROC_10[t] - ROC_10[t-5]",
+      "lookback": 5
+    },
+    {
+      "name": "ROC_accel_slope",
+      "params": "linreg_slope(ROC_accel, 5)",
+      "lookback": 5
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "ROC_10 > 0",
+        "ROC_accel > 0",
+        "ROC_accel_slope > 0 (acceleration is itself accelerating — strong trend emergence)",
+        "close > VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "ROC_accel has been positive for 3+ consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "ROC_10 < 0",
+        "ROC_accel < 0",
+        "ROC_accel_slope < 0 (deceleration accelerating — strong downtrend emergence)",
+        "close < VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "ROC_accel has been negative for 3+ consecutive bars"
+    },
+    "entry_price": "market order on 3rd consecutive acceleration bar close"
+  },
+  "exit": {
+    "target": "ROC_accel turns negative while ROC_10 still positive (for longs) — peak momentum, exit before deceleration",
+    "stop_loss": "0.25% from entry",
+    "trailing_stop": "trail at 0.15% once profit > 0.2%",
+    "time_stop": "30 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if ROC_accel flips sign (momentum shifting from acceleration to deceleration)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "no specific filter",
+    "time_filter": "no entries before 09:30 or after 14:30",
+    "volume_filter": "volume > 1x SMA(volume, 20)",
+    "trend_filter": "VWAP alignment",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on RBI policy day",
+    "other_filters": [
+      "skip if ROC_10 > 1.0% already (trend too mature, acceleration is late-stage)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.6,
+    "edge_decay_risk": "low — second-derivative momentum is rarely used in practice despite theoretical advantages"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Second derivative is extremely noisy on 1-min data — ROC of ROC amplifies noise quadratically",
+    "The 3-bar confirmation delays entry; acceleration phases are short on 1-min bars (often <5 bars), so the signal fires too late",
+    "Requires 3 layered lookbacks (ROC_10, ROC_accel over 5, slope over 5) — total effective lookback is ~20 bars, limiting early-session use"
+  ],
+  "prior_art": "Momentum acceleration is discussed in physics-based market models (Sornette, 'Why Stock Markets Crash'). The concept of 'jerk' (rate of change of acceleration) in market context is from Ehlers. Coppock Curve uses a similar concept on monthly data. Intraday second-derivative analysis is uncommon in published trading literature.",
+  "notes": "Edge math: 0.50 * 45bps - 0.50 * 28bps = 22.5 - 14 = 8.5 bps gross. Costs ~11 bps. Net ≈ -2.5 bps. Negative on paper. The key value of this strategy is in signal timing — entering during acceleration rather than after peak should improve the W:L ratio. Need to validate that ROC_accel > 0 entries have meaningfully better outcomes than ROC > 0 entries."
+}

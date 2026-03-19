@@ -1,0 +1,130 @@
+{
+  "name": "robust_regression_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "robust-regression",
+    "Huber",
+    "outlier-resistant",
+    "trend-estimation",
+    "quantitative"
+  ],
+  "thesis": "OLS linear regression for trend estimation on 1-min bars is heavily influenced by outliers (single large bars from block trades or news). Huber robust regression down-weights outliers and provides a more stable trend estimate. By fitting a Huber regression (y=close, x=bar_index) on a rolling 30-bar window, the slope gives a robust trend estimate less sensitive to price spikes. When the Huber slope is significantly positive (t-stat > 2.0) and the current price is near or below the Huber regression line (buy dip in robust uptrend), we enter long. The inefficiency exists because standard linear regression is used everywhere but robust versions are not — the improvement in signal quality from outlier rejection is underappreciated.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr",
+  "timeframe": "1min",
+  "session": "09:45-15:10 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "3-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "Huber_Slope",
+      "params": "HuberRegressor(epsilon=1.35).fit(range(30), close[-30:]).coef_[0] — robust slope",
+      "lookback": 30
+    },
+    {
+      "name": "Huber_Intercept",
+      "params": "HuberRegressor fitted intercept",
+      "lookback": 30
+    },
+    {
+      "name": "Huber_Line",
+      "params": "Huber_Intercept + Huber_Slope * bar_index (regression line value at current bar)",
+      "lookback": 30
+    },
+    {
+      "name": "Residual",
+      "params": "close - Huber_Line (distance from robust trend)",
+      "lookback": 30
+    },
+    {
+      "name": "Residual_Std",
+      "params": "MAD(Residual, 30) * 1.4826 (robust std from median absolute deviation)",
+      "lookback": 30
+    },
+    {
+      "name": "Slope_TScore",
+      "params": "Huber_Slope / (Residual_Std / sqrt(sum_x_sq)) — approximate t-statistic for slope",
+      "lookback": 30
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Slope_TScore > 2.0 (robust uptrend is statistically significant)",
+        "Residual < 0 (price is below robust trend line — buying dip in uptrend)",
+        "Residual / Residual_Std > -2.0 (not too far below — not an outlier itself)",
+        "close > vwap (broader session trend agrees)"
+      ],
+      "confirmation": "close starts reverting up: close > close[1 bar ago]"
+    },
+    "short": {
+      "conditions": [
+        "Slope_TScore < -2.0 (robust downtrend is statistically significant)",
+        "Residual > 0 (price is above robust trend line — selling rip in downtrend)",
+        "Residual / Residual_Std < 2.0",
+        "close < vwap"
+      ],
+      "confirmation": "close starts reverting down: close < close[1 bar ago]"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "Residual crosses zero (price returns to robust trend line, capturing the dip/rip)",
+    "stop_loss": "Residual reaches -2.5 * Residual_Std for longs / +2.5 * Residual_Std for shorts",
+    "trailing_stop": "None — target is the regression line reversion",
+    "time_stop": "60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Slope_TScore drops below 1.5 (trend weakening)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "Fixed ₹1L; scale to ₹1.25L if abs(Slope_TScore) > 3.0 (very strong robust trend)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25",
+    "time_filter": "No entries before 09:45 (need 30 bars for regression) or after 15:10",
+    "volume_filter": "Volume > SMA(volume, 15) on entry bar",
+    "trend_filter": "NIFTY 50 robust slope (Huber on NIFTY) agrees with stock trend direction",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "HuberRegressor must converge within 100 iterations"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.4,
+    "edge_decay_risk": "Low-Medium — robust regression is well-known in statistics but rarely applied to 1-min trading; the outlier rejection provides genuinely cleaner trend signals than OLS or EMA"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "HuberRegressor with epsilon=1.35 is the standard default but may not be optimal for financial data with heavy tails — the epsilon parameter controls the boundary between inliers and outliers",
+    "The t-statistic approximation for Huber regression is not exact (Huber regression is not OLS) — the standard errors are asymptotic approximations that may be poor at n=30",
+    "Buying dips in an uptrend assumes the trend is genuine and the dip is noise — but some 'dips' are the beginning of a trend reversal, and the 30-bar robust trend takes time to detect the change"
+  ],
+  "prior_art": "Huber (1964) robust estimation; robust regression widely used in statistics; application to trading trend estimation less common; linear regression channels in technical analysis use OLS, not robust methods",
+  "notes": "Consider using RANSAC (Random Sample Consensus) instead of Huber regression for even more aggressive outlier rejection. Also consider Theil-Sen estimator which is a non-parametric alternative to OLS that naturally handles outliers."
+}

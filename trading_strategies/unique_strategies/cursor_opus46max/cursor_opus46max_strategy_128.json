@@ -1,0 +1,139 @@
+{
+  "name": "monthly_settlement_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "event_driven",
+    "settlement",
+    "monthly_expiry",
+    "rollover",
+    "futures"
+  ],
+  "thesis": "Monthly F&O settlement (last Thursday of each month) creates predictable intraday patterns due to: (1) futures rollover \u2014 open interest migrates from current month to next month, causing basis changes and temporary mispricings, (2) physical settlement for stock futures (since Oct 2019) forces position unwinding if traders don't want delivery, (3) the settlement price is computed from the weighted average of the last 30 minutes, incentivizing specific order flow patterns. On settlement day: morning is dominated by last-minute rollover activity (high volume, range-bound), then the afternoon sees directional positioning as market makers adjust. The key trade: fade unusual divergences between current and next month futures prices (basis spread) during rollover, and trade the directional bias in the last 90 minutes driven by settlement price fixation.",
+  "universe": "NIFTY 50 and BANK NIFTY (via futures), select stock futures with high OI",
+  "stock_filter": "NIFTY/BANK NIFTY futures (most liquid), top 10 stock futures by OI",
+  "timeframe": "1min",
+  "session": "09:20-15:29 IST (monthly settlement day only)",
+  "hold_time": "15-60 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "2-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50, BANK NIFTY",
+    "option_chain": true,
+    "order_book": false,
+    "other": [
+      "current month and next month futures prices",
+      "rollover percentage (OI migration)",
+      "settlement day calendar"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "basis_current",
+      "formula": "(current_month_futures - spot_index) / spot_index * 10000 (bps)",
+      "params": {}
+    },
+    {
+      "name": "basis_next",
+      "formula": "(next_month_futures - spot_index) / spot_index * 10000 (bps)",
+      "params": {}
+    },
+    {
+      "name": "calendar_spread",
+      "formula": "basis_next - basis_current (bps)",
+      "params": {}
+    },
+    {
+      "name": "rollover_pct",
+      "formula": "OI_next_month / (OI_current_month + OI_next_month) * 100",
+      "params": {}
+    },
+    {
+      "name": "settlement_window",
+      "formula": "'rollover' if time < 14:00 else 'settlement_fix'",
+      "params": {
+        "transition": "14:00"
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "settlement_window == 'rollover' AND calendar_spread > historical_75th_percentile (next month at unusual premium \u2014 rollover buying next month too aggressively)",
+        "OR settlement_window == 'settlement_fix' AND NIFTY_close > VWAP AND volume increasing (directional bias up during settlement fixation)"
+      ],
+      "confirmation": "rollover: calendar_spread starts compressing. settlement_fix: 2 consecutive up bars"
+    },
+    "short": {
+      "conditions": [
+        "settlement_window == 'rollover' AND calendar_spread < historical_25th_percentile (next month at unusual discount)",
+        "OR settlement_window == 'settlement_fix' AND NIFTY_close < VWAP AND volume increasing"
+      ],
+      "confirmation": "rollover: calendar_spread starts expanding. settlement_fix: 2 consecutive down bars"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "rollover: calendar_spread reverts to median. settlement_fix: 20 bps from entry",
+    "stop_loss": "rollover: calendar_spread extends to 90th/10th percentile. settlement_fix: 12 bps",
+    "trailing_stop": "8 bps trailing (settlement_fix trades only)",
+    "time_stop": "rollover trades exit by 14:00. settlement_fix trades exit by 15:25",
+    "eod_rule": "flatten by 15:29 IST",
+    "signal_exit": "rollover_pct plateaus (rollover activity exhausted)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "\u20b91L in index futures per trade",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25 (high VIX settlement days are chaotic, patterns break)",
+    "time_filter": "rollover trades: 09:20-14:00; settlement_fix trades: 14:00-15:25",
+    "volume_filter": "futures volume > 1.5x normal day (confirms active settlement)",
+    "trend_filter": "settlement_fix trades follow intraday trend; rollover trades are mean-reversion",
+    "spread_filter": "futures bid-ask < 0.05%",
+    "event_filter": "ONLY on monthly settlement days (12 per year)",
+    "other_filters": [
+      "skip if rollover_pct > 85% by morning (rollover already complete, no signal)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.7,
+    "profit_factor_estimate": 1.38,
+    "edge_decay_risk": "Low \u2014 settlement day patterns are structural, driven by the mechanics of futures expiry and physical delivery. As long as the F&O framework exists, these patterns persist."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Only 12 monthly settlement days per year. The strategy generates very few trades annually and cannot be a standalone income source.",
+    "Physical delivery for stock futures means position must be closed regardless \u2014 the 'unwinding pressure' signal may be obvious and already priced in by the morning.",
+    "Calendar spread percentile thresholds based on historical data may not reflect current cost-of-carry (which changes with interest rates and dividend expectations)."
+  ],
+  "prior_art": "Stoll & Whaley (1987) 'Program Trading and Expiration-Day Effects'. Karolyi (1996) 'Stock Market Volatility Around Expiration Days in Japan'. In India, Thenmozhi (2002) studies F&O expiry effects on NSE. SEBI circular on physical delivery settlement.",
+  "notes": "The settlement price fixation in the last 30 minutes is weighted-average-based, which means large orders in this window disproportionately affect settlement. Some traders intentionally push prices during this window \u2014 be aware of potential manipulation. The rollover percentage data is available from NSE's daily F&O reports and also in near real-time from option chain snapshots.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_128.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_128.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

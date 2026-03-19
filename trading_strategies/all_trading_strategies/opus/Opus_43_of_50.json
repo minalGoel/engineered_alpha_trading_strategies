@@ -1,0 +1,131 @@
+{
+  "name": "gap_vwap_momentum_trifecta_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "hybrid",
+    "gap",
+    "vwap",
+    "momentum"
+  ],
+  "thesis": "This combines three independent edges: (1) gap direction bias, (2) VWAP as institutional anchor, and (3) first-hour momentum persistence. When a stock gaps > 0.3%, pulls back to VWAP in the first 45 min, bounces off VWAP, AND the bounce aligns with the gap direction, the trade has three independent supporting factors. Each factor alone is marginal; together they compound into a high-conviction setup. Edge persists because executing a 3-factor strategy requires real-time monitoring that manual traders can't sustain.",
+  "universe": "nifty50",
+  "stock_filter": "top 25 by avg daily turnover, stocks gapping > 0.3%",
+  "timeframe": "1min",
+  "session": "09:20-11:00",
+  "hold_time": "15-60 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_close"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open_of_day - prev_day_close) / prev_day_close * 100",
+      "lookback": 1,
+      "purpose": "gap direction and magnitude"
+    },
+    {
+      "name": "vwap_touch",
+      "formula": "abs(low - vwap) / vwap < 0.001 (gap up) OR abs(high - vwap) / vwap < 0.001 (gap down)",
+      "lookback": 1,
+      "purpose": "VWAP pullback"
+    },
+    {
+      "name": "bounce_confirmed",
+      "formula": "close > vwap (for gap up) after touching it",
+      "lookback": 1,
+      "purpose": "VWAP bounce"
+    },
+    {
+      "name": "return_from_open",
+      "formula": "(close - open_of_day) / open_of_day * 100",
+      "lookback": 1,
+      "purpose": "first-hour momentum"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct > 0.3",
+        "vwap_touch == True (pulled back to VWAP)",
+        "bounce_confirmed == True (bounced off VWAP)",
+        "return_from_open > 0 (still positive from open)"
+      ],
+      "confirmation": "bar closes above VWAP after touching it, in gap direction"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct < -0.3",
+        "vwap_touch == True",
+        "bounce_confirmed == True (rejected at VWAP)",
+        "return_from_open < 0"
+      ],
+      "confirmation": "bar closes below VWAP after touching it, in gap direction"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "high_of_day (for longs) — retest the extreme",
+    "stop_loss": "0.25% below VWAP (for longs)",
+    "trailing_stop": "trail by 0.2% after +0.3%",
+    "time_stop": "exit by 11:00",
+    "eod_rule": "flatten",
+    "signal_exit": "close breaks below VWAP against trade direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "entry 09:20-10:30; manage until 11:00",
+    "volume_filter": "bounce bar volume > SMA(volume, 10)",
+    "trend_filter": "gap direction is the trend bias",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on stock result days",
+    "other_filters": [
+      "gap must be > 0.3% and < 2%"
+    ]
+  },
+  "edge": {
+    "expected_bps": 32,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.66,
+    "edge_decay_risk": "low — 3-factor confluence is hard to crowd"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very selective — all three factors aligning is rare (maybe 1-2 signals per week)",
+    "VWAP pullback may not happen if gap momentum is too strong — missed entries",
+    "Opening hour slippage is elevated"
+  ],
+  "prior_art": "Gap + VWAP + momentum — composite of three well-known single-factor strategies",
+  "notes": "High-conviction setup. Track separately and consider increasing position size if backtest confirms edge."
+}

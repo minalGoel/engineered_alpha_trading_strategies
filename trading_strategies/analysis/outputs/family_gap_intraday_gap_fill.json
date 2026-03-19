@@ -1,0 +1,158 @@
+{
+  "family": "gap intraday gap_fill",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+      "name": "gap_fill_full_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "gap",
+        "gap_fill",
+        "mean_reversion",
+        "opening",
+        "intraday"
+      ],
+      "thesis": "Overnight gaps in Indian large-cap stocks fill completely (price returns to prior close) roughly 65-70% of the time within the session, driven by the behavioral tendency of institutional traders to fade overnight sentiment extremes and re-establish positions at prior day's equilibrium levels. Gaps o",
+      "indicators": [],
+      "entry_long": [
+        "gap_pct < -0.3 AND gap_pct > -1.0 (gap down, moderate size)",
+        "RSI_14 < 40 (oversold on 1-min timeframe)",
+        "close > low_of_first_5_bars (not making new lows)",
+        "volume_ratio > 0.8 (decent volume, not dead)"
+      ],
+      "entry_short": [
+        "gap_pct > 0.3 AND gap_pct < 1.0 (gap up, moderate size)",
+        "RSI_14 > 60 (overbought on 1-min timeframe)",
+        "close < high_of_first_5_bars (not making new highs)",
+        "volume_ratio > 0.8"
+      ],
+      "exit_target": "price reaches prev_close (100% gap fill)",
+      "exit_stop": "gap extends by 50% from open (e.g., 0.5% gap down extends to 0.75% below prev close) OR 0.5 * ATR_14",
+      "filters": [
+        "India_VIX < 20; high VIX gaps are more likely structural (news-driven)",
+        "enter only between 09:20-10:30 IST; if no entry by 10:30, skip today",
+        "first 5-min volume > 1.5x average first-5-min volume",
+        "NIFTY 50 gap direction same as stock gap (sector-wide gap, not stock-specific news)",
+        "bid-ask < 0.05% at entry"
+      ],
+      "weaknesses": [
+        "Cannot reliably distinguish between sentiment-driven gaps (which fill) and news-driven gaps (which continue); the event_filter helps but is imperfect",
+        "Full gap fill requires patience \u2014 many gaps fill 70-80% and then reverse, hitting trailing stop before reaching the 100% target",
+        "On high-VIX days or macro event days, multiple stocks gap simultaneously in the same direction, creating correlated risk across the 2 allowed positions"
+      ],
+      "prior_art": "Caginalp & Laurent (1998) gap analysis; Cooper et al. (2004) gap returns. Indian market gap fill rates documented by various domestic trading educators with 60-70% fill rates for moderate gaps."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+      "name": "gap_fade_large_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "gap",
+        "fade",
+        "large_gap",
+        "contrarian",
+        "intraday"
+      ],
+      "thesis": "Large gaps (>1.5%) in NIFTY 50 stocks are disproportionately caused by overnight sentiment over-reaction to global cues (US market moves, Asian open, commodity prices) rather than stock-specific news. When no earnings or corporate action drives the gap, large gaps fade (partially revert) 55-60% of t",
+      "indicators": [],
+      "entry_long": [
+        "gap_pct < -1.5 (large gap down)",
+        "excess_gap < -0.5 (stock gapped more than index)",
+        "RSI_14 < 25 (deeply oversold on 1-min)",
+        "no earnings or corporate action for the stock today"
+      ],
+      "entry_short": [
+        "gap_pct > 1.5 (large gap up)",
+        "excess_gap > 0.5 (stock gapped more than index)",
+        "RSI_14 > 75 (deeply overbought on 1-min)",
+        "no earnings or corporate action for the stock today"
+      ],
+      "exit_target": "revert 40% of the excess_gap (not full gap, just the excess over index)",
+      "exit_stop": "gap extends further by 0.5% from open OR 0.7 * ATR_14 from entry",
+      "filters": [
+        "India_VIX < 25; above 25, large gaps are often structural",
+        "enter between 09:20-10:30 IST; if no setup by 10:30, skip",
+        "opening 5-min volume > 2x average (confirms institutional participation)",
+        "NIFTY 50 not gapping > 2% in same direction (systemic event, don't fade)",
+        "bid-ask < 0.06% at entry (large gaps can widen spreads)"
+      ],
+      "weaknesses": [
+        "The news filter is imperfect \u2014 sometimes gaps are driven by leaked information, off-market block deals, or global events that fundamentally justify the gap, leading to gap-and-go instead of fade",
+        "Low frequency: large gaps (>1.5%) occur on only ~15-20% of trading days for any given stock, requiring monitoring of the full NIFTY 50 universe for sufficient signals",
+        "Wider bid-ask spreads at open on gap days increase effective slippage to 5-8 bps per side, significantly eating into the edge vs normal days"
+      ],
+      "prior_art": "Dyl & Maberly (1992) gap reversal; Fabozzi et al. (2007) on overnight gap return predictability. Indian context similar to findings in Aggarwal & Gupta (2009) on NSE opening returns."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json",
+      "name": "global_cue_reaction_v1",
+      "universe": "NIFTY 50 index (via NIFTY futures)",
+      "timeframe": "1min",
+      "tags": [
+        "event_driven",
+        "global_cues",
+        "SGX_NIFTY",
+        "gap",
+        "lead_lag"
+      ],
+      "thesis": "Indian markets open at 09:15 IST, by which time SGX NIFTY futures (trading in Singapore from 06:30 IST) have already priced in overnight US, European, and Asian market moves. The opening gap in NIFTY relative to SGX NIFTY's implied open provides a tradeable signal: (1) when NIFTY opens at a PREMIUM ",
+      "indicators": [
+        "sgx_implied_open",
+        "nifty_open",
+        "premium_bps",
+        "gap_from_prev_close",
+        "excess_gap"
+      ],
+      "entry_long": [
+        "premium_bps < -10 (NIFTY opened at discount to SGX \u2014 expect convergence upward)",
+        "abs(excess_gap) > 10 bps (meaningful domestic discount)",
+        "SGX NIFTY was stable in last 30 min before NSE open (not trending against India)"
+      ],
+      "entry_short": [
+        "premium_bps > 10 (NIFTY opened at premium to SGX \u2014 expect convergence downward)",
+        "abs(excess_gap) > 10 bps",
+        "SGX NIFTY was stable in last 30 min before NSE open"
+      ],
+      "exit_target": "premium_bps reverts to 0 (NIFTY aligns with SGX implied level)",
+      "exit_stop": "premium_bps extends to \u00b125 bps (domestic flow overpowering arbitrage)",
+      "filters": [
+        "India_VIX < 25 (in high VIX, convergence may not happen as domestic fear dominates)",
+        "entry only in 09:15-09:30; exit by 10:30",
+        "NIFTY futures volume > 0.8x normal in first 15 min",
+        "skip if overnight S&P 500 moved > 2% (extreme global event, convergence won't apply)",
+        "NIFTY futures bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "SGX NIFTY data is not freely available via Zerodha. Requires separate data subscription or scraping from financial portals with latency.",
+        "On days with significant India-specific overnight news (regulatory changes, geopolitical events), the premium/discount is justified and won't converge.",
+        "The signal generates only 1 trade per day and targets a small edge (~22 bps). Annual returns depend heavily on consistency across 250 trading days."
+      ],
+      "prior_art": "Madhavan (2000) 'Market Microstructure' on price discovery across venues. Eun & Sabherwal (2003) 'Cross-Border Listings and Price Discovery'. In India, Mukherjee (2011) studies NIFTY-SGX NIFTY price d"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "gap intraday gap_fill",
+      "family_slug": "gap_intraday_gap_fill",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+      "cosine": 0.8358
+    },
+    {
+      "family": "gap intraday gap_fill",
+      "family_slug": "gap_intraday_gap_fill",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_063.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json",
+      "cosine": 0.7332
+    },
+    {
+      "family": "gap intraday gap_fill",
+      "family_slug": "gap_intraday_gap_fill",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_061.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_124.json",
+      "cosine": 0.6587
+    }
+  ]
+}

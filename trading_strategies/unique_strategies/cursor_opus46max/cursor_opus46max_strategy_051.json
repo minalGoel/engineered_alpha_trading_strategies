@@ -1,0 +1,130 @@
+{
+  "name": "pairs_trading_bank_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "stat_arb",
+    "pairs",
+    "banking",
+    "mean_reversion",
+    "intraday"
+  ],
+  "thesis": "HDFCBANK and ICICIBANK are structurally linked: both are large-cap private banks with overlapping loan books, similar NIM profiles, and high institutional overlap. Their intraday spread (log price ratio) mean-reverts within the session because fundamental news rarely justifies a >1-sigma divergence that persists past lunch. The inefficiency exists because most retail flow is directional, and stat-arb desks focus on multi-day horizons, leaving the intraday spread under-arbitraged. The edge survives because it requires real-time cointegration monitoring and fast two-leg execution that retail traders cannot easily replicate.",
+  "universe": "HDFCBANK, ICICIBANK on NSE",
+  "stock_filter": "Only trade when both legs have avg 1-min volume > 50000 shares in first 30 mins",
+  "timeframe": "1min",
+  "session": "09:20-15:15 IST (skip first 5 mins for price discovery)",
+  "hold_time": "15-90 mins typical",
+  "max_hold_bars": 120,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_BANK",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "rolling_beta_60min"
+    ]
+  },
+  "indicators": [
+    "spread = log(HDFCBANK_close) - hedge_ratio * log(ICICIBANK_close)",
+    "hedge_ratio = OLS_slope(log(HDFCBANK_close), log(ICICIBANK_close), lookback=120)",
+    "spread_mean = SMA(spread, 120)",
+    "spread_std = rolling_std(spread, 120)",
+    "z_score = (spread - spread_mean) / spread_std",
+    "half_life = -log(2) / log(OLS_slope(spread[t-1], spread[t], lookback=60))",
+    "spread_vol = rolling_std(spread_returns, 30)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "z_score < -2.0",
+        "half_life > 5 AND half_life < 60",
+        "abs(z_score) NOT expanding for last 3 bars",
+        "India_VIX < 22"
+      ],
+      "confirmation": "z_score crosses above -1.8 from below (momentum turning)"
+    },
+    "short": {
+      "conditions": [
+        "z_score > 2.0",
+        "half_life > 5 AND half_life < 60",
+        "abs(z_score) NOT expanding for last 3 bars",
+        "India_VIX < 22"
+      ],
+      "confirmation": "z_score crosses below 1.8 from above (momentum turning)"
+    },
+    "entry_price": "market order on both legs simultaneously, limit orders 1 tick inside bid/ask"
+  },
+  "exit": {
+    "target": "z_score crosses 0 (spread returns to mean)",
+    "stop_loss": "z_score exceeds 3.5 (spread blowout) OR loss > 0.5% of capital_per_trade",
+    "trailing_stop": "if z_score crosses 0.5 toward mean, trail at 0.8 sigma from peak reversion",
+    "time_stop": "close if held > 90 mins without hitting target",
+    "eod_rule": "flatten both legs by 15:15 IST",
+    "signal_exit": "hedge_ratio instability: if rolling hedge_ratio changes > 10% in 30 mins, exit"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "equal INR notional on each leg, adjusted by hedge_ratio",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; above 22 widen z_score entry to 2.5",
+    "time_filter": "no new entries after 14:30 IST",
+    "volume_filter": "both legs must have 1-min volume > 20000 shares at entry bar",
+    "trend_filter": "NIFTY_BANK not trending > 1% in either direction in last 60 mins",
+    "spread_filter": "bid-ask spread on both legs < 0.05%",
+    "event_filter": "skip if either stock has earnings/results within 2 trading days",
+    "other_filters": [
+      "skip RBI monetary policy days"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.62,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "moderate \u2014 more quant desks entering Indian pairs space; spread may tighten over 6-12 months"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Two-leg execution risk: one leg may fill while the other slips, creating unhedged exposure for seconds",
+    "Regime breaks: if RBI policy differentially affects one bank (e.g., HDFC merger integration issues), the pair relationship can break for days",
+    "Hedge ratio instability intraday can cause false signals if the 120-bar lookback is too short for structural shifts"
+  ],
+  "prior_art": "Gatev, Goetzmann & Rouwenhorst (2006) pairs trading framework; adapted for Indian banking sector intraday with z-score entry/exit thresholds similar to Avellaneda & Lee (2010)",
+  "notes": "Edge math: 0.62 * 45bps - 0.38 * 35bps = 27.9 - 13.3 = 14.6bps gross, costs ~12bps round trip (2*3 slippage + 2.5 STT + 0.5 exchange per leg ~= 12bps), net ~15bps per trade but 2-4 trades/day compounds to ~25bps daily. Half-life filter is critical to avoid pairs that won't revert within the session.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "stat_arb pairs sector",
+    "num_within_family_comparisons": 7,
+    "variant_pairs": [
+      "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+      "all_trading_strategies/opus/Opus_17_of_50.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+      "all_trading_strategies/opus/Opus_22_of_50.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+      "all_trading_strategies/claude_project/claude_project_22_of_25.json"
+    ]
+  }
+}

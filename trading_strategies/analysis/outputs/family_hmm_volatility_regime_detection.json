@@ -1,0 +1,98 @@
+{
+  "family": "hmm volatility regime_detection",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_083.json",
+      "name": "regime_detection_vol_v1",
+      "universe": "NIFTY 50 constituents on NSE (top 10 by liquidity)",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "HMM",
+        "regime_detection",
+        "hidden_markov",
+        "intraday"
+      ],
+      "thesis": "A simplified Hidden Markov Model (HMM) with 2 states (low-vol / high-vol) fitted on rolling 120-bar 1-min return sequences can detect intraday volatility regime shifts 2-5 bars before simple threshold-based methods. The HMM captures the transition probability between regimes: when the model assigns ",
+      "indicators": [],
+      "entry_long": [
+        "low_to_high == True AND HMM_prob_high_vol > 0.80 AND EMA_8 > EMA_21 (vol expansion + upward momentum)",
+        "OR high_to_low == True AND HMM_prob_high_vol < 0.20 AND close < vwap (vol contraction + below VWAP mean rev)"
+      ],
+      "entry_short": [
+        "low_to_high == True AND HMM_prob_high_vol > 0.80 AND EMA_8 < EMA_21 (vol expansion + downward momentum)",
+        "OR high_to_low == True AND HMM_prob_high_vol < 0.20 AND close > vwap (vol contraction + above VWAP mean rev)"
+      ],
+      "exit_target": "low_to_high: 1.5 * ATR_14; high_to_low: VWAP touch (mean reversion)",
+      "exit_stop": "low_to_high: 0.7 * ATR_14; high_to_low: 0.4 * ATR_14 beyond VWAP",
+      "filters": [
+        "India_VIX < 25; extreme VIX makes HMM state estimates noisy",
+        "09:30-15:00; need 120-bar history for HMM estimation",
+        "per entry type (see confirmation conditions)",
+        "none (regime detection IS the filter)",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "HMM is a parametric model that assumes Gaussian emissions; 1-min return distributions have fat tails, violating this assumption and causing state misclassification at extremes",
+        "Real-time HMM state estimation is computationally expensive (forward algorithm on 120 observations per bar); latency may cause missed entries on fast regime transitions",
+        "HMM with 2 states may be too simplistic \u2014 3 states (low, medium, high vol) might better capture the intraday vol structure but adds model complexity and overfitting risk"
+      ],
+      "prior_art": "Hamilton (1989) regime-switching models; Bulla & Bulla (2006) HMM for financial time series. Nystrup et al. (2017) on HMM-based portfolio optimization."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_166.json",
+      "name": "hmm_regime_v1",
+      "universe": "NIFTY 50 constituents",
+      "timeframe": "1min",
+      "tags": [
+        "hmm",
+        "hidden-markov",
+        "regime",
+        "quantitative",
+        "state-detection"
+      ],
+      "thesis": "Financial markets exhibit latent states (trending, mean-reverting, volatile-choppy) that are not directly observable but can be inferred from observable quantities (returns, volume, spread) using a Hidden Markov Model. By fitting a 3-state HMM on the previous session's 1-min data (observations: retu",
+      "indicators": [
+        "HMM_State",
+        "State_Prob",
+        "EMA_9",
+        "EMA_21",
+        "BB_mid",
+        "BB_lower",
+        "BB_upper"
+      ],
+      "entry_long": [
+        "STATE_1 (trending): HMM_State == 1 AND State_Prob > 0.70 AND EMA(close,9) > EMA(close,21) AND close > vwap",
+        "STATE_2 (mean-reverting): HMM_State == 2 AND State_Prob > 0.70 AND close < BB_lower"
+      ],
+      "entry_short": [
+        "STATE_1 (trending): HMM_State == 1 AND State_Prob > 0.70 AND EMA(close,9) < EMA(close,21) AND close < vwap",
+        "STATE_2 (mean-reverting): HMM_State == 2 AND State_Prob > 0.70 AND close > BB_upper"
+      ],
+      "exit_target": "STATE_1: 50 bps; STATE_2: close reverts to BB_mid",
+      "exit_stop": "STATE_1: 30 bps; STATE_2: 25 bps",
+      "filters": [
+        "India VIX < 25; if VIX > 20, require State_Prob > 0.80 for entry",
+        "No entries before 09:20 or after 15:15",
+        "Volume on entry bar > SMA(volume, 15)",
+        "None \u2014 HMM handles regime detection internally",
+        "Bid-ask spread < 5 bps"
+      ],
+      "weaknesses": [
+        "HMM fitted on previous session's data assumes stationarity of state dynamics across sessions \u2014 this breaks down during earnings season, macro events, or regime changes",
+        "3-state HMM is a strong modeling assumption \u2014 true market dynamics may have more states or non-Gaussian emissions; model misspecification leads to incorrect state decoding",
+        "Forward algorithm computation at each 1-min bar adds latency (O(N\u00b2) per bar where N=3 states); with many stocks this may exceed latency budget for real-time trading"
+      ],
+      "prior_art": "Bulla et al. (2011) on HMM for stock returns; Hamilton (1989) regime-switching models; Ryd\u00e9n et al. (1998) stylized facts and HMMs; hmmlearn library in Python widely available but intraday application"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "hmm volatility regime_detection",
+      "family_slug": "hmm_volatility_regime_detection",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_083.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_166.json",
+      "cosine": 0.7745
+    }
+  ]
+}

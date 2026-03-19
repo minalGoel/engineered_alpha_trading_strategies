@@ -1,0 +1,103 @@
+{
+  "family": "expiry event_driven options",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_123.json",
+      "name": "expiry_day_pattern_v1",
+      "universe": "NIFTY 50, BANK NIFTY (via index futures)",
+      "timeframe": "1min",
+      "tags": [
+        "event_driven",
+        "expiry",
+        "options",
+        "gamma_squeeze",
+        "pin_risk"
+      ],
+      "thesis": "F&O expiry days (weekly Thursday for NIFTY/BANK NIFTY, monthly last Thursday for stocks) exhibit distinct intraday patterns driven by options market makers' gamma hedging and pin risk. On expiry day: (1) stocks/indices tend to pin near the strike with maximum open interest ('max pain'), (2) gamma ex",
+      "indicators": [
+        "max_pain_strike",
+        "distance_to_max_pain",
+        "net_gamma",
+        "expiry_phase"
+      ],
+      "entry_long": [
+        "(expiry_phase == 'morning_pin' AND distance_to_max_pain < -30 bps) \u2014 below max pain, expect pin rally",
+        "OR (expiry_phase == 'afternoon_unwind' AND close > high_of_last_30_bars AND net_gamma > 0) \u2014 gamma squeeze up"
+      ],
+      "entry_short": [
+        "(expiry_phase == 'morning_pin' AND distance_to_max_pain > 30 bps) \u2014 above max pain, expect pin pullback",
+        "OR (expiry_phase == 'afternoon_unwind' AND close < low_of_last_30_bars AND net_gamma < 0) \u2014 gamma squeeze down"
+      ],
+      "exit_target": "morning_pin: price reaches max_pain_strike. afternoon_unwind: 30 bps from entry",
+      "exit_stop": "morning_pin: 15 bps beyond max pain distance (diverging). afternoon_unwind: 15 bps from entry",
+      "filters": [
+        "India_VIX > 12 AND < 25 (need some vol for gamma effects but not too much chaos)",
+        "morning phase: 09:20-13:00. afternoon phase: 13:30-15:25",
+        "index futures volume > 1.2x normal (confirmed active expiry)",
+        "morning: contrarian toward max pain. afternoon: trend-following breakout",
+        "futures bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "Max pain calculation requires full option chain data and is sensitive to OI changes during the day. Stale OI data (even 30-min old) can mislead.",
+        "With weekly expiries, every Thursday is an expiry day but gamma effects are smaller for weekly options (less OI). Monthly expiry effects are stronger but only 12 per year.",
+        "The afternoon gamma squeeze can be violent and fast \u2014 if the stop loss is too tight (15 bps), it may get hit before the squeeze completes."
+      ],
+      "prior_art": "Ni, Pearson & Poteshman (2005) 'Stock Price Clustering on Option Expiration Dates'. Avellaneda & Lipkin (2003) 'A market-induced mechanism for stock pinning'. In India, expiry day effects are widely d"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_37_of_50.json",
+      "name": "expiry_day_premium_decay_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "time_of_day",
+        "expiry",
+        "theta",
+        "mean_reversion"
+      ],
+      "thesis": "On weekly F&O expiry days (Thursdays), Nifty50 and BankNifty constituents experience increased volatility in the first hour due to options hedging/unhedging, followed by a mean reversion toward VWAP as gamma risk decays. Stocks that overshoot in the first hour due to options-driven flow revert becau",
+      "indicators": [
+        "vwap_zscore",
+        "first_hour_range",
+        "vix_change",
+        "atr_20"
+      ],
+      "entry_long": [
+        "is_expiry_day == True",
+        "vwap_zscore < -1.5 (stock overshot to downside)",
+        "time > 10:00",
+        "vix_change < 0 (VIX declining = gamma pressure easing)"
+      ],
+      "entry_short": [
+        "is_expiry_day == True",
+        "vwap_zscore > 1.5",
+        "time > 10:00",
+        "vix_change < 0"
+      ],
+      "exit_target": "vwap_zscore crosses 0",
+      "exit_stop": "1.5 * atr_20 from entry",
+      "filters": [
+        "vix_change < 0 (only when volatility is declining post-open)",
+        "entry 10:00-12:00; manage until 14:00",
+        "volume > SMA(volume, 20)",
+        "none \u2014 mean reversion",
+        "skip if spread > 0.12% (wider on expiry)"
+      ],
+      "weaknesses": [
+        "Only fires on Thursdays (52 trading days/year) \u2014 very low frequency",
+        "Monthly expiry is different from weekly \u2014 need separate parameters",
+        "If expiry falls on a macro-event day, options flow is overwhelmed by directional flow"
+      ],
+      "prior_art": "Expiry day effects \u2014 widely studied in Indian markets (NSE F&O expiry pinning, hedging flow)"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "expiry event_driven options",
+      "family_slug": "expiry_event_driven_options",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_123.json",
+      "fp_b": "all_trading_strategies/opus/Opus_37_of_50.json",
+      "cosine": 0.7885
+    }
+  ]
+}

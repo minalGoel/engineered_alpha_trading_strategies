@@ -1,0 +1,140 @@
+{
+  "name": "mean_reversion_speed_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "mean-reversion",
+    "OU-process",
+    "speed",
+    "estimation",
+    "quantitative"
+  ],
+  "thesis": "The speed at which a stock reverts to its mean (VWAP) can be estimated by fitting an Ornstein-Uhlenbeck (OU) process to the VWAP deviation series: dx = theta * (mu - x) * dt + sigma * dW. The theta parameter (mean-reversion speed) tells us how quickly deviations from VWAP are corrected. High theta (> 0.05 per bar): fast reversion, enter on large deviations and expect quick profit. Low theta (< 0.02 per bar): slow reversion, the deviation may persist, so avoid mean-reversion trades. By estimating theta in real-time on a 60-bar rolling window of VWAP deviations, we only trade mean-reversion when the statistical evidence supports it. The inefficiency exists because VWAP mean-reversion traders rarely quantify the reversion speed.",
+  "universe": "NIFTY 50 + NIFTY Next 50 constituents",
+  "stock_filter": "ADV(20) > \u20b975 Cr; stock must have stable VWAP (not dominated by single large trade)",
+  "timeframe": "1min",
+  "session": "10:15-15:10 IST",
+  "hold_time": "10-30 min (inversely proportional to theta)",
+  "max_hold_bars": 45,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 7,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "VWAP_Dev",
+      "params": "close - vwap (absolute deviation in price units)",
+      "lookback": "session"
+    },
+    {
+      "name": "VWAP_Dev_Norm",
+      "params": "(close - vwap) / vwap * 10000 (normalized in bps)",
+      "lookback": "session"
+    },
+    {
+      "name": "OU_Theta",
+      "params": "OLS regression: delta(VWAP_Dev) = theta * VWAP_Dev + intercept, window=60; theta = -slope",
+      "lookback": 60
+    },
+    {
+      "name": "OU_Sigma",
+      "params": "std(residuals) from OU regression, window=60",
+      "lookback": 60
+    },
+    {
+      "name": "Expected_HL",
+      "params": "log(2) / OU_Theta (expected half-life of reversion in bars)",
+      "lookback": 60
+    },
+    {
+      "name": "Z_Score_VWAP",
+      "params": "VWAP_Dev / (OU_Sigma / sqrt(2 * OU_Theta))",
+      "lookback": 60
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "OU_Theta > 0.05 (fast mean-reversion speed, statistically significant)",
+        "Z_Score_VWAP < -2.0 (price significantly below VWAP in OU model terms)",
+        "Expected_HL < 15 bars (reversion expected within 15 minutes)"
+      ],
+      "confirmation": "OU_Theta has been > 0.03 for at least 10 bars (stable mean-reverting regime)"
+    },
+    "short": {
+      "conditions": [
+        "OU_Theta > 0.05",
+        "Z_Score_VWAP > 2.0 (price significantly above VWAP)",
+        "Expected_HL < 15 bars"
+      ],
+      "confirmation": "OU_Theta has been > 0.03 for at least 10 bars"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "Z_Score_VWAP crosses zero (full reversion to VWAP)",
+    "stop_loss": "Z_Score_VWAP reaches -3.0 for longs / +3.0 for shorts (deviation worsens)",
+    "trailing_stop": "None \u2014 pure mean-reversion, target is VWAP",
+    "time_stop": "min(45, 3 * Expected_HL) bars",
+    "eod_rule": "flatten",
+    "signal_exit": "OU_Theta drops below 0.02 (mean-reversion weakening \u2014 stop expecting reversion)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "Scale with OU_Theta: higher theta = more confidence = larger size. \u20b975K if theta 0.05-0.08, \u20b91L if 0.08-0.12, \u20b91.25L if > 0.12",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22 (mean-reversion works best in calm markets)",
+    "time_filter": "No entries before 10:15 (need 60 bars for OU estimation) or after 15:10",
+    "volume_filter": "Volume > SMA(volume, 20) \u2014 sufficient liquidity for VWAP to be meaningful",
+    "trend_filter": "abs(EMA(NIFTY_50, 30) - EMA(NIFTY_50, 60)) / EMA(NIFTY_50, 60) < 30 bps (index not in strong trend)",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day and RBI policy day",
+    "other_filters": [
+      "OU regression R-squared > 0.10 (minimum fit quality for the OU model)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.52,
+    "edge_decay_risk": "Low \u2014 OU process estimation for mean-reversion speed is a quantitative technique rarely applied to intraday VWAP trading; the statistical rigor provides a moat"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "OU process assumes constant theta and sigma within the 60-bar window \u2014 in reality, both parameters are time-varying (e.g., theta drops as VWAP deviation grows large), violating model assumptions",
+    "Z-score based on OU parameters inherits all estimation errors from theta and sigma \u2014 a 10% error in theta translates to large errors in Z-score and Expected_HL",
+    "The strategy only enters on Z_Score > 2.0, which combined with the high theta requirement, produces very few signals \u2014 may generate only 1-2 trades per day across entire universe"
+  ],
+  "prior_art": "Ornstein-Uhlenbeck process for mean-reversion (Uhlenbeck & Ornstein 1930); applied to pairs trading in Bertram (2010); VWAP mean-reversion is common but formal OU estimation is rare",
+  "notes": "Consider using maximum likelihood estimation (MLE) instead of OLS for OU parameters \u2014 MLE is more efficient for small samples. The theta threshold of 0.05 corresponds to a half-life of ~14 bars (14 minutes), which is reasonable for intraday mean-reversion.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_179.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_179.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

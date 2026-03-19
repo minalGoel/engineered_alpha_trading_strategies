@@ -1,0 +1,146 @@
+{
+  "name": "market_breadth_signal_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "sector_rotation",
+    "market_breadth",
+    "divergence",
+    "advance_decline"
+  ],
+  "thesis": "Market breadth \u2014 the proportion of stocks advancing vs declining \u2014 diverges from the headline NIFTY 50 index during distribution (narrow rally in 5-10 heavy-weight stocks while breadth deteriorates) and accumulation (broad-based buying while index is flat due to weakness in heavyweights). When NIFTY 50 makes a new intraday high but the advance-decline ratio is declining, it signals unsustainable narrowing and a likely reversal within 15-30 minutes. In Indian markets, this divergence is amplified because NIFTY 50 is top-heavy: top 10 stocks represent ~55% of weight. A rally in HDFC Bank + Reliance + TCS can push NIFTY up while 40 other stocks are flat or down. The inefficiency persists because most retail traders watch only the index level, not breadth metrics, and breadth data requires monitoring all 50 constituents simultaneously.",
+  "universe": "NIFTY 50 index and all 50 constituents",
+  "stock_filter": "All NIFTY 50 constituents for breadth computation; trade via NIFTY 50 futures or NIFTYBEES",
+  "timeframe": "1min",
+  "session": "09:30-15:20 IST",
+  "hold_time": "10-30 min",
+  "max_hold_bars": 30,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "1-min OHLCV for all 50 NIFTY constituents for breadth computation"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "advance_decline_ratio",
+      "formula": "count(stocks where close > close[5]) / count(stocks where close < close[5])",
+      "params": {
+        "lookback": 5
+      }
+    },
+    {
+      "name": "breadth_ema",
+      "formula": "EMA(advance_decline_ratio, 10)",
+      "params": {
+        "period": 10
+      }
+    },
+    {
+      "name": "nifty_new_high",
+      "formula": "1 if NIFTY50_close == max(NIFTY50_close, from_session_start) else 0",
+      "params": {}
+    },
+    {
+      "name": "nifty_new_low",
+      "formula": "1 if NIFTY50_close == min(NIFTY50_close, from_session_start) else 0",
+      "params": {}
+    },
+    {
+      "name": "breadth_divergence",
+      "formula": "(nifty_new_high == 1 AND breadth_ema < 1.0) OR (nifty_new_low == 1 AND breadth_ema > 1.0)",
+      "params": {}
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "nifty_new_low == 1 (NIFTY hitting intraday lows)",
+        "breadth_ema > 1.2 (but majority of stocks are actually advancing)",
+        "breadth_divergence == True",
+        "India_VIX < 22"
+      ],
+      "confirmation": "NIFTY 50 1-min close > NIFTY 50 1-min close[1] (first uptick from the low)"
+    },
+    "short": {
+      "conditions": [
+        "nifty_new_high == 1 (NIFTY hitting intraday highs)",
+        "breadth_ema < 0.8 (but majority of stocks are actually declining)",
+        "breadth_divergence == True",
+        "India_VIX < 22"
+      ],
+      "confirmation": "NIFTY 50 1-min close < NIFTY 50 1-min close[1] (first downtick from the high)"
+    },
+    "entry_price": "market order on NIFTY 50 futures at confirmation"
+  },
+  "exit": {
+    "target": "NIFTY 50 moves 20 bps in direction of breadth (reversal from divergence)",
+    "stop_loss": "NIFTY 50 makes another new high/low extending 10 bps beyond entry",
+    "trailing_stop": "8 bps trailing after 12 bps profit",
+    "time_stop": "exit after 30 bars (if divergence doesn't resolve, it may be a legitimate new trend)",
+    "eod_rule": "flatten by 15:20 IST",
+    "signal_exit": "breadth_ema realigns with index direction (divergence resolved without reversal)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.1,
+    "position_sizing": "\u20b91L in NIFTY futures (1 mini lot if available) or NIFTYBEES",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; in high VIX, breadth divergences may not revert (panic selling)",
+    "time_filter": "skip first 15 min (breadth metrics need stabilization) and last 10 min",
+    "volume_filter": "NIFTY 50 aggregate volume > 0.7x normal participation",
+    "trend_filter": "divergence is more reliable when NIFTY is near day's VWAP (not extreme trend)",
+    "spread_filter": "NIFTY futures bid-ask < 0.05%",
+    "event_filter": "skip on broad macro event days (all stocks move together, breadth uninformative)",
+    "other_filters": [
+      "require at least 30 of 50 stocks to have meaningful 5-min returns (exclude those halted or illiquid)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.7,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "Low \u2014 breadth divergence is a classic technical analysis concept but its real-time intraday computation at 1-min resolution is novel. Most practitioners use daily breadth, not intraday."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Breadth divergence can persist for extended periods (2+ hours) before resolving. The 30-bar time stop may exit positions prematurely before the thesis plays out.",
+    "On days with heavy FII selling in large-caps only (e.g., MSCI rebalance), breadth divergence is genuine and NIFTY decline will persist despite positive breadth.",
+    "Computing real-time breadth for all 50 stocks requires monitoring 50 simultaneous data feeds, which is resource-intensive and may have data latency issues."
+  ],
+  "prior_art": "Zweig (1986) 'Winning on Wall Street' popularized breadth indicators. McClellan Oscillator and Summation Index are classic breadth tools. In India, intraday breadth analysis is nascent \u2014 BSE/NSE publish daily A/D ratios but not intraday.",
+  "notes": "The 5-bar lookback for advance/decline classification is a balance between responsiveness and noise. 1-bar lookback is too noisy; 10-bar lookback is too slow. Experiment with VWAP-based classification (advancing = close > VWAP, declining = close < VWAP) as an alternative to close-over-close.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_120.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_120.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "index-correlated nifty-confirmed breakout",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_164.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_048.json"
+    ]
+  }
+}

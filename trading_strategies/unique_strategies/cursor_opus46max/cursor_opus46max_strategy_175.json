@@ -1,0 +1,141 @@
+{
+  "name": "rolling_sharpe_adaptive_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "sharpe-ratio",
+    "adaptive-sizing",
+    "performance-based",
+    "regime-adaptive",
+    "risk-management"
+  ],
+  "thesis": "A strategy's real-time performance (measured by rolling Sharpe ratio of its own recent trades) provides information about whether current market conditions are favorable. By computing a rolling Sharpe ratio over the last 20 trade outcomes and scaling position size proportionally, we ride winning streaks with larger size and cut losers with smaller size \u2014 a form of adaptive position sizing. The base signal is a simple VWAP + EMA momentum system; the innovation is in the meta-layer that adjusts sizing based on recent strategy performance. The inefficiency exists because most traders use fixed sizing and don't dynamically adapt to their own recent track record. This exploits the regime-clustering phenomenon: winning trades cluster in favorable regimes, and losing trades cluster in unfavorable ones.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > \u20b9100 Cr",
+  "timeframe": "1min",
+  "session": "09:25-15:15 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "trade_log_last_20_trades"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "EMA_9",
+      "params": "EMA(close, 9)",
+      "lookback": 9
+    },
+    {
+      "name": "EMA_21",
+      "params": "EMA(close, 21)",
+      "lookback": 21
+    },
+    {
+      "name": "VWAP_Distance",
+      "params": "(close - vwap) / vwap * 10000",
+      "lookback": "session"
+    },
+    {
+      "name": "Rolling_Trade_Sharpe",
+      "params": "mean(trade_pnl_last_20) / std(trade_pnl_last_20) * sqrt(20)",
+      "lookback": "20 trades"
+    },
+    {
+      "name": "Size_Multiplier",
+      "params": "max(0.5, min(2.0, 0.5 + Rolling_Trade_Sharpe * 0.5))",
+      "lookback": "20 trades"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "EMA(close, 9) > EMA(close, 21)",
+        "close > vwap",
+        "VWAP_Distance > 5 bps (not just barely above vwap)",
+        "Rolling_Trade_Sharpe > -1.0 (not in deep drawdown \u2014 don't enter when losing badly)"
+      ],
+      "confirmation": "Volume > SMA(volume, 15) on entry bar"
+    },
+    "short": {
+      "conditions": [
+        "EMA(close, 9) < EMA(close, 21)",
+        "close < vwap",
+        "VWAP_Distance < -5 bps",
+        "Rolling_Trade_Sharpe > -1.0"
+      ],
+      "confirmation": "Volume > SMA(volume, 15) on entry bar"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "35 bps from entry",
+    "stop_loss": "20 bps from entry",
+    "trailing_stop": "After 20 bps profit, trail at 12 bps from high-water mark",
+    "time_stop": "60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "EMA(close,9) crosses EMA(close,21) against position direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "Adaptive: base \u20b91L * Size_Multiplier (range \u20b950K to \u20b92L based on rolling Sharpe)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; if VIX > 20, cap Size_Multiplier at 1.0",
+    "time_filter": "No entries before 09:25 or after 15:15",
+    "volume_filter": "Volume > SMA(volume, 15) on entry bar",
+    "trend_filter": "NIFTY 50 direction should agree with trade direction",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "Must have at least 10 completed trades in trade log before adaptive sizing activates (use fixed \u20b91L for first 10)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Low-Medium \u2014 the adaptive sizing meta-layer adds value independent of the base signal; even a mediocre base strategy benefits from performance-proportional sizing"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Rolling Sharpe on 20 trades has very high variance \u2014 a single large winner or loser can swing the Sharpe dramatically, causing abrupt position size changes that amplify risk",
+    "The adaptive sizing creates a pro-cyclical dynamic: after a winning streak, size increases, so the next loss (which is statistically inevitable) is disproportionately large \u2014 can give back streak gains in one trade",
+    "Base signal (EMA 9/21 crossover + VWAP) is generic \u2014 the adaptive sizing layer cannot compensate for a fundamentally weak entry signal; it only helps during favorable regime clustering"
+  ],
+  "prior_art": "Kelly criterion for optimal sizing; Tharp's position sizing concepts in 'Trade Your Way to Financial Freedom'; adaptive position sizing discussed in Vince's 'The Leverage Space Trading Model'",
+  "notes": "Consider using a geometric Kelly fraction instead of linear Sharpe scaling for mathematically optimal sizing. Also consider capping the Size_Multiplier increase rate (max 10% increase per trade) to smooth the transition.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_175.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_175.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "mean-variance markowitz optimal-timing",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_159.json"
+    ]
+  }
+}

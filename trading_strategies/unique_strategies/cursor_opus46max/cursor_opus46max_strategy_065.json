@@ -1,0 +1,124 @@
+{
+  "name": "gap_reversal_volume_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "gap",
+    "reversal",
+    "volume_confirmation",
+    "contrarian",
+    "intraday"
+  ],
+  "thesis": "When a stock gaps in one direction but volume within the first 15 minutes is heavily concentrated on the opposite side (buying into a gap down, selling into a gap up), it signals institutional counter-positioning. Volume-at-price analysis showing accumulation/distribution against the gap direction is a strong predictor of intraday reversal. The inefficiency exists because most gap traders focus on price action alone and ignore the volume microstructure at the open. By requiring both gap + contrary volume signature, we filter for high-conviction reversal setups where smart money is visibly positioning against the gap.",
+  "universe": "NIFTY 50 constituents on NSE",
+  "stock_filter": "gap > 0.5% (abs); daily avg volume > \u20b9200cr",
+  "timeframe": "1min",
+  "session": "09:15-14:30 IST",
+  "hold_time": "30-120 mins typical",
+  "max_hold_bars": 150,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "tick_data_buy_sell_classification"
+    ]
+  },
+  "indicators": [
+    "gap_pct = (open - prev_close) / prev_close * 100",
+    "buy_volume_15min = sum(buy_classified_volume, first_15_bars)",
+    "sell_volume_15min = sum(sell_classified_volume, first_15_bars)",
+    "volume_imbalance = (buy_volume_15min - sell_volume_15min) / (buy_volume_15min + sell_volume_15min)",
+    "VWAP_dev = (close - vwap) / vwap * 100",
+    "OBV_slope = linear_regression_slope(OBV(close, volume), 15)",
+    "ATR_14 = ATR(high, low, close, 14)",
+    "reversal_bar = (gap_pct > 0 AND close < open AND close < low[1]) OR (gap_pct < 0 AND close > open AND close > high[1])"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct < -0.5 (gap down)",
+        "volume_imbalance > 0.2 (net buying into gap down \u2014 accumulation)",
+        "OBV_slope > 0 (on-balance volume rising despite gap down)",
+        "time > 09:30 IST (need 15 min volume data)"
+      ],
+      "confirmation": "reversal_bar == True AND close crosses above VWAP"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct > 0.5 (gap up)",
+        "volume_imbalance < -0.2 (net selling into gap up \u2014 distribution)",
+        "OBV_slope < 0 (on-balance volume falling despite gap up)",
+        "time > 09:30 IST"
+      ],
+      "confirmation": "reversal_bar == True AND close crosses below VWAP"
+    },
+    "entry_price": "market order on confirmation bar close"
+  },
+  "exit": {
+    "target": "price reaches prev_close (full gap fill, aided by volume confirmation)",
+    "stop_loss": "price makes new intraday extreme in gap direction (new low for gap down, new high for gap up) OR 0.6 * ATR_14",
+    "trailing_stop": "after 50% gap fill, trail stop at 25% fill level",
+    "time_stop": "exit if held > 120 mins",
+    "eod_rule": "flatten by 14:30 IST",
+    "signal_exit": "if volume_imbalance reverses sign (contrary volume dries up), exit"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.6,
+    "position_sizing": "risk-based: shares = (capital * 0.006) / stop_distance",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3500,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22",
+    "time_filter": "entry window 09:30-10:30 IST (need volume data, but not too late)",
+    "volume_filter": "first 15-min total volume > 1.5x average first-15-min volume",
+    "trend_filter": "NIFTY not gapping > 1.5% in same direction (sector-wide panic, don't counter-trade)",
+    "spread_filter": "bid-ask < 0.05%",
+    "event_filter": "skip if gap is caused by company-specific news (earnings miss, regulatory action)",
+    "other_filters": [
+      "volume_imbalance must be computed from actual tick-level buy/sell classification, not inferred from 1-min bars"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.62,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.95,
+    "edge_decay_risk": "low \u2014 volume microstructure signals are underutilized in Indian retail trading"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Buy/sell volume classification at tick level is noisy; Lee-Ready algorithm misclassifies 15-20% of trades, weakening the volume_imbalance signal",
+    "Requires tick-level data which Zerodha does not provide natively; must use alternative data sources or approximate from 1-min OHLCV (lower accuracy)",
+    "The 15-minute wait for volume confirmation means entry is delayed, and fast-filling gaps may already be 30-40% filled before the signal triggers"
+  ],
+  "prior_art": "Chordia et al. (2002) order imbalance and stock returns; Llorente et al. (2002) volume-return relationship. Gap reversal with volume adapted from Connors & Raschke (1996).",
+  "notes": "Edge math: 0.62 * 55bps - 0.38 * 35bps = 34.1 - 13.3 = 20.8bps gross. Costs ~9bps RT. Net ~11.8bps/trade * 1.5 trades/day = ~17.7bps daily. The volume confirmation filter is the key differentiator vs simple gap fade; it raises win rate from ~55% to ~62% at the cost of fewer signals.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_065.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_065.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "gap momentum intraday",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_070.json"
+    ],
+    "different_pairs": []
+  }
+}

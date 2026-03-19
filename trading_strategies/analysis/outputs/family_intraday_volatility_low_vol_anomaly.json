@@ -1,0 +1,156 @@
+{
+  "family": "intraday volatility low_vol_anomaly",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+      "name": "low_vol_momentum_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "low_vol_anomaly",
+        "momentum",
+        "quality",
+        "intraday"
+      ],
+      "thesis": "The low-volatility anomaly (Ang et al. 2006) \u2014 low-vol stocks deliver higher risk-adjusted returns than high-vol stocks \u2014 manifests intraday in Indian markets. NIFTY 50 stocks in the bottom tercile of 20-day realized vol that also show positive intraday momentum (price > VWAP, EMA alignment) outperf",
+      "indicators": [],
+      "entry_long": [
+        "low_vol == True (stock in bottom vol tercile)",
+        "intraday_momentum == True (above VWAP, EMAs aligned up)",
+        "relative_strength_5d > 0 (stock outperforming index over 5 days)",
+        "time > 09:45 IST (let vol ranking stabilize)"
+      ],
+      "entry_short": [
+        "high_vol == True (stock in top vol tercile)",
+        "intraday_momentum == True for short (below VWAP, EMAs aligned down)",
+        "relative_strength_5d < 0 (stock underperforming index)",
+        "time > 09:45 IST"
+      ],
+      "exit_target": "long leg outperforms short leg by 30bps (relative target)",
+      "exit_stop": "long leg underperforms short leg by 25bps OR either leg hits 0.5% absolute loss",
+      "filters": [
+        "India_VIX < 20; low-vol anomaly weakens in high-VIX environments (all stocks become high-vol)",
+        "enter between 09:45-11:00; hold through session",
+        "both long and short stocks must have avg volume > \u20b9100cr/day",
+        "NIFTY not in extreme trend (> 2%); factor bets work in moderate markets",
+        "bid-ask < 0.05% on both legs"
+      ],
+      "weaknesses": [
+        "The low-vol anomaly is primarily a cross-sectional effect over weeks/months; compressing it to intraday may not capture the same economic forces (institutional preference, leverage aversion)",
+        "Two-leg execution with stocks from different sectors creates idiosyncratic risk that may dominate the low-vol factor return on any given day",
+        "In risk-off environments (sharp selloffs), low-vol stocks also sell off, and the short high-vol leg may actually outperform (short squeeze), creating large losses"
+      ],
+      "prior_art": "Ang et al. (2006) cross-section of vol and returns; Baker et al. (2011) betting against beta; Blitz & Van Vliet (2007) low-vol effect. Intraday adaptation is novel."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json",
+      "name": "smart_beta_intraday_v1",
+      "universe": "NIFTY 100 constituents, bottom tercile by 5-day avg intraday range",
+      "timeframe": "1min",
+      "tags": [
+        "smart-beta",
+        "low-volatility",
+        "intraday",
+        "factor-tilt",
+        "risk-adjusted"
+      ],
+      "thesis": "The low-volatility anomaly (low-vol stocks deliver higher risk-adjusted returns) is documented at monthly horizons but has an intraday analog: stocks in the bottom tercile of realized intraday volatility (measured by 5-day average of intraday high-low range / close) that break out of their compresse",
+      "indicators": [
+        "Range_Ratio",
+        "Keltner_Upper",
+        "Keltner_Lower",
+        "Vol_Percentile",
+        "OBV_slope"
+      ],
+      "entry_long": [
+        "Stock is in bottom tercile of 5-day avg intraday range (low-vol name)",
+        "close > Keltner_Upper (breakout above compressed range)",
+        "Range_Ratio > 1.5 (current bar range 1.5x avg \u2014 expansion)",
+        "OBV_slope > 0 (volume supporting breakout)"
+      ],
+      "entry_short": [
+        "Stock is in bottom tercile of 5-day avg intraday range",
+        "close < Keltner_Lower (breakdown below compressed range)",
+        "Range_Ratio > 1.5",
+        "OBV_slope < 0 (volume supporting breakdown)"
+      ],
+      "exit_target": "60 bps from entry (low-vol stocks move less, target accordingly)",
+      "exit_stop": "30 bps from entry (tight stop \u2014 false breakouts in low-vol names are quick)",
+      "filters": [
+        "India VIX < 22; low-vol breakout strategy works best in calm markets",
+        "No entries before 09:30 or after 15:10",
+        "Volume on breakout bar > 2x SMA(volume, 20)",
+        "NIFTY 50 EMA(20) slope > 0 for longs; < 0 for shorts",
+        "Bid-ask spread < 4 bps (tighter for low-vol names)"
+      ],
+      "weaknesses": [
+        "Low-vol stocks have smaller absolute moves \u2014 60 bps target is ambitious for names in the bottom tercile of intraday range; many targets may not be hit within time stop",
+        "False breakouts in low-vol names often have low volume, making the volume filter critical but also restrictive \u2014 may only get 1-2 signals per week",
+        "The low-volatility anomaly is documented at monthly frequencies; its persistence at 1-min granularity is unproven and may not hold"
+      ],
+      "prior_art": "Baker, Bradley & Wurgler (2011) 'Benchmarks as Limits to Arbitrage'; Blitz & van Vliet (2007) low-volatility anomaly; NIFTY Low Volatility 30 index methodology; Keltner Channel breakouts in retail TA"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+      "name": "overnight_vol_carry_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "overnight",
+        "carry",
+        "open_close",
+        "intraday"
+      ],
+      "thesis": "The overnight return variance (close-to-open) is systematically different from intraday return variance (open-to-close) in Indian equities. On average, the ratio of overnight vol to intraday vol for NIFTY 50 stocks is ~0.6, meaning stocks move less overnight than during the session. However, after n",
+      "indicators": [],
+      "entry_long": [
+        "IF session_type == 'mean_rev': gap_pct < -0.5 AND RSI_14 < 35 (fade the overnight over-reaction, buy dip)",
+        "IF session_type == 'momentum': close > EMA_9 AND EMA_9 > EMA_21 AND time > 09:30 (ride the pent-up energy up)"
+      ],
+      "entry_short": [
+        "IF session_type == 'mean_rev': gap_pct > 0.5 AND RSI_14 > 65 (fade gap up)",
+        "IF session_type == 'momentum': close < EMA_9 AND EMA_9 < EMA_21 AND time > 09:30"
+      ],
+      "exit_target": "mean_rev: prev_close (gap fill); momentum: 1.5 * ATR_14 from entry",
+      "exit_stop": "mean_rev: gap extends 40% further; momentum: 0.7 * ATR_14 from entry",
+      "filters": [
+        "India_VIX < 22 for mean_rev; no VIX filter for momentum",
+        "mean_rev: enter 09:20-10:30; momentum: enter 09:30-11:00",
+        "opening 5-min volume > 1.0x average",
+        "momentum type: NIFTY must be moving in trade direction; mean_rev: NIFTY gap in same direction as stock (sector-wide overreaction)",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "The overnight vol ratio threshold (1.5 for mean-rev, 0.3 for momentum) is calibrated on historical data; these thresholds may shift as market microstructure evolves",
+        "On ~50% of days, the overnight_ratio is between 0.3-1.5 ('neutral'), generating no signals \u2014 strategy is highly capital-inefficient as standalone",
+        "The momentum sub-strategy (low overnight vol = intraday breakout) has only ~52% win rate, bringing down the blended performance"
+      ],
+      "prior_art": "French & Roll (1986) stock return variances: trading vs non-trading hours. Lockwood & Linn (1990) on overnight vs intraday volatility. Cliff et al. (2008) on overnight returns."
+    }
+  ],
+  "pairs": [
+    {
+      "family": "intraday volatility low_vol_anomaly",
+      "family_slug": "intraday_volatility_low_vol_anomaly",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json",
+      "cosine": 0.7723
+    },
+    {
+      "family": "intraday volatility low_vol_anomaly",
+      "family_slug": "intraday_volatility_low_vol_anomaly",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_077.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+      "cosine": 0.6726
+    },
+    {
+      "family": "intraday volatility low_vol_anomaly",
+      "family_slug": "intraday_volatility_low_vol_anomaly",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_084.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_157.json",
+      "cosine": 0.6275
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "family": "time_of_day microstructure closing_auction",
+  "members": [
+    {
+      "fp": "all_trading_strategies/opus/Opus_34_of_50.json",
+      "name": "closing_auction_anticipation_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "microstructure",
+        "closing_auction",
+        "time_of_day"
+      ],
+      "thesis": "NSE's closing auction (15:30-15:40) concentrates 5-8% of daily volume. Stocks trending in a direction during the last 30 minutes tend to continue into the close as index fund rebalancing, mutual fund NAV-related orders, and institutional closing trades cluster. By entering at 15:00 in the direction ",
+      "indicators": [
+        "return_last_30",
+        "vwap_dist_pct",
+        "volume_accel",
+        "atr_20"
+      ],
+      "entry_long": [
+        "return_last_30 > 0.15",
+        "close > vwap",
+        "volume_accel > 1.5 (volume accelerating)"
+      ],
+      "entry_short": [
+        "return_last_30 < -0.15",
+        "close < vwap",
+        "volume_accel > 1.5"
+      ],
+      "exit_target": "hold until 15:29 (flatten before auction)",
+      "exit_stop": "0.25% against entry",
+      "filters": [
+        "none",
+        "entry at 15:00 only; exit by 15:29",
+        "volume_accel > 1.5",
+        "return_last_30 determines direction",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Very short hold (29 bars max) \u2014 edge per trade is thin; need high frequency to compound",
+        "Closing 30 min can be unpredictable on news days \u2014 institutional flow gets disrupted",
+        "Must flatten by 15:29 \u2014 can't capture the actual auction premium without overnight exposure"
+      ],
+      "prior_art": "Closing auction premium \u2014 documented in market microstructure literature (Pagano et al.)"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_38_of_50.json",
+      "name": "pre_market_auction_edge_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "time_of_day",
+        "auction",
+        "opening"
+      ],
+      "thesis": "NSE pre-market auction (09:00-09:08) sets indicative prices that often differ from the continuous session opening price at 09:15. When the auction equilibrium price (AEP) is > 0.2% above/below the previous close AND the first 5 bars of continuous trading confirm the direction, a strong intraday move",
+      "indicators": [
+        "aep_gap_pct",
+        "continuous_open_gap",
+        "aep_vs_open",
+        "first_5_direction",
+        "atr_20"
+      ],
+      "entry_long": [
+        "aep_gap_pct > 0.2",
+        "first_5_direction == 1 (first 5 bars confirm upward)",
+        "continuous_open_gap > 0"
+      ],
+      "entry_short": [
+        "aep_gap_pct < -0.2",
+        "first_5_direction == -1",
+        "continuous_open_gap < 0"
+      ],
+      "exit_target": "0.4% from entry",
+      "exit_stop": "0.3% from entry",
+      "filters": [
+        "none",
+        "entry at 09:20; exit by 10:30",
+        "pre_market_volume > 500 orders (sufficient auction participation)",
+        "AEP direction must align with first-5-bar direction",
+        "skip if opening spread > 0.12%"
+      ],
+      "weaknesses": [
+        "Pre-market auction data availability via Zerodha API is limited \u2014 may need alternative data source",
+        "AEP can differ significantly from continuous open if auction participation is low",
+        "Opening minutes have highest slippage \u2014 4+ bps typical"
+      ],
+      "prior_art": "Pre-market auction analysis \u2014 NSE-specific, less studied in academic literature"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_39_of_50.json",
+      "name": "last_30_min_momentum_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "time_of_day",
+        "closing",
+        "momentum"
+      ],
+      "thesis": "Stocks that are up/down > 1% for the day with sustained volume tend to accelerate in the last 30 minutes (14:45-15:15) as institutional portfolio managers who have been monitoring all day make final positioning decisions. The 'last call' effect creates a rush to participate. Edge persists because th",
+      "indicators": [
+        "day_return",
+        "volume_vs_avg",
+        "close_vs_vwap",
+        "atr_20"
+      ],
+      "entry_long": [
+        "day_return > 1.0",
+        "close > vwap",
+        "volume_vs_avg > 0.8 (not a dead day)",
+        "time >= 14:45"
+      ],
+      "entry_short": [
+        "day_return < -1.0",
+        "close < vwap",
+        "volume_vs_avg > 0.8",
+        "time >= 14:45"
+      ],
+      "exit_target": "hold until 15:29 (flatten before auction)",
+      "exit_stop": "0.3% against entry",
+      "filters": [
+        "none",
+        "entry at 14:45 only; exit at 15:29",
+        "volume_vs_avg > 0.8",
+        "day_return > 1% determines direction",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Short hold time (44 bars max) limits profit potential per trade",
+        "On reversal days, the last 30 min go against the day's trend \u2014 stop loss triggered",
+        "Screening for 1%+ movers at 14:45 biases toward momentum stocks that may be overextended"
+      ],
+      "prior_art": "Last-hour momentum \u2014 well-documented in market microstructure (Bogousslavsky 2016)"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "time_of_day microstructure closing_auction",
+      "family_slug": "time_of_day_microstructure_closing_aucti",
+      "fp_a": "all_trading_strategies/opus/Opus_34_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_38_of_50.json",
+      "cosine": 0.7706
+    },
+    {
+      "family": "time_of_day microstructure closing_auction",
+      "family_slug": "time_of_day_microstructure_closing_aucti",
+      "fp_a": "all_trading_strategies/opus/Opus_34_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_39_of_50.json",
+      "cosine": 0.7641
+    },
+    {
+      "family": "time_of_day microstructure closing_auction",
+      "family_slug": "time_of_day_microstructure_closing_aucti",
+      "fp_a": "all_trading_strategies/opus/Opus_38_of_50.json",
+      "fp_b": "all_trading_strategies/opus/Opus_39_of_50.json",
+      "cosine": 0.6098
+    }
+  ]
+}

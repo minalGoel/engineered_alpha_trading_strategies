@@ -1,0 +1,129 @@
+{
+  "name": "vwap_breakout_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "vwap",
+    "breakout",
+    "level-based",
+    "institutional-level",
+    "intraday"
+  ],
+  "thesis": "VWAP serves as the single most important intraday level for institutional traders. Unlike strategy 3 (VWAP cross momentum, which trades the first cross), this strategy specifically targets the DECISIVE break of VWAP that occurs after price has tested VWAP 3+ times and finally breaks through with conviction. Multiple tests of VWAP weaken the opposing side's limit orders (like a battering ram), and the eventual breakthrough triggers a cascade of stops and new momentum entries. The edge exists because the 3+ test requirement is highly selective — most VWAP strategies trade the first cross (noisy) while this waits for the high-conviction multi-test break. The inefficiency persists because counting VWAP tests and measuring breakout conviction in real-time is computationally specific.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 50 crore INR AND close > 100 INR",
+  "timeframe": "1min",
+  "session": "10:00-14:30 IST",
+  "hold_time": "20-60 minutes",
+  "max_hold_bars": 60,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "vwap_touch_count"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "vwap_touch_count",
+      "params": "count of bars where abs(close - VWAP) / VWAP < 0.05% in session",
+      "lookback": "session"
+    },
+    {
+      "name": "side_before_break",
+      "params": "mode of sign(close - VWAP) over last 20 bars",
+      "lookback": 20
+    },
+    {
+      "name": "break_volume",
+      "params": "volume / SMA(volume, 20)",
+      "lookback": 20
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > VWAP * 1.001 (clear break above VWAP by > 0.1%)",
+        "vwap_touch_count >= 3 (VWAP has been tested 3+ times today)",
+        "side_before_break == -1 (price was predominantly below VWAP before the break)",
+        "break_volume > 2.0",
+        "India_VIX < 25"
+      ],
+      "confirmation": "2 consecutive bars closing above VWAP after the 3rd+ test"
+    },
+    "short": {
+      "conditions": [
+        "close < VWAP * 0.999 (clear break below VWAP by > 0.1%)",
+        "vwap_touch_count >= 3",
+        "side_before_break == 1 (price was predominantly above VWAP before the break)",
+        "break_volume > 2.0",
+        "India_VIX < 25"
+      ],
+      "confirmation": "2 consecutive bars closing below VWAP after the 3rd+ test"
+    },
+    "entry_price": "market order on 2nd confirmation bar close"
+  },
+  "exit": {
+    "target": "0.5% from entry (once VWAP is decisively broken, follow-through tends to be significant)",
+    "stop_loss": "VWAP (if price crosses back through VWAP, the break has failed)",
+    "trailing_stop": "trail at 0.2% once profit > 0.3%",
+    "time_stop": "60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if price closes within 0.05% of VWAP for 2 bars (reversion to the line)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25",
+    "time_filter": "no entries before 10:00 (need multiple VWAP tests to occur) or after 14:30",
+    "volume_filter": "break bar volume > 2x 20-bar SMA",
+    "trend_filter": "prefer breaks in direction of NIFTY 50 trend",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on macro event days",
+    "other_filters": [
+      "vwap_touch_count must be >= 3 — this is the core filter distinguishing from basic VWAP cross strategies"
+    ]
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.83,
+    "edge_decay_risk": "low — multi-test VWAP break is a specific setup; counting touches is not standard"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The 3+ touch requirement is strict — many valid VWAP breaks occur on the first or second test",
+    "Defining a 'touch' (within 0.05% of VWAP) is arbitrary; different thresholds produce different touch counts",
+    "Late-session VWAP breaks (after 13:00) have insufficient time to develop — limited by flatten time"
+  ],
+  "prior_art": "VWAP as a key institutional level is standard (Brian Shannon, SMB Capital). The 'multiple test then break' concept is from support/resistance theory (Al Brooks). Combining these — counting VWAP touches before trading the break — is a practical synthesis that is less commonly formalized in published strategies.",
+  "notes": "Edge math: 0.55 * 50bps - 0.45 * 33bps = 27.5 - 14.9 = 12.6 bps gross. Costs ~11 bps. Net ≈ 1.6 bps per trade. Marginally positive. The strategy's strength is in high selectivity — only taking the highest-conviction VWAP breaks. Low frequency (0-2/day) limits absolute P&L but keeps quality high."
+}

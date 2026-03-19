@@ -1,0 +1,92 @@
+{
+  "family": "breakout volatility narrow_range",
+  "members": [
+    {
+      "fp": "all_trading_strategies/gemini/gemini_14_of_20.json",
+      "name": "narrow_range_7_breakout",
+      "universe": "nifty100",
+      "timeframe": "1min",
+      "tags": [
+        "volatility",
+        "breakout"
+      ],
+      "thesis": "Exploits the NR7 pattern (Narrowest Range of last 7 days). This indicates extreme volatility compression. Intraday, if an NR7 stock breaks its previous day's high/low, it signifies a 'range expansion' phase. Market microstructure forces (stop hunting) propel the move once the range is broken.",
+      "indicators": [
+        "pd_high",
+        "pd_low"
+      ],
+      "entry_long": [
+        "close > pd_high",
+        "volume > sma(volume, 50)"
+      ],
+      "entry_short": [
+        "close < pd_low",
+        "volume > sma(volume, 50)"
+      ],
+      "exit_target": "1.5 * (pd_high - pd_low) + entry",
+      "exit_stop": "0.5 * (pd_high - pd_low) distance",
+      "filters": [
+        "none",
+        "first hour",
+        "rel_vol > 1.0",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "False breakout 'fakeouts'",
+        "NR7 days can sometimes be followed by NR8 days (dead markets)"
+      ],
+      "prior_art": "Toby Crabel NR7"
+    },
+    {
+      "fp": "all_trading_strategies/grok/Grok_8_of_10.json",
+      "name": "nr7_breakout_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "breakout",
+        "narrow_range"
+      ],
+      "thesis": "Exploiting volatility expansion after NR7 (narrowest 7-day range) on 1-min. Inefficiency from compression buildup ignored by retail. Not arbitraged because needs volume + index filter; costs high for false breaks.",
+      "indicators": [
+        "nr7_flag"
+      ],
+      "entry_long": [
+        "nr7_flag == True",
+        "close > high_1min",
+        "rel_volume > 2.0",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "nr7_flag == True",
+        "close < low_1min",
+        "rel_volume > 2.0",
+        "vix < 22"
+      ],
+      "exit_target": "2 * ATR(14)",
+      "exit_stop": "NR7 low/high",
+      "filters": [
+        "vix < 22",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "Regime dependency: low-vol periods produce no expansion",
+        "Liquidity constraints: NR7 often in illiquid names",
+        "Crowding: NR7/4 setups classic on X"
+      ],
+      "prior_art": "NR7 breaking system (SanJeet X post)"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "breakout volatility narrow_range",
+      "family_slug": "breakout_volatility_narrow_range",
+      "fp_a": "all_trading_strategies/gemini/gemini_14_of_20.json",
+      "fp_b": "all_trading_strategies/grok/Grok_8_of_10.json",
+      "cosine": 0.8253
+    }
+  ]
+}

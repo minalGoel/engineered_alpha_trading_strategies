@@ -1,0 +1,130 @@
+{
+  "name": "relative_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "relative-strength",
+    "momentum",
+    "index-relative",
+    "sector-rotation",
+    "intraday"
+  ],
+  "thesis": "Stocks showing intraday return > 2x NIFTY 50 intraday return (when NIFTY is up) exhibit persistent relative momentum for the remainder of the session. This occurs because institutional allocation decisions (mutual funds, FIIs) that drive one stock to outperform unfold over hours, not minutes. If HDFC Bank is +1.5% while NIFTY is +0.5% at 11 AM, the buying flow that caused this outperformance likely has more volume to execute. The edge exists because intraday relative strength is rarely quantified — most use end-of-day RS. The inefficiency persists because measuring real-time relative momentum requires comparing individual stock returns to the index continuously, which is beyond standard charting.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 50 crore INR AND NIFTY 50 constituent or NIFTY Next 50",
+  "timeframe": "1min",
+  "session": "10:30-14:30 IST",
+  "hold_time": "30-90 minutes",
+  "max_hold_bars": 90,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "nifty_intraday_return",
+      "stock_intraday_return"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "stock_return",
+      "params": "(close - open_today) / open_today * 100",
+      "lookback": "session"
+    },
+    {
+      "name": "nifty_return",
+      "params": "(nifty_close - nifty_open_today) / nifty_open_today * 100",
+      "lookback": "session"
+    },
+    {
+      "name": "relative_return",
+      "params": "stock_return - nifty_return",
+      "lookback": "session"
+    },
+    {
+      "name": "relative_return_30",
+      "params": "(close - close[t-30]) / close[t-30] * 100 - (nifty_close - nifty_close[t-30]) / nifty_close[t-30] * 100",
+      "lookback": 30
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "relative_return > 0.5",
+        "relative_return_30 > 0.3",
+        "nifty_return > -0.5 (market not crashing)",
+        "close > VWAP",
+        "bar_count_from_open > 75 (after 10:30)"
+      ],
+      "confirmation": "relative_return is increasing: relative_return[t] > relative_return[t-10] (RS still building)"
+    },
+    "short": {
+      "conditions": [
+        "relative_return < -0.5",
+        "relative_return_30 < -0.3",
+        "nifty_return < 0.5 (market not rallying hard)",
+        "close < VWAP",
+        "bar_count_from_open > 75"
+      ],
+      "confirmation": "relative_return is decreasing: relative_return[t] < relative_return[t-10] (RW still building)"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "0.5% absolute return on the stock (not relative)",
+    "stop_loss": "0.3% from entry OR relative_return flips sign (stock now underperforming)",
+    "trailing_stop": "trail at 0.2% once profit exceeds 0.3%",
+    "time_stop": "90 bars or 14:30 IST",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if relative_return_30 flips sign (short-term RS lost)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "no specific filter — relative momentum is market-condition-agnostic",
+    "time_filter": "no entries before 10:30 (need morning to establish RS) or after 14:30",
+    "volume_filter": "volume > 0.8x SMA(volume, 20)",
+    "trend_filter": "prefer longs when NIFTY is mildly positive (0-1%); strong trends reduce stock-level alpha",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip if relative strength is caused by stock-specific news rather than flow",
+    "other_filters": [
+      "skip if stock has earnings today (RS may reverse on intraday leak)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.63,
+    "edge_decay_risk": "low-moderate — intraday relative strength is under-researched and under-utilized"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Relative strength can be entirely driven by a single morning block deal — not sustained institutional flow",
+    "By 10:30 when the signal fires, much of the day's outperformance may already be priced in (look-ahead problem)",
+    "This is a directional bet on one stock (not hedged) — exposed to market risk even though it is RS-motivated"
+  ],
+  "prior_art": "Relative strength momentum: Levy (1967), Jegadeesh & Titman (1993) on daily/monthly timeframes. IBD Relative Strength Rating (daily). Intraday RS continuation is less documented. Minervini ('Trade Like a Stock Market Wizard') discusses RS leaders but on daily charts. Intraday adaptation is relatively novel.",
+  "notes": "Edge math: 0.52 * 50bps - 0.48 * 33bps = 26 - 15.8 = 10.2 bps gross. Costs ~11 bps. Net ≈ -0.8 bps. Marginally negative. If trailing stop captures outsized winners: avg winner rises to 60bps. 0.52*60 - 0.48*33 = 31.2 - 15.8 = 15.4 bps gross, net ~4 bps. Viable with trailing."
+}

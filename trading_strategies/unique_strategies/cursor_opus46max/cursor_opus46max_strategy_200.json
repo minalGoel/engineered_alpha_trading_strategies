@@ -1,0 +1,148 @@
+{
+  "name": "new_listing_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "special-situation",
+    "IPO",
+    "new-listing",
+    "momentum",
+    "day-1",
+    "event"
+  ],
+  "thesis": "IPO listing day offers a unique trading opportunity because of extreme information asymmetry and behavioral biases. Stocks that list at a significant premium (>20% above issue price) and maintain that premium through the first 30 minutes tend to attract further momentum buying from retail FOMO, pushing prices higher. Conversely, IPOs that list at a discount or lose their listing premium within 30 minutes tend to see panic selling. The key signal is the 'listing premium persistence': if the stock holds >80% of its listing premium after 30 bars, momentum is genuine. The inefficiency exists because listing day has no historical OHLCV for the stock, making indicator-based strategies impossible. Most algo traders skip day-1 entirely, leaving the field to retail traders and IPO flippers.",
+  "universe": "NSE newly listed IPOs on listing day",
+  "stock_filter": "IPO size > \u20b9500 Cr; subscription ratio > 3x (popular IPO); BSE+NSE dual listed",
+  "timeframe": "1min",
+  "session": "09:45-14:00 IST (listing day only \u2014 early close to avoid EOD confusion)",
+  "hold_time": "15-60 min",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-1 (listing-day only)",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "IPO_issue_price",
+      "subscription_data",
+      "GMP_grey_market_premium",
+      "sector_index"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "Issue_Price",
+      "params": "IPO issue price from prospectus",
+      "lookback": "event"
+    },
+    {
+      "name": "Listing_Premium_Pct",
+      "params": "(first_trade_price - Issue_Price) / Issue_Price * 100",
+      "lookback": "event"
+    },
+    {
+      "name": "Premium_Persistence",
+      "params": "current_premium / listing_premium where current_premium = (close - Issue_Price) / Issue_Price * 100",
+      "lookback": "session"
+    },
+    {
+      "name": "First_30_VWAP",
+      "params": "VWAP computed on first 30 bars of listing",
+      "lookback": 30
+    },
+    {
+      "name": "Volume_Profile",
+      "params": "cumulative volume as % of IPO shares offered",
+      "lookback": "session"
+    },
+    {
+      "name": "Bid_Ask_Imbalance",
+      "params": "(total_bid_qty - total_ask_qty) / (total_bid_qty + total_ask_qty) at best 5 levels",
+      "lookback": "real-time"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Listing_Premium_Pct > 20 (listed at significant premium \u2014 positive sentiment)",
+        "Premium_Persistence > 0.80 after bar 30 (stock has held >80% of listing premium through initial 30 min)",
+        "close > First_30_VWAP (price above initial VWAP \u2014 not fading)",
+        "Bid_Ask_Imbalance > 0.2 (buyers still dominate)"
+      ],
+      "confirmation": "Volume_Profile > 10% of shares offered (sufficient liquidity for price discovery) AND close makes new high after bar 30"
+    },
+    "short": {
+      "conditions": [
+        "Listing_Premium_Pct < 5 OR Premium_Persistence < 0.50 after bar 30 (premium fading or listed near issue price)",
+        "close < First_30_VWAP (below initial VWAP \u2014 sellers dominating)",
+        "Bid_Ask_Imbalance < -0.2 (sellers dominate)"
+      ],
+      "confirmation": "close makes new low after bar 30 AND Volume_Profile > 10%"
+    },
+    "entry_price": "market order after confirmation (typically bar 30-60)"
+  },
+  "exit": {
+    "target": "LONG: 60 bps from entry (IPO momentum moves tend to be large); SHORT: 40 bps from entry",
+    "stop_loss": "LONG: 35 bps; SHORT: 25 bps",
+    "trailing_stop": "LONG: after 40 bps, trail at 20 bps; SHORT: after 25 bps, trail at 15 bps",
+    "time_stop": "90 bars (end trade well before market close on listing day)",
+    "eod_rule": "flatten by 14:00 IST (early \u2014 listing day can have erratic close dynamics)",
+    "signal_exit": "Premium_Persistence drops below 0.60 for longs (premium eroding); Bid_Ask_Imbalance flips sign"
+  },
+  "risk": {
+    "capital_per_trade": 75000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "\u20b975K per trade (reduced due to extreme uncertainty on listing day; no historical vol to calibrate)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22; high VIX environment makes IPO listings more volatile and unpredictable",
+    "time_filter": "No entry before bar 30 (09:45 IST \u2014 let initial price discovery complete); no entry after 14:00",
+    "volume_filter": "Volume_Profile > 10% of shares offered (minimum liquidity for meaningful price discovery)",
+    "trend_filter": "NIFTY 50 must not be down > 1.5% (bear market IPO listings underperform regardless of company quality)",
+    "spread_filter": "Bid-ask spread < 20 bps (listing day spreads are naturally very wide; 20 bps is realistic threshold)",
+    "event_filter": "Must be IPO listing day specifically; not applicable to re-listings or demergers",
+    "other_filters": [
+      "Subscription ratio > 3x (oversubscribed \u2014 positive demand signal)",
+      "Grey Market Premium (GMP) on listing morning was positive (informal market sentiment positive)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 40,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.79,
+    "edge_decay_risk": "Low \u2014 IPO listing day dynamics are driven by retail FOMO and institutional allotment selling, both behavioral phenomena that persist; each IPO is unique making systematic replication difficult"
+  },
+  "costs": {
+    "slippage_bps_per_side": 8,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "IPO listing days are infrequent (20-40 material IPOs per year in India) \u2014 this is a very low-frequency strategy, unsuitable as a primary trading approach",
+    "Listing day spreads are 10-20 bps (vs normal 3-5 bps), and slippage can be 5-10 bps per side \u2014 total round-trip costs of 20-30 bps can erase much of the edge",
+    "No historical price data exists for the stock on listing day \u2014 all indicators must be computed from scratch, with no backtesting possible for the specific stock; backtesting relies on out-of-sample IPO events"
+  ],
+  "prior_art": "Ritter (1991) IPO underpricing; Loughran & Ritter (2004) on long-run IPO performance; Indian IPO listing day studies in NSE Working Papers; retail FOMO and flipping behavior documented in Aggarwal, Prabhala & Puri (2002)",
+  "notes": "The grey market premium (GMP) available through informal dealer networks provides a strong pre-listing signal \u2014 IPOs with GMP > 30% tend to list strong. Consider tracking GMP on the morning of listing as a pre-trade filter. This strategy has the highest per-trade edge but lowest frequency of all strategies in this batch; best used as an overlay to a higher-frequency core strategy.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_200.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_200.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

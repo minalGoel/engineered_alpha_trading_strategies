@@ -1,0 +1,110 @@
+{
+  "name": "low_vol_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "volatility",
+    "low_vol_anomaly",
+    "momentum",
+    "quality",
+    "intraday"
+  ],
+  "thesis": "The low-volatility anomaly (Ang et al. 2006) — low-vol stocks deliver higher risk-adjusted returns than high-vol stocks — manifests intraday in Indian markets. NIFTY 50 stocks in the bottom tercile of 20-day realized vol that also show positive intraday momentum (price > VWAP, EMA alignment) outperform high-vol stocks with similar momentum characteristics. This is because low-vol stocks attract institutional accumulation (steady, predictable) while high-vol stocks attract speculative flow (noisy, mean-reverting). The strategy goes long low-vol momentum stocks and short high-vol momentum stocks, capturing the low-vol premium intraday.",
+  "universe": "NIFTY 50 constituents on NSE",
+  "stock_filter": "rank stocks by 20-day realized vol; long bottom tercile, short top tercile (with momentum filter)",
+  "timeframe": "1min",
+  "session": "09:30-15:10 IST",
+  "hold_time": "60-240 mins (hold for most of session)",
+  "max_hold_bars": 300,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "20d_realized_vol_per_stock",
+      "stock_beta_60d"
+    ]
+  },
+  "indicators": [
+    "realized_vol_20d = rolling_std(daily_returns, 20) * sqrt(252)  # annualized",
+    "vol_rank = percentile_rank(realized_vol_20d, within NIFTY 50)",
+    "low_vol = vol_rank < 33  # bottom tercile",
+    "high_vol = vol_rank > 67  # top tercile",
+    "intraday_momentum = close > vwap AND EMA(close, 9) > EMA(close, 21)",
+    "relative_strength_5d = stock_5d_return - NIFTY_5d_return",
+    "ATR_14 = ATR(high, low, close, 14)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "low_vol == True (stock in bottom vol tercile)",
+        "intraday_momentum == True (above VWAP, EMAs aligned up)",
+        "relative_strength_5d > 0 (stock outperforming index over 5 days)",
+        "time > 09:45 IST (let vol ranking stabilize)"
+      ],
+      "confirmation": "close makes new session high while above VWAP"
+    },
+    "short": {
+      "conditions": [
+        "high_vol == True (stock in top vol tercile)",
+        "intraday_momentum == True for short (below VWAP, EMAs aligned down)",
+        "relative_strength_5d < 0 (stock underperforming index)",
+        "time > 09:45 IST"
+      ],
+      "confirmation": "close makes new session low while below VWAP"
+    },
+    "entry_price": "market order; size long leg 1.2x short leg to account for beta difference"
+  },
+  "exit": {
+    "target": "long leg outperforms short leg by 30bps (relative target)",
+    "stop_loss": "long leg underperforms short leg by 25bps OR either leg hits 0.5% absolute loss",
+    "trailing_stop": "after 15bps relative outperformance, trail at 5bps relative",
+    "time_stop": "hold for session unless stopped out (this is a factor bet, not a quick trade)",
+    "eod_rule": "flatten both legs by 15:10 IST",
+    "signal_exit": "if VIX spikes > 20 during trade, close (vol regime shift breaks the anomaly)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "beta-neutral: long_notional = capital/2, short_notional = (long_beta/short_beta) * capital/2",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 20; low-vol anomaly weakens in high-VIX environments (all stocks become high-vol)",
+    "time_filter": "enter between 09:45-11:00; hold through session",
+    "volume_filter": "both long and short stocks must have avg volume > ₹100cr/day",
+    "trend_filter": "NIFTY not in extreme trend (> 2%); factor bets work in moderate markets",
+    "spread_filter": "bid-ask < 0.05% on both legs",
+    "event_filter": "skip if either stock has earnings today; skip budget/RBI days",
+    "other_filters": [
+      "rebalance vol ranking daily before market open; don't use stale rankings"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.52,
+    "edge_decay_risk": "moderate — low-vol anomaly is well-documented and may compress as more quant funds exploit it"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The low-vol anomaly is primarily a cross-sectional effect over weeks/months; compressing it to intraday may not capture the same economic forces (institutional preference, leverage aversion)",
+    "Two-leg execution with stocks from different sectors creates idiosyncratic risk that may dominate the low-vol factor return on any given day",
+    "In risk-off environments (sharp selloffs), low-vol stocks also sell off, and the short high-vol leg may actually outperform (short squeeze), creating large losses"
+  ],
+  "prior_art": "Ang et al. (2006) cross-section of vol and returns; Baker et al. (2011) betting against beta; Blitz & Van Vliet (2007) low-vol effect. Intraday adaptation is novel.",
+  "notes": "Edge math: 0.58 * 35bps - 0.42 * 25bps = 20.3 - 10.5 = 9.8bps gross. Costs ~12bps RT (two legs). Net negative per trade! The 22bps daily estimate relies on the full-session hold allowing the factor to express. Factor bets need time; this is borderline for intraday. Consider as supplementary only."
+}

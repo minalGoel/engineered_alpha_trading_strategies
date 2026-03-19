@@ -1,0 +1,129 @@
+{
+  "name": "pharma_pairs_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "pharma",
+    "generic",
+    "API",
+    "healthcare"
+  ],
+  "thesis": "Indian pharma companies — Sun Pharma, Dr. Reddy's, Cipla, Lupin, Aurobindo — share common revenue drivers: US generic drug market, ANDA approvals, FDA inspection outcomes, and INR/USD exchange rate. The intraday correlation (0.45-0.65 across the group) is driven by: (1) US pharma market news affects all Indian generics simultaneously, (2) FDA-related sentiment is contagious (one company's warning letter creates fear across the group), (3) INR/USD moves affect all dollar-earning pharma stocks equally. However, company-specific events (ANDA approval, FDA observation, litigation outcome) create temporary divergences that revert as the market separates company-specific impact from sector-wide sentiment. The pair trade exploits this: when sector sentiment drives group-wide movement but one stock diverges, trade the divergent stock back toward the group.",
+  "universe": "Sun Pharma, Dr. Reddy's, Cipla, Lupin, Aurobindo Pharma",
+  "stock_filter": "All 5: ADV > ₹30 crore each",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Pharma",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "USD/INR 1-min data",
+      "NIFTY Pharma index 1-min data"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "pharma_group_return",
+      "formula": "equal_weighted_mean(cum_return of all 5 pharma stocks)",
+      "params": {
+        "weighting": "equal"
+      }
+    },
+    {
+      "name": "stock_deviation",
+      "formula": "stock_cum_return - pharma_group_return (bps)",
+      "params": {}
+    },
+    {
+      "name": "deviation_zscore",
+      "formula": "(stock_deviation - SMA(stock_deviation, 30)) / STDEV(stock_deviation, 30)",
+      "params": {
+        "lookback": 30
+      }
+    },
+    {
+      "name": "usdinr_sensitivity",
+      "formula": "rolling_corr(stock_1min_return, USDINR_1min_return, 60)",
+      "params": {
+        "lookback": 60
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "deviation_zscore < -1.8 (stock lagging pharma group)",
+        "stock_deviation < -12 bps",
+        "NIFTY Pharma index moving (sector sentiment active, not idiosyncratic)",
+        "no company-specific FDA/ANDA news today"
+      ],
+      "confirmation": "deviation_zscore starts rising"
+    },
+    "short": {
+      "conditions": [
+        "deviation_zscore > 1.8 (stock leading pharma group)",
+        "stock_deviation > 12 bps",
+        "NIFTY Pharma index moving",
+        "no company-specific FDA/ANDA news today"
+      ],
+      "confirmation": "deviation_zscore starts falling"
+    },
+    "entry_price": "market order on divergent stock"
+  },
+  "exit": {
+    "target": "stock_deviation reverts to ±3 bps (near group average)",
+    "stop_loss": "deviation_zscore extends to ±2.8",
+    "trailing_stop": "5 bps trailing after 8 bps reversion",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "FDA/ANDA news breaks for the divergent stock during trade"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "₹1L on divergent stock",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "divergent stock volume > 50th percentile",
+    "trend_filter": "NIFTY Pharma must be moving > 15 bps from open (sector activity confirming)",
+    "spread_filter": "bid-ask < 8 bps for divergent stock",
+    "event_filter": "skip during US FDA inspection season (Oct-Mar) for stocks under inspection, skip result days",
+    "other_filters": [
+      "skip if USDINR has moved > 0.5% intraday (FX dominates, not stock-specific)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Low — pharma group correlation is driven by common US market exposure and regulatory framework. Unless Indian pharma diversifies away from US generics, the correlation persists."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "FDA-related news (warning letters, import alerts) can cause stocks to gap 5-10% and diverge permanently from the group. The 'no FDA news' filter is critical but hard to implement reliably in real-time.",
+    "Pharma stocks have moderate liquidity compared to banking — Aurobindo and Lupin can have wide spreads (8-12 bps) that erode the 22 bps edge.",
+    "US pricing pressure news (Congressional hearings, CMS rule changes) affects all generics but disproportionately hits smaller companies, making equal-weighted group mean biased."
+  ],
+  "prior_art": "Avellaneda & Lee (2010) for sector mean reversion framework. In India, NIFTY Pharma index composition and methodology. Kamesam (2018) studies Indian pharma sector stock correlations and FDA impact.",
+  "notes": "Sun Pharma is the index heavyweight and often leads the group. Consider using Sun Pharma vs group average (excluding Sun Pharma) as the primary pair signal. FDA inspection schedules are not public but can be estimated from company filings — avoid trading pairs involving stocks likely under active FDA inspection."
+}

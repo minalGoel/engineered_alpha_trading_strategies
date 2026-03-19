@@ -1,0 +1,123 @@
+{
+  "name": "banknifty_lead_lag_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "stat_arb",
+    "lead_lag",
+    "cross_asset"
+  ],
+  "thesis": "Bank NIFTY leads NIFTY 50 by 1-5 minutes during directional moves because banking stocks are the highest-weight sector and institutional flows hit banks first. When Bank NIFTY makes a sharp move but NIFTY laggards haven't caught up, there's a window to trade the laggards. The inefficiency exists due to differential liquidity across NIFTY constituents — banks trade faster, IT/pharma lag. Not fully arbitraged because the lead-lag window is narrow (1-5 min) and requires pre-computed signals and fast execution.",
+  "universe": "nifty50",
+  "stock_filter": "NIFTY 50 non-banking stocks (IT, pharma, auto, FMCG) with ADV > ₹50cr",
+  "timeframe": "1min",
+  "session": "09:30-15:00",
+  "hold_time": "5-30 bars",
+  "max_hold_bars": 45,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 12,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "banknifty",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "nifty50_1min",
+      "banknifty_1min"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "bn_return_5",
+      "formula": "(banknifty_close - banknifty_close[5]) / banknifty_close[5] * 100",
+      "lookback": 5,
+      "purpose": "Bank NIFTY 5-bar return"
+    },
+    {
+      "name": "stock_return_5",
+      "formula": "(close - close[5]) / close[5] * 100",
+      "lookback": 5,
+      "purpose": "stock 5-bar return"
+    },
+    {
+      "name": "lag_signal",
+      "formula": "bn_return_5 - (beta_to_bn * stock_return_5)",
+      "lookback": 0,
+      "purpose": "how much the stock is lagging Bank NIFTY"
+    },
+    {
+      "name": "lag_zscore",
+      "formula": "zscore(lag_signal, 60)",
+      "lookback": 60,
+      "purpose": "normalized lag signal"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "lag_zscore > 2.0",
+        "bn_return_5 > 0.15",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "lag_zscore > 2.0 for at least 2 bars"
+    },
+    "short": {
+      "conditions": [
+        "lag_zscore < -2.0",
+        "bn_return_5 < -0.15",
+        "volume > SMA(volume, 20) * 0.8"
+      ],
+      "confirmation": "lag_zscore < -2.0 for at least 2 bars"
+    },
+    "entry_price": "market on confirmation"
+  },
+  "exit": {
+    "target": "lag_zscore crosses 0 OR 0.3% from entry",
+    "stop_loss": "0.25% from entry",
+    "trailing_stop": "none — short hold, fast in/out",
+    "time_stop": "exit after 30 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when lag_zscore crosses 0"
+  },
+  "risk": {
+    "capital_per_trade": 150000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "fixed",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 8000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 24",
+    "time_filter": "no trades in first 10 min or last 15 min",
+    "volume_filter": "volume > 80% of 20-bar avg",
+    "trend_filter": "trade in direction of Bank NIFTY move only",
+    "spread_filter": "skip if stock spread > 0.1%",
+    "event_filter": "skip on RBI policy day (Bank NIFTY-specific event)",
+    "other_filters": [
+      "skip if stock is a banking/financial stock (no lead-lag against itself)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.19,
+    "edge_decay_risk": "medium — microstructure, decays as latency improves across market"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Lead-lag relationships are not stable — the 'leader' changes based on what's driving the market that day. Bank NIFTY doesn't always lead.",
+    "Small per-trade edge (20 bps) with high frequency means costs eat a huge chunk. Any slippage increase destroys profitability.",
+    "The 1-5 minute window is extremely tight for Zerodha execution. Co-location traders with DMA will eat this edge before retail can act."
+  ],
+  "prior_art": "Lead-lag pairs trading. See: Algorithmic Trading (Chan), Advances in Financial Machine Learning (de Prado) on lead-lag estimation.",
+  "notes": "This strategy may not survive real execution at Zerodha speeds. Consider paper trading for 3 months before committing capital."
+}

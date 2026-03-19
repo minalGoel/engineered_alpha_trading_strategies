@@ -1,0 +1,260 @@
+{
+  "family": "gap mean_reversion momentum",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "name": "gap_fade_reversion_v103",
+      "universe": "nifty200",
+      "timeframe": "5min",
+      "tags": [
+        "gap",
+        "mean_reversion"
+      ],
+      "thesis": "Overnight gaps caused by retail overreaction or minor news are often overextended. Institutional participants use the morning liquidity to fade the gap and revert to previous day's value area. Exists due to overnight liquidity vacuums.",
+      "indicators": [
+        "prev_close",
+        "gap_pct"
+      ],
+      "entry_long": [
+        "gap_pct < -21 AND close > open AND volume > SMA(volume, 5)"
+      ],
+      "entry_short": [
+        "gap_pct > 21 AND close < open AND volume > SMA(volume, 5)"
+      ],
+      "exit_target": "prev_close (Gap Fill)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix between 12-22",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Runaway gaps (gap and go) will trigger maximum stop losses",
+        "Earnings or major macroeconomic news can completely invalidate the mean reversion thesis",
+        "Often crowded trade in the first 15 minutes"
+      ],
+      "prior_art": "Morning Gap Fade"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "name": "gap_fade_reversion_v106",
+      "universe": "nifty50",
+      "timeframe": "5min",
+      "tags": [
+        "gap",
+        "mean_reversion"
+      ],
+      "thesis": "Overnight gaps caused by retail overreaction or minor news are often overextended. Institutional participants use the morning liquidity to fade the gap and revert to previous day's value area. Exists due to overnight liquidity vacuums.",
+      "indicators": [
+        "prev_close",
+        "gap_pct"
+      ],
+      "entry_long": [
+        "gap_pct < -20 AND close > open AND volume > SMA(volume, 5)"
+      ],
+      "entry_short": [
+        "gap_pct > 20 AND close < open AND volume > SMA(volume, 5)"
+      ],
+      "exit_target": "prev_close (Gap Fill)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix < 25",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Runaway gaps (gap and go) will trigger maximum stop losses",
+        "Earnings or major macroeconomic news can completely invalidate the mean reversion thesis",
+        "Often crowded trade in the first 15 minutes"
+      ],
+      "prior_art": "Morning Gap Fade"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "name": "gap_fade_reversion_v104",
+      "universe": "nifty200",
+      "timeframe": "15min",
+      "tags": [
+        "gap",
+        "mean_reversion"
+      ],
+      "thesis": "Overnight gaps caused by retail overreaction or minor news are often overextended. Institutional participants use the morning liquidity to fade the gap and revert to previous day's value area. Exists due to overnight liquidity vacuums.",
+      "indicators": [
+        "prev_close",
+        "gap_pct"
+      ],
+      "entry_long": [
+        "gap_pct < -14 AND close > open AND volume > SMA(volume, 5)"
+      ],
+      "entry_short": [
+        "gap_pct > 14 AND close < open AND volume > SMA(volume, 5)"
+      ],
+      "exit_target": "prev_close (Gap Fill)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix < 25",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Runaway gaps (gap and go) will trigger maximum stop losses",
+        "Earnings or major macroeconomic news can completely invalidate the mean reversion thesis",
+        "Often crowded trade in the first 15 minutes"
+      ],
+      "prior_art": "Morning Gap Fade"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "name": "gap_fade_reversion_v116",
+      "universe": "fno",
+      "timeframe": "15min",
+      "tags": [
+        "gap",
+        "mean_reversion"
+      ],
+      "thesis": "Overnight gaps caused by retail overreaction or minor news are often overextended. Institutional participants use the morning liquidity to fade the gap and revert to previous day's value area. Exists due to overnight liquidity vacuums.",
+      "indicators": [
+        "prev_close",
+        "gap_pct"
+      ],
+      "entry_long": [
+        "gap_pct < -50 AND close > open AND volume > SMA(volume, 5)"
+      ],
+      "entry_short": [
+        "gap_pct > 50 AND close < open AND volume > SMA(volume, 5)"
+      ],
+      "exit_target": "prev_close (Gap Fill)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix > 15",
+        "only 09:30-14:30",
+        "skip if volume < SMA(volume, 20)",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Runaway gaps (gap and go) will trigger maximum stop losses",
+        "Earnings or major macroeconomic news can completely invalidate the mean reversion thesis",
+        "Often crowded trade in the first 15 minutes"
+      ],
+      "prior_art": "Morning Gap Fade"
+    },
+    {
+      "fp": "all_trading_strategies/gemini/gemini_11_of_20.json",
+      "name": "gap_momentum_continuation",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "gap"
+      ],
+      "thesis": "Exploits 'Information Momentum'. Gaps > 2% on the open usually indicate significant overnight fundamental news (earnings, orders). The first 15 mins of volume confirms if institutions are buying the news or fading it. Continuation occurs when the 15-min high is broken on high relative volume.",
+      "indicators": [
+        "gap_pct",
+        "range_15"
+      ],
+      "entry_long": [
+        "gap_pct > 0.02",
+        "close > range_15",
+        "volume > sma(volume, 20) * 1.5"
+      ],
+      "entry_short": [
+        "gap_pct < -0.02",
+        "close < range_15",
+        "volume > sma(volume, 20) * 1.5"
+      ],
+      "exit_target": "fixed 1.2%",
+      "exit_stop": "0.6% from entry",
+      "filters": [
+        "vix < 25",
+        "09:30-11:30",
+        "rel_vol > 1.5",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "Gap fills (reversals) are common",
+        "High slippage on high-momentum names"
+      ],
+      "prior_art": "Gap and Go"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "cosine": 0.9988
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "cosine": 0.9986
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "cosine": 0.9985
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "cosine": 0.9933
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "cosine": 0.993
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "cosine": 0.9926
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_103.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+      "cosine": 0.784
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_116.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+      "cosine": 0.7824
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_106.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+      "cosine": 0.7811
+    },
+    {
+      "family": "gap mean_reversion momentum",
+      "family_slug": "gap_mean_reversion_momentum",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_104.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_11_of_20.json",
+      "cosine": 0.78
+    }
+  ]
+}

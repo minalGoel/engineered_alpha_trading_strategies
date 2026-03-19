@@ -1,0 +1,128 @@
+{
+  "name": "changepoint_detection_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "changepoint",
+    "structural-break",
+    "CUSUM",
+    "regime-shift",
+    "quantitative"
+  ],
+  "thesis": "Intraday price series experience structural breaks — sudden changes in mean return or volatility caused by news, large orders, or sentiment shifts. By detecting these changepoints in real-time using CUSUM (Cumulative Sum) control charts on 1-min returns, we identify the moment a new regime begins. A positive CUSUM break (cumulative returns exceed threshold) signals a new uptrend regime; trade in that direction. A negative CUSUM break signals a new downtrend. The edge comes from entering at the very beginning of a new regime rather than waiting for lagging indicators (like EMA crossovers) to confirm. The inefficiency persists because CUSUM is a quality control technique from manufacturing, rarely applied to finance.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr",
+  "timeframe": "1min",
+  "session": "09:25-15:10 IST",
+  "hold_time": "15-60 min (until next changepoint or exit)",
+  "max_hold_bars": 75,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "Return_1min",
+      "params": "ROC(close, 1)",
+      "lookback": 1
+    },
+    {
+      "name": "Rolling_Mean_Return",
+      "params": "SMA(Return_1min, 30)",
+      "lookback": 30
+    },
+    {
+      "name": "CUSUM_Pos",
+      "params": "max(0, CUSUM_Pos[-1] + Return_1min - Rolling_Mean_Return - k) where k = 0.5 * std(Return_1min, 30)",
+      "lookback": "session"
+    },
+    {
+      "name": "CUSUM_Neg",
+      "params": "min(0, CUSUM_Neg[-1] + Return_1min - Rolling_Mean_Return + k)",
+      "lookback": "session"
+    },
+    {
+      "name": "CUSUM_Threshold",
+      "params": "h = 4.0 * std(Return_1min, 30) — detection threshold",
+      "lookback": 30
+    },
+    {
+      "name": "Changepoint_Signal",
+      "params": "+1 if CUSUM_Pos > CUSUM_Threshold; -1 if abs(CUSUM_Neg) > CUSUM_Threshold; 0 otherwise",
+      "lookback": "session"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Changepoint_Signal == +1 (positive CUSUM break — new uptrend regime detected)",
+        "CUSUM_Pos just exceeded threshold within last 3 bars (fresh break, not stale)",
+        "close > vwap"
+      ],
+      "confirmation": "ROC(close, 3) > 5 bps (momentum in new regime direction)"
+    },
+    "short": {
+      "conditions": [
+        "Changepoint_Signal == -1 (negative CUSUM break — new downtrend regime detected)",
+        "abs(CUSUM_Neg) just exceeded threshold within last 3 bars",
+        "close < vwap"
+      ],
+      "confirmation": "ROC(close, 3) < -5 bps"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "45 bps from entry",
+    "stop_loss": "25 bps from entry",
+    "trailing_stop": "After 25 bps profit, trail at 15 bps from high-water mark",
+    "time_stop": "75 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Opposite Changepoint_Signal detected (new regime shift against position) OR CUSUM resets to 0 (regime ended)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "Fixed ₹1L; increase to ₹1.25L if CUSUM exceeds 2x threshold (very strong structural break)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; adjust CUSUM_Threshold (h) proportionally to VIX level",
+    "time_filter": "No entries before 09:25 (need 30 bars for rolling statistics) or after 15:10",
+    "volume_filter": "Volume on changepoint bar > 1.5 * SMA(volume, 20) (structural breaks should be accompanied by volume)",
+    "trend_filter": "NIFTY 50 must not have a simultaneous opposing changepoint",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day — changepoints are expected and not exploitable",
+    "other_filters": [
+      "CUSUM must have been below threshold for at least 20 bars before break (fresh signal, not continuation)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 27,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.35,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Low — CUSUM changepoint detection is from quality control (Page 1954), rarely applied to financial time series in real-time; the early detection provides timing advantage over lagging indicators"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The CUSUM parameters k (allowable slack) and h (threshold) critically affect the trade-off between detection speed and false alarm rate — the standard k=0.5*sigma, h=4*sigma may not be optimal for financial data",
+    "CUSUM assumes the change is a step-function shift in mean — but financial regime shifts are often gradual (ramping) or volatile (noisy), causing delayed detection or false triggers",
+    "The 'fresh break' requirement (CUSUM exceeded threshold within last 3 bars) can miss slow-building changepoints where CUSUM gradually approaches and crosses the threshold over many bars"
+  ],
+  "prior_art": "Page (1954) CUSUM test; Basseville & Nikiforov (1993) 'Detection of Abrupt Changes'; Andreou & Ghysels (2002) on structural breaks in financial data; CUSUM applied to trading in some quant research papers",
+  "notes": "Consider using Bayesian Online Changepoint Detection (Adams & MacKay 2007) for probabilistic changepoint estimation that avoids hard threshold decisions. The ruptures Python library provides multiple changepoint detection algorithms with different computational trade-offs."
+}

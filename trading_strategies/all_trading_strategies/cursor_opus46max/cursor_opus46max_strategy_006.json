@@ -1,0 +1,131 @@
+{
+  "name": "vwap_anchored_support_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "vwap",
+    "anchored",
+    "support-resistance",
+    "multi-day",
+    "intraday"
+  ],
+  "thesis": "Anchored VWAP from significant prior events (earnings release, 52-week high/low, large gap day) acts as a persistent institutional memory of fair value from that event. When current price approaches an anchored VWAP from a major event, institutional participants who entered near that event face break-even decisions, creating supply/demand clusters. The inefficiency exists because standard platforms only show session VWAP, not anchored VWAP from arbitrary dates. Traders who compute anchored VWAP gain an informational edge over those using only session VWAP. The edge persists because most retail traders lack the data infrastructure to compute multi-day anchored VWAPs efficiently.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 50 crore INR AND has had earnings or 52w event in last 30 trading days",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "20-90 minutes",
+  "max_hold_bars": 90,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "anchored_vwap_from_event",
+      "event_dates_calendar",
+      "historical_1min_data_30d"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "session_VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "anchored_VWAP",
+      "params": "cumulative VWAP from event_date using 1min data",
+      "lookback": "multi-day"
+    },
+    {
+      "name": "distance_to_anchored",
+      "params": "(close - anchored_VWAP) / anchored_VWAP * 100",
+      "lookback": 1
+    },
+    {
+      "name": "RSI",
+      "params": "RSI(close, 14)",
+      "lookback": 14
+    },
+    {
+      "name": "volume_ratio",
+      "params": "volume / SMA(volume, 20)",
+      "lookback": 20
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "abs(distance_to_anchored) < 0.15",
+        "close > anchored_VWAP",
+        "close[t-1] <= anchored_VWAP[t-1]",
+        "volume_ratio > 1.3",
+        "RSI(close, 14) > 40 AND RSI(close, 14) < 60"
+      ],
+      "confirmation": "price bounces off anchored_VWAP with 2 consecutive closes above it"
+    },
+    "short": {
+      "conditions": [
+        "abs(distance_to_anchored) < 0.15",
+        "close < anchored_VWAP",
+        "close[t-1] >= anchored_VWAP[t-1]",
+        "volume_ratio > 1.3",
+        "RSI(close, 14) > 40 AND RSI(close, 14) < 60"
+      ],
+      "confirmation": "price rejected at anchored_VWAP with 2 consecutive closes below it"
+    },
+    "entry_price": "limit order at anchored_VWAP level (support/resistance bounce entry)"
+  },
+  "exit": {
+    "target": "0.5% from entry (bounce target)",
+    "stop_loss": "0.25% beyond anchored_VWAP (through the level means thesis is wrong)",
+    "trailing_stop": "trail at 0.2% once profit exceeds 0.3%",
+    "time_stop": "exit after 90 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if price recrosses anchored_VWAP against the position direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "fixed 1L; 1.5L for high-conviction setups (post-earnings anchored VWAP)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25; anchored levels are less reliable in panic regimes",
+    "time_filter": "no entries in first 15 or last 15 min of session",
+    "volume_filter": "volume on approach bar > 1.3x 20-bar SMA",
+    "trend_filter": "prefer trades where anchored VWAP direction matches session VWAP direction",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip if another event (earnings, corporate action) is imminent today",
+    "other_filters": [
+      "anchored VWAP must be from an event within last 30 trading days — older levels degrade"
+    ]
+  },
+  "edge": {
+    "expected_bps": 32,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.91,
+    "edge_decay_risk": "low — anchored VWAP is not widely computed by retail; data infrastructure barrier"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Requires maintaining a calendar of events and computing multi-day anchored VWAPs — significant data engineering overhead",
+    "Anchored VWAP levels that are too old (>30 days) lose their institutional memory relevance",
+    "Signal is rare — only triggers when price approaches a specific level, may have 0 trade days frequently"
+  ],
+  "prior_art": "Anchored VWAP was popularized by Brian Shannon ('Technical Analysis Using Multiple Timeframes') and is available on TradingView. Institutional use of anchored VWAP is discussed by DeMark and others. The concept of event-based anchoring adds specificity beyond generic anchored VWAP.",
+  "notes": "Edge math: 0.56 * 50bps - 0.44 * 33bps = 28 - 14.5 = 13.5 bps gross. Costs ~11 bps. Net ≈ 2.5 bps per trade. Low but positive. The real value is in high-conviction setups (post-earnings anchored VWAP near price) where win rate may be 0.60+. Needs event calendar infrastructure to be practical."
+}

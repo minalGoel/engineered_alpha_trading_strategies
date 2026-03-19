@@ -1,0 +1,135 @@
+{
+  "name": "vwap_crossover_flow_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "microstructure",
+    "vwap",
+    "crossover",
+    "flow"
+  ],
+  "thesis": "VWAP crossovers with volume surge signal institutional flow direction change. When a stock crosses above VWAP on 3x volume after spending 30+ bars below it, institutional buyers are stepping in. The crossover itself becomes a magnet for TWAP algorithms that benchmark to VWAP. Edge persists because the timing of institutional flow shifts is unpredictable — you can only detect them in real-time via the volume-confirmed VWAP cross.",
+  "universe": "nifty50",
+  "stock_filter": "top 25 by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "15-60 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "bars_below_vwap",
+      "formula": "count of consecutive bars with close < vwap",
+      "lookback": 60,
+      "purpose": "duration below VWAP"
+    },
+    {
+      "name": "bars_above_vwap",
+      "formula": "count of consecutive bars with close > vwap",
+      "lookback": 60,
+      "purpose": "duration above VWAP"
+    },
+    {
+      "name": "vwap_cross_up",
+      "formula": "close > vwap AND close[1] < vwap",
+      "lookback": 2,
+      "purpose": "VWAP cross detection"
+    },
+    {
+      "name": "vwap_cross_down",
+      "formula": "close < vwap AND close[1] > vwap",
+      "lookback": 2,
+      "purpose": "VWAP cross detection"
+    },
+    {
+      "name": "vol_surge",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "volume confirmation"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vwap_cross_up == True",
+        "bars_below_vwap > 30 (spent significant time below)",
+        "vol_surge > 3.0",
+        "vix < 22"
+      ],
+      "confirmation": "cross bar closes in top 25% of its range"
+    },
+    "short": {
+      "conditions": [
+        "vwap_cross_down == True",
+        "bars_above_vwap > 30",
+        "vol_surge > 3.0",
+        "vix < 22"
+      ],
+      "confirmation": "cross bar closes in bottom 25% of its range"
+    },
+    "entry_price": "market on cross bar close"
+  },
+  "exit": {
+    "target": "0.4% from entry",
+    "stop_loss": "close crosses back below/above VWAP (whichever invalidates trade)",
+    "trailing_stop": "move SL to breakeven after +0.2%",
+    "time_stop": "exit after 90 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "reverse VWAP cross"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "vol_surge > 3.0 on cross bar",
+    "trend_filter": "trade in direction of VWAP cross",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on stock result days",
+    "other_filters": [
+      "bars below/above VWAP must be > 30 — quick oscillations around VWAP are noise"
+    ]
+  },
+  "edge": {
+    "expected_bps": 24,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.41,
+    "edge_decay_risk": "low — VWAP benchmarking is institutional infrastructure, not going away"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "VWAP is recalculated continuously — cross can be marginal and flip back on next bar",
+    "30-bar threshold means signal fires relatively late in the move",
+    "On choppy days, price crosses VWAP many times but none stick — stop loss triggered repeatedly"
+  ],
+  "prior_art": "VWAP crossover trading — institutional execution concept. Volume-confirmed version is the edge.",
+  "notes": "Consider weighting the 30-bar threshold by time-of-day — fewer bars needed in morning when VWAP is less stable."
+}

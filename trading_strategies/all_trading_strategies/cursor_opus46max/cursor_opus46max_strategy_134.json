@@ -1,0 +1,127 @@
+{
+  "name": "psu_bank_pairs_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "PSU_bank",
+    "government_owned",
+    "high_correlation"
+  ],
+  "thesis": "PSU (Public Sector Undertaking) banks share nearly identical business models, regulatory frameworks, government ownership, and macro sensitivity. SBI, Bank of Baroda, PNB, and Canara Bank exhibit 0.65-0.80 daily correlation — among the highest in any Indian sector — because: (1) government policies affect all PSU banks simultaneously (recapitalization, merger mandates, priority sector lending), (2) they compete for the same customer base with similar product offerings, (3) RBI rate decisions impact them identically (similar CASA ratios, NIM sensitivity). When one PSU bank diverges from the group (e.g., SBI reports good numbers but PNB lags on a day with no PNB-specific news), the laggard catches up within 30-60 minutes. This is the tightest pairs opportunity in Indian equities due to the exceptional homogeneity of PSU bank fundamentals.",
+  "universe": "SBI, Bank of Baroda, PNB, Canara Bank",
+  "stock_filter": "SBI: ADV > ₹500 crore. Bank of Baroda: ADV > ₹150 crore. PNB: ADV > ₹100 crore. Canara: ADV > ₹80 crore",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "10-45 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Bank, NIFTY PSU Bank",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "NIFTY PSU Bank index 1-min data"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "psu_group_return",
+      "formula": "equal_weighted_mean(SBI_cum_return, BOB_cum_return, PNB_cum_return, CANBANK_cum_return)",
+      "params": {
+        "weighting": "equal"
+      }
+    },
+    {
+      "name": "stock_deviation",
+      "formula": "stock_cum_return - psu_group_return (bps)",
+      "params": {}
+    },
+    {
+      "name": "deviation_zscore",
+      "formula": "(stock_deviation - SMA(stock_deviation, 30)) / STDEV(stock_deviation, 30)",
+      "params": {
+        "lookback": 30
+      }
+    },
+    {
+      "name": "group_correlation",
+      "formula": "mean of all pairwise rolling_corr(stock_i, stock_j, 60) across 4 stocks",
+      "params": {
+        "lookback": 60
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "deviation_zscore < -1.5 (stock lagging PSU bank group)",
+        "stock_deviation < -10 bps (meaningful lag)",
+        "group_correlation > 0.5 (group is cohesive)",
+        "no stock-specific news for the lagging stock"
+      ],
+      "confirmation": "deviation_zscore turns upward (crosses above -1.2)"
+    },
+    "short": {
+      "conditions": [
+        "deviation_zscore > 1.5 (stock leading PSU bank group)",
+        "stock_deviation > 10 bps",
+        "group_correlation > 0.5",
+        "no stock-specific news for the leading stock"
+      ],
+      "confirmation": "deviation_zscore turns downward (crosses below 1.2)"
+    },
+    "entry_price": "market order on divergent stock"
+  },
+  "exit": {
+    "target": "stock_deviation reverts to 0 (back to group average)",
+    "stop_loss": "deviation_zscore extends to ±2.5 (stock-specific event suspected)",
+    "trailing_stop": "5 bps trailing after 8 bps reversion",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "group_correlation drops below 0.3 (group dispersion event)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.12,
+    "position_sizing": "₹1L on divergent stock (directional on stock, hedged by group mean expectation)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25 (PSU banks are rate-sensitive; high VIX correlates with rate uncertainty)",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "divergent stock volume > 50th percentile of its typical",
+    "trend_filter": "no trend filter (group mean reversion is trend-independent)",
+    "spread_filter": "divergent stock bid-ask < 8 bps",
+    "event_filter": "skip during result season for any PSU bank, RBI policy day, government recapitalization announcements",
+    "other_filters": [
+      "skip if divergent stock has NPA/provision headlines"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "Low — PSU bank homogeneity is structural (government ownership, similar business models). Unless privatization significantly differentiates them, the correlation will persist."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "PSU bank stocks can gap significantly on NPA/provision news for individual banks, creating overnight risk that bleeds into the next day's intraday correlation.",
+    "Government actions (merger announcements, recapitalization) can permanently change the relative value of PSU banks, invalidating the equal-weighted group mean.",
+    "PNB and Canara Bank have lower liquidity than SBI, creating execution challenges and wider slippage on the divergent stock when it's not SBI."
+  ],
+  "prior_art": "Avellaneda & Lee (2010) 'Statistical Arbitrage in the US Equities Market'. In India, PSU bank correlation is documented in NIFTY PSU Bank index methodology. Srivastava & Joshi (2016) study government ownership and stock correlation in India.",
+  "notes": "The directional (unhedged) approach works because the group mean reversion is strong enough to predict the divergent stock's direction. A market-neutral version would use SBI as the hedge leg against the divergent stock, but this requires larger capital allocation. Consider switching to NIFTY PSU Bank futures as hedge when available."
+}

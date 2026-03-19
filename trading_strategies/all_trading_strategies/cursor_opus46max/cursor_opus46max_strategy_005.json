@@ -1,0 +1,129 @@
+{
+  "name": "vwap_slope_trend_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "vwap",
+    "slope",
+    "trend-following",
+    "intraday",
+    "directional"
+  ],
+  "thesis": "The slope of VWAP over a rolling 20-bar window reveals the direction of institutional net order flow. A rising VWAP slope means institutions are net buying at progressively higher prices; a falling slope means net selling. Trading in the direction of the VWAP slope captures the institutional order flow tailwind. The edge exists because most participants look at price vs VWAP (static level), not the rate of change of VWAP (dynamic signal). The slope change anticipates future VWAP-tracking algo behavior — if VWAP is rising, TWAP/VWAP algos will bid higher. This edge persists because computing and interpreting VWAP slope is non-trivial and requires clean real-time data.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND close > 50 INR",
+  "timeframe": "1min",
+  "session": "09:45-15:00 IST",
+  "hold_time": "20-60 minutes",
+  "max_hold_bars": 60,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "vwap_slope"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "vwap_slope",
+      "params": "linreg_slope(VWAP, 20) * 1000",
+      "lookback": 20
+    },
+    {
+      "name": "vwap_slope_ma",
+      "params": "SMA(vwap_slope, 10)",
+      "lookback": 10
+    },
+    {
+      "name": "EMA_9",
+      "params": "EMA(close, 9)",
+      "lookback": 9
+    },
+    {
+      "name": "ADX",
+      "params": "ADX(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vwap_slope > 0",
+        "vwap_slope > vwap_slope_ma",
+        "close > VWAP",
+        "close > EMA(close, 9)",
+        "ADX(14) > 20"
+      ],
+      "confirmation": "vwap_slope has been positive for 5+ consecutive bars AND increasing for last 3 bars"
+    },
+    "short": {
+      "conditions": [
+        "vwap_slope < 0",
+        "vwap_slope < vwap_slope_ma",
+        "close < VWAP",
+        "close < EMA(close, 9)",
+        "ADX(14) > 20"
+      ],
+      "confirmation": "vwap_slope has been negative for 5+ consecutive bars AND decreasing for last 3 bars"
+    },
+    "entry_price": "limit order at EMA(close, 9) if within 0.1% of current price, else market"
+  },
+  "exit": {
+    "target": "0.5% from entry OR vwap_slope reverses sign",
+    "stop_loss": "0.3% from entry",
+    "trailing_stop": "trail at 0.2% once profit exceeds 0.3%",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if vwap_slope crosses zero (trend exhaustion)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "no specific filter — trend strategies work across VIX regimes",
+    "time_filter": "no entries before 09:45 (slope needs data) or after 15:00",
+    "volume_filter": "bar volume > 0.8 * SMA(volume, 20)",
+    "trend_filter": "NIFTY 50 slope should align (both positive or both negative for added confidence)",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "caution on RBI policy day — slope can reverse suddenly on rate decision",
+    "other_filters": [
+      "skip if ADX < 20 (no trend)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.67,
+    "edge_decay_risk": "moderate — slope analysis is straightforward once implemented but not widely used on VWAP"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "VWAP slope is a lagging indicator — by the time slope confirms a trend, much of the move may be done",
+    "In choppy markets with ADX < 20, slope oscillates around zero giving false signals; ADX filter helps but reduces opportunity set",
+    "Slope calculation via linear regression is sensitive to outlier bars — a single large bar can distort slope reading"
+  ],
+  "prior_art": "VWAP slope analysis is discussed in Brian Shannon's 'Technical Analysis Using Multiple Timeframes'. Linear regression slope on price is a standard indicator (LinReg Slope in most platforms). Applying it to VWAP specifically rather than price is less common in literature. ADX as trend filter is from Wilder (1978).",
+  "notes": "Edge math: 0.50 * 50bps - 0.50 * 30bps = 25 - 15 = 10 bps gross. Costs ~11 bps RT. Net ≈ -1 bps. Marginally negative on conservative estimates. However, the trailing stop should improve avg winner beyond 50 bps in trending conditions. If avg winner is 60 bps: 0.50*60 - 0.50*30 = 15 bps gross, net 4 bps. Needs validation."
+}

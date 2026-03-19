@@ -1,0 +1,140 @@
+{
+  "name": "circuit_breaker_proximity_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "event_driven",
+    "circuit_limit",
+    "magnet_effect",
+    "mean_reversion",
+    "tail_risk"
+  ],
+  "thesis": "NSE has stock-level circuit limits at 5%, 10%, or 20% (depending on the stock's circuit filter band). When a stock approaches within 1-2% of its upper or lower circuit limit, two opposing forces create tradeable patterns: (1) the 'magnet effect' where prices accelerate TOWARD the circuit as momentum traders and stop losses cascade, and (2) 'circuit reversion' where if the stock doesn't hit the circuit, it bounces back sharply as selling/buying exhaustion kicks in. The strategy: when a stock reaches 80% of its circuit distance (e.g., 4% for a 5% circuit stock), monitor for signs of exhaustion. If volume dries up and the approach velocity slows, fade the move for a reversion trade. If volume surges and velocity accelerates, trade the magnet effect toward the circuit. The inefficiency exists because retail traders panic near circuit limits, creating predictable behavioral patterns.",
+  "universe": "NIFTY 200 constituents with circuit limits",
+  "stock_filter": "Stocks approaching within 20% of their circuit limit, ADV > \u20b910 crore",
+  "timeframe": "1min",
+  "session": "09:20-15:15 IST",
+  "hold_time": "5-20 min",
+  "max_hold_bars": 20,
+  "trades_per_day": "0-3 (rare event)",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "stock circuit limit bands from NSE",
+      "previous close for circuit computation"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "circuit_distance_pct",
+      "formula": "(circuit_limit - close) / close * 100 for upper; (close - lower_circuit) / close * 100 for lower",
+      "params": {}
+    },
+    {
+      "name": "approach_velocity",
+      "formula": "(circuit_distance_pct[5] - circuit_distance_pct) / 5 (how fast price is approaching circuit per bar)",
+      "params": {
+        "lookback": 5
+      }
+    },
+    {
+      "name": "volume_profile_circuit",
+      "formula": "volume_1min / SMA(volume_1min, 20) as price approaches circuit",
+      "params": {
+        "lookback": 20
+      }
+    },
+    {
+      "name": "exhaustion_signal",
+      "formula": "approach_velocity < approach_velocity[3] AND volume_profile_circuit < volume_profile_circuit[3]",
+      "params": {
+        "lookback": 3
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "stock approaching LOWER circuit (circuit_distance_pct for lower < 2%)",
+        "exhaustion_signal == True (velocity slowing, volume declining \u2014 sellers exhausted)",
+        "close > low_of_last_10_bars (not making new lows \u2014 potential bottom forming)"
+      ],
+      "confirmation": "close > close[1] AND close > close[2] (two consecutive up bars near lower circuit)"
+    },
+    "short": {
+      "conditions": [
+        "stock approaching UPPER circuit (circuit_distance_pct for upper < 2%)",
+        "exhaustion_signal == True (velocity slowing, volume declining \u2014 buyers exhausted)",
+        "close < high_of_last_10_bars (not making new highs \u2014 potential top forming)"
+      ],
+      "confirmation": "close < close[1] AND close < close[2] (two consecutive down bars near upper circuit)"
+    },
+    "entry_price": "limit order near current price (don't chase into circuit)"
+  },
+  "exit": {
+    "target": "50% reversion from circuit approach extreme (e.g., if stock at -4% from prev close and circuit at -5%, target -2%)",
+    "stop_loss": "stock hits circuit (locks, no exit possible \u2014 maximum adverse scenario)",
+    "trailing_stop": "10 bps trailing after 20 bps reversion",
+    "time_stop": "exit after 20 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "approach_velocity re-accelerates (exhaustion signal was false)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "\u20b950K per trade (half size due to tail risk of circuit lock)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 0.3
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25 (in extreme VIX, circuits hit more often and don't revert)",
+    "time_filter": "skip last 30 min (circuit hits in last 30 min may not revert before EOD)",
+    "volume_filter": "exhaustion_signal required (volume must be declining)",
+    "trend_filter": "fade circuit approach only when NIFTY 50 is not moving > 1.5% in same direction",
+    "spread_filter": "bid-ask < 20 bps (spreads widen near circuit \u2014 accept wider tolerance)",
+    "event_filter": "skip if stock has news/result today (circuit approach may be fundamental, not technical)",
+    "other_filters": [
+      "skip stocks with 5% circuit band (too tight, hits frequently, less signal)",
+      "skip if stock was at circuit yesterday (multi-day trending toward circuit is fundamental)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 2.5,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "Low \u2014 circuit limit effects are structural features of Indian market microstructure. The magnet effect and reversion are well-documented in academic literature and driven by permanent behavioral factors."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "If the stock hits the circuit limit, all orders lock and position becomes un-exitable. For lower circuit, this means unlimited holding period risk until market reopens.",
+    "Circuit proximity events are rare for NIFTY 200 stocks (5-10% circuit bands). Most events occur in lower-liquidity stocks where execution is challenging.",
+    "The exhaustion signal (declining velocity + volume) has a high false positive rate \u2014 sometimes volume drops temporarily before a final surge to circuit."
+  ],
+  "prior_art": "Subrahmanyam (1994) 'Circuit Breakers and Market Volatility'. Kim & Rhee (1997) 'Price Limit Performance: Evidence from the Tokyo Stock Exchange'. Cho et al. (2003) 'Magnet Effect of Price Limits'. In India, SEBI's circuit breaker framework and NSE's dynamic price bands.",
+  "notes": "CRITICAL RISK: if a stock hits lower circuit, your long position is locked and you cannot exit until the circuit reopens (may be next day or multiple days in extreme cases). This violates the 'no overnight positions' constraint. The strategy must therefore use very small position sizes (\u20b950K) and accept the tail risk. Consider using put options as insurance if available.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_130.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_130.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

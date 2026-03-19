@@ -1,0 +1,105 @@
+{
+  "name": "multi_ema_ribbon_squeeze",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": ["momentum", "trend_following"],
+  "thesis": "Exploits the 'spring-loading' of multi-timeframe averages. When EMA(9, 21, 50) all cluster within a 0.1% range, the market is in equilibrium. The subsequent expansion usually signifies a strong trend initiation as various timeframe traders (scalpers to day-traders) all align in the same direction.",
+  "universe": "nifty100",
+  "stock_filter": "top 20 by avg range",
+  "timeframe": "1min",
+  "session": "full_day",
+  "hold_time": "30-100 bars",
+  "max_hold_bars": 150,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_9",
+      "formula": "EMA(close, 9)",
+      "lookback": 9,
+      "purpose": "fast"
+    },
+    {
+      "name": "ema_21",
+      "formula": "EMA(close, 21)",
+      "lookback": 21,
+      "purpose": "med"
+    },
+    {
+      "name": "ema_50",
+      "formula": "EMA(close, 50)",
+      "lookback": 50,
+      "purpose": "slow"
+    },
+    {
+      "name": "squeeze",
+      "formula": "max(ema_9, ema_21, ema_50) / min(ema_9, ema_21, ema_50) < 1.001",
+      "lookback": 0,
+      "purpose": "trigger"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": ["squeeze == True", "close > max(ema_9, ema_21, ema_50)", "volume > sma(volume, 20)"],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": ["squeeze == True", "close < min(ema_9, ema_21, ema_50)", "volume > sma(volume, 20)"],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "3 * ATR(20) from entry",
+    "stop_loss": "ema_50",
+    "trailing_stop": "ema_21 trail",
+    "time_stop": "none",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 1.2
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "none",
+    "volume_filter": "rel_vol > 1.2",
+    "trend_filter": "none",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 26.0,
+    "win_rate_estimate": 0.47,
+    "avg_winner_to_loser": 2.1,
+    "profit_factor_estimate": 1.86,
+    "edge_decay_risk": "low — structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Ribbons can remain squeezed for hours",
+    "Whipsaw on fakeouts"
+  ],
+  "prior_art": "Guppy Multiple Moving Average variant",
+  "notes": "Effective on trending stocks."
+}

@@ -1,0 +1,125 @@
+{
+  "name": "fractal_dimension_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "fractal",
+    "dimension",
+    "complexity",
+    "market-state",
+    "quantitative"
+  ],
+  "thesis": "The fractal dimension (FD) of a price series measures its space-filling complexity on a scale from 1 (smooth trend) to 2 (random noise). When FD approaches 1.0, the price path is trending smoothly — ideal for trend-following. When FD approaches 1.5+, the path is noisy and random. By computing the Higuchi fractal dimension on a rolling 40-bar window and trading only when FD < 1.35 (structured, trending price action), we filter out choppy noise periods and only enter during mechanistically favorable conditions. The inefficiency exists because fractal dimension is a concept from chaos theory, not standard technical analysis, and its real-time computation on 1-min bars is uncommon outside academic research.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > ₹100 Cr; stock must have sufficient tick activity for meaningful 1-min bar construction",
+  "timeframe": "1min",
+  "session": "09:55-15:10 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "Higuchi_FD",
+      "params": "higuchi_fractal_dimension(close, k_max=8, window=40)",
+      "lookback": 40
+    },
+    {
+      "name": "FD_Regime",
+      "params": "TRENDING if Higuchi_FD < 1.35; NOISY if Higuchi_FD >= 1.35",
+      "lookback": 40
+    },
+    {
+      "name": "EMA_10",
+      "params": "EMA(close, 10)",
+      "lookback": 10
+    },
+    {
+      "name": "EMA_25",
+      "params": "EMA(close, 25)",
+      "lookback": 25
+    },
+    {
+      "name": "VWAP_Slope",
+      "params": "linreg_slope(vwap, 10) * 10000 (bps per bar)",
+      "lookback": 10
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "FD_Regime == TRENDING (fractal dimension < 1.35)",
+        "EMA(close, 10) > EMA(close, 25) (uptrend confirmed)",
+        "close > vwap",
+        "VWAP_Slope > 0 (VWAP itself is trending up)"
+      ],
+      "confirmation": "Higuchi_FD has been < 1.35 for at least 5 consecutive bars (stable trending regime)"
+    },
+    "short": {
+      "conditions": [
+        "FD_Regime == TRENDING (fractal dimension < 1.35)",
+        "EMA(close, 10) < EMA(close, 25) (downtrend confirmed)",
+        "close < vwap",
+        "VWAP_Slope < 0"
+      ],
+      "confirmation": "Higuchi_FD has been < 1.35 for at least 5 consecutive bars"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "45 bps from entry",
+    "stop_loss": "25 bps from entry",
+    "trailing_stop": "After 25 bps profit, trail at 15 bps from high-water mark",
+    "time_stop": "60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Higuchi_FD rises above 1.45 (price action becoming noisy — edge lost)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "Inversely scale with FD: ₹1.25L if FD < 1.20, ₹1L if 1.20-1.30, ₹75K if 1.30-1.35",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.8
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25",
+    "time_filter": "No entries before 09:55 (need 40 bars for FD computation) or after 15:10",
+    "volume_filter": "Volume on entry bar > SMA(volume, 20)",
+    "trend_filter": "NIFTY 50 fractal dimension should also be < 1.40 (index also trending)",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "k_max parameter (8) must have sufficient data points in each scale for robust FD estimate"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Low — fractal dimension is an obscure indicator rarely used in practice; computational barrier provides moat"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Higuchi FD with k_max=8 on 40 data points is at the boundary of statistical reliability — the algorithm requires k_max * N computations and smaller windows reduce accuracy significantly",
+    "FD < 1.35 filtering removes the majority of trading time — price is 'noisy' (FD > 1.35) for ~60-70% of the session, leaving a narrow window for entries",
+    "The relationship between fractal dimension and future returns is not well-established empirically on 1-min Indian equity data — the theory is from physics, not finance-specific"
+  ],
+  "prior_art": "Higuchi (1988) fractal dimension algorithm; Peters (1994) 'Fractal Market Analysis'; Mandelbrot's fractal geometry of markets; Ehlers references fractal concepts in his trading system books",
+  "notes": "Consider combining FD with the Hurst exponent (strategy 172) for a more robust regime classification. Both measure different aspects of the same underlying fractal structure. The k_max parameter of 8 is a compromise between accuracy and computational speed."
+}

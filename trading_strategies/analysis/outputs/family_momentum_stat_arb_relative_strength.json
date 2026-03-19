@@ -1,0 +1,562 @@
+{
+  "family": "momentum stat_arb relative_strength",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "name": "index_relative_strength_v182",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -10 AND stock_return > 2.7 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 10 AND stock_return < -2.7 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix > 15",
+        "only 09:30-14:30",
+        "rel_volume > 1.2",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "name": "index_relative_strength_v189",
+      "universe": "nifty50",
+      "timeframe": "5min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -20 AND stock_return > 2.5 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 20 AND stock_return < -2.5 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix between 12-22",
+        "only 09:30-14:30",
+        "rel_volume > 1.2",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "name": "index_relative_strength_v192",
+      "universe": "nifty200",
+      "timeframe": "15min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -20 AND stock_return > 2.3 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 20 AND stock_return < -2.3 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "none",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "name": "index_relative_strength_v183",
+      "universe": "nifty200",
+      "timeframe": "5min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -30 AND stock_return > 1.6 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 30 AND stock_return < -1.6 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix > 15",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "name": "index_relative_strength_v200",
+      "universe": "nifty50",
+      "timeframe": "15min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -20 AND stock_return > 3.0 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 20 AND stock_return < -3.0 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix > 15",
+        "only 09:30-14:30",
+        "rel_volume > 1.2",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "name": "index_relative_strength_v181",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -30 AND stock_return > 1.8 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 30 AND stock_return < -1.8 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "none",
+        "only 09:30-14:30",
+        "rel_volume > 1.2",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "name": "index_relative_strength_v187",
+      "universe": "fno",
+      "timeframe": "15min",
+      "tags": [
+        "stat_arb",
+        "momentum"
+      ],
+      "thesis": "Stocks that show resilience (relative strength) while the index is falling will explode upwards when the index stabilizes. It exploits the beta-disconnect during temporary index weakness driven by basket selling.",
+      "indicators": [
+        "index_return",
+        "stock_return"
+      ],
+      "entry_long": [
+        "index_return < -30 AND stock_return > 2.9 AND index_return > REF(index_return, 1)"
+      ],
+      "entry_short": [
+        "index_return > 30 AND stock_return < -2.9 AND index_return < REF(index_return, 1)"
+      ],
+      "exit_target": "close crosses VWAP(close)",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "vix > 15",
+        "only 09:30-14:30",
+        "none",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Stock might eventually succumb to index pressure if the selloff is macroeconomic",
+        "Relative strength can be noisy on 1-min timeframes",
+        "Requires tracking both index and stock simultaneously with low latency"
+      ],
+      "prior_art": "Relative Strength divergence"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "name": "relative_strength_breakout_003",
+      "universe": "nifty200",
+      "timeframe": "1min",
+      "tags": [
+        "relative_strength",
+        "breakout",
+        "momentum",
+        "index_filter"
+      ],
+      "thesis": "This strategy exploits delayed continuation in stocks that outperform their benchmark intraday and then break consolidation with participation. The inefficiency exists because institutional and discretionary traders visually chase leaders after the benchmark confirms them, and it persists because re",
+      "indicators": [
+        "vwap",
+        "atr_14",
+        "rel_volume_20",
+        "index_vwap_dev",
+        "rel_ret",
+        "base_high",
+        "base_low",
+        "ema_20"
+      ],
+      "entry_long": [
+        "rel_ret >= 0.004",
+        "close > base_high",
+        "close > vwap",
+        "close > ema_20",
+        "rel_volume_20 >= 1.4",
+        "index_vwap_dev >= 0"
+      ],
+      "entry_short": [
+        "rel_ret <= -0.004",
+        "close < base_low",
+        "close < vwap",
+        "close < ema_20",
+        "rel_volume_20 >= 1.4",
+        "index_vwap_dev <= 0"
+      ],
+      "exit_target": "2R fixed target with optional 3R runner",
+      "exit_stop": "base edge or 0.8 * ATR(14), whichever is farther",
+      "filters": [
+        "vix between 12-24",
+        "only 09:30-14:30",
+        "require rel_volume_20 >= 1.4",
+        "only align with NIFTY50 VWAP direction",
+        "none"
+      ],
+      "weaknesses": [
+        "Performance is regime-dependent and weakens materially when session structure changes mid-trade.",
+        "Fast moves can create worse-than-assumed slippage and reduce realized edge versus paper assumptions.",
+        "Crowding risk can compress payoff and make execution quality unstable in the most obvious setups."
+      ],
+      "prior_art": "Leader breakout with benchmark-relative strength filter"
+    },
+    {
+      "fp": "all_trading_strategies/gemini/gemini_3_of_20.json",
+      "name": "sector_relative_strength_momentum",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "momentum",
+        "relative_strength"
+      ],
+      "thesis": "Capitalizes on institutional 'herding' into sectors. When Nifty Bank outperforms Nifty 50, the strongest stock in the banking sector exhibits persistent intraday momentum as mutual funds rotate capital. Information lag in retail participants creates a 60-90 minute window of trend.",
+      "indicators": [
+        "rel_strength",
+        "index_ema"
+      ],
+      "entry_long": [
+        "rel_strength > 1.02",
+        "index_close > index_ema",
+        "close > vwap"
+      ],
+      "entry_short": [
+        "rel_strength < 0.98",
+        "index_close < index_ema",
+        "close < vwap"
+      ],
+      "exit_target": "fixed 0.8%",
+      "exit_stop": "0.4% from entry",
+      "filters": [
+        "none",
+        "after 10:30",
+        "volume > sma(volume, 20)",
+        "index_alignment",
+        "none"
+      ],
+      "weaknesses": [
+        "Sector rotation can reverse midday",
+        "High correlation between open positions"
+      ],
+      "prior_art": "Standard Relative Strength Alpha"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "cosine": 0.9986
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "cosine": 0.9984
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "cosine": 0.998
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "cosine": 0.9978
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "cosine": 0.9973
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "cosine": 0.9973
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "cosine": 0.9966
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "cosine": 0.9962
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "cosine": 0.9962
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "cosine": 0.996
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "cosine": 0.9954
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "cosine": 0.9953
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "cosine": 0.9951
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "cosine": 0.9945
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "cosine": 0.9945
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "cosine": 0.9924
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "cosine": 0.9922
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "cosine": 0.9921
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "cosine": 0.992
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "cosine": 0.9907
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "cosine": 0.9887
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_3_of_20.json",
+      "cosine": 0.757
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_182.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7103
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7083
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_189.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7076
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_181.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7072
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_192.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7071
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_187.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7067
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_200.json",
+      "fp_b": "all_trading_strategies/cursor_gpt54/cursor_gpt54_relative_strength_breakout_003.json",
+      "cosine": 0.7039
+    },
+    {
+      "family": "momentum stat_arb relative_strength",
+      "family_slug": "momentum_stat_arb_relative_strength",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_183.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_3_of_20.json",
+      "cosine": 0.6856
+    }
+  ]
+}

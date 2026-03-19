@@ -1,0 +1,123 @@
+{
+  "name": "support_resistance_reversal_v1",
+  "version": "0.1.0",
+  "author": "aggregated_from_x_indian_traders",
+  "tags": [
+    "reversal",
+    "s_r"
+  ],
+  "thesis": "Exploiting reversals at 2+ day support/resistance with high-low pattern change. Inefficiency from institutional accumulation at levels. Not arbitraged due to multi-day filter + volume + VIX requirement.",
+  "universe": "nifty200",
+  "stock_filter": "stocks with clear 2-day S/R",
+  "timeframe": "1min",
+  "session": "09:20-15:15",
+  "hold_time": "12-35 bars",
+  "max_hold_bars": 50,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": false,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prior_day_support"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "s_r_level",
+      "formula": "price touched same level 2+ days",
+      "lookback": null,
+      "purpose": "level"
+    },
+    {
+      "name": "hl_reversal",
+      "formula": "higher low to lower high pattern break",
+      "lookback": 5,
+      "purpose": "reversal"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close near s_r_level",
+        "hl_reversal == True",
+        "rel_volume > 1.5",
+        "vix < 20"
+      ],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": [
+        "close near s_r_level",
+        "hl_reversal == True",
+        "rel_volume > 1.5",
+        "vix < 20"
+      ],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "next S/R level",
+    "stop_loss": "0.8 * ATR(20)",
+    "trailing_stop": "none",
+    "time_stop": "exit after 40 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 300000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 25000,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "vix < 20",
+    "time_filter": "none",
+    "volume_filter": "none",
+    "trend_filter": "none",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 27,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.7,
+    "profit_factor_estimate": 2.3,
+    "edge_decay_risk": "medium \u2014 behavioral"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Regime dependency: strong trends break S/R",
+    "Liquidity constraints: thin stocks at levels",
+    "Crowding: S/R setups core of Gujral style on X"
+  ],
+  "prior_art": "Support/resistance + reversal (Ashwani Gujral X post)",
+  "notes": "Multi-day S/R detection required.",
+  "_filepath": "all_trading_strategies/grok/Grok_10_of_10.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/grok/Grok_10_of_10.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "reversal s_r mean_reversion",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/grok/Grok_6_of_10.json"
+    ],
+    "different_pairs": []
+  }
+}

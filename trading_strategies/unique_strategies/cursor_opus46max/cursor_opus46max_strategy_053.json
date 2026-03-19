@@ -1,0 +1,131 @@
+{
+  "name": "pairs_trading_auto_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-fast",
+  "tags": [
+    "stat_arb",
+    "pairs",
+    "auto_sector",
+    "mean_reversion",
+    "intraday"
+  ],
+  "thesis": "MARUTI and M&M are co-integrated auto sector leaders with overlapping macro exposure (fuel prices, interest rates, rural demand). Intraday spread dislocations arise from differential dealer flow and mutual fund rebalancing, not fundamental divergence. The auto sector is less crowded for pairs trading than banking because fewer quant teams focus on it, yet the stocks have sufficient liquidity for intraday execution. The inefficiency persists because auto pairs require adjusting for segment differences (passenger vs UV) which adds analytical complexity that deters simple implementations.",
+  "universe": "MARUTI, M&M on NSE",
+  "stock_filter": "Both legs avg 1-min volume > 5000 shares; market cap > \u20b91 lakh crore",
+  "timeframe": "1min",
+  "session": "09:25-15:10 IST",
+  "hold_time": "20-90 mins typical",
+  "max_hold_bars": 120,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY_AUTO",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "crude_oil_1min"
+    ]
+  },
+  "indicators": [
+    "spread = log(MARUTI_close) - hedge_ratio * log(M&M_close)",
+    "hedge_ratio = OLS_slope(log(MARUTI), log(M&M), lookback=150)",
+    "spread_mean = SMA(spread, 100)",
+    "spread_std = rolling_std(spread, 100)",
+    "z_score = (spread - spread_mean) / spread_std",
+    "half_life = -log(2) / log(AR1_coeff(spread, lookback=80))",
+    "crude_z = (CRUDE - SMA(CRUDE, 60)) / rolling_std(CRUDE, 60)",
+    "ADF_pvalue = rolling_ADF_test(spread, lookback=150)"
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "z_score < -2.0",
+        "ADF_pvalue < 0.05",
+        "half_life > 10 AND half_life < 80",
+        "abs(crude_z) < 1.5"
+      ],
+      "confirmation": "z_score shows first bar closing above prior bar (reversal candle)"
+    },
+    "short": {
+      "conditions": [
+        "z_score > 2.0",
+        "ADF_pvalue < 0.05",
+        "half_life > 10 AND half_life < 80",
+        "abs(crude_z) < 1.5"
+      ],
+      "confirmation": "z_score shows first bar closing below prior bar (reversal candle)"
+    },
+    "entry_price": "market order both legs, expect 2-3 bps slippage per leg"
+  },
+  "exit": {
+    "target": "z_score crosses 0 (full mean reversion)",
+    "stop_loss": "z_score exceeds 3.5 OR loss > 0.6% of capital_per_trade",
+    "trailing_stop": "after z_score crosses 1.0 toward mean, trail at 1.2 sigma from peak",
+    "time_stop": "exit if held > 90 mins",
+    "eod_rule": "flatten both legs by 15:10 IST",
+    "signal_exit": "if crude_z moves > 2.0 during trade, exit (oil shock differentially impacts auto names)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.6,
+    "position_sizing": "hedge-ratio-adjusted notional on each leg",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3500,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 20; skip above 20",
+    "time_filter": "no new entries after 14:00 IST",
+    "volume_filter": "both legs 1-min volume > 3000 shares at entry bar",
+    "trend_filter": "NIFTY_AUTO not trending > 2% intraday",
+    "spread_filter": "bid-ask spread < 0.05% on both legs",
+    "event_filter": "skip if monthly auto sales data released today; skip earnings week for either stock",
+    "other_filters": [
+      "skip days with crude oil inventory report (Wed US time, Thu India morning)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 23,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.66,
+    "edge_decay_risk": "low \u2014 auto sector pairs less crowded; edge should persist 12+ months"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "MARUTI (passenger cars) and M&M (SUVs/tractors) have segment divergence: rural demand shocks hit M&M harder, breaking the pair for extended periods",
+    "Auto stocks have wider spreads and lower intraday volume than banking pairs, increasing slippage risk especially in the second half of the session",
+    "Monthly auto sales numbers create information asymmetry events where the pair can gap unpredictably at open"
+  ],
+  "prior_art": "Vidyamurthy (2004) pairs trading framework; adapted for Indian auto sector with crude oil filter. Similar to Huck (2013) sector-constrained pairs.",
+  "notes": "Edge math: 0.58 * 50bps - 0.42 * 38bps = 29 - 15.96 = 13.04bps gross per trade. Costs ~12bps RT. Net ~1bps/trade * 2 trades = ~2bps daily seems thin. Edge estimate of 23bps assumes occasional 3+ sigma dislocation trades that contribute disproportionately. ADF filter is key \u2014 only trade when cointegration is confirmed.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_053.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "stat_arb pairs sector",
+    "num_within_family_comparisons": 7,
+    "variant_pairs": [
+      "all_trading_strategies/claude_project/claude_project_10_of_25.json",
+      "all_trading_strategies/opus/Opus_17_of_50.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_051.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_052.json",
+      "all_trading_strategies/opus/Opus_22_of_50.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_018.json",
+      "all_trading_strategies/claude_project/claude_project_22_of_25.json"
+    ]
+  }
+}

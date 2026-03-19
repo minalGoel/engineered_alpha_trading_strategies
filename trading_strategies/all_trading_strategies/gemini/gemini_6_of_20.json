@@ -1,0 +1,93 @@
+{
+  "name": "european_open_momentum_continuation",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": ["momentum", "event_driven"],
+  "thesis": "Exploits the liquidity influx from the London/European market open (13:30 IST). Arbitrageurs and global macro funds trade ADR/GDR underlyings at this time, creating a directional 'push' in liquid Indian large-caps that persists until the US pre-market opens.",
+  "universe": "nifty50",
+  "stock_filter": "ADR-linked stocks (RELIANCE, HDFC BANK, ICICI BANK, INFOSYS, TCS)",
+  "timeframe": "1min",
+  "session": "13:30-15:00",
+  "hold_time": "45-90 bars",
+  "max_hold_bars": 120,
+  "trades_per_day": "1 per symbol",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "momentum_30",
+      "formula": "close / close[30]",
+      "lookback": 30,
+      "purpose": "trend_confirmation"
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP",
+      "lookback": 0,
+      "purpose": "support_resistance"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": ["time == 13:31", "close > vwap", "momentum_30 > 1.005", "index_close > index_vwap"],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": ["time == 13:31", "close < vwap", "momentum_30 < 0.995", "index_close < index_vwap"],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "fixed 0.7%",
+    "stop_loss": "0.35% from entry",
+    "trailing_stop": "none",
+    "time_stop": "flatten at 15:15",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.7,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.4
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "exactly at 13:31",
+    "volume_filter": "none",
+    "trend_filter": "index_alignment",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 31.0,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.95,
+    "edge_decay_risk": "low — structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "European macro events can trigger reversals",
+    "Reliance on global flows which can be absent on European holidays"
+  ],
+  "prior_art": "Intraday Global Flow Arbitrage",
+  "notes": "Targeted at specific heavyweights only."
+}

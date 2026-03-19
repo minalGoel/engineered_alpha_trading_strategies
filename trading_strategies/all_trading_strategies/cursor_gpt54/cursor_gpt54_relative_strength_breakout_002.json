@@ -1,0 +1,154 @@
+{
+  "name": "relative_strength_breakout_002",
+  "version": "0.1.0",
+  "author": "cursor-fast",
+  "tags": [
+    "relative_strength",
+    "breakout",
+    "momentum",
+    "index_filter"
+  ],
+  "thesis": "This strategy exploits delayed continuation in stocks that outperform their benchmark intraday and then break consolidation with participation. The inefficiency exists because institutional and discretionary traders visually chase leaders after the benchmark confirms them, and it persists because relative-strength signals are noisy and crowd-sensitive.",
+  "universe": "fno",
+  "stock_filter": "top 120 by 20-day median traded value in FnO, price > 100",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "8-38 bars",
+  "max_hold_bars": 38,
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "banknifty",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "relative return versus benchmark",
+      "base breakout levels"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "VWAP()",
+      "lookback": 390,
+      "purpose": "intraday fair value anchor"
+    },
+    {
+      "name": "atr_14",
+      "formula": "ATR(14)",
+      "lookback": 14,
+      "purpose": "volatility normalization"
+    },
+    {
+      "name": "rel_volume_20",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "purpose": "participation filter"
+    },
+    {
+      "name": "index_vwap_dev",
+      "formula": "(BANKNIFTY_close - BANKNIFTY_VWAP) / BANKNIFTY_VWAP",
+      "lookback": 390,
+      "purpose": "benchmark alignment"
+    },
+    {
+      "name": "rel_ret",
+      "formula": "close / close[-10] - BANKNIFTY_close / BANKNIFTY_close[-10]",
+      "lookback": 10,
+      "purpose": "relative strength"
+    },
+    {
+      "name": "base_high",
+      "formula": "HIGHEST(high, 25)",
+      "lookback": 25,
+      "purpose": "consolidation break"
+    },
+    {
+      "name": "base_low",
+      "formula": "LOWEST(low, 25)",
+      "lookback": 25,
+      "purpose": "consolidation break"
+    },
+    {
+      "name": "ema_20",
+      "formula": "EMA(close, 20)",
+      "lookback": 20,
+      "purpose": "trend support"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "rel_ret >= 0.004",
+        "close > base_high",
+        "close > vwap",
+        "close > ema_20",
+        "rel_volume_20 >= 1.2",
+        "index_vwap_dev >= 0"
+      ],
+      "confirmation": "close > high[-1]"
+    },
+    "short": {
+      "conditions": [
+        "rel_ret <= -0.004",
+        "close < base_low",
+        "close < vwap",
+        "close < ema_20",
+        "rel_volume_20 >= 1.2",
+        "index_vwap_dev <= 0"
+      ],
+      "confirmation": "close < low[-1]"
+    },
+    "entry_price": "close of signal bar"
+  },
+  "exit": {
+    "target": "2R fixed target with optional 3R runner",
+    "stop_loss": "base edge or 0.8 * ATR(14), whichever is farther",
+    "trailing_stop": "trail by 20-EMA after +1R",
+    "time_stop": "exit after 38 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit when rel_ret flips sign against the position"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.65,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 24",
+    "time_filter": "only 09:30-14:30",
+    "volume_filter": "require rel_volume_20 >= 1.2",
+    "trend_filter": "only align with BANKNIFTY VWAP direction",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": [
+      "skip if setup occurs after 14:30"
+    ]
+  },
+  "edge": {
+    "expected_bps": 23,
+    "win_rate_estimate": 0.47,
+    "avg_winner_to_loser": 1.65,
+    "profit_factor_estimate": 1.46,
+    "edge_decay_risk": "medium — behavioral"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Performance is regime-dependent and weakens materially when session structure changes mid-trade.",
+    "Fast moves can create worse-than-assumed slippage and reduce realized edge versus paper assumptions.",
+    "Crowding risk can compress payoff and make execution quality unstable in the most obvious setups."
+  ],
+  "prior_art": "Leader breakout with benchmark-relative strength filter",
+  "notes": "Generated in a mixed-model batch under cursor-fast. Family: relative_strength_breakout. Use for research only until walk-forward and paper-trading validation are complete."
+}

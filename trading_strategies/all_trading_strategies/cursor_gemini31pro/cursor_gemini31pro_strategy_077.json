@@ -1,0 +1,107 @@
+{
+    "name": "macd_trend_continuation_v77",
+    "version": "1.0.0",
+    "author": "QuantGen_Subagent_3",
+    "tags": [
+        "trend_following",
+        "momentum"
+    ],
+    "thesis": "Momentum breeds momentum in intraday equities. When the MACD line crosses the signal line in the direction of the primary trend, it flags an acceleration of institutional buying/selling. Exists due to autocorrelated order flow.",
+    "universe": "nifty200",
+    "stock_filter": "top 50 by avg volume in universe",
+    "timeframe": "1min",
+    "session": "09:30-15:15",
+    "hold_time": "5-15 bars",
+    "max_hold_bars": 30,
+    "trades_per_day": "2-5",
+    "max_trades_per_day": 8,
+    "data": {
+        "ohlcv_1min": true,
+        "vwap": true,
+        "vix": true,
+        "index": "nifty50",
+        "option_chain": false,
+        "order_book": false,
+        "other": []
+    },
+    "indicators": [
+        {
+            "name": "ema_50",
+            "formula": "EMA(close, 50)",
+            "lookback": 50,
+            "purpose": "trend direction"
+        },
+        {
+            "name": "macd_line",
+            "formula": "EMA(close, 12) - EMA(close, 26)",
+            "lookback": 26,
+            "purpose": "momentum"
+        },
+        {
+            "name": "macd_signal",
+            "formula": "EMA(macd_line, 9)",
+            "lookback": 9,
+            "purpose": "signal"
+        }
+    ],
+    "entry": {
+        "long": {
+            "conditions": [
+                "close > ema_50 AND CROSSOVER(macd_line, macd_signal) AND macd_line < 0"
+            ],
+            "confirmation": "volume surge"
+        },
+        "short": {
+            "conditions": [
+                "close < ema_50 AND CROSSUNDER(macd_line, macd_signal) AND macd_line > 0"
+            ],
+            "confirmation": "volume surge"
+        },
+        "entry_price": "market"
+    },
+    "exit": {
+        "target": "50 * ATR(14) from entry",
+        "stop_loss": "1.5 * ATR(14) below entry",
+        "trailing_stop": "move SL to breakeven after +0.5%",
+        "time_stop": "exit after 30 bars",
+        "eod_rule": "flatten",
+        "signal_exit": "none"
+    },
+    "risk": {
+        "capital_per_trade": 200000,
+        "max_risk_per_trade_pct": 1.0,
+        "position_sizing": "vol_adjusted",
+        "max_open_positions": 3,
+        "max_daily_loss_inr": 5000,
+        "max_portfolio_heat_pct": 3.0
+    },
+    "filters": {
+        "vix_filter": "vix between 12-22",
+        "time_filter": "only 09:30-14:30",
+        "volume_filter": "skip if volume < SMA(volume, 20)",
+        "trend_filter": "none",
+        "spread_filter": "skip if bid-ask > 0.05%",
+        "event_filter": "skip on RBI policy days",
+        "other_filters": []
+    },
+    "edge": {
+        "expected_bps": 20.0,
+        "win_rate_estimate": 0.4,
+        "avg_winner_to_loser": 3.19,
+        "profit_factor_estimate": 2.1,
+        "edge_decay_risk": "medium — behavioral"
+    },
+    "costs": {
+        "slippage_bps_per_side": 3,
+        "brokerage": "zerodha_intraday",
+        "stt_bps": 2.5,
+        "exchange_charges_bps": 0.5
+    },
+    "weaknesses": [
+        "Whipsaws heavily in range-bound markets",
+        "Late entry compared to pure price action breakouts",
+        "Susceptible to sudden mean-reverting algorithmic spikes"
+    ],
+    "prior_art": "Standard MACD Trend Strategy",
+    "notes": "Generated variation 77."
+}

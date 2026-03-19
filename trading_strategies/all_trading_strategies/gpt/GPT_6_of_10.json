@@ -1,0 +1,101 @@
+{
+    "name": "atr_breakout_v1",
+    "version": "0.1.0",
+    "author": "AI_Quant",
+    "tags": [
+        "breakout",
+        "volatility"
+    ],
+    "thesis": "This strategy targets volatility breakouts: when intraday range expands beyond normal (ATR spikes), price often continues in the breakout direction. It exploits sudden volatility expansions as signals of momentum. The inefficiency is that traders often underestimate quickly expanding ranges, and it persists because ATR is a lagging measure and signals come slightly late.",
+    "universe": "nifty200",
+    "stock_filter": "top_fno",
+    "timeframe": "1min",
+    "session": "09:20-15:15",
+    "hold_time": "1-10 bars",
+    "max_hold_bars": 10,
+    "trades_per_day": "2-5",
+    "max_trades_per_day": 5,
+    "data": {
+        "ohlcv_1min": true,
+        "vwap": false,
+        "vix": false,
+        "index": "none",
+        "option_chain": false,
+        "order_book": false,
+        "other": []
+    },
+    "indicators": [
+        {
+            "name": "atr14",
+            "formula": "ATR(14)",
+            "lookback": 14,
+            "purpose": "volatility measure"
+        },
+        {
+            "name": "prev_range",
+            "formula": "high - low",
+            "lookback": 1,
+            "purpose": "current bar range"
+        }
+    ],
+    "entry": {
+        "long": {
+            "conditions": [
+                "prev_range > 1.5 * atr14"
+            ],
+            "confirmation": ""
+        },
+        "short": {
+            "conditions": [
+                "prev_range > 1.5 * atr14"
+            ],
+            "confirmation": ""
+        },
+        "entry_price": "market"
+    },
+    "exit": {
+        "target": "1.0% from entry",
+        "stop_loss": "0.5% from entry",
+        "trailing_stop": "none",
+        "time_stop": "exit after 10 bars",
+        "eod_rule": "flatten",
+        "signal_exit": ""
+    },
+    "risk": {
+        "capital_per_trade": 100000,
+        "max_risk_per_trade_pct": 0.3,
+        "position_sizing": "fixed",
+        "max_open_positions": 2,
+        "max_daily_loss_inr": 50000,
+        "max_portfolio_heat_pct": 30.0
+    },
+    "filters": {
+        "vix_filter": "",
+        "time_filter": "",
+        "volume_filter": "volume > 1.5 * avg_20",
+        "trend_filter": "",
+        "spread_filter": "",
+        "event_filter": "none",
+        "other_filters": []
+    },
+    "edge": {
+        "expected_bps": 25,
+        "win_rate_estimate": 0.5,
+        "avg_winner_to_loser": 2.0,
+        "profit_factor_estimate": 1.5,
+        "edge_decay_risk": "medium \u2014 structural"
+    },
+    "costs": {
+        "slippage_bps_per_side": 3,
+        "brokerage": "zerodha_intraday",
+        "stt_bps": 2.5,
+        "exchange_charges_bps": 0.5
+    },
+    "weaknesses": [
+        "Often false alarms during normal volatility spikes",
+        "Late entries (after breakout), can capture smaller portion of move",
+        "High slippage during volatility spikes"
+    ],
+    "prior_art": "Volatility breakout",
+    "notes": "Uses ATR and current bar range to detect spikes."
+}

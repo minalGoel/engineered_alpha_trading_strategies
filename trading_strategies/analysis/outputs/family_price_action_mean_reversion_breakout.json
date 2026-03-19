@@ -1,0 +1,207 @@
+{
+  "family": "price_action mean_reversion breakout",
+  "members": [
+    {
+      "fp": "all_trading_strategies/gemini/gemini_19_of_20.json",
+      "name": "volume_spike_exhaustion_fade",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion"
+      ],
+      "thesis": "Exploits 'exhaustion gaps'. A massive volume spike (5x average) on a 1-min bar without a significant price breakout usually indicates a 'climax' where all buyers/sellers are exhausted. This typically leads to a mean reversion as the order book refills. This is a market microstructure phenomenon.",
+      "indicators": [
+        "vol_spike",
+        "range_check"
+      ],
+      "entry_long": [
+        "vol_spike == True",
+        "close < close[1]",
+        "range_check == True"
+      ],
+      "entry_short": [
+        "vol_spike == True",
+        "close > close[1]",
+        "range_check == True"
+      ],
+      "exit_target": "fixed 0.25%",
+      "exit_stop": "0.15% from entry",
+      "filters": [
+        "none",
+        "mid-session",
+        "none",
+        "none",
+        "spread < 0.01%"
+      ],
+      "weaknesses": [
+        "Spikes can be part of a high-frequency wash trade",
+        "Requires extremely low slippage to be profitable"
+      ],
+      "prior_art": "Microstructure Exhaustion Alpha"
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_8_of_50.json",
+      "name": "microstructure_volume_reversion_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "mean_reversion",
+        "microstructure",
+        "volume"
+      ],
+      "thesis": "Sudden volume spikes (> 5x 20-bar avg) without proportional price movement (< 0.15% move on the spike bar) indicate institutional accumulation/distribution. The price tends to move in the direction of the volume bar's close relative to its open in the next 10-20 bars. The inefficiency exists because",
+      "indicators": [
+        "vol_ratio",
+        "bar_range_pct",
+        "bar_direction",
+        "atr_20"
+      ],
+      "entry_long": [
+        "vol_ratio > 5.0",
+        "bar_range_pct < 0.15",
+        "bar_direction == 1 (close > open on spike bar)"
+      ],
+      "entry_short": [
+        "vol_ratio > 5.0",
+        "bar_range_pct < 0.15",
+        "bar_direction == -1 (close < open on spike bar)"
+      ],
+      "exit_target": "0.3% in direction of bar_direction",
+      "exit_stop": "0.25% against direction",
+      "filters": [
+        "none",
+        "no trades first 15 min (opening volume is naturally spiky)",
+        "vol_ratio > 5.0 is the core filter",
+        "none",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "5x volume spike on 1-min can be a single large retail order, not institutional \u2014 false positives",
+        "Tight target (0.3%) and stop (0.25%) means costs eat a large % of edge \u2014 very sensitive to slippage",
+        "Low frequency \u2014 5x spikes with small range are rare, may go days without a signal"
+      ],
+      "prior_art": "Volume spike absorption \u2014 institutional microstructure concept; not widely systematized"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+      "name": "inside_bar_breakout_v177",
+      "universe": "nifty200",
+      "timeframe": "15min",
+      "tags": [
+        "price_action",
+        "breakout"
+      ],
+      "thesis": "An inside bar represents intraday equilibrium and volatility contraction. A breakout of the inside bar on increased volume indicates a resolution of this equilibrium. Exists because of localized order book vacuums after consolidation.",
+      "indicators": [
+        "prev_high",
+        "prev_low",
+        "is_inside"
+      ],
+      "entry_long": [
+        "REF(is_inside, 1) AND close > REF(prev_high, 1)"
+      ],
+      "entry_short": [
+        "REF(is_inside, 1) AND close < REF(prev_low, 1)"
+      ],
+      "exit_target": "14 * ATR(14) from entry",
+      "exit_stop": "1.5 * ATR(14) below entry",
+      "filters": [
+        "none",
+        "only 09:30-14:30",
+        "rel_volume > 1.2",
+        "none",
+        "skip if bid-ask > 0.05%"
+      ],
+      "weaknesses": [
+        "Extremely susceptible to algorithmic stop hunts (wicks)",
+        "Only effective during certain times of the day (e.g., first 2 hours)",
+        "Low win rate requires strict discipline on stops"
+      ],
+      "prior_art": "Classic Inside Bar Strategy"
+    },
+    {
+      "fp": "all_trading_strategies/grok/Grok_3_of_10.json",
+      "name": "open_high_low_v1",
+      "universe": "fno",
+      "timeframe": "1min",
+      "tags": [
+        "price_action",
+        "open_high_low"
+      ],
+      "thesis": "Exploiting stocks that make open=high or open=low on 1-min as strong directional bias due to institutional conviction at open. Inefficiency from retail chasing momentum without confirmation. Persists because most traders ignore volume filter + index alignment; costs kill discretionary versions.",
+      "indicators": [
+        "open_high_low_flag",
+        "rel_volume"
+      ],
+      "entry_long": [
+        "open_high_low_flag == True AND open == low",
+        "rel_volume > 1.5",
+        "vix < 21"
+      ],
+      "entry_short": [
+        "open_high_low_flag == True AND open == high",
+        "rel_volume > 1.5",
+        "vix < 21"
+      ],
+      "exit_target": "1.5 * ATR(14) from entry",
+      "exit_stop": "open price",
+      "filters": [
+        "vix < 21",
+        "first 15 min only",
+        "none",
+        "none",
+        "none"
+      ],
+      "weaknesses": [
+        "Regime dependency: worthless in ranging sideways opens",
+        "Slippage on fast moves: open=high/low often coincides with news spikes",
+        "Crowding: extremely popular on X leading to alpha decay in top names"
+      ],
+      "prior_art": "Open High Low strategy (classic X thread by @bhaveshp1509)"
+    }
+  ],
+  "pairs": [
+    {
+      "family": "price_action mean_reversion breakout",
+      "family_slug": "price_action_mean_reversion_breakout",
+      "fp_a": "all_trading_strategies/gemini/gemini_19_of_20.json",
+      "fp_b": "all_trading_strategies/opus/Opus_8_of_50.json",
+      "cosine": 0.7677
+    },
+    {
+      "family": "price_action mean_reversion breakout",
+      "family_slug": "price_action_mean_reversion_breakout",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+      "fp_b": "all_trading_strategies/gemini/gemini_19_of_20.json",
+      "cosine": 0.7026
+    },
+    {
+      "family": "price_action mean_reversion breakout",
+      "family_slug": "price_action_mean_reversion_breakout",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+      "fp_b": "all_trading_strategies/grok/Grok_3_of_10.json",
+      "cosine": 0.6916
+    },
+    {
+      "family": "price_action mean_reversion breakout",
+      "family_slug": "price_action_mean_reversion_breakout",
+      "fp_a": "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_177.json",
+      "fp_b": "all_trading_strategies/opus/Opus_8_of_50.json",
+      "cosine": 0.6848
+    },
+    {
+      "family": "price_action mean_reversion breakout",
+      "family_slug": "price_action_mean_reversion_breakout",
+      "fp_a": "all_trading_strategies/grok/Grok_3_of_10.json",
+      "fp_b": "all_trading_strategies/opus/Opus_8_of_50.json",
+      "cosine": 0.648
+    },
+    {
+      "family": "price_action mean_reversion breakout",
+      "family_slug": "price_action_mean_reversion_breakout",
+      "fp_a": "all_trading_strategies/gemini/gemini_19_of_20.json",
+      "fp_b": "all_trading_strategies/grok/Grok_3_of_10.json",
+      "cosine": 0.6122
+    }
+  ]
+}

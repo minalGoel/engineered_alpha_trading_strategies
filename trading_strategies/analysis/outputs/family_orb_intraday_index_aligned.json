@@ -1,0 +1,222 @@
+{
+  "family": "orb intraday index_aligned",
+  "members": [
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+      "name": "orb_sector_momentum_v1",
+      "universe": "NIFTY 50 constituents, grouped by sector (banking, IT, pharma, auto, energy)",
+      "timeframe": "1min",
+      "tags": [
+        "ORB",
+        "sector_momentum",
+        "relative_strength",
+        "leaders",
+        "intraday"
+      ],
+      "thesis": "ORB breakouts on stocks that are sector momentum leaders (highest relative strength within their sector over the prior 5 days) have 20% higher follow-through than ORB on lagging sector members. Momentum leaders already have institutional accumulation tailwinds, and the ORB breakout is the continuati",
+      "indicators": [],
+      "entry_long": [
+        "is_leader == True (stock is top-2 in sector by 5-day RS)",
+        "close > ORB_high_15 (breakout above 15-min ORB)",
+        "rel_strength_5d > 0 (outperforming sector)",
+        "volume_ratio > 1.2 at breakout"
+      ],
+      "entry_short": [
+        "is_leader == True in downward momentum (bottom-2 sector rank = weakest stocks)",
+        "close < ORB_low_15 (breakdown below 15-min ORB)",
+        "rel_strength_5d < 0 (underperforming sector)",
+        "volume_ratio > 1.2 at breakdown"
+      ],
+      "exit_target": "2.0 * ORB_range_15 from breakout level",
+      "exit_stop": "ORB_mid (midpoint of 15-min range) OR 0.4% from entry",
+      "filters": [
+        "India_VIX between 12 and 22",
+        "enter 09:30-10:30 IST",
+        "breakout bar volume > 1.2x 20-bar SMA",
+        "sector index trending in same direction as stock breakout over 5 days",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "5-day sector momentum can be driven by a single large move on day 1, making the ranking stale by day 5; the momentum may have already reversed",
+        "Restricting to top-2 per sector across 5 sectors = max 10 candidates, further filtered by ORB breakout; signal frequency can be very low (0-1 per day)",
+        "Momentum leaders are often extended and near resistance levels, making their ORB breakouts more susceptible to profit-taking reversals"
+      ],
+      "prior_art": "Jegadeesh & Titman (1993) cross-sectional momentum; adapted for intraday ORB entry on momentum leaders. Moskowitz & Grinblatt (1999) on industry momentum."
+    },
+    {
+      "fp": "all_trading_strategies/opus/Opus_46_of_50.json",
+      "name": "orb_plus_sector_filter_v1",
+      "universe": "nifty50",
+      "timeframe": "1min",
+      "tags": [
+        "hybrid",
+        "orb",
+        "sector",
+        "filter"
+      ],
+      "thesis": "Standard ORB (Opening Range Breakout) has a ~48% win rate. Adding a sector filter \u2014 only take the ORB breakout if the stock's sector index also broke its ORB in the same direction \u2014 increases win rate to ~55%. The sector confirmation eliminates stock-specific false breakouts: if the entire banking s",
+      "indicators": [
+        "stock_orb_high",
+        "stock_orb_low",
+        "sector_orb_high",
+        "sector_orb_low",
+        "atr_20"
+      ],
+      "entry_long": [
+        "close > stock_orb_high",
+        "sector_index_close > sector_orb_high (sector confirms)",
+        "close > vwap",
+        "vix < 22"
+      ],
+      "entry_short": [
+        "close < stock_orb_low",
+        "sector_index_close < sector_orb_low",
+        "close < vwap",
+        "vix < 22"
+      ],
+      "exit_target": "1.0 * stock ORB range from breakout level",
+      "exit_stop": "stock ORB midpoint",
+      "filters": [
+        "vix < 22",
+        "entry only 09:30-11:00",
+        "stock volume > SMA(volume, 10) on breakout bar",
+        "nifty50 direction aligns with breakout direction",
+        "skip if spread > 0.08%"
+      ],
+      "weaknesses": [
+        "Requiring sector confirmation reduces trade frequency significantly",
+        "Sector index data may not be available at 1-min resolution from Zerodha \u2014 may need to compute from constituents",
+        "On days when the entire market breaks out, the sector filter doesn't add differentiation"
+      ],
+      "prior_art": "ORB with sector confirmation \u2014 sector-relative version of classic ORB"
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+      "name": "orb_multi_stock_v1",
+      "universe": "NIFTY 50 constituents on NSE, sorted by ORB signal quality",
+      "timeframe": "1min",
+      "tags": [
+        "ORB",
+        "multi_stock",
+        "portfolio",
+        "diversification",
+        "intraday"
+      ],
+      "thesis": "Individual stock ORB breakouts have ~52% win rate, but a portfolio approach \u2014 trading ORB breakouts across 5-8 uncorrelated stocks simultaneously \u2014 improves the daily portfolio win rate to ~70%+ through diversification. When multiple stocks break their ORBs in the same direction on the same morning,",
+      "indicators": [],
+      "entry_long": [
+        "close[i] > ORB_high_15[i] for stock i",
+        "signal_score[i] >= 2 (at least 2 of 3 confirmations)",
+        "portfolio_correlation < 0.6 (diversified, not all banking stocks)",
+        "at least 3 stocks have ORB breakout signals (portfolio threshold)"
+      ],
+      "entry_short": [
+        "close[i] < ORB_low_15[i] for stock i",
+        "signal_score[i] >= 2",
+        "portfolio_correlation < 0.6",
+        "at least 3 stocks have ORB breakdown signals"
+      ],
+      "exit_target": "per stock: 2.0 * ORB_range_15[i]; portfolio: exit all if portfolio_pnl > 0.3% of total capital",
+      "exit_stop": "per stock: ORB_mid[i]; portfolio: exit all if portfolio loss > 0.3% of total capital",
+      "filters": [
+        "India_VIX between 12 and 22",
+        "all entries between 09:30-10:30 IST",
+        "each stock breakout bar volume > 1.2x 20-bar SMA",
+        "NIFTY ORB direction should match majority of stock ORB directions",
+        "bid-ask < 0.05% on all stocks at entry"
+      ],
+      "weaknesses": [
+        "Managing 5-8 simultaneous positions is operationally complex; monitoring, adjusting stops, and exiting all positions requires significant attention and infrastructure",
+        "The diversification benefit assumes low correlation between portfolio stocks; on macro-driven days (RBI decision, global event), all stocks correlate to 1.0, eliminating the benefit",
+        "Transaction costs compound across 5-8 stocks: total costs are 5-8x a single stock strategy, eating significantly into the per-stock edge"
+      ],
+      "prior_art": "Markowitz (1952) portfolio diversification; adapted for intraday ORB context. Similar to Khandani & Lo (2007) on quant portfolio approaches."
+    },
+    {
+      "fp": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+      "name": "orb_index_aligned_v1",
+      "universe": "NIFTY 50 constituents on NSE",
+      "timeframe": "1min",
+      "tags": [
+        "ORB",
+        "index_aligned",
+        "macro_confirmation",
+        "trend_filter",
+        "intraday"
+      ],
+      "thesis": "ORB breakouts that are aligned with the NIFTY 50 index direction have 15-20% higher follow-through rate than counter-index breakouts. When a stock breaks above its 15-min ORB high AND NIFTY 50 also breaks above its 15-min ORB high, the macro tailwind provides institutional flow support. Counter-inde",
+      "indicators": [],
+      "entry_long": [
+        "aligned_long == True (stock AND NIFTY both break above 15-min ORB)",
+        "volume at breakout > 1.3x SMA(volume, 20)",
+        "close > vwap",
+        "stock_beta > 0.5 (stock responsive to index)"
+      ],
+      "entry_short": [
+        "aligned_short == True (stock AND NIFTY both break below 15-min ORB)",
+        "volume at breakdown > 1.3x SMA(volume, 20)",
+        "close < vwap",
+        "stock_beta > 0.5"
+      ],
+      "exit_target": "2.0 * stock_ORB_range from breakout level",
+      "exit_stop": "stock_ORB_mid (midpoint) OR NIFTY re-enters its ORB range (macro support lost)",
+      "filters": [
+        "India_VIX between 13 and 22",
+        "enter between 09:30-10:30; aligned breakouts must happen in first hour",
+        "stock breakout bar volume > 1.3x 20-bar SMA",
+        "CORE FILTER \u2014 NIFTY ORB breakout in same direction as stock (alignment is the strategy)",
+        "bid-ask < 0.05%"
+      ],
+      "weaknesses": [
+        "Requiring both stock AND index to break ORB simultaneously reduces signal frequency significantly; aligned breakouts occur on only ~30-40% of trading days",
+        "The 3-bar NIFTY confirmation delays entry by ~3 minutes, during which the stock may move 10-20 bps past the breakout level, reducing reward",
+        "On days where NIFTY breaks out but then reverses (false index breakout), the aligned stock trade also fails, and the dual stop (stock ORB mid + NIFTY re-entry) can whipsaw"
+      ],
+      "prior_art": "Elder (1993) triple-screen system (multi-timeframe confirmation); adapted for multi-instrument (stock + index) ORB confirmation. Crabel (1990) ORB foundation."
+    }
+  ],
+  "pairs": [
+    {
+      "family": "orb intraday index_aligned",
+      "family_slug": "orb_intraday_index_aligned",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+      "fp_b": "all_trading_strategies/opus/Opus_46_of_50.json",
+      "cosine": 0.7792
+    },
+    {
+      "family": "orb intraday index_aligned",
+      "family_slug": "orb_intraday_index_aligned",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+      "cosine": 0.7398
+    },
+    {
+      "family": "orb intraday index_aligned",
+      "family_slug": "orb_intraday_index_aligned",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_092.json",
+      "cosine": 0.7244
+    },
+    {
+      "family": "orb intraday index_aligned",
+      "family_slug": "orb_intraday_index_aligned",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+      "fp_b": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+      "cosine": 0.7152
+    },
+    {
+      "family": "orb intraday index_aligned",
+      "family_slug": "orb_intraday_index_aligned",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_091.json",
+      "fp_b": "all_trading_strategies/opus/Opus_46_of_50.json",
+      "cosine": 0.7077
+    },
+    {
+      "family": "orb intraday index_aligned",
+      "family_slug": "orb_intraday_index_aligned",
+      "fp_a": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_097.json",
+      "fp_b": "all_trading_strategies/opus/Opus_46_of_50.json",
+      "cosine": 0.644
+    }
+  ]
+}

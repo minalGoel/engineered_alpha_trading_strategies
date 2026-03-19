@@ -1,0 +1,143 @@
+{
+  "name": "volume_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "volume-weighted",
+    "momentum",
+    "vol-price-trend",
+    "intraday"
+  ],
+  "thesis": "Volume-weighted momentum measures not just how much price moved, but how much volume participated in the move. When ROC(10) is positive AND cumulative volume on up-bars exceeds cumulative volume on down-bars by >60:40 over the last 20 bars, the momentum has institutional backing (large volume confirming the direction). Moves on thin volume tend to reverse; moves on heavy volume tend to continue. The edge exists because most momentum indicators ignore volume entirely (RSI, MACD, ROC are all price-only). Integrating volume into momentum scoring provides a more informative signal. The inefficiency persists because volume-weighted momentum is not a standard indicator in any major charting platform \u2014 it requires custom computation.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 50 crore INR AND avg_bar_volume > 10000 shares per 1-min bar",
+  "timeframe": "1min",
+  "session": "09:30-14:30 IST",
+  "hold_time": "15-40 minutes",
+  "max_hold_bars": 40,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "up_vol_20",
+      "params": "SUM(volume where close > open, 20)",
+      "lookback": 20
+    },
+    {
+      "name": "dn_vol_20",
+      "params": "SUM(volume where close <= open, 20)",
+      "lookback": 20
+    },
+    {
+      "name": "vol_ratio_20",
+      "params": "up_vol_20 / (up_vol_20 + dn_vol_20)",
+      "lookback": 20
+    },
+    {
+      "name": "ROC_10",
+      "params": "(close - close[t-10]) / close[t-10] * 100",
+      "lookback": 10
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR_14",
+      "params": "ATR(14)",
+      "lookback": 14
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vol_ratio_20 > 0.60",
+        "ROC_10 > 0.15",
+        "close > VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "vol_ratio_20[t] > vol_ratio_20[t-5] (volume participation in up-moves is increasing)"
+    },
+    "short": {
+      "conditions": [
+        "vol_ratio_20 < 0.40",
+        "ROC_10 < -0.15",
+        "close < VWAP",
+        "volume > SMA(volume, 20)"
+      ],
+      "confirmation": "vol_ratio_20[t] < vol_ratio_20[t-5] (volume participation in down-moves is increasing)"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "0.4% from entry",
+    "stop_loss": "0.2% from entry",
+    "trailing_stop": "trail at 0.15% once profit > 0.25%",
+    "time_stop": "40 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if vol_ratio_20 reverts to 0.45-0.55 range (volume participation neutralized)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "no specific filter",
+    "time_filter": "no entries before 09:30 or after 14:30",
+    "volume_filter": "integrated into the signal \u2014 vol_ratio_20 IS the volume filter",
+    "trend_filter": "VWAP alignment ensures we trade with institutional flow, not against it",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on expiry day",
+    "other_filters": [
+      "skip if total 20-bar volume is < 50% of average \u2014 low volume makes ratio unreliable"
+    ]
+  },
+  "edge": {
+    "expected_bps": 26,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.63,
+    "edge_decay_risk": "low \u2014 volume-weighted momentum is not standard; custom indicator provides information edge"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The up/down volume classification (close > open) is crude \u2014 a bar can close green on low volume and red on high volume",
+    "20-bar lookback means the volume ratio can be distorted by a single extreme-volume bar",
+    "In low-volume periods (lunch hour 12:30-13:30), the ratio is based on thin data and unreliable"
+  ],
+  "prior_art": "Volume Price Trend (VPT), On-Balance Volume (OBV), and Chaikin Money Flow all attempt to integrate volume with price direction. The specific up_vol / total_vol ratio over 20 bars is a simplified version of Volume Weighted Average Price's directional component. Easley et al. (2012) VPIN is related but uses a different bucketing approach.",
+  "notes": "Edge math: 0.52 * 40bps - 0.48 * 27bps = 20.8 - 13.0 = 7.8 bps gross. Costs ~11 bps. Net \u2248 -3.2 bps. Negative on conservative estimates. The vol_ratio filter is the edge \u2014 need to validate that high vol_ratio (>0.65) meaningfully predicts continuation vs base rate. If WR improves to 0.56: 0.56*40 - 0.44*27 = 22.4 - 11.9 = 10.5 bps, net ~0 bps. Still marginal.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_028.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_028.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "volume-weighted momentum vol-price-trend",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/opus/Opus_35_of_50.json"
+    ],
+    "different_pairs": []
+  }
+}

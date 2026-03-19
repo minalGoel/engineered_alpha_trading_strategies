@@ -38,9 +38,49 @@ STRATEGY_TIMEOUT_SECS = 45 * 60
 
 
 def _save_json(path: Path, data):
-    """Save data as JSON using orjson."""
+    """Save data as JSON using orjson.
+
+    Uses OPT_NON_STR_KEYS | OPT_SERIALIZE_NUMPY to handle numpy types,
+    and a default handler for NaN/Infinity which orjson rejects by default.
+    We sanitise floats before serialising to avoid crashes on NaN/Inf values
+    that can leak through from metric calculations.
+
+    Writes atomically via temp file + rename to prevent corruption on crash.
+    """
+    import tempfile
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2))
+    sanitised = _sanitise_for_json(data)
+    payload = orjson.dumps(sanitised, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
+    # Atomic write: write to temp file in same directory, then rename
+    import os as _os
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        _os.write(fd, payload)
+        _os.close(fd)
+        fd = -1  # mark as closed
+        _os.replace(tmp_path, path)  # atomic on same filesystem
+    except Exception:
+        if fd >= 0:
+            _os.close(fd)
+        try:
+            _os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
+def _sanitise_for_json(obj):
+    """Recursively replace NaN/Infinity floats with None so orjson doesn't crash."""
+    import math
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sanitise_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitise_for_json(v) for v in obj]
+    return obj
 
 
 def _save_parquet(path: Path, df: pl.DataFrame):
@@ -271,8 +311,15 @@ def run_strategy_pipeline(
                 optimized_params = opt_result.get("optimized_params", {})
                 default_sharpe = opt_result.get("default_sharpe", 0)
                 cv_results = opt_result.get("cv_fold_results", [])
-                trading_days = 748  # approximate, will be refined
-                log.info("%s — Phase 3 — loaded from disk", log_prefix)
+                # Estimate trading_days from actual stock data instead of hardcoding
+                trading_days = 0
+                for df in train_stock_data.values():
+                    if "day_id" in df.columns:
+                        trading_days = max(trading_days, df["day_id"].n_unique())
+                    break
+                if trading_days == 0:
+                    trading_days = 748  # fallback only if no stock data loaded
+                log.info("%s — Phase 3 — loaded from disk (trading_days=%d)", log_prefix, trading_days)
             else:
                 log.error("%s — Phase 3 results missing, cannot restart from phase %d",
                           log_prefix, start_phase)
@@ -374,6 +421,7 @@ def run_strategy_pipeline(
         all_test_trades = []
         test_per_stock = {}
 
+        test_trading_days = 0
         for sym in passing_syms:
             df = load_stock_data(ps.timeframe, sym, start_date=TEST_START)
             if df is None or df.is_empty():
@@ -389,17 +437,22 @@ def run_strategy_pipeline(
                 needs_obv=ps.needs_obv,
                 needs_bar_count=ps.needs_bar_count,
             )
+            # Track test period trading days from the first stock we see
+            if test_trading_days == 0 and "day_id" in df.columns:
+                test_trading_days = df["day_id"].n_unique()
             trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
                                      skip_indicators=True)
             if trades is not None and not trades.is_empty():
                 all_test_trades.append(trades)
-                m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade)
+                m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade,
+                                              total_trading_days=test_trading_days or None)
                 test_per_stock[sym] = m
 
         watchdog.check()
 
         test_combined = pl.concat(all_test_trades) if all_test_trades else pl.DataFrame()
-        test_metrics = compute_metrics(test_combined, ps.capital_per_trade)
+        test_metrics = compute_metrics(test_combined, ps.capital_per_trade,
+                                       total_trading_days=test_trading_days or None)
 
         # Save test results
         test_dir = strat_dir / "test"

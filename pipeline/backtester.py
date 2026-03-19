@@ -125,8 +125,11 @@ def backtest_single(
         else:
             long_mask = np.zeros(n, dtype=np.bool_)
 
-        if not strategy.is_long_only and short_conds:
-            short_mask = evaluate_conditions(short_conds, arrays)
+        if not strategy.is_long_only:
+            if short_conds:
+                short_mask = evaluate_conditions(short_conds, arrays)
+            else:
+                short_mask = np.zeros(n, dtype=np.bool_)
 
         # Apply VIX filter
         if vix_conds:
@@ -151,9 +154,10 @@ def backtest_single(
         # Apply expiry day filter
         if strategy.time_filter.skip_expiry:
             # Skip Thursdays (approximate expiry detection)
+            # Polars weekday: Monday=1 .. Sunday=7, so Thursday=4
             if "datetime" in df.columns:
                 weekday = df["datetime"].dt.weekday().to_numpy()
-                expiry_mask = weekday != 3  # 3 = Thursday
+                expiry_mask = weekday != 4  # 4 = Thursday in Polars
                 long_mask &= expiry_mask
                 short_mask &= expiry_mask
 
@@ -211,9 +215,20 @@ def backtest_single(
         time_stop = int(param_overrides.get("time_stop_bars",
                     strategy.exit_rules.time_stop_bars or DEFAULT_MAX_HOLD_BARS))
 
-        # NaN-safe: replace NaN with 0 in atr array
+        # NaN-safe: replace NaN with 0 in atr and target arrays.
+        # Also forward-fill NaN in price arrays — NaN prices from missing data
+        # would produce NaN PnL and corrupt all downstream metrics.
         atr_arr = np.nan_to_num(atr_arr, nan=0.0)
         target_indicator = np.nan_to_num(target_indicator, nan=0.0)
+        for key in ("open", "high", "low", "close"):
+            if key in arrays:
+                arr = arrays[key]
+                mask = np.isnan(arr)
+                if mask.any():
+                    # Forward-fill NaN values in price arrays
+                    for idx in range(len(arr)):
+                        if mask[idx] and idx > 0:
+                            arr[idx] = arr[idx - 1]
 
         # ── Run state machine ───────────────────────────────────────────
         eod_flatten_minutes = EOD_FLATTEN_H * 60 + EOD_FLATTEN_M

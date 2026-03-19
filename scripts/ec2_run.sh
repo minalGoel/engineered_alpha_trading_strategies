@@ -76,9 +76,11 @@ PIPELINE_PID=$!
 echo "[$(date)] Pipeline started with PID=$PIPELINE_PID"
 echo "[$(date)] Monitor with: tail -f ~/pipeline.log"
 
-# Wait for pipeline to complete
+# Wait for pipeline to complete (disable set -e so we can capture exit code)
+set +e
 wait $PIPELINE_PID
 PIPELINE_EXIT=$?
+set -e
 echo "[$(date)] Pipeline exited with code=$PIPELINE_EXIT"
 
 # ── Push results to git ────────────────────────────────────────────────────

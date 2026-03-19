@@ -216,9 +216,12 @@ class CrossCondition:
                 return np.zeros(len(a), dtype=np.bool_)
 
         if self.direction == "over":
-            return (a > b) & (np.roll(a, 1) <= np.roll(b, 1))
+            result = (a > b) & (np.roll(a, 1) <= np.roll(b, 1))
         else:
-            return (a < b) & (np.roll(a, 1) >= np.roll(b, 1))
+            result = (a < b) & (np.roll(a, 1) >= np.roll(b, 1))
+        # Bar 0 has no prior bar — np.roll wraps last element, so suppress it
+        result[0] = False
+        return result
 
     def __repr__(self):
         return f"CROSS{'OVER' if self.direction == 'over' else 'UNDER'}({self.col_a}, {self.col_b})"
@@ -646,10 +649,10 @@ def parse_time_filter(session_str: str, filters: dict) -> TimeFilter:
             # Override with explicit window
             start_h, start_m = int(m.group(1)), int(m.group(2))
             end_h, end_m = int(m.group(3)), int(m.group(4))
-            tf.start_h = max(tf.start_h * 60 + tf.start_m, start_h * 60 + start_m) // 60
-            tf.start_m = max(tf.start_h * 60 + tf.start_m, start_h * 60 + start_m) % 60
-            tf.end_h = min(tf.end_h * 60 + tf.end_m, end_h * 60 + end_m) // 60
-            tf.end_m = min(tf.end_h * 60 + tf.end_m, end_h * 60 + end_m) % 60
+            new_start = max(tf.start_h * 60 + tf.start_m, start_h * 60 + start_m)
+            tf.start_h, tf.start_m = new_start // 60, new_start % 60
+            new_end = min(tf.end_h * 60 + tf.end_m, end_h * 60 + end_m)
+            tf.end_h, tf.end_m = new_end // 60, new_end % 60
 
         m = _RE_TIME_BEFORE.search(time_str)
         if m:

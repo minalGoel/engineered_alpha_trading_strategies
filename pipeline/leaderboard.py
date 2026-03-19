@@ -160,6 +160,9 @@ def build_master_signals(
         if signals_path.exists():
             try:
                 df = pl.read_parquet(signals_path)
+                # Tag each signal with its source strategy
+                if "strategy" not in df.columns:
+                    df = df.with_columns(pl.lit(sr["name"]).alias("strategy"))
                 all_signals.append(df)
             except Exception as e:
                 log.warning("Failed to read signals for %s: %s", sr["name"], e)
@@ -167,4 +170,7 @@ def build_master_signals(
     if not all_signals:
         return None
 
-    return pl.concat(all_signals).sort("timestamp")
+    combined = pl.concat(all_signals, how="diagonal")
+    # Sort by whichever timestamp column exists
+    sort_col = "timestamp" if "timestamp" in combined.columns else "datetime"
+    return combined.sort(sort_col)

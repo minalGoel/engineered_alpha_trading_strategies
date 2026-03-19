@@ -208,7 +208,7 @@ def generate_report(
 
     # ── Last 20 Signals ─────────────────────────────────────────────────
     if test_trades_df is not None and not test_trades_df.is_empty():
-        lines.append("## Last 20 Signals (test period)")
+        lines.append("## Last 10 Trades (test period)")
         lines.append("| Timestamp | Symbol | Action | Price | Trade PnL |")
         lines.append("|-----------|--------|--------|-------|-----------|")
         recent = test_trades_df.sort("exit_time", descending=True).head(10)
@@ -232,7 +232,8 @@ def generate_report(
         lines.append(f"- {w}")
     # Discovered weaknesses
     if stock_filter and stock_filter.get("passing_stocks", 0) < 20:
-        lines.append(f"- Only works on {stock_filter.get('passing_stocks', 0)}/206 stocks")
+        total_stocks = stock_filter.get('total_stocks_tested', stock_filter.get('passing_stocks', 0))
+        lines.append(f"- Only works on {stock_filter.get('passing_stocks', 0)}/{total_stocks} stocks")
     if test_metrics and train_metrics:
         train_sharpe = train_metrics.get("sharpe_annualized", 0)
         test_sharpe = test_metrics.get("sharpe_annualized", 0)

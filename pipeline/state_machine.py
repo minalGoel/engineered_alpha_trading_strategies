@@ -125,25 +125,6 @@ def run_state_machine(
         if i < warmup_bars:
             continue
 
-        # ── Check EOD flatten (always enforced) ─────────────────────────
-        if state != _FLAT and time_minutes[i] >= eod_flatten_minutes:
-            exit_price = close_arr[i]
-            if state == _LONG:
-                pnl = (exit_price - entry_price) * (capital_per_trade / entry_price)
-            else:
-                pnl = (entry_price - exit_price) * (capital_per_trade / entry_price)
-            daily_pnl += pnl
-
-            out_entry_bar[trade_count] = entry_bar_idx
-            out_exit_bar[trade_count] = i
-            out_side[trade_count] = state
-            out_entry_price[trade_count] = entry_price
-            out_exit_price[trade_count] = exit_price
-            out_exit_reason[trade_count] = _EXIT_EOD
-            trade_count += 1
-            state = _FLAT
-            continue
-
         # ── In position: check exits ────────────────────────────────────
         if state != _FLAT:
             bars_held += 1
@@ -207,6 +188,12 @@ def run_state_machine(
                     reason = _EXIT_TIME
                     exit_triggered = True
 
+                # 6. EOD flatten (lowest priority — only if no other exit triggered)
+                if not exit_triggered and time_minutes[i] >= eod_flatten_minutes:
+                    fill_price = close_arr[i]
+                    reason = _EXIT_EOD
+                    exit_triggered = True
+
             else:  # SHORT
                 # Update tracking
                 if low_arr[i] < lowest_since_entry:
@@ -263,7 +250,17 @@ def run_state_machine(
                     reason = _EXIT_TIME
                     exit_triggered = True
 
+                # 6. EOD flatten (lowest priority — only if no other exit triggered)
+                if not exit_triggered and time_minutes[i] >= eod_flatten_minutes:
+                    fill_price = close_arr[i]
+                    reason = _EXIT_EOD
+                    exit_triggered = True
+
             if exit_triggered:
+                if trade_count >= max_trades:
+                    state = _FLAT
+                    continue
+
                 if state == _LONG:
                     pnl = (fill_price - entry_price) * (capital_per_trade / entry_price)
                 else:

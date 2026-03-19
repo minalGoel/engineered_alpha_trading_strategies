@@ -31,6 +31,7 @@ VIX_FILES = {
     "15min": DATA_DIR / "india_vix_15min.parquet",
     "30min": DATA_DIR / "india_vix_30min.parquet",
     "1h": DATA_DIR / "india_vix_1h.parquet",
+    "daily": DATA_DIR / "india_vix_daily.parquet",
 }
 
 INDEX_FILES = {
@@ -39,6 +40,7 @@ INDEX_FILES = {
     "15min": DATA_DIR / "index_15min.parquet",
     "30min": DATA_DIR / "index_30min.parquet",
     "1h": DATA_DIR / "index_1h.parquet",
+    "daily": DATA_DIR / "index_daily.parquet",
 }
 
 STOCKS_LIST_FILE = DATA_DIR / "stocks_list.parquet"

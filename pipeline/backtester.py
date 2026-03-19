@@ -7,6 +7,7 @@ from __future__ import annotations
 import numpy as np
 import polars as pl
 import logging
+import orjson
 from typing import Optional
 
 from pipeline.config import (
@@ -308,7 +309,6 @@ def backtest_single(
                 val = float(arrays["vix"][entry_bar])
                 if val == val:
                     ind_dict["vix"] = round(val, 2)
-            import orjson
             entry_indicators_list.append(orjson.dumps(ind_dict).decode())
 
         trades_df = pl.DataFrame({

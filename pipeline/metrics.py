@@ -120,7 +120,7 @@ def compute_metrics(
 
     # ── Streaks ─────────────────────────────────────────────────────────
     longest_win = _longest_streak(pnls > 0)
-    longest_loss = _longest_streak(pnls <= 0)
+    longest_loss = _longest_streak(pnls < 0)
 
     # ── Monthly PnL ─────────────────────────────────────────────────────
     monthly_pnl = _compute_monthly_pnl(trades_df)

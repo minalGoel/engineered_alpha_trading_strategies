@@ -135,7 +135,10 @@ def compute_vwap(df: pl.DataFrame, name: str = "vwap") -> pl.DataFrame:
         pl.col("volume").cum_sum().over("day_id").alias("_cum_vol"),
     )
     df = df.with_columns(
-        (pl.col("_cum_tp_vol") / pl.col("_cum_vol")).alias(name)
+        pl.when(pl.col("_cum_vol") > 0)
+        .then(pl.col("_cum_tp_vol") / pl.col("_cum_vol"))
+        .otherwise(pl.col("close"))
+        .alias(name)
     )
     df = df.drop(["_tp_vol", "_cum_tp_vol", "_cum_vol"])
     return df

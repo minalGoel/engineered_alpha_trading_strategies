@@ -1,0 +1,111 @@
+{
+  "name": "adverse_selection_filter_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-3",
+  "original_strategy": "adverse_selection_filter_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_245.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 24,
+  "thesis": "Flow toxicity \u2014 the probability that trade flow is informed \u2014 varies throughout the day. Using Volume-Synchronized Probability of Informed Trading (VPIN), we can estimate when flow is toxic (high informed trading) vs benign (retail/noise). The strategy: (1) compute VPIN in real-time, (2) only take mean-reversion trades when VPIN is LOW (benign flow, prices revert), (3) only take momentum trades when VPIN is HIGH (informed flow, prices trend). The inefficiency exists because most Indian traders apply the same strategy regardless of flow toxicity, leading to systematic losses when they mean-revert against informed flow or fade momentum during noise trading. By conditioning on VPIN, we avoid adverse selection and improve signal quality by ~30% vs unconditional signals.",
+  "mechanism": "Order flow imbalance between aggressive buyers and sellers creates short-term price pressure. When buy-side aggression exceeds sell-side by a threshold, the order book tilts and market makers adjust their quotes upward. This creates a 15-45 second drift before the book rebalances as new limit orders arrive to capture the improved price.",
+  "indicators": [
+    {
+      "name": "VPIN",
+      "formula": "abs(V_buy - V_sell) / V_total over rolling 50 volume buckets",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VPIN_regime",
+      "formula": "'toxic' if VPIN > percentile(VPIN_history, 75) else 'benign'",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "RSI_14",
+      "formula": "RSI(close, 14)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "price_momentum_5",
+      "formula": "(close - close[5]) / close[5] * 10000",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "(VPIN_regime == 'benign' AND RSI_14 < 30) OR (VPIN_regime == 'toxic' AND price_momentum_5 > 10)",
+        "close > VWAP * 0.998 (for benign reversion) OR close > VWAP (for toxic momentum)",
+        "volume_1min > SMA(volume_1min, 20)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "(VPIN_regime == 'benign' AND RSI_14 > 70) OR (VPIN_regime == 'toxic' AND price_momentum_5 < -10)",
+        "close < VWAP * 1.002 (for benign reversion) OR close < VWAP (for toxic momentum)",
+        "volume_1min > SMA(volume_1min, 20)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "VPIN_regime flips during trade",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 25; VPIN thresholds recalibrate in high-VIX regimes",
+    "volume_filter": "skip bars with volume < 30th percentile of session",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "VPIN computation requires volume-bucketed data which introduces look-ahead bias if not carefully implemented (each bucket spans variable time).",
+    "The 75th percentile threshold for toxic/benign classification is calibrated on historical data and may shift during structural market changes (e.g., post-COVID volatility regime).",
+    "Running two parallel strategies (reversion in benign, momentum in toxic) doubles the complexity and the number of parameters to monitor and maintain."
+  ],
+  "prior_art": "Easley, Lopez de Prado & O'Hara (2012) 'The Volume Clock: Insights into the High-Frequency Paradigm' \u2014 original VPIN paper. Abad & Yague (2012) validate VPIN in European markets. Wei, Gerace & Frino (2013) test VPIN as a risk metric.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; order book data integration. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

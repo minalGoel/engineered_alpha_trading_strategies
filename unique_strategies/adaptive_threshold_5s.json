@@ -1,0 +1,125 @@
+{
+  "name": "adaptive_threshold_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "adaptive_threshold_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_300.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 12,
+  "thesis": "Fixed indicator thresholds (e.g., RSI > 70 is overbought) fail because the distribution of indicators shifts with market regime. In trending markets, RSI can stay above 70 for extended periods; in ranging markets, RSI(14) rarely exceeds 65. By dynamically scaling thresholds using a rolling percentile approach \u2014 overbought = top 5th percentile of RSI over last 120 bars, oversold = bottom 5th percentile \u2014 the strategy adapts to current market conditions. Similarly, Bollinger Band width thresholds for breakout are scaled by recent volatility regime using ATR percentile. The inefficiency persists because most retail and systematic traders use static thresholds, creating predictable entry/exit clustering that we can front-run.",
+  "mechanism": "Market microstructure varies across volatility regimes. In low-vol regimes, mean-reversion dominates as market makers provide tight liquidity. In high-vol regimes, momentum persists as liquidity thins and stop-cascades amplify moves. Adapting the signal to the current regime captures the appropriate edge for prevailing conditions.",
+  "indicators": [
+    {
+      "name": "RSI_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "RSI_Upper_Threshold",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "RSI_Lower_Threshold",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_Width",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_Width_Threshold",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "ATR_Pctile",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "RSI_14 < RSI_Lower_Threshold (dynamically oversold)",
+        "BB_Width was < BB_Width_Threshold within last 10 bars (recent squeeze)",
+        "close < vwap AND (vwap - close)/close * 10000 > 20 bps"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "RSI_14 > RSI_Upper_Threshold (dynamically overbought)",
+        "BB_Width was < BB_Width_Threshold within last 10 bars",
+        "close > vwap AND (close - vwap)/close * 10000 > 20 bps"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "RSI_14 crosses median of 120-bar rolling RSI distribution (50th percentile)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25",
+    "volume_filter": "Volume on signal bar > SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "120-bar lookback for percentile calibration means no trades until 11:15 IST, missing the often-volatile morning session where many intraday opportunities occur",
+    "Percentile-based thresholds can become very narrow in low-volatility regimes (RSI staying 45-55), triggering on minor fluctuations that lack follow-through",
+    "The strategy conflates two different setups \u2014 RSI extremes (mean-reversion) and BB squeeze (breakout) \u2014 which may point in opposite directions, reducing clarity"
+  ],
+  "prior_art": "Bollinger Band squeeze (John Bollinger); adaptive RSI thresholds discussed in Kaufman's 'New Trading Systems and Methods'; percentile-based dynamic thresholds used in some quant funds but not widely published",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

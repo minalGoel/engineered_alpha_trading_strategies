@@ -1,0 +1,122 @@
+{
+  "name": "adx_trend_strength_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "adx_trend_strength_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_161.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "ADX rising above 25 from below signals the emergence of a new intraday trend. Rather than using ADX just as a filter (as in strategy 21), here ADX itself IS the signal. When ADX(14) crosses above 25 AND +DI > -DI (for longs) or -DI > +DI (for shorts), a new directional trend is forming. The edge exists because ADX measures trend strength regardless of direction, and the cross above 25 is a relatively specific event (~2-3 times per day per stock). The DI lines provide direction while ADX provides conviction. The inefficiency is that most traders use ADX as a lagging confirmation, not as a lead entry signal. By entering when ADX is just crossing 25 (nascent trend), we capture the early part of the trend before it becomes obvious to all participants.",
+  "mechanism": "ADX measures the strength of directional order flow. Rising ADX indicates that one-sided institutional flow is dominating the order book. The trend persists because the institutional order is not yet complete, and trend-following algorithms amplify the existing direction, creating persistent moves that last until the flow exhausts.",
+  "indicators": [
+    {
+      "name": "ADX_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "plus_DI_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "minus_DI_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "ATR_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ADX(14) > 25",
+        "ADX(14)[t-1] <= 25",
+        "+DI(14) > -DI(14)",
+        "+DI(14) - -DI(14) > 10",
+        "close > VWAP"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "ADX(14) > 25",
+        "ADX(14)[t-1] <= 25",
+        "-DI(14) > +DI(14)",
+        "-DI(14) - +DI(14) > 10",
+        "close < VWAP"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 6,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if ADX starts declining AND DI lines converge (trend fading)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "no specific filter \u2014 ADX-based entries work across VIX regimes",
+    "volume_filter": "volume on cross bar > SMA(volume, 20)",
+    "expiry_filter": "skip on F&O expiry day"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 5
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "ADX is inherently lagging \u2014 by the time ADX crosses 25, the trend has already started 14+ bars ago",
+    "On 1-min bars, ADX(14) reacts to only 14 minutes of data, making the 25 threshold potentially unstable",
+    "False ADX breakouts above 25: ADX can spike above 25 on a single large bar and immediately fall back"
+  ],
+  "prior_art": "ADX/DMI system by Welles Wilder ('New Concepts in Technical Trading Systems', 1978). Standard textbook trend following. The ADX > 25 threshold for trend confirmation is widely used. Using ADX cross as entry rather than filter is less conventional \u2014 most sources use DI cross for entry and ADX for filter.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

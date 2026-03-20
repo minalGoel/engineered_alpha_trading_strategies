@@ -1,0 +1,93 @@
+{
+  "name": "atr_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from AI_Quant",
+  "original_strategy": "atr_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_6.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "This strategy targets volatility breakouts: when intraday range expands beyond normal (ATR spikes), price often continues in the breakout direction. It exploits sudden volatility expansions as signals of momentum. The inefficiency is that traders often underestimate quickly expanding ranges, and it persists because ATR is a lagging measure and signals come slightly late.",
+  "mechanism": "ATR measures the amplitude of recent price swings. When current price movement exceeds the ATR envelope, it signals a breakout from the volatility regime. Such breakouts typically result from institutional flow entering the market, and the move persists until the flow is absorbed, usually within 1-3 ATR multiples of the breakout point.",
+  "indicators": [
+    {
+      "name": "atr14",
+      "formula": "ATR(168)",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": "volatility measure"
+    },
+    {
+      "name": "prev_range",
+      "formula": "high - low",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "current bar range"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "prev_range > 1.5 * atr14"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "prev_range > 1.5 * atr14"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit on opposing signal",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25",
+    "volume_filter": "volume > 1.5 * avg_20",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Often false alarms during normal volatility spikes",
+    "Late entries (after breakout), can capture smaller portion of move",
+    "High slippage during volatility spikes"
+  ],
+  "prior_art": "Volatility breakout",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

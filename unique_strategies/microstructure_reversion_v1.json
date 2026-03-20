@@ -1,0 +1,121 @@
+{
+  "name": "microstructure_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["microstructure", "order_flow", "imbalance", "mean_reversion", "exhaustion"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_155.json",
+  "original_name": "microstructure_reversion_v1",
+
+  "mechanism": "On NIFTY at 5-second resolution, each bar's return sign (+/-) combined with its volume approximates the net aggressor side — whether buyers or sellers were dominant in that 5-second window. A rolling 12-bar window (60 seconds) of signed volume flow measures cumulative buying vs selling pressure. When this signed flow becomes extremely one-sided — over 80% buy-volume or 80% sell-volume across the past minute — it signals short-term liquidity exhaustion on NIFTY. The aggressive side has consumed the available resting limit orders, and the limit order book is now thin on that side. The reversion mechanism is specific to NIFTY's microstructure: market makers on NSE who provide liquidity through index options delta-hedge via NIFTY futures/spot. When aggressive buying exhausts their resting sell limits, they momentarily pull quotes, creating a micro-vacuum. But within 15-30 seconds, they re-enter with fresh limit orders at slightly lower prices (for buy exhaustion) because their options book needs to stay delta-neutral. This forced re-entry by market makers IS the reversion. Unlike VWAP reversion strategies which measure deviation from a session-level anchor, this measures real-time aggressor flow exhaustion — a microstructure phenomenon that operates on a 30-60 second timescale, independent of where price sits relative to VWAP.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:15 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 10,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["signed_volume_flow"]
+  },
+
+  "indicators": [
+    {
+      "name": "bar_signed_volume",
+      "formula": "volume * sign(close - open); if close == open, use sign(close - prev_close)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Approximates the net aggressor direction for each 5-second bar on NIFTY. A green bar's volume is attributed to buyers (positive), red bar's to sellers (negative). This is a crude but effective proxy for order flow direction at 5s granularity — on NIFTY futures/spot, 5-second bars are short enough that each bar is usually dominated by one side. More sophisticated than the original's up-bar/down-bar classification because we use the actual close-open direction rather than close-vs-previous-close."
+    },
+    {
+      "name": "buy_flow_ratio_12",
+      "formula": "sum(max(bar_signed_volume, 0), 12) / sum(abs(bar_signed_volume), 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Ratio of buy-attributed volume to total volume over 12 bars (60 seconds). Lookback of 12 bars = 1 minute chosen because NIFTY market makers typically replenish their limit order book within 30-60 seconds of exhaustion — so 1 minute captures one full exhaust-replenish cycle. Shorter windows (6 bars/30s) are too noisy; longer windows (24 bars/2min) dilute the exhaustion signal with normal flow."
+    },
+    {
+      "name": "flow_extreme",
+      "formula": "1 if buy_flow_ratio_12 > 0.80 else (-1 if buy_flow_ratio_12 < 0.20 else 0)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Binary flag for flow exhaustion. The 80/20 thresholds are chosen because on NIFTY in normal conditions, the buy_flow_ratio oscillates between 0.35-0.65 (balanced two-way flow). A reading above 0.80 means 4 out of 5 volume units in the past minute were buy-attributed — this level of one-sidedness is unsustainable because it implies limit sell orders are being consumed much faster than they're replenished. The original used 70% but at 5s resolution on NIFTY, the noise floor is higher, requiring a stricter 80% threshold to avoid false signals."
+    },
+    {
+      "name": "return_12",
+      "formula": "(close - close[12]) / close[12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Price return over the same 12-bar window. Used to confirm that the extreme flow actually MOVED price — if buy_flow_ratio > 0.80 but price hasn't risen, the flow is being absorbed by a large hidden seller (iceberg order) and reversion won't occur. On NIFTY, a 1-minute move of 0.03% (roughly 7 spot points) during extreme flow confirms genuine exhaustion rather than absorbed flow."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "flow_extreme == -1 (sell exhaustion: 80%+ of past minute's volume was sell-attributed)",
+        "return_12 < -0.03 (NIFTY dropped at least 7 spot points during the sell flow — selling actually moved price)",
+        "bar_signed_volume[current] > 0 (first green bar after sell exhaustion — market makers re-entering with buy limits)"
+      ],
+      "confirmation": "Current bar close > current bar open AND current bar close > previous bar close (buying resuming)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "flow_extreme == 1 (buy exhaustion: 80%+ of past minute's volume was buy-attributed)",
+        "return_12 > 0.03 (NIFTY rose at least 7 spot points during the buy flow)",
+        "bar_signed_volume[current] < 0 (first red bar after buy exhaustion — sellers stepping in)"
+      ],
+      "confirmation": "Current bar close < current bar open AND current bar close < previous bar close"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = roughly 8 NIFTY spot points. If the exhaustion thesis is correct, reversion should begin within 15-30 seconds. If price moves another 8 spot points in the exhaustion direction instead of reverting, the flow isn't exhausted — there's a genuine directional push (perhaps news-driven or large institutional order). 4 points is at the breakeven threshold, keeping losses to approximately the cost of being wrong.",
+    "target_points": 5,
+    "target_rationale": "Flow exhaustion reversions on NIFTY are FAST but SHALLOW — the market makers re-entering pull price back 8-15 spot points (4-7 option points) before the next wave of directional flow resumes. Target of 5 option points captures the median reversion magnitude. Higher targets (8+) would require the reversion to overshoot into a counter-trend, which only happens 20-30% of the time. The 5:4 reward-to-risk is modest but compensated by higher win rate on genuine exhaustion signals.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "none — flow exhaustion and market-maker replenishment dynamics operate across all VIX regimes on NIFTY",
+    "time_filter": "No trades before 09:20 (need 12 bars = 1 minute of data) or after 15:10 (closing auction distorts flow patterns)",
+    "volume_filter": "Skip bars where total volume in 12-bar window is below session average — low volume makes the flow ratio unreliable",
+    "trend_filter": "none — counter-trend by design; the exhaustion signal IS the trend-ending signal",
+    "spread_filter": "ATM option bid-ask < 2 points — microstructure trades require tight execution"
+  },
+
+  "edge": {
+    "expected_bps": 8,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.25,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "moderate — the signal is noisy because bar-level signed volume is a crude proxy for true order flow; with tick-level data the edge would be much stronger"
+  },
+
+  "adaptation_notes": "Original operated on 1-min bars with a 10-bar rolling window (10 minutes) and used close-location-value (CLV) to split buy/sell volume. Adapted to NIFTY 5s: (1) Replaced CLV-based buy/sell split with bar-sign-weighted volume — at 5s resolution on NIFTY, each bar is short enough that the close-vs-open direction is a reasonable aggressor proxy, whereas CLV needs meaningful high-low range which 5s bars often lack. (2) Lookback compressed from 10 bars x 1min = 10 minutes to 12 bars x 5s = 1 minute — NIFTY market maker replenishment cycles operate on 30-60 second timescales, not 10-minute timescales. (3) Exhaustion threshold tightened from 70% to 80% because 5s bar noise is higher. (4) Hold time compressed from 5-20 minutes to 15-60 seconds — the reversion from microstructure exhaustion is fast (market makers re-enter quickly) and the opportunity dissipates within a minute. (5) Moved from individual stocks to NIFTY index because NIFTY has the deepest order book on NSE, making the market-maker exhaustion/replenishment cycle most reliable and predictable. (6) Stop/target rebalanced to 4/5 option points to match the shallow-but-fast reversion profile.",
+
+  "weaknesses": [
+    "Signed volume is a very crude approximation of true order flow — many 5s bars have close == open, making direction assignment ambiguous",
+    "On trending NIFTY days (strong FII buying/selling), 80% one-sided flow may persist for minutes without reverting, triggering repeated stop-outs",
+    "The 5:4 reward-to-risk ratio is thin — even small slippage deterioration pushes the strategy below breakeven",
+    "Cannot distinguish genuine liquidity exhaustion from a brief pause before the next wave of institutional flow continues"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_155.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-20 minutes (5-20 bars)",
+    "original_indicators": ["buy_vol (CLV-based)", "sell_vol (CLV-based)", "buy_imbalance_10", "price_change_10", "ATR_10"],
+    "original_stop": "0.2% from entry",
+    "original_target": "buy_imbalance crosses 0.50 OR 0.2% profit"
+  }
+}

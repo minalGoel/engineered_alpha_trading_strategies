@@ -1,0 +1,123 @@
+{
+  "name": "gap_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "momentum", "continuation", "opening"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_12.json",
+  "original_name": "gap_momentum_v1",
+
+  "mechanism": "When NIFTY gaps open by more than 100 spot points (roughly 0.4%), driven by overnight global cues or pre-market institutional positioning, the gap direction tends to CONTINUE for at least the first 60-180 seconds of trading. This is because large NIFTY gaps are caused by institutional portfolio adjustments — mutual funds and FIIs rebalancing to global overnight moves — and these orders are typically sliced across the first 1-3 minutes via TWAP/VWAP algos. At 5-second resolution on NIFTY, we can detect gap-direction confirmation in just 6 bars (30 seconds) rather than waiting for a full 1-minute candle. The confirmation is simple: if 4 of the first 6 five-second bars close in the gap direction, the institutional flow is genuine and ongoing. We enter immediately and ride the continuation for 60-180 seconds as the remaining sliced orders continue pushing NIFTY in the gap direction. The edge decays once the initial institutional execution wave is complete — typically within 2-3 minutes of open — so we exit before that window closes. This is fundamentally different from ORB breakout (which waits for a range to form) and gap fade (which bets AGAINST the gap). We are betting WITH the gap, but only for its first continuation leg.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:15-09:25 IST",
+  "hold_time_seconds": [60, 180],
+  "max_hold_bars": 36,
+  "trades_per_day": "0-1",
+  "max_trades_per_day": 1,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["prev_close", "gap_points"]
+  },
+
+  "indicators": [
+    {
+      "name": "gap_points",
+      "formula": "open_09:15 - prev_close",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Absolute gap size in NIFTY spot points. Threshold of 100 points chosen because gaps below 50 points on NIFTY are often noise from SGX Nifty arbitrage closing, while gaps above 100 points require genuine institutional repositioning (FII/DII rebalancing to global moves). At 100+ points, the gap represents real capital flow, not just market-maker adjustment."
+    },
+    {
+      "name": "directional_bar_count_6",
+      "formula": "count of bars 1-6 where close > open (gap up) or close < open (gap down)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Counts how many of the first 6 five-second bars (30 seconds) confirm the gap direction. 6 bars = 30 seconds chosen because NIFTY's opening auction settles within 15-20 seconds, and by 30 seconds we have enough bars to distinguish institutional continuation (4+ confirming bars) from gap-fill attempts (2 or fewer). Waiting longer loses edge as the first execution wave is short-lived."
+    },
+    {
+      "name": "cumulative_return_6",
+      "formula": "(close[bar 6] - open[bar 1]) / open[bar 1] * 100",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Net price movement over the first 30 seconds. Confirms that the directional bars are producing meaningful price progress, not just noise. On NIFTY, a gap-up day that continues should show at least 0.02% additional move (5+ spot points) in the first 30 seconds beyond the gap itself. This filters out gaps that open and immediately stall."
+    },
+    {
+      "name": "india_vix",
+      "formula": "India VIX at 09:15",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "VIX filter at 25 because above that level, gap continuations become unreliable — high VIX means options market makers widen spreads and institutional algos reduce size, so the continuation flow is weaker and more erratic. Below 25, gaps driven by overnight moves follow through cleanly."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_points > 100 (NIFTY gapped up 100+ spot points — institutional repositioning)",
+        "directional_bar_count_6 >= 4 (at least 4 of first 6 bars closed green — gap direction confirmed)",
+        "cumulative_return_6 > 0.02 (price progressing further in gap direction, not stalling)",
+        "india_vix < 25 (options market liquid enough for clean execution)"
+      ],
+      "confirmation": "Bar 7 opens above bar 6 close (no immediate reversal at 30-second mark)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_points < -100 (NIFTY gapped down 100+ spot points)",
+        "directional_bar_count_6 >= 4 (at least 4 of first 6 bars closed red)",
+        "cumulative_return_6 < -0.02 (price continuing lower)",
+        "india_vix < 25"
+      ],
+      "confirmation": "Bar 7 opens below bar 6 close"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option points = roughly 10 NIFTY spot points at ATM delta 0.5. On a 100+ point gap day, if NIFTY reverses 10 spot points against the gap direction within the first minute, the continuation thesis is broken — this is likely a gap-and-reverse pattern, not gap-and-go. 5 option points is just above the 4-point breakeven cost, keeping losses minimal on failed setups.",
+    "target_points": 10,
+    "target_rationale": "On NIFTY gap continuation days with 100+ point gaps, the first 2-3 minutes typically see an additional 20-40 spot points of follow-through beyond the gap. At ATM delta 0.5, that translates to 10-20 option points. Target of 10 captures the conservative end of this range, giving a 2:1 reward-to-risk ratio. We don't reach for the full move because institutional execution waves taper after 2-3 minutes.",
+    "time_stop_bars": 36,
+    "eod_rule": "flatten at 09:25 — this is a first-3-minutes-only strategy; holding longer exposes to gap-fill dynamics that kick in after the opening wave"
+  },
+
+  "filters": {
+    "vix_filter": "india_vix < 25 — above 25, gap continuations are unreliable due to wider spreads and reduced institutional algo sizing",
+    "time_filter": "Entry ONLY between 09:15:30 and 09:16:00 (after 6 confirmation bars). No late entries — the edge is entirely in the first 3 minutes.",
+    "volume_filter": "none — opening minutes always have high volume on gap days",
+    "trend_filter": "none — the gap itself IS the trend signal",
+    "spread_filter": "ATM option bid-ask < 3 points (opening spreads can be wide; skip if liquidity is poor)"
+  },
+
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.4,
+    "edge_decay_risk": "low — institutional gap continuation is structural, driven by portfolio rebalancing mechanics"
+  },
+
+  "adaptation_notes": "Original traded stocks with >2% gaps on 1-min bars, holding until EOD with stop at signal bar high/low and no target. Adapted to NIFTY index options at 5s: (1) Gap threshold changed from percentage to absolute 100 spot points because NIFTY's gap distribution is well-known and institutional flow significance is better measured in absolute points. (2) Confirmation compressed from 1-minute bar to 6 five-second bars (30s) — at 5s resolution we see the institutional flow develop in real time rather than waiting for a coarse 1-min summary. (3) Hold time compressed from EOD to 60-180 seconds — we only capture the first continuation leg, not the full day's trend, because options theta and gamma decay make holding longer increasingly costly. (4) Stop changed from signal bar high/low (which could be very wide on gap days) to fixed 5 option points, appropriate for the compressed hold time. (5) Added explicit target of 10 points — original had no target (ride-the-trend), but at 5s resolution with options, we must take profit before the first execution wave ends. (6) Reduced from 1-3 trades/day to 0-1 because there's only one opening gap per day.",
+
+  "weaknesses": [
+    "Trade frequency is very low — 100+ point gaps happen only 2-4 times per month on NIFTY, so this strategy produces at most 1 trade per qualifying day",
+    "Opening 30 seconds have the widest bid-ask spreads on options — slippage could consume 2-3 points of the expected 10-point target",
+    "Gap continuation thesis fails on 'gap and trap' days where institutions use the gap to offload positions to retail buyers, causing immediate reversal after the first 30 seconds",
+    "VIX filter eliminates high-volatility gap days which are actually the largest gaps — missing the biggest moves"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_12.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "until EOD (up to 360 bars)",
+    "original_indicators": ["gap_pct", "signal_candle_dir"],
+    "original_stop": "high/low of signal 1-min bar",
+    "original_target": "none (ride the trend)"
+  }
+}

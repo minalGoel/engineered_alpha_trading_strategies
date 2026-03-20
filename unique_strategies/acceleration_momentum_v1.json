@@ -1,0 +1,123 @@
+{
+  "name": "acceleration_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["acceleration", "second_derivative", "momentum", "early_entry", "trend"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_167.json",
+  "original_name": "acceleration_momentum_v1",
+
+  "mechanism": "On NIFTY at 5-second resolution, the second derivative of price (acceleration) detects the moment when a move transitions from 'drifting' to 'surging.' ROC over 12 bars (1 minute) measures NIFTY's velocity — how fast price is moving. The ROC of that ROC over 6 bars (30 seconds) measures acceleration — whether the velocity is INCREASING. When both are positive (price rising AND rising faster), it indicates fresh aggressive buying is entering NIFTY, likely from an institutional algo that is ramping up its execution rate. This is fundamentally different from traditional momentum indicators like MACD which measure velocity crossovers — by the time MACD crosses, the acceleration phase is already over and the move is at peak velocity or decelerating. The acceleration signal fires BEFORE peak velocity, providing an earlier entry on NIFTY. At 5s resolution, acceleration phases on NIFTY are short-lived — typically 30-90 seconds — because the institutional algo that caused the acceleration either completes its execution or gets detected by competing algos who front-run the remaining order. We enter when acceleration turns positive and exit when it peaks (acceleration starts declining even though velocity is still positive), capturing 15-40 spot points of the fastest-moving portion of a NIFTY intraday move.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:10 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 8,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "roc_12",
+      "formula": "(close - close[12]) / close[12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Rate of change over 12 bars = 1 minute. Measures NIFTY's price velocity. 12-bar lookback chosen because 1 minute is the minimum window where NIFTY price moves become statistically distinguishable from bid-ask bounce noise. Shorter lookbacks (6 bars/30s) produce ROC values dominated by single-tick noise; longer lookbacks (24 bars/2min) smooth out the acceleration signal we need to detect. At typical NIFTY intraday volatility, a 1-minute ROC of 0.02% (5 spot points) represents meaningful directional movement."
+    },
+    {
+      "name": "roc_accel_6",
+      "formula": "roc_12[t] - roc_12[t-6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Acceleration: change in velocity over 6 bars = 30 seconds. This is the second derivative of NIFTY price. Lookback of 6 bars chosen because NIFTY acceleration phases — when an institutional algo ramps from 10% to 100% of its target participation rate — typically complete within 20-40 seconds. A 30-second window captures one full ramp-up. When roc_accel_6 > 0 while roc_12 > 0, NIFTY is not just moving up but moving up FASTER — the hallmark of fresh aggressive flow entering."
+    },
+    {
+      "name": "accel_sustained",
+      "formula": "count of last 3 bars where roc_accel_6 > 0",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "Persistence filter: requires acceleration to be positive for 3 consecutive bars (15 seconds). Single-bar acceleration spikes are common noise on NIFTY — a large single trade can cause a one-bar ROC jump. But sustained acceleration over 15 seconds means the buying pressure is genuine and ongoing, not a single block print. Original used 3-bar confirmation on 1-min (3 minutes); compressed to 3 bars on 5s (15 seconds) proportionally."
+    },
+    {
+      "name": "roc_12_magnitude",
+      "formula": "abs(roc_12)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Absolute velocity magnitude to filter out mature moves. If roc_12 already exceeds 0.06% (roughly 15 spot points in 1 minute), the move is mature and acceleration is late-stage — entering now risks buying the top. This filter ensures we enter during EARLY acceleration, not after the move is already extended."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "roc_12 > 0.01 (NIFTY is moving up — velocity is positive, at least 2-3 spot points/minute)",
+        "roc_accel_6 > 0 (velocity is INCREASING — NIFTY is accelerating upward)",
+        "accel_sustained == 3 (acceleration has persisted for 15 seconds — not a single-trade spike)",
+        "roc_12_magnitude < 0.06 (move is still early, not yet at peak velocity — prevents chasing)"
+      ],
+      "confirmation": "Current bar close > previous bar high (price making new 5-second high during acceleration — breakout micro-confirmation)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "roc_12 < -0.01 (NIFTY is moving down — negative velocity)",
+        "roc_accel_6 < 0 (velocity is becoming more negative — accelerating downward)",
+        "accel_sustained == 3 (sustained negative acceleration for 15 seconds)",
+        "roc_12_magnitude < 0.06 (downmove still early, not exhausted)"
+      ],
+      "confirmation": "Current bar close < previous bar low (new 5-second low during acceleration)"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = approximately 8 NIFTY spot points. If the acceleration thesis is correct, price should continue moving in the entry direction with increasing velocity. A reversal of 8 spot points from entry means the acceleration was a false signal — likely a single large trade that briefly distorted ROC rather than genuine institutional flow. 4 points keeps the loss at the breakeven threshold, preserving capital for the next signal.",
+    "target_points": 8,
+    "target_rationale": "NIFTY acceleration phases at 5s resolution typically produce 15-30 spot points of total move from acceleration onset to velocity peak. Entering after 15 seconds of confirmation, we capture roughly 60-70% of the remaining move = 10-20 spot points = 5-10 option points. Target of 8 captures the median outcome, giving 2:1 reward-to-risk. Signal-based exit (acceleration turning negative) is the primary exit; the 8-point target is a backstop for cases where acceleration stays positive but velocity plateaus.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:10"
+  },
+
+  "filters": {
+    "vix_filter": "none — acceleration dynamics are regime-independent; they work in both low and high VIX because they measure CHANGE in velocity, not absolute volatility",
+    "time_filter": "No entries before 09:20 (need 18 bars warmup: 12 for roc_12 + 6 for roc_accel_6) or after 15:10",
+    "volume_filter": "none — acceleration is a price-only signal; adding volume filters would reduce already-limited trade frequency",
+    "trend_filter": "roc_12_magnitude < 0.06 filter prevents chasing mature trends",
+    "spread_filter": "ATM option bid-ask < 2 points"
+  },
+
+  "edge": {
+    "expected_bps": 12,
+    "win_rate_estimate": 0.50,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.0,
+    "edge_decay_risk": "low — second-derivative analysis is rarely used in practice, and the early-entry advantage is structural"
+  },
+
+  "adaptation_notes": "Original used ROC(10) on 1-min bars (10-minute velocity) with ROC of ROC over 5 bars (5-minute acceleration window), holding 10-30 minutes. Adapted to NIFTY 5s: (1) Velocity window compressed from 10 minutes to 1 minute (12 five-second bars) because NIFTY acceleration phases at intraday resolution are much shorter than on individual stocks — the NIFTY order book is deep enough that institutional flow creates acceleration for only 30-90 seconds before the book replenishes. (2) Acceleration window compressed from 5 minutes to 30 seconds (6 bars) — at 5s on NIFTY, a 30-second window captures one institutional ramp-up cycle. (3) Added magnitude filter (roc_12 < 0.06%) absent from original — critical at 5s because the entire acceleration-to-deceleration cycle completes in 1-2 minutes, and entering after peak velocity is fatal. (4) Hold time compressed from 10-30 minutes to 30-120 seconds to match the 5s acceleration cycle duration on NIFTY. (5) Stop/target set to 4/8 option points — the original's 0.25% stop and trailing logic are inappropriate for 5s; fixed points aligned with typical NIFTY acceleration move sizes. (6) Added signal-based exit: when acceleration turns negative (roc_accel_6 crosses below 0) even if target not hit, exit immediately — the acceleration edge is gone.",
+
+  "weaknesses": [
+    "Second derivative amplifies noise quadratically — ROC of ROC on 5s NIFTY data will produce many false acceleration signals from bid-ask bounce",
+    "The 15-second persistence filter helps but still admits noise: 3 consecutive 5s bars of positive acceleration can occur randomly in choppy markets",
+    "Acceleration phases on NIFTY at 5s are extremely short-lived (30-90s), leaving very narrow windows for entry — execution delay of even 2-3 seconds significantly degrades the signal",
+    "In range-bound NIFTY sessions (low ADR days), acceleration signals fire frequently but produce tiny moves that barely cover the 4-point breakeven cost"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_167.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 minutes (10-30 bars)",
+    "original_indicators": ["ROC_10", "ROC_accel (ROC_10 change over 5 bars)", "ROC_accel_slope (linreg 5 bars)", "VWAP", "ATR_14"],
+    "original_stop": "0.25% from entry",
+    "original_target": "ROC_accel turns negative (signal-based)"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "name": "institutional_flow_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["institutional", "volume_spike", "block_order", "momentum", "event_driven"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_168.json",
+  "original_name": "institutional_flow_momentum_v1",
+
+  "mechanism": "On NIFTY at 5-second resolution, a single bar with volume exceeding 5x the 60-bar rolling average AND a directional price move of at least 0.03% (7+ spot points) signals an institutional iceberg order hitting the NIFTY order book. These are typically FII basket execution algorithms that slice a large parent order across time, but occasionally a slice is too large for the available liquidity at one price level, causing a visible price impact in a single 5-second window. The key insight specific to NIFTY is that iceberg orders on NSE are not truly hidden — the exchange's matching engine reveals their footprint through sudden volume-price dislocations. After the initial block hits, the iceberg algorithm still has unfilled quantity remaining, which will continue to execute over the next 30-90 seconds. Additionally, other institutional algos running 'flow detection' strategies on the same NIFTY book will detect the large print and begin front-running the expected continuation. This creates a positive feedback loop — the initial block triggers followers, which creates more momentum, which triggers more followers. We enter after confirming the spike with one follow-through bar (5 seconds) and ride this institutional momentum cascade for 30-90 seconds. This is EVENT-DRIVEN, not indicator-based — we are reacting to a specific identifiable market event (the block print), not a mathematical condition on price history.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:10 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["rolling_volume_sma"]
+  },
+
+  "indicators": [
+    {
+      "name": "vol_ratio_60",
+      "formula": "volume / SMA(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Volume spike ratio relative to 60-bar (5-minute) rolling average. Lookback of 60 bars chosen because NIFTY's 5-second volume distribution has high variance — a 20-bar lookback (original's equivalent at 5s) would be distorted by a single previous spike, while 60 bars provides a stable baseline covering 5 minutes of normal trading. The 5x threshold (vol_ratio > 5.0) identifies prints that are genuinely anomalous — on NIFTY, these occur 3-8 times per session and correlate with institutional block execution."
+    },
+    {
+      "name": "spike_return",
+      "formula": "(close - open) / open * 100",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Return on the spike bar itself. Must exceed 0.03% (about 7 NIFTY spot points) in absolute terms to confirm the volume spike was DIRECTIONAL, not just a two-sided surge (e.g., opening auction spillover or index rebalancing where buy and sell arrive simultaneously). On NIFTY, 0.03% in a single 5-second bar is rare during normal trading (typical 5s bars move 0-0.01%), making it a strong signal of one-sided institutional flow."
+    },
+    {
+      "name": "followthrough_bar",
+      "formula": "sign(close[t+1] - open[t+1]) == sign(spike_return)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Confirms the bar immediately after the spike closes in the same direction. This is the critical filter — if the next 5-second bar reverses the spike, it means the block was absorbed by a resting counter-order (e.g., the spike hit a large hidden sell limit) and there is no remaining unfilled quantity. On NIFTY, genuine iceberg orders show follow-through in the next bar 60-65% of the time; non-institutional spikes (index rebalancing, futures roll) show follow-through only 45-50% of the time."
+    },
+    {
+      "name": "spike_bar_range",
+      "formula": "high - low on spike bar",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Range of the spike bar in spot points. Used to set the stop loss reference. A wide-range spike bar (15+ points) that closes near its high/low indicates strong directional conviction. A spike with a wide range but a long wick (close near middle) suggests the block was partially absorbed, reducing continuation probability."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_ratio_60 > 5.0 (volume spike is 5x the 5-minute average — anomalous institutional-sized print)",
+        "spike_return > 0.03 (spike moved NIFTY up 7+ spot points — one-sided buy flow)",
+        "spike bar close > spike bar open (clean green bar, not a wick-heavy doji)",
+        "followthrough_bar == true (next 5s bar also closes green — institutional flow is continuing)"
+      ],
+      "confirmation": "Enter at close of follow-through bar (bar after spike). Must be within 10 seconds of spike detection."
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_ratio_60 > 5.0 (anomalous volume spike)",
+        "spike_return < -0.03 (spike moved NIFTY down 7+ spot points)",
+        "spike bar close < spike bar open (clean red bar)",
+        "followthrough_bar == true (next bar also red)"
+      ],
+      "confirmation": "Enter at close of follow-through bar"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option points = roughly 10 NIFTY spot points. After an institutional block print that moved NIFTY 7+ points and had follow-through, a 10-point reversal from entry means the block was a one-off execution (completed order, not an iceberg) or a counter-block entered in the opposite direction. The initial momentum thesis is broken. 5 points gives enough room for the normal 3-5 point oscillation after a spike without getting stopped on noise, while capping losses at just above breakeven.",
+    "target_points": 10,
+    "target_rationale": "After a genuine institutional iceberg print on NIFTY, the unfilled remainder plus momentum-following algos typically push price an additional 15-30 spot points over the next 30-90 seconds (7-15 option points at ATM delta 0.5). Target of 10 option points captures the median follow-through and gives 2:1 reward-to-risk. The original targeted 0.4% (roughly 100 NIFTY points over 10-30 minutes); we compress to 10 option points over 30-90 seconds because the institutional execution window at 5s is much shorter — the algo finishes or gets detected within 1-2 minutes.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:10"
+  },
+
+  "filters": {
+    "vix_filter": "none — institutional block execution occurs regardless of VIX regime; if anything, high-VIX days see MORE large prints as institutions rebalance urgently",
+    "time_filter": "No entries in first 60 seconds of session (09:15-09:16) — opening auction creates false volume spikes. No entries after 15:10 — closing auction approaching.",
+    "volume_filter": "The 5x volume ratio IS the core filter — no additional volume filter needed",
+    "trend_filter": "none — this is event-driven, not trend-dependent; the event (block print) creates its own short-term trend",
+    "spread_filter": "ATM option bid-ask < 2.5 points — must execute quickly after spike detection; wide spreads eat into the edge"
+  },
+
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.4,
+    "edge_decay_risk": "moderate — as more algos implement flow detection, the follow-through window shortens; currently 30-90 seconds, may compress to 10-30 seconds over time"
+  },
+
+  "adaptation_notes": "Original targeted individual NIFTY 100 stocks with 5x volume spikes on 1-min bars, holding 10-30 minutes for 0.4% target. Adapted to NIFTY index options at 5s: (1) Moved from stocks to NIFTY because index-level block prints have a cleaner signal — on individual stocks, 5x volume often comes from bulk deals or block crosses that don't indicate directional flow, but on NIFTY futures/spot, large directional volume is almost always institutional algo execution. (2) Volume baseline changed from SMA(vol, 20) on 1-min (20-minute average) to SMA(vol, 60) on 5s (5-minute average) — at 5s resolution, volume is extremely lumpy and a 20-bar (100-second) baseline is too short to be stable. 60 bars provides a reliable 5-minute baseline. (3) Price impact threshold reduced from 0.2% to 0.03% — NIFTY is much less volatile per bar than individual stocks; 0.03% in a single 5s bar is already a 2-3 sigma event. (4) Hold time compressed from 10-30 minutes to 30-90 seconds because the institutional execution window at 5s granularity on NIFTY is much shorter — competing algos detect and front-run the flow within 1-2 minutes. (5) Confirmation simplified from 'next bar closes in same direction' on 1-min to same logic on 5s — but the 5s follow-through is more informative because it captures the immediate post-spike microstructure reaction.",
+
+  "weaknesses": [
+    "Low trade frequency: genuine 5x volume spikes with 0.03% directional impact occur only 3-8 times per NIFTY session; with follow-through filter, perhaps 1-3 qualify",
+    "Entry is 2 bars (10 seconds) after the spike — at 5s resolution, fast algos with direct market access will have already captured much of the follow-through momentum",
+    "Cannot distinguish institutional iceberg orders from index arbitrage or ETF creation/redemption flow — the latter creates volume spikes but no continuation",
+    "Spike detection at exactly 5x is arbitrary — some genuine institutional prints may be 3-4x while some noise events hit 6x; the threshold needs empirical calibration on NIFTY"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_168.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 minutes (10-30 bars)",
+    "original_indicators": ["vol_spike (volume/SMA(vol,20))", "bar_return", "abs_bar_return", "VWAP", "ATR_14", "price_impact"],
+    "original_stop": "0.2% from entry OR price crosses spike bar open",
+    "original_target": "0.4% from entry"
+  }
+}

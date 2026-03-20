@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session_end upper bound in pullback detection loop and time_ok filter in long/short_entry
 """First Pullback After Opening Move — Opus_14
 
 Thesis: After a strong directional move in the first 45 minutes (>0.5%),
@@ -142,7 +143,7 @@ class Strategy(BaseStrategy):
             if (ret_from_open[i] > open_move and
                     low[i] <= ema9[i] <= high[i] and
                     pullback_count_long == 0 and
-                    time_mins[i] >= 585):
+                    self.session_start <= time_mins[i] <= self.session_end):
                 pullback_long[i] = True
                 pullback_count_long += 1
 
@@ -150,14 +151,15 @@ class Strategy(BaseStrategy):
             if (ret_from_open[i] < -open_move and
                     low[i] <= ema9[i] <= high[i] and
                     pullback_count_short == 0 and
-                    time_mins[i] >= 585):
+                    self.session_start <= time_mins[i] <= self.session_end):
                 pullback_short[i] = True
                 pullback_count_short += 1
 
         rsi_ok = (rsi14 >= rsi_lo) & (rsi14 <= rsi_hi)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
-        long_entry = pullback_long & (close > vwap) & rsi_ok
-        short_entry = pullback_short & (close < vwap) & rsi_ok
+        long_entry = pullback_long & (close > vwap) & rsi_ok & time_ok
+        short_entry = pullback_short & (close < vwap) & rsi_ok & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

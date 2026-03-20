@@ -1,3 +1,4 @@
+# AUDIT FIX: Added time_ok filter to long_entry and short_entry (session_start=570 to session_end=885)
 """Index Constituent Beta-Adjusted Spread — Opus_18
 
 Thesis: After adjusting for beta, the residual return of a stock vs its
@@ -70,6 +71,7 @@ class Strategy(BaseStrategy):
         index_close = df["index_close"].to_numpy().astype(np.float64)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=99.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # ── 60-bar returns ──
         lookback = 60
@@ -105,9 +107,10 @@ class Strategy(BaseStrategy):
         vix_ok = vix < vix_max
         index_calm = np.abs(index_ret) < idx_ret_max
         atr14 = _compute_atr(high, low, close, 14)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
-        long_entry = (zscore < -zs_entry) & vix_ok & index_calm
-        short_entry = (zscore > zs_entry) & vix_ok & index_calm
+        long_entry = (zscore < -zs_entry) & vix_ok & index_calm & time_ok
+        short_entry = (zscore > zs_entry) & vix_ok & index_calm & time_ok
 
         # ── Signal exit: zscore crosses zero ──
         sig_exit_long = np.zeros(n, dtype=np.bool_)

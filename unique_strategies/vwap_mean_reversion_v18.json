@@ -1,0 +1,121 @@
+{
+  "name": "vwap_mean_reversion_v18",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "deep_deviation"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_100.json",
+  "original_name": "vwap_mean_reversion_v18",
+
+  "mechanism": "On NIFTY, sharp intraday selloffs (driven by global futures drops, FII outflow blocks, or macro surprises) push the index 40-80 spot points below session VWAP within 10-30 minutes. At this deviation level, every VWAP-benchmarked algorithm in the market (which is the majority of institutional execution) starts accumulating aggressively — they're getting fills significantly better than their benchmark and will keep buying until VWAP catches up. Simultaneously, the selling that caused the deviation was likely a concentrated block (one FII liquidating), not broad-based — once that specific seller is done, there's no follow-through. At 5-second resolution, we detect the exact bar where the deviation from VWAP stops widening (rate of change of the VWAP gap turns positive), which is the inflection point where institutional VWAP buying overwhelms the residual selling. We enter at the inflection and capture the first 15-25 spot points of the reversion before the gap narrows enough that VWAP algos reduce their buying intensity.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [60, 180],
+  "max_hold_bars": 36,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as fair-value anchor. No lookback scaling needed — VWAP is inherently cumulative from market open regardless of bar size. This is the gravitational center that institutional algorithms benchmark against."
+    },
+    {
+      "name": "vwap_dev",
+      "formula": "(close - vwap) / close * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Percentage deviation from VWAP. More interpretable than z-score for index trading because NIFTY's absolute level changes but percentage deviations are comparable across sessions. A deviation below -0.15% on NIFTY (roughly 35-40 spot points) indicates meaningful institutional buying will commence."
+    },
+    {
+      "name": "dev_momentum_24",
+      "formula": "vwap_dev - vwap_dev[24]",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute rate of change of VWAP deviation. Replaces the original's relative volume indicator because index volume is noisy and unreliable. This directly measures whether the deviation is EXPANDING (seller still active) or CONTRACTING (reversion beginning). We enter only when dev_momentum turns positive — the gap is narrowing, confirming the seller has exhausted."
+    },
+    {
+      "name": "vwap_stddev_360",
+      "formula": "STDDEV(close - vwap, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-minute rolling standard deviation of VWAP deviations. Original used 21-bar stddev on 15-min bars (~5 hours). At 5s, 360 bars = 30 minutes captures the current session's volatility regime without being contaminated by early morning auction noise. Used to judge whether a deviation is statistically extreme for THIS session, not just historically."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_dev < -0.15 (NIFTY is 35+ spot points below VWAP — deep enough for institutional VWAP algos to buy aggressively)",
+        "dev_momentum_24 > 0 (deviation is CONTRACTING — reversion has begun, seller is exhausting)",
+        "VIX > 14 (some volatility needed to create the deviation in the first place; low VIX sessions rarely produce tradeable VWAP deviations on NIFTY)"
+      ],
+      "confirmation": "Two consecutive bars where close moves toward VWAP (prevents entering during a brief pause in a continued selloff)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_dev > 0.15 (NIFTY is 35+ spot points ABOVE VWAP)",
+        "dev_momentum_24 < 0 (deviation is contracting — rally exhausting)",
+        "VIX > 14"
+      ],
+      "confirmation": "Two consecutive bars where close moves toward VWAP"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 6,
+    "stop_rationale": "Mean reversion trades need room because the deviation can widen 10-15 more spot points (5-7 option points) before the actual reversal. A 6-point stop allows for one more push against us without getting stopped out. On NIFTY specifically, the last flush before a VWAP reversion is often the sharpest (stop-hunting by algos before the real bounce). 6 points accommodates this while limiting risk to ~1.5x the target expectation ratio.",
+    "target_points": 10,
+    "target_rationale": "Deep VWAP deviations of 40-80 spot points on NIFTY typically revert 50-70% within 5-10 minutes once the seller exhausts. That's 20-55 spot points of reversion = 10-27 ATM option points. Target of 10 captures the lower end of expected reversion, giving 1:1.67 risk-reward. We don't target full VWAP touch because the last 30% of reversion is slowest and most contested.",
+    "time_stop_bars": 36,
+    "eod_rule": "flatten at 15:20"
+  },
+
+  "filters": {
+    "vix_filter": "VIX must be > 14 — flat VIX sessions don't produce the 0.15% deviations needed",
+    "time_filter": "No trades before 09:30 (need 15 min for VWAP to stabilize) or after 15:00 (VWAP loses meaning near close as algos stop benchmarking)",
+    "volume_filter": "none — replaced by dev_momentum indicator",
+    "trend_filter": "none — this is a counter-trend strategy by design",
+    "spread_filter": "skip if ATM option bid-ask > 3 points (wide spreads during selloffs can eat the edge)"
+  },
+
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 2.0,
+    "edge_decay_risk": "low — VWAP benchmarking is structurally embedded in institutional mandates and won't disappear"
+  },
+
+  "adaptation_notes": "Original targeted individual Nifty200 stocks at 15-min bars with 30-60 bar holds (full day). Three key adaptations: (1) VWAP deviations on NIFTY index are smaller than individual stocks due to diversification, so threshold moved from z-score -1.7 to percentage-based -0.15%, which is roughly 2 standard deviations on a typical NIFTY session. Percentage is more stable than z-score for an index. (2) Replaced relative volume with dev_momentum_24 because index volume doesn't have the same 'panic selling' signature that individual stocks do — on NIFTY, the reversion signal is in the price action (deviation stops expanding), not the volume. (3) Hold time compressed from 'all day' to 60-180 seconds because the FIRST LEG of VWAP reversion is fast and high-probability; the latter legs are contested by other mean-reversion algos and profit-takers. We capture the initial institutional VWAP buying surge only.",
+
+  "weaknesses": [
+    "On genuine trend days (budget day, global crash), VWAP deviation keeps widening and the reversion never comes — max loss hits",
+    "Dev_momentum can briefly turn positive during a pause in selling, generating a false entry before the next leg down",
+    "Late afternoon VWAP loses meaning as institutional VWAP algos complete their daily targets",
+    "Low trade frequency (1-3/day) means small sample size and high variance in daily P&L"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_100.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "30-60 bars (7.5-15 hours)",
+    "original_indicators": ["VWAP", "VWAP z-score (STDDEV 21)", "Relative volume (SMA 30)"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "VWAP touch"
+  }
+}

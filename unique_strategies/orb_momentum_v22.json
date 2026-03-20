@@ -1,0 +1,131 @@
+{
+  "name": "orb_momentum_v22",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "opening_range", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_102.json",
+  "original_name": "orb_momentum_v22",
+
+  "mechanism": "NIFTY's first 20 minutes (09:15-09:35) is the overnight information absorption window where global cues, SGX NIFTY gaps, and FII pre-market flows get priced in. This creates a defined high-low range representing the market's initial consensus. Large institutional participants deliberately wait until this range forms before initiating directional orders — they want the opening noise to settle before committing capital. When price breaks above the ORB high, it signals that institutional buy-side flow has overwhelmed the opening range's supply ceiling. On NIFTY specifically, the ORB breakout is heavily watched (it's the most popular intraday strategy in Indian markets), which creates a self-reinforcing effect: breakout triggers stop-losses of short sellers positioned at the range high, AND triggers fresh momentum entries from algo systems — both amplifying the initial move. At 5-second resolution, we detect the breakout 10-50 seconds before traders using 1-min or 5-min bars even see it close above the range. We capture this SPEED ADVANTAGE by entering on the third consecutive 5s bar above the ORB level (15 seconds of confirmation to filter false spikes) and riding the initial breakout surge for 30-120 seconds before the move becomes crowded and contested.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:36-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "orb_high",
+      "formula": "max(high) for bars where time_minutes >= 555 and time_minutes < 576",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Opening range high (09:15-09:35, 240 bars at 5s). NOT scaled — this is a FIXED TIME WINDOW, not a lookback period. The 20-minute opening range is a market-structure concept that doesn't change with bar size. We compute the actual high of the first 20 minutes regardless of whether we use 5s or 1-min bars."
+    },
+    {
+      "name": "orb_low",
+      "formula": "min(low) for bars where time_minutes >= 555 and time_minutes < 576",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Opening range low. Same fixed time window. Together with orb_high, defines the range that must be broken for a signal."
+    },
+    {
+      "name": "orb_width",
+      "formula": "orb_high - orb_low",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Range width used to gauge breakout quality. NIFTY ORB typically 30-60 spot points. Narrow ranges (<25 pts) produce explosive breakouts but more fakeouts. Wide ranges (>70 pts) produce slower breakouts but are more reliable. Used to dynamically adjust stop/target: wider range = wider stop, because a wider range had more energy to contain."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as breakout quality filter. A breakout above ORB_high that also occurs above VWAP indicates the average buyer is profitable — more likely to hold and push further. A breakout below VWAP is weaker (average buyer is underwater, may take profits quickly)."
+    },
+    {
+      "name": "bars_above_orb",
+      "formula": "consecutive count of bars where close > orb_high (or < orb_low)",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "Breakout persistence filter. Requires 3 consecutive 5s bars (15 seconds) above the ORB level. Original used a single 1-min bar close. At 5s, a single bar above can be a wick/spike that immediately reverses. 3 bars (15s) is roughly equivalent to one 15-second candle body clearing the level — much more reliable than a single 5s bar but still faster than waiting for a full 1-min close."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes >= 576 (after 09:35 — opening range is fully formed)",
+        "close > orb_high for 3 consecutive bars (15s breakout confirmation)",
+        "close > vwap (breakout aligned with session trend)",
+        "orb_width > 20 (range too narrow = likely noise, not a real range)"
+      ],
+      "confirmation": "Third consecutive bar above ORB high triggers entry"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes >= 576",
+        "close < orb_low for 3 consecutive bars",
+        "close < vwap",
+        "orb_width > 20"
+      ],
+      "confirmation": "Third consecutive bar below ORB low triggers entry"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "ORB breakouts on NIFTY commonly 'throwback' — price briefly dips back to the breakout level before continuing. A typical throwback is 5-12 spot points (2.5-6 option points) below the breakout level. 5-point stop allows for the throwback without getting shaken out. If price falls more than 10 spot points below the breakout (5 option points), the breakout has failed and will likely revert into the range. This is wider than the momentum strategy's 3-point stop because breakouts need more room — the thesis isn't 'immediate continuation' but 'continuation after potential retest.'",
+    "target_points": 8,
+    "target_rationale": "NIFTY ORB breakouts that persist through the throwback typically extend 20-40 spot points beyond the range within 5 minutes (10-20 option points). Target of 8 captures the first leg of the extension. Risk-reward is 1:1.6, which is acceptable because ORB breakouts have higher win rates than general momentum (the range high/low is a well-defined support/resistance level). We exit at first-leg target rather than trailing because at 5s resolution, breakout momentum is front-loaded — the first 2 minutes are strongest.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20"
+  },
+
+  "filters": {
+    "vix_filter": "VIX > 12 — extremely low VIX sessions have narrow ranges that produce unreliable breakouts",
+    "time_filter": "Only trade 09:36-11:00 IST. ORB breakouts lose effectiveness after the morning session because the range becomes stale — later moves aren't driven by the opening range dynamics anymore. Original's 14:30 cutoff was for intraday stocks; for 5s index options, the ORB signal decays much faster.",
+    "volume_filter": "replaced by bars_above_orb persistence filter — volume is less meaningful on NIFTY index",
+    "trend_filter": "VWAP alignment serves as trend filter",
+    "spread_filter": "skip if ATM option bid-ask > 2 points"
+  },
+
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.5,
+    "edge_decay_risk": "high — ORB is the most widely-traded intraday strategy in India; edge comes from the 5s speed advantage, which erodes as more participants move to tick/5s data"
+  },
+
+  "adaptation_notes": "Original used 20-bar ORB on 1-min = 20-minute range. This is a TIME concept, not a lookback — the opening range is always 09:15-09:35 regardless of bar size. So orb_high/orb_low are computed identically; the only change is 240 bars instead of 20 bars to represent the same 20 minutes. The REAL adaptation is the ENTRY TIMING: original waited for a 1-min bar close above the range. At 5s, we detect the breakout ~10-50s earlier using a 3-bar persistence filter (15s). This speed advantage is the core edge at 5s — we enter before 1-min traders even see the signal. However, added the ORB_width filter (>20 pts) that the original lacked, because at 5s resolution, narrow-range breakouts produce many false spikes. Also added a TIME DECAY filter (no trades after 11:00) because the ORB concept loses relevance as the session progresses — at 5s timeframes this decay is faster than at 1-min. Original's ATR-based stops don't apply (ATR is for the underlying, we trade options); replaced with fixed 5-point option stop calibrated to typical throwback depth.",
+
+  "weaknesses": [
+    "ORB is the most crowded intraday strategy in India — when everyone trades it, breakouts become self-defeating (too many entries at the same price → slippage)",
+    "False breakouts (fakeouts) are common, especially on range-bound days where price probes above/below the range without conviction",
+    "Limited to 1-2 trades per day because there's only one opening range — small sample size",
+    "On expiry days (Thursday), ORB dynamics are distorted by options expiry-related hedging flows that don't reflect genuine directional intent",
+    "Speed advantage over 1-min traders is temporary — more participants adopting tick data reduces this edge over time"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_102.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 bars (10-30 min)",
+    "original_indicators": ["ORB High (HIGHEST 20)", "ORB Low (LOWEST 20)", "VWAP"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "1.9 * ATR(20)"
+  }
+}

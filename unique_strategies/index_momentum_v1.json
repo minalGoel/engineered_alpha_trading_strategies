@@ -1,0 +1,107 @@
+{
+  "name": "index_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "continuation", "fast_burst"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_10.json",
+  "original_name": "index_momentum_v1",
+
+  "mechanism": "NIFTY experiences sharp 1-minute directional bursts when macro news hits (RBI announcements, global futures moves, FII flow data) or when algorithmic momentum strategies trigger cascading entries. These bursts — visible as a 60-bar (5-min) return exceeding 0.15% — have autocorrelation at the 30-60 second scale because the underlying institutional orders are still being executed. Specifically, when NIFTY moves 30+ spot points in 5 minutes, the TWAP algorithms that initiated the move are typically only 40-60% filled, meaning the remaining flow will push price further in the same direction for another 1-3 minutes. We enter when we detect a fast 12-bar (1-min) acceleration that ALIGNS with the 5-minute trend, capturing the continuation before the flow completes. This is distinct from mean-reversion strategies — we're riding the tail of the institutional execution, not fading it.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [20, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 10,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "ret_12",
+      "formula": "(close - close[12]) / close[12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute fast return to detect momentum bursts. Original used 5-bar return on 1-min = 5-minute window. At 5s bars, using 12 bars (1 min) instead of 60 bars (5 min) because we want to catch the ACCELERATION within the trend, not wait for the full trend to develop. A 1-min return > 0.05% on NIFTY indicates a directional burst in progress."
+    },
+    {
+      "name": "ret_60",
+      "formula": "(close - close[60]) / close[60] * 100",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute trend direction for confirmation. This IS the original's 5-bar lookback scaled to 5s (5 min × 12 = 60 bars). We keep this one at the original's time horizon because it serves as a CONFIRMATION filter — we want the fast burst to align with a broader directional move, not a random spike against the trend."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ret_12 > 0.05 (1-min burst is positive)",
+        "ret_60 > 0.15 (5-min trend is strongly positive)",
+        "ret_12 direction matches ret_60 direction (no divergence)"
+      ],
+      "confirmation": "Two consecutive 5s bars closing higher (momentum not stalling)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ret_12 < -0.05 (1-min burst is negative)",
+        "ret_60 < -0.15 (5-min trend is strongly negative)",
+        "ret_12 direction matches ret_60 direction"
+      ],
+      "confirmation": "Two consecutive 5s bars closing lower"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "Momentum continuation is a HIGH-CONVICTION trade — if the trend is real, price should not reverse 6+ spot points (3 option points) against us within the first 30 seconds. A 3-point stop catches the 'momentum stall' scenario quickly. Tight stop is appropriate because this is not a reversion trade that needs room to overshoot; if momentum dies, it dies fast and holding longer only increases loss.",
+    "target_points": 5,
+    "target_rationale": "NIFTY momentum bursts that persist past the first minute typically deliver 15-25 additional spot points over the next 1-2 minutes (7-12 ATM option points). Target of 5 captures ~40% of expected continuation, giving 1:1.67 risk-reward. We take early profits because momentum autocorrelation decays rapidly — the first 60s of continuation is most reliable.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+
+  "filters": {
+    "vix_filter": "none — momentum works in all VIX regimes (high VIX actually increases magnitude of bursts)",
+    "time_filter": "No trades in first 5 minutes (09:15-09:20) due to opening auction noise; no trades after 15:20 to avoid EOD mean-reversion",
+    "volume_filter": "none — index volume is consistent",
+    "trend_filter": "embedded in entry (ret_60 serves as trend filter)",
+    "spread_filter": "skip if ATM option bid-ask > 2 points"
+  },
+
+  "edge": {
+    "expected_bps": 12,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "medium — crowding from other momentum algos reduces autocorrelation over time"
+  },
+
+  "adaptation_notes": "Original measured 5-bar return on 1-min bars (5-minute window) with a single threshold of 0.2%. Scaling blindly to 60 bars gives the same view, but that misses the point: at 5s resolution we can DECOMPOSE the 5-min move into fast bursts and slow drifts. Added a fast 12-bar (1-min) return to detect bursts-within-trends, creating a two-layer signal: fast burst (trade trigger) + slow trend (confirmation). The original's 0.2% threshold is for 5-min; scaled the fast threshold to 0.05% for 1-min (not simply 0.2/5 because returns don't scale linearly — used sqrt(time) approximation: 0.2/sqrt(5) ~ 0.09, then halved for faster entry). Stop narrowed from original's 0.3% of NIFTY (~70 spot pts / ~35 option pts) to 3 option points because our hold time is 10-20x shorter. The original traded individual Nifty50 stocks following the index; we trade the index directly via options, eliminating the 'beta lag' the original exploited.",
+
+  "weaknesses": [
+    "False momentum signals during choppy/consolidating sessions generate many small losses",
+    "Late entry risk: by the time 5-min ret exceeds 0.15%, much of the move may be done",
+    "Highly correlated with other momentum strategies — drawdowns cluster on reversal days",
+    "News-driven gaps can show as momentum but reverse immediately (gap-and-fade)"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_10.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "1-10 bars (1-10 min)",
+    "original_indicators": ["5-bar return (5-min)"],
+    "original_stop": "0.3%",
+    "original_target": "0.3%"
+  }
+}

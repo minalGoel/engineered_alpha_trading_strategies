@@ -1,3 +1,4 @@
+# AUDIT FIX: Added time_ok filter to long_entry and short_entry — entries were firing outside session window (session_start=570, session_end=870)
 """Previous Day High/Low Breakout — Opus_13
 
 Thesis: Breakouts beyond the prior session's high or low, confirmed by
@@ -123,9 +124,10 @@ class Strategy(BaseStrategy):
 
         vix_ok = vix < vix_max
         vwap_ok_long = close > vwap
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
-        long_entry = two_above & vol_ok & vwap_ok_long & vix_ok
-        short_entry = two_below & vol_ok & vix_ok
+        long_entry = two_above & vol_ok & vwap_ok_long & vix_ok & time_ok
+        short_entry = two_below & vol_ok & vix_ok & time_ok
 
         # ── Signal exit: close crosses back inside PDH/PDL ──
         sig_exit_long = (pdh > 0) & (close < pdh)

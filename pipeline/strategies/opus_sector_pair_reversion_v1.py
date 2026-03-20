@@ -1,3 +1,4 @@
+# AUDIT FIX: Added time_ok filter to long_entry and short_entry — entries were firing outside session window (session_start=570, session_end=885)
 """Sector Pair Reversion (Stock vs Index) — Opus_17
 
 Thesis: The log-spread between a stock and its index (with a hedge ratio)
@@ -95,9 +96,11 @@ class Strategy(BaseStrategy):
 
         vix_ok = vix < vix_max
         atr14 = _compute_atr(high, low, close, 14)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
-        long_entry = (zscore < -zs_entry) & vix_ok
-        short_entry = (zscore > zs_entry) & vix_ok
+        long_entry = (zscore < -zs_entry) & vix_ok & time_ok
+        short_entry = (zscore > zs_entry) & vix_ok & time_ok
 
         # ── Signal exit: zscore crosses zero ──
         sig_exit_long = np.zeros(n, dtype=np.bool_)

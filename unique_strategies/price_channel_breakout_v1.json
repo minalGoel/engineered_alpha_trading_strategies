@@ -1,0 +1,120 @@
+{
+  "name": "price_channel_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["donchian", "channel-breakout", "momentum", "trend-following", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_163.json",
+  "original_name": "price_channel_breakout_v1",
+  "mechanism": "On NIFTY, when the index closes above its 10-minute Donchian upper band with a volume surge, it signals that institutional TWAP/VWAP algorithms working directional buy-side flows have overcome a meaningful intraday resistance level — the highest high of the prior 120 five-second bars. Stop-loss orders from short participants clustered just above this level are triggered, accelerating the initial push, while new momentum-following algos join the move. The closing above VWAP confirms the breakout is institutional-demand-driven rather than a momentary spike, making a 10-20 spot point continuation over the next 30-90 seconds structurally likely. The symmetric downside setup applies for Donchian lower-band breaks below VWAP — forced covering of resting buy stops amplifies the initial leg.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "dc_upper_120",
+      "formula": "highest(high, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute rolling high (120 × 5s bars). NOT 12x scaling of the original 30-bar lookback (which would give 360 bars = 30 min). Chosen because 10-minute micro-consolidations are the most meaningful intraday resistance levels on NIFTY where institutional algo orders cluster. Shorter windows (2-5 min = 24-60 bars) are too noisy — breakouts happen frequently but reverse just as fast. Longer windows (30 min = 360 bars) give too few signals for a 90-second hold strategy."
+    },
+    {
+      "name": "dc_lower_120",
+      "formula": "lowest(low, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Symmetric 10-minute rolling low for bearish breakout detection. Same rationale as dc_upper_120."
+    },
+    {
+      "name": "dc_width_pct",
+      "formula": "(dc_upper_120 - dc_lower_120) / close * 100",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Channel width as % of spot price. Must exceed 0.15% (~33 NIFTY pts) to ensure the consolidation is real and not noise-level chop. Breakouts from <0.15% ranges are false positives at 5s resolution."
+    },
+    {
+      "name": "volume_ratio_20",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20-bar (100-second) volume ratio. The 20-bar window captures whether the breakout bar has abnormally high flow versus the prior ~1.5 minutes of activity — short enough to detect transient volume spikes while smoothing 5s noise."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume) from session open",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP (no lookback — cumulative). Breakout above DC upper AND above VWAP confirms institutional buy-side demand. Breakout above DC upper but below VWAP may be a fakeout as VWAP-tracking algos would be selling against the price."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > dc_upper_120[t-1]  (close breaks above prior bar's 10-min channel high)",
+        "close > vwap  (price above institutional benchmark — confirms direction)",
+        "volume_ratio_20 > 1.3  (volume surge confirms institutional participation)",
+        "dc_width_pct > 0.15  (channel wide enough to distinguish from noise)",
+        "(close - low) / (high - low) > 0.70  (strong close — top 30% of bar range)"
+      ],
+      "confirmation": "All 5 conditions on same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < dc_lower_120[t-1]  (close breaks below prior bar's 10-min channel low)",
+        "close < vwap  (price below institutional benchmark — confirms direction)",
+        "volume_ratio_20 > 1.3  (volume surge confirms institutional selling)",
+        "dc_width_pct > 0.15  (channel wide enough to distinguish from noise)",
+        "(close - low) / (high - low) < 0.30  (weak close — bottom 30% of bar range)"
+      ],
+      "confirmation": "All 5 conditions on same 5-second bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot points at delta 0.5. Breakout failures on NIFTY reverse quickly — if price re-enters the channel within 30s, the institutional bid at the breakout level has been absorbed and the thesis is invalidated; 8 spot points is the typical retracement depth before the thesis is structurally broken.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot points at delta 0.5. Successful NIFTY Donchian breakouts typically extend 15-25 spot points from the channel before the first significant pullback; 14 pts captures ~60% of the typical first leg extension at a 1:1.75 R:R ratio.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — VIX not required; channel width filter implicitly handles low-volatility no-breakout regimes",
+    "time_filter": "09:30-15:20 IST (skip first 15 min to allow 10-min DC to populate with meaningful data)",
+    "volume_filter": "volume_ratio_20 > 1.3 (tunable)",
+    "trend_filter": "close vs VWAP alignment (built into entry conditions)",
+    "spread_filter": "none (limit orders at candle close, spread=0)"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.44,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.37,
+    "edge_decay_risk": "moderate — Donchian breakout is a well-known pattern but the 5-second execution with volume+VWAP filter and strong-close confirmation reduces false positive rate vs naive channel breakout"
+  },
+  "adaptation_notes": "Original was NIFTY200 equity stocks at 1-minute bars with 30-minute channel (30 bars), 15-45 minute hold. Key changes: (1) Lookback compressed from 30 min to 10 min (120 bars) — not 12x scaled. At 5s with 90s hold, 10-min channel captures the micro-resistance levels NIFTY forms before institutional breakouts, while 30-min would fire too rarely. (2) Volume confirmation preserved but SMA window shortened from 20 bars (20 min) to 20 bars (100s) to match 5s timeframe. (3) DC_width_pct threshold lowered from 0.3% to 0.15% — index is smoother than stocks, meaningful consolidations can be tighter. (4) Stop changed from DC_mid (variable) to fixed 4 option pts for consistent risk management at 5s resolution. (5) Hold time compressed from 15-45 min to 30-90 sec — we're only riding the initial breakout impulse, not the full trend.",
+  "weaknesses": [
+    "NIFTY channel breakouts have higher false positive rate in range-bound macro sessions (post-RBI, pre-budget) when algorithms are not directionally positioned",
+    "Volume ratio on 5s NIFTY index data is noisier than on equity stocks — single large block trades can spike the ratio without real momentum",
+    "10-minute channel on 5s bars requires 600 rows of warmup; early-session signals (09:30-09:40) will have insufficient DC data"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_163.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["DC_upper(30)", "DC_lower(30)", "volume_ratio(20)", "VWAP"],
+    "original_stop": "DC_mid (midline of channel)",
+    "original_target": "DC_width projected from breakout point (measured move)"
+  }
+}

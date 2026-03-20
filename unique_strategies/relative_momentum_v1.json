@@ -1,0 +1,110 @@
+{
+  "name": "relative_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "relative-strength", "acceleration", "institutional-flow", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_165.json",
+  "original_name": "relative_momentum_v1",
+  "mechanism": "On NIFTY, large institutional directional orders (FII equity block deals, domestic fund rebalancing) execute over 30-180 minutes via TWAP algorithms that create a gentle session drift. When the 2-minute return rate suddenly exceeds twice the session drift rate, it signals these orders have entered an urgency phase — either a new buyer joined an existing trend or a staggered TWAP order accelerated near its deadline. At 5-second resolution, this acceleration is detectable ~15 seconds before a 1-minute bar confirms it, and the institutional flow typically sustains for another 30-90 seconds as the order continues filling. The session drift rate normalises for time-of-day effects: a 0.3% move at 09:45 (30 min in) is the same drift rate as 1.2% at 13:00 (240 min in), preventing false signals from large opening moves.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-14:30 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "session_return",
+      "formula": "(close - day_open) / day_open * 100",
+      "lookback": "session-cumulative",
+      "computed_on": "spot",
+      "purpose": "Establishes session drift direction and magnitude. Cumulative from day open — no fixed lookback. Mirrors original's stock_return and nifty_return which were both session-cumulative. Acts as the 'baseline' return against which recent momentum is compared."
+    },
+    {
+      "name": "recent_return_24",
+      "formula": "(close - close[t-24]) / close[t-24] * 100",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute return (24 bars × 5s). Original used relative_return_30 with 30-min lookback; compressed to 2 min because at 5s frequency we are trading the acceleration burst, not the multi-hour sustained outperformance. At 30-90s hold times, the signal must be as recent as possible — 2 min is the right window to isolate TWAP urgency phases from background drift."
+    },
+    {
+      "name": "session_rate",
+      "formula": "session_return / bars_from_open",
+      "lookback": "session-cumulative",
+      "computed_on": "spot",
+      "purpose": "Per-bar session drift rate. Normalises session_return by elapsed time so that a 0.3% move in the first 30 min is equivalent drift-rate to 1.2% in the first 120 min. Required to make the relative ratio comparable across different times of day."
+    },
+    {
+      "name": "recent_rate",
+      "formula": "recent_return_24 / 24",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Per-bar return rate over the last 2 minutes (24 bars). The ratio recent_rate / session_rate > threshold replicates the original's 'stock return > 2x NIFTY return' logic, adapted to a single index comparing its own recent burst vs session baseline."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "session_return > session_min_return (session trending up, >0.05%)",
+        "recent_rate > rel_ratio_threshold * session_rate (current 2-min acceleration exceeds 2× session drift rate)",
+        "recent_return_24 > 0 (last 2 min actually positive, not reverting)"
+      ],
+      "confirmation": "Both session drift is positive AND recent burst exceeds the threshold multiple — prevents misfires during flat sessions or reversals"
+    },
+    "buy_pe": {
+      "conditions": [
+        "session_return < -session_min_return (session trending down, < -0.05%)",
+        "recent_rate < rel_ratio_threshold * session_rate (current 2-min acceleration exceeds 2× session downward drift rate — both values negative, recent_rate more negative)",
+        "recent_return_24 < 0 (last 2 min actually negative)"
+      ],
+      "confirmation": "Symmetric to buy_ce: session must be genuinely negative and recent burst must be accelerating below the threshold multiple"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option pts ≈ 6 NIFTY spot pts at delta 0.5. A genuine TWAP urgency burst should not retrace 6 spot pts within 30-90s — if it does, the acceleration was noise or a stop-hunt rather than sustained institutional flow. Calibrated to 30s NIFTY moves (2-5 pts option), using the lower end because tight stops are appropriate for high-frequency acceleration entries.",
+    "target_points": 5.0,
+    "target_rationale": "5 option pts ≈ 10 NIFTY spot pts. Continued TWAP execution over 30-90 seconds typically advances NIFTY 8-15 spot pts further; 5 pts captures the median outcome (~50% of expected move) at 1:1.67 R:R. At the 2-minute horizon, typical NIFTY option moves are 3-7 pts — 5 pts sits at the upper-median, achievable when the acceleration is real.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 14:30 (session_end_minutes=870)"
+  },
+  "filters": {
+    "vix_filter": "none — relative momentum acceleration is market-regime agnostic; the session drift rate already normalises for volatility conditions",
+    "time_filter": "09:30-14:30 IST. Skip first 15 min (09:15-09:30) for opening noise; close at 14:30 to avoid afternoon low-volume drift signals. Warmup: 288 bars (24 min) required to establish meaningful session drift rate.",
+    "volume_filter": "none — NIFTY spot volume is noisy at 5s; using price-based relative rate avoids volume contamination",
+    "trend_filter": "Implicit in session_return sign — only trade CE when session is positive, PE when session is negative",
+    "spread_filter": "not applicable — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.94,
+    "edge_decay_risk": "moderate — as more algo strategies monitor rate-of-rate acceleration, the urgency phase signals may become more crowded; however TWAP institutional flows are structural and unlikely to disappear"
+  },
+  "adaptation_notes": "Original strategy: stocks showing intraday return > 2× NIFTY return signal sustained institutional buying. Adapted by replacing the cross-sectional stock-vs-index comparison with an intraindex time-series comparison: current 2-minute return rate vs session drift rate. The '2x' threshold is preserved directly. The session window is compressed from 10:30-14:30 to 09:30-14:30 (start earlier since we're not scanning multiple stocks — warmup handles the calibration period). Hold time compressed from 30-90 min to 30-90 sec (×60 compression) reflecting that we're catching the burst, not the sustained allocation flow. The 30-min relative return lookback is compressed to 2 min (24 bars) matching the hold time scale. No VIX filter added — original had none and the session drift normalisation already handles volatility context.",
+  "weaknesses": [
+    "Session drift rate is noisy in the first 30-45 min — signals before 10:00 may be unreliable even with warmup filter",
+    "If NIFTY gaps up strongly at open, session_rate is inflated all day — 2x threshold may rarely trigger, reducing trade count",
+    "Acceleration bursts sometimes coincide with news releases (macro data, RBI commentary) that reverse sharply — no news filter implemented",
+    "The session_rate denominator grows all day, making signals harder to trigger in the afternoon when drift is diluted"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_165.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-90 minutes",
+    "original_indicators": ["stock_return (session)", "nifty_return (session)", "relative_return", "relative_return_30", "VWAP"],
+    "original_stop": "0.3% from entry OR relative_return flips sign",
+    "original_target": "0.5% absolute return on the stock"
+  }
+}

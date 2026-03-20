@@ -1,0 +1,133 @@
+{
+  "name": "momentum_score_composite_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["composite", "multi-indicator", "momentum-score", "weighted", "intraday", "confluence"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_164.json",
+  "original_name": "momentum_score_composite_v1",
+  "mechanism": "On NIFTY, when five independent momentum signals — 2-minute RSI velocity, MACD histogram acceleration, 1-minute rate-of-change, ADX directional bias, and volume-price direction — simultaneously align in the same direction, it indicates that multiple algorithmic strategy families (momentum-chasers, trend-followers, volume-participation systems) are all positioned in the same direction at the same time. This simultaneous agreement at the 1-3 minute timescale on NIFTY signals that institutional order flow has reached critical mass: the underlying directional program trades still have unfilled volume that will continue to absorb liquidity for the next 30-90 seconds. A composite score > 55 (out of 100 max) with 15-second persistence filters out the cases where only one or two indicators spike, leaving only the highest-conviction directional bars where continuation probability is meaningfully elevated.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute RSI captures short-term price velocity on NIFTY. Original RSI(14) was on 1-min bars = 14-minute lookback. We compress to 24 bars (2 min) because we hold 30-90 seconds — we want to detect the ONSET of momentum, not its established state. A 14-min RSI would be entering momentum trades that are already 12 minutes old; 2-min RSI enters near the beginning."
+    },
+    {
+      "name": "macd_hist_52",
+      "formula": "MACD(EMA24, EMA52, signal=EMA18) histogram",
+      "lookback": 52,
+      "computed_on": "spot",
+      "purpose": "Original MACD(12,26,9) on 1-min bars means slow MA covers 26 minutes. We compress proportionally to our hold time: holding 30-90s vs original 15-45 min = ~10x compression. Slow MA becomes 52 bars (4.3 min). This maintains the original fast/slow MA ratio (24/52 ≈ 12/26) but at a timescale relevant to our 30-90 second options hold."
+    },
+    {
+      "name": "roc_12",
+      "formula": "(close - close[12]) / close[12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute rate of change (12 × 5s). Original ROC(10) at 1-min bars = 10-minute lookback. For 30-90s hold on NIFTY, the relevant comparison window is 1 minute: long enough to filter 5-second tick noise, short enough to be predictive at 30-90s horizon. A 10-min ROC on NIFTY would be capturing moves already too old to drive the next 60 seconds."
+    },
+    {
+      "name": "adx_24_dir",
+      "formula": "sign(+DI(24) - -DI(24)) × min(ADX(24), 40) / 2",
+      "lookback": 48,
+      "computed_on": "spot",
+      "purpose": "2-minute ADX directional score. Acts as a CONTEXT FILTER (not trade trigger) — confirms that short-term trend direction has some strength before contributing to composite. 24 bars (2 min) is sufficient to establish micro-trend direction on NIFTY at 5s bars without being too noisy. Not scaled from original 14-min ADX because directional confirmation works at any timescale."
+    },
+    {
+      "name": "vol_mom_60",
+      "formula": "(volume - SMA(volume, 60)) / SMA(volume, 60) × sign(close - prev_close)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute volume momentum relative baseline. Volume baseline must be longer than our trade window to avoid circular reference; 60 bars (5 min) captures the current session activity rate. Sign of bar direction weights volume by price impact. Original used SMA(volume, 20) on 1-min bars = 20-min baseline; we compress proportionally (20 min → 5 min) to stay responsive to intraday volume regime shifts."
+    },
+    {
+      "name": "composite_score",
+      "formula": "rsi_score + macd_score + roc_score + adx_score + vol_score (each normalized to [-20, +20])",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Aggregated signal in range [-100, +100]. Threshold at ±55 means at least 3 of 5 indicators must be near-max agreement, or all 5 must be in moderate agreement. This is the same multi-consensus philosophy as the original strategy."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(TP × volume) / cumulative(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Intraday VWAP as trend context. Composite signals above VWAP are more likely to persist (VWAP-benchmarked algos are buyers); below VWAP they resist. Same as original's VWAP alignment condition."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "composite_score > threshold (default 55)",
+        "composite_score has been > (threshold - 10) for last 3 bars (15s persistence)",
+        "close > vwap",
+        "india_vix < vix_max (default 25)"
+      ],
+      "confirmation": "3-bar persistence filter (15 seconds) prevents single-bar spikes from triggering. Same 3-bar logic as original's 3-consecutive-bar confirmation, adapted to 5s bars."
+    },
+    "buy_pe": {
+      "conditions": [
+        "composite_score < -threshold (default -55)",
+        "composite_score has been < -(threshold - 10) for last 3 bars (15s persistence)",
+        "close < vwap",
+        "india_vix < vix_max (default 25)"
+      ],
+      "confirmation": "Symmetric to bullish side."
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "When 5 momentum indicators align on NIFTY, price should not retrace more than 8 spot points (4 option pts at ATM delta ~0.5) within 30 seconds — a retracement of that magnitude means the directional flow has reversed and the multi-indicator consensus has dissolved. Tight relative to typical NIFTY 1-min moves (3-7 pts) because these are high-conviction entries; if thesis is right, no retracement should be needed.",
+    "target_points": 7,
+    "target_rationale": "Multi-indicator confluence on NIFTY precedes 15-20 spot point moves over the next 60-90 seconds as remaining institutional orders fill. 7 option pts ≈ 14 spot pts represents the lower bound of this expected move (1:1.75 R:R). Captures roughly 50-70% of the typical continuation before momentum exhausts.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "india_vix < 25 — above 25 momentum reversals become unpredictable on NIFTY; multi-indicator alignment breaks down in panic regimes",
+    "time_filter": "09:25-15:20 IST — skip first 10 minutes (indicator warmup and opening noise) and last 10 minutes (low liquidity)",
+    "volume_filter": "volume momentum built into composite score — high-participation direction bars score higher",
+    "trend_filter": "close vs VWAP alignment required — filters out counter-trend entries where composite spikes against institutional order flow direction",
+    "spread_filter": "N/A — limit orders at close price"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.14,
+    "edge_decay_risk": "medium — composite scoring is computationally non-trivial but replicable; edge may erode if multiple algos begin trading the same multi-indicator alignment on NIFTY"
+  },
+  "adaptation_notes": "Original strategy traded NIFTY200 stocks at 1-min resolution with 15-45 min holds. Key changes: (1) All indicators compressed 10-12x in bar count to match 30-90s hold vs 15-45 min original; (2) VWAP kept (cumulative, no scaling needed); (3) Volume SMA period compressed from 20-min to 5-min baseline; (4) MACD parameters maintain original fast/slow ratio at compressed timescale; (5) Index-specific: indices are smoother/more liquid than individual stocks so composite threshold reduced from 60 to 55 to account for slightly lower per-bar volatility on the index. The multi-indicator consensus philosophy transfers cleanly to index at any timescale.",
+  "weaknesses": [
+    "All 5 indicators are lagging — composite alignment means the directional move has already started; on NIFTY this typically means 3-5 spot pts of initial move are already captured by entry",
+    "Signal rarity: composite > 55 with VWAP filter may produce only 2-5 signals per day on NIFTY",
+    "5 indicators with normalization parameters = 5 sources of overfitting risk; composite threshold is tunable",
+    "Index volume in spot_df may be sparse at 5s; volume-momentum sub-score may underperform compared to stock volume"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_164.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["RSI(14)", "MACD(12,26,9)", "ROC(10)", "ADX(14)", "volume SMA(20)"],
+    "original_stop": "0.25% from entry",
+    "original_target": "0.5% from entry"
+  }
+}

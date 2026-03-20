@@ -1,0 +1,119 @@
+{
+  "name": "volume_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volume-weighted", "momentum", "vol-price-trend", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_166.json",
+  "original_name": "volume_momentum_v1",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing directional orders leave a measurable volume fingerprint: when more than 62% of the last 100 seconds of traded volume lands on up-bars (5-second candles closing above their open), it signals sustained buy-side order flow rather than noise. When this volume skew aligns with spot trading above session VWAP and a positive 60-second rate-of-change, the remaining unfilled institutional queue pushes NIFTY 15-25 spot points higher in the next 30-90 seconds — we buy ATM CE to capture approximately half of that continuation. The symmetrical condition (volume skew toward down-bars, below VWAP, negative 60s ROC) signals sell-side institutional flow and we buy PE.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "up_vol_ratio_20",
+      "formula": "SUM(volume where close>open, 20) / SUM(volume, 20)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20 bars = 100 seconds — recent enough to reflect current institutional flow direction without being contaminated by volume from 5+ minutes ago. Original used 20 bars on 1-min (20 minutes); we compress to 20 bars at 5s because we hold 30-90 seconds, not 15-40 minutes. The ratio needs at least 10-15 bars to be statistically meaningful, so 20 is the minimum reliable window."
+    },
+    {
+      "name": "roc_12",
+      "formula": "(close - close[t-12]) / close[t-12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 60 seconds (1 minute). Original used ROC(10) on 1-min bars = 10 minutes. We compress to 1 minute because we target 30-90 second holds — the directional trigger should confirm a move that started in the last minute, not 10 minutes ago. A 1-minute ROC above 0.10% on NIFTY (roughly 22 spot pts) confirms momentum is already in progress."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume) from session open",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "No scaling — cumulative from 09:15. VWAP is the institutional benchmark; trades above VWAP are buy-side dominated (institutions getting filled at or below benchmark). Unchanged from original."
+    },
+    {
+      "name": "vol_sma_24",
+      "formula": "SMA(volume, 24) — rolling 2-minute average (prior 24 bars, excluding current)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars = 120 seconds. Current bar volume vs 2-minute rolling average confirms this is an active bar, not a thin-volume noise spike. The 2-minute window is tight enough to reflect current session regime without smoothing out intraday volume surges."
+    },
+    {
+      "name": "vol_ratio_trend_6",
+      "formula": "vol_ratio[t] - vol_ratio[t-6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6 bars = 30 seconds. Checks whether institutional volume participation in the direction is INCREASING in the last 30 seconds — confirming momentum is accelerating rather than stalling. This replaces the original's confirmation condition (vol_ratio[t] > vol_ratio[t-5] on 1-min bars = 5 minutes). Compressed to 6 bars because at 5s resolution we want to detect acceleration in the last 30 seconds, not the last 5 minutes."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "up_vol_ratio_20 > 0.62 (>62% of last 100s volume in up-bars)",
+        "roc_12 > 0.10 (NIFTY up >0.10% in last 60 seconds)",
+        "close > vwap (spot above institutional benchmark)",
+        "volume[t] > vol_sma_24 (current bar volume above 2-min average)"
+      ],
+      "confirmation": "vol_ratio_trend_6 > 0 (up-volume participation increasing over last 30s)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "up_vol_ratio_20 < 0.38 (<38% of last 100s volume in up-bars, i.e. >62% in down-bars)",
+        "roc_12 < -0.10 (NIFTY down >0.10% in last 60 seconds)",
+        "close < vwap (spot below institutional benchmark)",
+        "volume[t] > vol_sma_24 (current bar volume above 2-min average)"
+      ],
+      "confirmation": "vol_ratio_trend_6 < 0 (down-volume participation increasing over last 30s)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. On a 30-90 second institutional momentum trade, if the spot retraces 8 pts against us the volume thesis is broken — the order queue has reversed or exhausted. NIFTY 30-second moves are typically 2-5 option pts, so a 4-pt stop gives one full typical adverse move before cutting.",
+    "target_points": 7.0,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. Institutional-backed NIFTY momentum runs 15-25 spot pts in 60-90 seconds; 7 option pts captures ~50-60% of the expected move, matching the 1-2 minute typical move range from the calibration table. R:R of 1:1.75.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "none — strategy relies on volume ratio rather than volatility regime",
+    "time_filter": "09:25-15:20 IST; skip first 10 minutes to let opening volume settle",
+    "volume_filter": "integrated — current bar volume > 2-minute rolling average (vol_sma_24)",
+    "trend_filter": "VWAP alignment ensures we trade with institutional benchmark direction",
+    "spread_filter": "not applicable — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.82,
+    "edge_decay_risk": "low — up/down volume ratio is a non-standard custom indicator not available in mainstream charting platforms; order-flow structural dynamics are persistent"
+  },
+  "adaptation_notes": "Key changes from original: (1) dropped stock universe filter — NIFTY index is the single underlying; (2) compressed all lookbacks from 1-min to 5-second equivalents targeting 30-90s holds; (3) removed bid-ask spread filter (limit order execution); (4) ROC threshold lowered from 0.15% to 0.10% because index moves are smoother and a 0.10% NIFTY 60s move (~22 pts) is already meaningful; (5) stops/targets in option premium points not percentage; (6) ADV and avg_bar_volume stock filters eliminated entirely.",
+  "weaknesses": [
+    "NIFTY volume data at 5-second resolution can have gaps (zero-volume bars during illiquid seconds) which distort the rolling volume ratio",
+    "Up/down bar classification (close > open) is sensitive to where in the 5s bar the volume actually traded — a bar can close green on entirely sell-initiated volume",
+    "Volume ratio can be momentarily skewed by large expiry-day rolls or basket trades unrelated to directional flow",
+    "False signals possible when VWAP and momentum align but the move is mean-reverting off an intraday extreme"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_166.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-40 minutes",
+    "original_indicators": ["up_vol_20", "dn_vol_20", "vol_ratio_20", "ROC_10", "VWAP", "ATR_14"],
+    "original_stop": "0.2% from entry",
+    "original_target": "0.4% from entry"
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "name": "consolidation_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "consolidation_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_182.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "A mid-session consolidation occurs when price trades in a range < 0.2% for 20+ consecutive bars after an initial directional move. This pattern represents institutional order absorption: large limit orders create a ceiling/floor, absorbing aggressive orders until the limit order is fully filled. When the consolidation breaks, the absorbed side's orders are exhausted, and the breakout direction tends to continue. This is distinct from strategy 41 (range expansion) in that this specifically looks for consolidation AFTER an initial move (continuation pattern), not a base from the session open. The edge exists because identifying real-time consolidation boundaries and distinguishing from general low-volatility drift requires specific computation.",
+  "mechanism": "Consolidation periods accumulate resting orders above resistance and below support. A breakout triggers these resting orders as stop-losses and breakout entries fire simultaneously. The resulting order flow imbalance overwhelms the resting liquidity, and market makers widen spreads in the breakout direction, accelerating the move.",
+  "indicators": [
+    {
+      "name": "consol_high",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "consol_low",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "consol_range_pct",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "consol_duration",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "prior_move_dir",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "consol_range_pct < 0.2",
+        "consol_duration >= 20",
+        "close > consol_high",
+        "volume > SMA(volume, 20) * 2.0",
+        "prior_move_dir > 0 (consolidation after an up-move = bullish continuation pattern)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "consol_range_pct < 0.2",
+        "consol_duration >= 20",
+        "close < consol_low",
+        "volume > SMA(volume, 20) * 2.0",
+        "prior_move_dir < 0 (consolidation after a down-move = bearish continuation pattern)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if price closes back within consolidation for 3 bars (false breakout)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "no specific filter",
+    "volume_filter": "breakout bar volume > 2x consolidation average volume",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Consolidation patterns can break in either direction; the prior_move_dir filter helps but continuation is not guaranteed",
+    "Very tight consolidation (0.2%) may be below the noise floor of some stocks \u2014 what looks like consolidation may be normal low-vol drift",
+    "Measured move targeting assumes symmetry (move after = move before consolidation) which is often not the case in practice"
+  ],
+  "prior_art": "Flag and pennant patterns are the classic continuation patterns (Edwards & Magee). The tight consolidation breakout is essentially a flag pattern quantified. Bulkowski's 'Encyclopedia of Chart Patterns' provides statistical performance of flags/pennants. The specific 0.2% range threshold and 20-bar minimum are quantitative adaptations.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

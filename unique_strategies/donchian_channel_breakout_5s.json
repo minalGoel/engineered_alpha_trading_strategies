@@ -1,0 +1,113 @@
+{
+  "name": "donchian_channel_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from quant_system",
+  "original_strategy": "donchian_channel_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_90.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Donchian channel (N-bar highest high / lowest low) breakouts capture the start of new intraday trends. Unlike moving average crossovers, Donchian is parameter-light (just one: the lookback) and doesn't whipsaw in rangebound markets because the channel only contracts, never generates false crosses. The inefficiency exists because Donchian is perceived as 'old school' and retail traders prefer fancier indicators. Not fully arbitraged because intraday Donchian requires real-time rolling max/min computation.",
+  "mechanism": "Donchian channel breakouts capture the moment price exceeds its N-period high or low. These levels represent the extreme of recent participant positioning. A breach triggers stop-losses from participants positioned for mean-reversion and new entries from trend followers, creating a flow cascade that sustains the directional move.",
+  "indicators": [
+    {
+      "name": "donchian_high_30",
+      "formula": "max(high, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-bar channel high"
+    },
+    {
+      "name": "donchian_low_30",
+      "formula": "min(low, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-bar channel low"
+    },
+    {
+      "name": "donchian_mid",
+      "formula": "(donchian_high_30 + donchian_low_30) / 2",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "channel midline for exit"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > donchian_high_30",
+        "volume > SMA(volume, 20) * 1.3",
+        "close > vwap",
+        "vix < 24"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < donchian_low_30",
+        "volume > SMA(volume, 20) * 1.3",
+        "close < vwap",
+        "vix < 24"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit when close crosses below donchian_mid (for longs)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix between 12-24",
+    "volume_filter": "breakout bar > 1.3x average",
+    "expiry_filter": "skip on expiry"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "37% win rate is psychologically punishing. 7-10 consecutive losses are expected regularly. Most traders will override the system.",
+    "30-bar Donchian on 1-min bars = 30-minute channel. This is quite short \u2014 noise-driven breakouts will be frequent.",
+    "In rangebound markets, the channel stays tight and generates many small losses as price oscillates just above/below the channel."
+  ],
+  "prior_art": "Donchian Channel Breakout. Richard Donchian (1950s). Turtle Trading System. See: Following the Trend (Clenow), Trading Evolved.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; apply to NIFTY/BANKNIFTY index instead of FnO universe; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,125 @@
+{
+  "name": "bootstrap_confidence_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "bootstrap_confidence_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_332.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Standard technical indicators provide point estimates (e.g., 'RSI is 28') without confidence intervals. Using block bootstrap resampling on rolling 1-min return data, we construct confidence intervals for the expected forward return. If the 90% bootstrap CI for the 30-bar forward return is entirely above zero, we have statistically robust evidence for a long entry. If entirely below zero, a short entry. When the CI straddles zero, no edge \u2014 stay flat. This eliminates entries where the point estimate looks good but uncertainty is too high. The inefficiency exists because bootstrap inference requires computational resources (1000 resamples per signal) and statistical knowledge beyond most market participants.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "Forward_Return_Proxy",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Block_Bootstrap_CI",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "CI_Lower",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "CI_Upper",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "CI_Width",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Signal_Strength",
+      "formula": "",
+      "lookback": 1440,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "CI_Lower > 0 (entire 90% CI is above zero \u2014 high confidence in positive forward return)",
+        "CI_Lower > 5 bps (minimum expected return even at 5th percentile)",
+        "close > vwap"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "CI_Upper < 0 (entire 90% CI is below zero \u2014 high confidence in negative forward return)",
+        "CI_Upper < -5 bps",
+        "close < vwap"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "CI shifts to include zero (confidence in direction lost)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25; high VIX widens CIs, making it harder to get directional signals",
+    "volume_filter": "Volume > SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Block bootstrap with block_size=5 assumes serial dependence structure decays within 5 bars \u2014 if the true dependence is longer (e.g., 15-bar cycles), the bootstrap CIs are invalid",
+    "Computing 500 bootstrap resamples per signal evaluation per stock adds significant latency \u2014 may not complete within the 1-minute bar window for real-time trading across 50 stocks",
+    "The 'CI entirely above/below zero' requirement is very restrictive \u2014 in noisy 1-min data, bootstrap CIs tend to be wide and straddle zero most of the time, generating very few signals"
+  ],
+  "prior_art": "Efron (1979) bootstrap; Politis & Romano (1994) block bootstrap for time series; White (2000) reality check bootstrap for trading strategies; application to real-time entry signals is novel",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,120 @@
+{
+  "name": "connors_rsi_extreme_5s",
+  "version": "1.0.0",
+  "author": "adapted from quant_system",
+  "original_strategy": "connors_rsi_extreme_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_79.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Connors RSI combines three oscillators (RSI, streak RSI, percentile rank) into a composite that identifies extreme short-term oversold conditions. When CRSI < 10 on liquid stocks near VWAP, the bounce probability is elevated because the sell-off is typically driven by short-term momentum traders who will quickly reverse. Inefficiency persists because CRSI is less commonly used than standard RSI, and the signal is infrequent enough that most automated systems don't bother.",
+  "mechanism": "Short-term selling exhausts available demand at a price level, creating a temporary liquidity vacuum. Market makers who absorbed the selling begin marking prices back to reduce inventory risk. Limit buy orders resting below create a floor, and new participants entering the long side accelerate the reversion as the forced selling pressure dissipates.",
+  "indicators": [
+    {
+      "name": "rsi_3",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "short-term RSI component"
+    },
+    {
+      "name": "streak",
+      "formula": "consecutive up/down close count",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "streak length"
+    },
+    {
+      "name": "streak_rsi",
+      "formula": "RSI(streak, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "streak RSI component"
+    },
+    {
+      "name": "pct_rank",
+      "formula": "percentile_rank(close_return_1bar, 1200)",
+      "lookback": 1200,
+      "computed_on": "spot",
+      "purpose": "return percentile component"
+    },
+    {
+      "name": "crsi",
+      "formula": "(rsi_3 + streak_rsi + pct_rank) / 3",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Connors RSI composite"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "crsi < 10",
+        "close < vwap",
+        "close > vwap - 0.5%",
+        "vix < 22"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "crsi > 90",
+        "close > vwap",
+        "close < vwap + 0.5%",
+        "vix < 22"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "exit when crsi crosses 50",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 22",
+    "volume_filter": "volume > SMA(volume, 20)",
+    "expiry_filter": "skip on expiry"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "reversion_threshold",
+      "default": 0.0005,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "CRSI on 1-min bars is extremely noisy. The 3-bar RSI oscillates wildly \u2014 signals fire frequently and many are false.",
+    "Thin profit factor (1.13) means a small increase in costs or slippage turns the strategy negative.",
+    "In trending markets, CRSI can stay at extremes for 50+ bars \u2014 the 'extreme' signal is not extreme at all, it's the trend."
+  ],
+  "prior_art": "Connors RSI \u2014 Larry Connors / TradingMarkets. Well-published. Adapted to intraday 1-min from original daily/swing timeframe.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; apply to NIFTY/BANKNIFTY index instead of FnO universe; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

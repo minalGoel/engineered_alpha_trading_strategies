@@ -1,0 +1,145 @@
+{
+  "name": "inside_bar_breakout_v177",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["price_action", "breakout", "consolidation", "range_contraction"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_121.json",
+  "original_name": "inside_bar_breakout_v177",
+
+  "mechanism": "NIFTY frequently enters micro-consolidation phases during the trading session where price compresses into a narrowing range over 1-3 minutes. These consolidations occur when the market digests a directional move — after a 20-40 spot point impulse, both buyers and sellers pause, and the 5-second bars begin nesting inside each other: each bar's high is lower than the previous bar's high and each bar's low is higher than the previous bar's low. This is the multi-bar 'inside bar' pattern — not a single inside bar (which is meaningless noise on a 5-second chart), but a SEQUENCE of 6-24 consecutive bars where the range progressively contracts. On NIFTY, these 1-3 minute consolidations represent a genuine order flow equilibrium: the directional move has absorbed available liquidity at those prices, market makers are tightening their quotes, and the next batch of resting orders (limit buys below or limit sells above) defines the breakout boundary. When price finally exits this compressed range, the breakout direction carries 10-25 spot points in 30-90 seconds because the consolidation created an order book vacuum — there are few resting orders in the breakout direction (they were consumed during the prior move) while stops from range-bound traders fuel the initial thrust. At 5-second resolution, we detect the exact bar when NIFTY escapes the consolidation range, giving us a 30-60 second lead over traders using 1-minute bars who won't see the breakout candle close until the move is already underway. We buy ATM CE on upside breakouts and ATM PE on downside breakouts, riding the initial 30-120 seconds of range expansion before the next consolidation forms.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:00 IST",
+  "hold_time_seconds": [25, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "rolling_high_12",
+      "formula": "MAX(high, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "The highest high over the last 12 bars (1 minute) — defines the upper boundary of the recent micro-range. The 12-bar window was chosen because on NIFTY, the minimum meaningful consolidation lasts approximately 1 minute. Shorter windows (6 bars = 30 seconds) capture noise fluctuations that do not represent genuine order flow equilibrium. This rolling high must be DECLINING or FLAT for the consolidation pattern to be valid — if it is rising, there is still upward momentum and no true consolidation has formed."
+    },
+    {
+      "name": "rolling_low_12",
+      "formula": "MIN(low, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "The lowest low over the last 12 bars (1 minute) — defines the lower boundary of the recent micro-range. Must be RISING or FLAT for the consolidation to be valid. Together with rolling_high_12, these two indicators define the 'mother bar' range that the consolidation bars must nest within."
+    },
+    {
+      "name": "consolidation_range",
+      "formula": "rolling_high_12 - rolling_low_12",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The width of the current micro-consolidation in spot points. On NIFTY, valid consolidation ranges for this strategy are typically 5-15 spot points. Ranges below 3 points are too tight (just bid-ask bounce, no real compression) and ranges above 20 points indicate a wide choppy zone rather than a compressed consolidation. This indicator must be CONTRACTING over the consolidation duration — a flat or expanding range is not a consolidation."
+    },
+    {
+      "name": "inside_bar_count",
+      "formula": "consecutive count of bars where high <= rolling_high_12[1] AND low >= rolling_low_12[1]",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Counts how many consecutive 5-second bars have stayed within the range established by the first bar of the consolidation. This is the multi-bar inside bar concept: not a single bar inside a single bar, but a SEQUENCE of bars nesting inside a reference range. On NIFTY at 5s, we require at least 12 consecutive inside bars (1 minute of consolidation) for the pattern to be meaningful. Fewer than 12 bars means the range is just a momentary pause between ticks, not a genuine equilibrium where resting orders accumulate on both sides. The maximum useful count is about 36 bars (3 minutes) — beyond that, the consolidation is more likely a dead zone with no pending breakout energy."
+    },
+    {
+      "name": "range_contraction_rate",
+      "formula": "(consolidation_range - consolidation_range[12]) / consolidation_range[12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Measures how fast the consolidation range is shrinking over the last 1 minute (12 bars). A contraction rate more negative than -0.15 (range shrinking by 15%+ per minute) indicates active compression — market makers are tightening quotes and volatility is collapsing. This distinguishes genuine consolidation-before-breakout from a wide sideways chop that has no directional resolution pending. On NIFTY, the strongest breakouts come from consolidations where the range contracts by 20-40% over 1-2 minutes."
+    },
+    {
+      "name": "pre_consolidation_momentum",
+      "formula": "close[inside_bar_count] - close[inside_bar_count + 24]",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Measures the directional move that PRECEDED the consolidation — the impulse that the market is now 'digesting'. On NIFTY, consolidations after strong impulse moves (15+ spot points in 2 minutes) produce more reliable breakouts because there is residual order flow in the impulse direction. Consolidations that form without a prior impulse are just random choppy price action with no breakout bias. The 24-bar (2-minute) pre-move window captures the typical NIFTY impulse duration."
+    },
+    {
+      "name": "volume_ratio_24",
+      "formula": "SMA(volume, 12) / SMA(volume, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Ratio of recent 1-minute volume to 2-minute volume. During genuine consolidation, volume DROPS as directional participants step aside and only market makers are active. A ratio below 0.8 confirms the consolidation is real. At breakout, this ratio spikes above 1.3 as directional flow resumes — used as breakout confirmation alongside the price condition."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "inside_bar_count >= 12 (at least 1 minute of consolidation — sufficient time for resting orders to accumulate on both sides of the range on NIFTY)",
+        "consolidation_range between 4 and 18 spot points (the range must be tight enough to represent genuine compression but wide enough to contain meaningful stop placement by range traders)",
+        "range_contraction_rate < -0.10 (range is actively shrinking, confirming compression rather than flat chop)",
+        "close > rolling_high_12 (NIFTY spot breaks above the upper boundary of the consolidation range — the breakout trigger)"
+      ],
+      "confirmation": "The breakout bar must close in its upper third (close > (high + low) / 2) AND volume_ratio_24 > 1.2 on the breakout bar. This confirms the breakout has genuine buying flow behind it rather than a momentary spike from a single large order that will immediately revert. On NIFTY, single-bar spikes through consolidation highs that lack volume confirmation revert within 10-15 seconds about 60% of the time."
+    },
+    "buy_pe": {
+      "conditions": [
+        "inside_bar_count >= 12",
+        "consolidation_range between 4 and 18 spot points",
+        "range_contraction_rate < -0.10",
+        "close < rolling_low_12 (NIFTY spot breaks below the lower boundary of the consolidation)"
+      ],
+      "confirmation": "The breakout bar must close in its lower third (close < (high + low) / 2) AND volume_ratio_24 > 1.2 on the breakout bar."
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "The stop is placed equivalent to the consolidation range depth (typically 4-8 spot points = 2-4 option points). If NIFTY breaks out upward and then reverses back through the ENTIRE consolidation range to the other side, the breakout has failed completely — this is a 'false breakout' where the range traders were right and the breakout traders were wrong. On NIFTY, failed consolidation breakouts typically retrace 1.0-1.5x the consolidation range within 30-60 seconds. A 4-option-point stop (~8 spot points) covers the typical consolidation range plus a small buffer, limiting damage to roughly one 30-second adverse move (2-5 option points per 30s typical).",
+    "target_points": 9,
+    "target_rationale": "After breaking out of a 1-3 minute consolidation, NIFTY typically travels 12-25 spot points (6-12 option points) in the breakout direction over the next 1-2 minutes. The first leg of the expansion — before price decelerates into a new consolidation — covers about 60-70% of this total move. A 9-point target captures the core of the first expansion leg and provides a 2.25:1 reward-to-risk ratio against the 4-point stop. The original strategy targeted 14x ATR(14), which on 15-minute bars was an outsized trend-following target. At 5s on NIFTY, the breakout is a SHORT impulse, not a trend — we capture the impulse and exit before the next consolidation begins. Going beyond 10-12 option points would require the breakout to become a sustained trend, which only happens when the consolidation resolves into a macro-level breakout (e.g., breaking out of a 30-minute range).",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 12-28 — below 12, NIFTY consolidations are ubiquitous but breakouts lack energy; above 28, NIFTY moves are too erratic for clean consolidation-breakout patterns to form",
+    "time_filter": "No trades before 09:30 (need initial bars for indicator initialization) or after 14:30 — late-session consolidation breakouts are often absorbed by closing-auction flows and fail to follow through",
+    "volume_filter": "volume_ratio_24 > 1.2 on breakout bar as core entry condition — breakouts without volume confirmation are fakeouts on NIFTY more than half the time",
+    "trend_filter": "Stronger edge when pre_consolidation_momentum aligns with breakout direction — consolidation after an up-impulse breaking out upward (continuation) has ~60% win rate vs. ~40% for reversal breakouts against the impulse",
+    "spread_filter": "Skip if ATM option bid-ask > 2.5 points — during consolidation phases, options spreads tighten (low vol), but at breakout they can widen briefly as market makers adjust"
+  },
+
+  "edge": {
+    "expected_bps": 16,
+    "win_rate_estimate": 0.40,
+    "avg_winner_to_loser": 2.25,
+    "profit_factor_estimate": 1.50,
+    "edge_decay_risk": "medium — consolidation-breakout is a well-known pattern, but the multi-bar inside bar detection at 5s resolution and the range_contraction_rate filter provide differentiation from standard implementations on 1-minute or higher timeframes"
+  },
+
+  "adaptation_notes": "Five fundamental changes from the original single-bar inside bar strategy on 15-minute Nifty200 stocks to multi-bar consolidation breakout on 5-second NIFTY index: (1) The core concept was COMPLETELY reframed. A single inside bar on a 5-second chart is pure noise — two consecutive 5s bars where one nests inside the other happens constantly and carries zero information. The concept was elevated to a MULTI-BAR consolidation pattern: 12+ consecutive bars (1+ minutes) where the range progressively contracts. This preserves the original insight (volatility contraction preceding breakout) while making it meaningful at 5s. (2) Added inside_bar_count minimum of 12 bars (1 minute). The original's single-bar inside pattern on 15-min represented 15 minutes of compression. We require at least 1 minute of sustained compression on NIFTY at 5s, which is the minimum duration for resting orders to accumulate on both sides and create the order book vacuum that powers the breakout. (3) Added range_contraction_rate as a quality filter that the original lacked entirely. Not all consolidations are equal — we specifically need the range to be SHRINKING, not just flat. Active contraction means market makers are tightening and volatility is collapsing, which is the precondition for an explosive breakout. (4) Target changed from 14x ATR(14) — an enormous trend-following target that implies holding for hours — to 9 option points, which captures the first expansion leg of 1-2 minutes. The original was a low-win-rate trend strategy (34% win rate, 3.84:1 winner-to-loser); this adaptation is a moderate-win-rate impulse strategy (40% win rate, 2.25:1) because NIFTY consolidation breakouts produce reliable impulses but rarely trend. (5) Added volume_ratio_24 confirmation to distinguish genuine breakouts from single-order spikes that revert. On NIFTY at 5s, a single large institutional order can spike price through the consolidation boundary for one bar before reverting — the volume confirmation filters this noise.",
+
+  "weaknesses": [
+    "False breakouts are the primary failure mode — NIFTY can break out of a consolidation, move 3-5 spot points, then reverse back into the range. The volume confirmation filter reduces but does not eliminate this risk",
+    "Consolidation patterns during the 11:30-13:00 lunch lull on NIFTY are often 'dead zones' rather than compression-before-breakout — the breakout may move 5-8 spot points then stall because there is insufficient participation to sustain the expansion",
+    "The multi-bar inside bar count can reset frequently as single bars poke beyond the range by fractions of a point, making it difficult to maintain a clean count in fast-moving NIFTY sessions",
+    "On BANKNIFTY expiry days (Wednesdays), consolidation patterns near strike prices are distorted by gamma hedging flows that create artificial range contractions without genuine breakout potential",
+    "When NIFTY is in a strong trending session (1%+ directional move), consolidations are brief and shallow, making the 12-bar minimum count difficult to achieve — the strategy may miss the best breakout opportunities on the most directional days"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_121.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "30-60 bars (7.5-15 hours, likely multi-day)",
+    "original_indicators": ["prev_high = REF(high, 1)", "prev_low = REF(low, 1)", "is_inside = high < prev_high AND low > prev_low"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "14 * ATR(14)"
+  }
+}

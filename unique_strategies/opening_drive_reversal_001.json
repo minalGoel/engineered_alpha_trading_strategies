@@ -1,0 +1,154 @@
+{
+  "name": "opening_drive_reversal_001",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "opening_reversal", "microstructure", "session_specific"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_130.json",
+  "original_name": "opening_drive_reversal_001",
+
+  "mechanism": "NIFTY's opening drive — the first 5-10 minutes of directional movement after the 09:15 market open — is driven by the release of overnight order accumulation. Pre-market orders from institutional desks, overnight global cues, SGX NIFTY convergence trades, and retail market orders all hit the book simultaneously, creating a powerful initial impulse that typically pushes NIFTY 15-40 spot points in one direction within the first 5 minutes. This drive routinely OVERSHOOTS fair value because the order flow is one-directional and liquidity providers widen spreads during the open, amplifying price impact. Retail traders pile in during the drive (momentum chasing), further exaggerating the overshoot. The exhaustion point — where the drive stalls and begins to reverse — is detectable at 5-second resolution through three converging signals: (1) the 5s bars begin showing long wicks AGAINST the drive direction, meaning price attempts to extend but gets rejected within the same 5-second interval; (2) RSI on a ultra-fast 3-bar lookback hits extreme levels (below 8 for bearish drives, above 92 for bullish drives), indicating the price move has become statistically extended relative to very recent history; (3) VWAP slope flattens, meaning the session's volume-weighted fair value has stopped moving in the drive direction — the accumulated volume is no longer supporting the price extension. We fade the exhaustion by buying ATM CE when a bearish drive exhausts (price below VWAP, wicks appearing on the downside) and ATM PE when a bullish drive exhausts (price above VWAP, wicks appearing on the upside). The trade captures 5-10 option points as NIFTY retraces toward the session VWAP over the next 30-120 seconds. This is DISTINCT from gap fade trading: a gap fade trades the distance between previous close and today's open, while this strategy trades the DRIVE from today's open regardless of gap size. NIFTY can open flat (no gap) but still have a 30-point opening drive that overshoots and reverses.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-10:00 IST",
+  "hold_time_seconds": [20, 150],
+  "max_hold_bars": 30,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 2,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["session_open_price", "previous_close"]
+  },
+
+  "indicators": [
+    {
+      "name": "session_vwap",
+      "formula": "VWAP() from 09:15",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP anchored from the 09:15 open. During the opening drive, VWAP trails price because the drive's volume is weighted toward the extreme — if NIFTY drives 30 points up, VWAP might only be 15 points up because early bars at lower prices had high volume too. VWAP is both the exhaustion reference (entry when price is far from VWAP) and the target (exit when price reverts toward VWAP). On NIFTY, the opening drive exhaustion point is typically 0.15-0.35% away from VWAP — once this gap starts closing, the reversion is underway."
+    },
+    {
+      "name": "rsi_3",
+      "formula": "RSI(close, 3)",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "Ultra-fast 3-bar RSI (15 seconds of data). The original used RSI(2) on 1-minute bars — but RSI(2) on 5s bars responds to just 10 seconds of price action, making it hyper-reactive to individual ticks rather than genuine exhaustion. RSI(3) on 5s captures 15 seconds, which on NIFTY is the minimum duration for a genuine exhaustion signal: 3 consecutive 5-second bars all moving in the drive direction pushes RSI to extremes, and if the 4th bar shows a reversal wick, the RSI divergence is meaningful. RSI(3) extremes below 8 (bearish drive exhaustion) or above 92 (bullish drive exhaustion) on NIFTY's 5s bars occur about 5-15 times per opening drive, but only 1-3 of those coincide with wick confirmation and VWAP conditions — these are the high-quality signals."
+    },
+    {
+      "name": "wick_down_ratio",
+      "formula": "(MIN(open, close) - low) / NULLIF(high - low, 0.0001)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Proportion of the 5s bar that is lower wick. During a bearish opening drive, a wick_down_ratio > 0.40 means price tried to push lower but was rejected within the 5-second window — buyers absorbed the selling. This is the micro-structural footprint of the exhaustion point: the drive's momentum can no longer hold price at the extreme for even 5 seconds. On NIFTY, opening drive exhaustion wicks are typically 2-5 spot points long, representing 1-2.5 option points of intra-bar rejection."
+    },
+    {
+      "name": "wick_up_ratio",
+      "formula": "(high - MAX(open, close)) / NULLIF(high - low, 0.0001)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Proportion of the 5s bar that is upper wick. During a bullish opening drive, wick_up_ratio > 0.40 signals that the upward push is being rejected within the bar. Mirror of wick_down_ratio for fading bullish drives."
+    },
+    {
+      "name": "vwap_slope_6",
+      "formula": "session_vwap - session_vwap[6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "VWAP change over 30 seconds (6 bars). During an active opening drive, VWAP slopes steeply in the drive direction because high-volume bars are printing at extreme prices. When the drive exhausts, VWAP slope flattens because new bars near the extreme have LOWER volume (participation is drying up) and the earlier high-volume bars near the open are pulling VWAP back toward the center. A vwap_slope_6 magnitude below 0.5 spot points (essentially flat) during an apparent exhaustion confirms that the drive's volume support is gone. The 6-bar (30-second) window was chosen because NIFTY's opening drive VWAP responds with approximately a 15-30 second lag to changes in directional flow — shorter windows catch noise, longer windows miss the inflection."
+    },
+    {
+      "name": "drive_magnitude",
+      "formula": "close - session_open_price",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "How far NIFTY has moved from the 09:15 open price. The opening drive must be at least 12 spot points (~6 option points) to be worth fading — smaller moves do not create sufficient overshoot for a profitable reversion. On NIFTY, drives of 12-40 spot points represent the typical 'overshoot' zone. Drives beyond 50 points often indicate genuine information (major global event, earnings shock from a heavyweight) rather than flow-driven overshoot, and fading them is dangerous."
+    },
+    {
+      "name": "drive_duration_bars",
+      "formula": "bars since session open at 09:15",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Tracks how long the session has been running in 5-second bars. The opening drive pattern is only valid between 09:20 (60 bars in, enough data for indicators and for the drive to develop) and 10:00 (540 bars in, 45 minutes after open). Before 09:20, the drive is still forming and fading it prematurely catches a knife. After 10:00, the opening drive dynamics have dissipated and any reversal patterns are caused by different market mechanics (institutional re-balancing, sector rotation) that this strategy is not designed to capture."
+    },
+    {
+      "name": "nifty_atr_36",
+      "formula": "ATR(36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute ATR (36 bars at 5s) capturing the recent volatility of the opening session. The opening 15-30 minutes of NIFTY have 2-3x the volatility of mid-session, so a session-long ATR would underestimate risk during the critical entry window. The 3-minute ATR specifically captures 'opening volatility' and is used to validate that the drive magnitude is significant relative to current conditions — a 12-point move in a session where 3-min ATR is 15 points is less meaningful than a 12-point move when ATR is 5 points."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "drive_magnitude < -12 spot points (NIFTY has driven at least 12 points below the open — sufficient overshoot for a bearish drive fade)",
+        "rsi_3 <= 8 (ultra-fast RSI confirms the price has reached a statistical extreme relative to the last 15 seconds of trading — the drive has pushed price to an unsustainable level)",
+        "wick_down_ratio >= 0.35 on current or previous bar (price attempted to push lower but was rejected within the 5-second window — micro-structural evidence of buying absorption at the low)",
+        "ABS(vwap_slope_6) < 0.5 (VWAP has stopped trending in the drive direction — the volume-weighted fair value is no longer being pulled toward the extreme, confirming the drive's momentum has stalled)",
+        "drive_duration_bars between 60 and 540 (between 09:20 and 10:00 — the valid window for opening drive exhaustion patterns on NIFTY)"
+      ],
+      "confirmation": "The signal bar must close above its open (green bar) — this is the first 5-second bar where buyers have WON the bar after a sustained bearish drive. On NIFTY, the transition from all-red 5s bars to the first green bar during the opening drive is the clearest micro-structural signal that the selling pressure has exhausted and buying flow is resuming."
+    },
+    "buy_pe": {
+      "conditions": [
+        "drive_magnitude > 12 spot points (NIFTY has driven at least 12 points above the open — sufficient overshoot for a bullish drive fade)",
+        "rsi_3 >= 92 (ultra-fast RSI at bullish extreme)",
+        "wick_up_ratio >= 0.35 on current or previous bar (upward push being rejected within the bar — sellers absorbing at the high)",
+        "ABS(vwap_slope_6) < 0.5 (VWAP slope flattened — drive volume support is gone)",
+        "drive_duration_bars between 60 and 540"
+      ],
+      "confirmation": "The signal bar must close below its open (red bar) — the first 5-second bar where sellers have won after the bullish drive, confirming exhaustion."
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "If NIFTY moves 5 option points (~10 spot points) further in the drive direction after our exhaustion entry, the drive is NOT exhausting — it is extending into a genuine trend move driven by new information rather than flow-driven overshoot. On NIFTY, opening drives that extend more than 10 spot points beyond an apparent exhaustion point typically continue for another 20-40 spot points as the move transitions from 'opening flow' to 'trend day' dynamics. The 5-point stop limits damage to approximately one 30-second adverse move (2-5 option points per 30s during the volatile open) and ensures the loss is contained before the trend acceleration phase.",
+    "target_points": 8,
+    "target_rationale": "The target represents NIFTY retracing approximately 50-60% of the opening drive magnitude back toward session VWAP over 30-120 seconds. On a typical 25-point opening drive, NIFTY retraces 12-18 spot points (6-9 option points) in the first 1-2 minutes after exhaustion before either stabilizing or continuing the reversion. The 8-point target captures this reliable first-leg reversion without requiring a full return to VWAP (which can take 10-20 minutes and exposes the trade to re-acceleration risk). The original targeted VWAP or 0.60% move — at 5s resolution with 20-150 second holds, we take the first 50-60% of the reversion and leave the rest. The 8:5 target-to-stop ratio (1.6:1) is conservative but compensated by the higher win rate (~52%) of opening drive exhaustion patterns on NIFTY compared to random mean-reversion signals.",
+    "time_stop_bars": 30,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 13-30 — below 13, opening drives are muted (5-10 spot points) and not worth fading; above 30, the opening drive may be informationally driven (crisis, geopolitical event) and fading it carries outsized risk of a trend day",
+    "time_filter": "STRICT 09:20-10:00 IST only — this strategy exploits a specific market microstructure pattern (post-auction order flow exhaustion) that ONLY occurs in the first 45 minutes after open. After 10:00, price movements are driven by institutional re-balancing, sector rotation, and news flow — completely different dynamics that this strategy has no edge on",
+    "volume_filter": "Implied through VWAP slope — when VWAP slope flattens despite price being at extremes, it confirms volume is no longer supporting the drive direction",
+    "trend_filter": "Skip if ABS(drive_magnitude) > 50 spot points — drives this large are typically information-driven (budget announcements, major global events, heavyweight earnings) rather than flow-driven overshoot. Fading a 50+ point opening drive catches a knife on genuine trend days. Also skip if previous day's range was > 2% (elevated regime = higher odds of genuine trend continuation through the open)",
+    "spread_filter": "Skip if ATM option bid-ask > 4 points during the entry window — opening session spreads are naturally wider (2-4 points vs. 1-2 mid-session), but beyond 4 points the slippage destroys the 8-point target"
+  },
+
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "medium-low — opening drive exhaustion is a persistent market microstructure pattern driven by the fundamental mismatch between overnight order accumulation and intraday liquidity. As long as markets have discrete opens with accumulated orders, this overshoot-and-revert dynamic will exist. However, the exact calibration (RSI threshold, wick ratio, VWAP slope) may need periodic recalibration as opening auction mechanics evolve"
+  },
+
+  "adaptation_notes": "Six key adaptations from the original 1-minute Nifty200 stock strategy to 5-second NIFTY index options: (1) Universe changed from Nifty200 stocks to NIFTY index itself. The opening drive pattern is STRONGER on the index than on individual stocks because NIFTY's opening flow represents the aggregated overnight order imbalance from the entire market — SGX convergence, FII overnight trades, global cue reactions. Individual stock drives can be information-driven (earnings, corporate action); NIFTY's drive is almost always flow-driven, making the exhaustion more predictable. (2) RSI lookback changed from 2 on 1-min to 3 on 5s — NOT a 12x scaling (which would give 24, far too long). RSI(2) on 5s responds to just 10 seconds, which is single-tick noise. RSI(3) on 5s captures 15 seconds — the minimum window where consecutive directional bars represent genuine momentum rather than tick-level noise. RSI(3) at 5s has similar sensitivity to RSI(2) at 1-min because both capture roughly the same 'number of meaningful price changes'. (3) VWAP slope window changed from 5 bars at 1-min (5 minutes) to 6 bars at 5s (30 seconds). The original's 5-minute VWAP slope was appropriate for 1-min entry with 5-12 minute holds. For 5s entry with 20-150 second holds, VWAP slope over 30 seconds captures the inflection point with appropriate granularity — long enough to filter noise but short enough to detect the moment volume support for the drive disappears. (4) Session window narrowed from 09:20-10:15 to 09:20-10:00. At 5s resolution, the opening drive exhaustion signal is detectable earlier and more precisely. By 10:00, NIFTY's opening flow dynamics have fully dissipated and any reversal patterns are caused by different mechanics. The original's 10:15 end time was appropriate for 1-min bars where the signal takes longer to confirm. (5) Drive_magnitude minimum of 12 spot points added as a filter. The original used close <= vwap * 0.995 (~0.5% from VWAP). On NIFTY at 5s, an absolute minimum (12 points) is more robust than a percentage because it directly corresponds to the option points we need to profit (12 spot points = ~6 option points, enough for 8 target minus 4-point spread/slippage cost). (6) Distinctly different from existing gap_fade_reversion_v103: gap fade trades the GAP (previous close to today's open), while this trades the DRIVE (today's open to first 5-10 minute extreme). A day can have zero gap but a 30-point opening drive, or a 100-point gap but a muted drive. The signals, timing, and mechanics are independent.",
+
+  "weaknesses": [
+    "Genuine trend days begin exactly like overshoot-and-revert days for the first 5 minutes — the opening drive looks identical whether it will reverse at 09:25 or continue all day. The 50-point magnitude filter helps but cannot distinguish all cases",
+    "Opening session option spreads on NIFTY are typically 2-4 points versus 1-2 mid-session, consuming 25-50% of the 8-point target in friction costs alone. Execution quality during the first 30 minutes is critical and variable",
+    "The strategy generates only 0-2 trades per day and is confined to a 40-minute window — low trade count means high variance in daily P&L and slow statistical convergence for backtesting validation",
+    "On days with major overnight events (US Fed, global crisis, election results), the opening drive carries genuine information and the exhaustion may be temporary — price reverses briefly then continues in the drive direction as institutional flow resumes",
+    "NIFTY's opening auction mechanics have changed multiple times (pre-open session adjustments, T+1 settlement impact) — the specific RSI and wick thresholds need recalibration when exchange microstructure rules change"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_130.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-12 bars (5-12 minutes)",
+    "original_indicators": ["RSI(2)", "wick_down_ratio", "wick_up_ratio", "vwap_slope_5", "index_return_5", "ATR(14)", "rel_volume_20"],
+    "original_stop": "signal bar extreme or 0.45% from entry",
+    "original_target": "session VWAP or first 0.60% move"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "name": "pdh_pdl_fakeout_v141",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "liquidity_hunt", "stop_sweep", "support_resistance"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_120.json",
+  "original_name": "pdh_pdl_fakeout_v141",
+
+  "mechanism": "NIFTY's Previous Day High and Previous Day Low are the two most universally watched horizontal levels on every intraday trader's chart. Because these levels are so obvious, retail and algorithmic stop-loss orders cluster densely just beyond them — shorts pile stops 5-10 points above PDH, longs pile stops 5-10 points below PDL. Institutional participants and aggressive market-making algorithms exploit this predictable clustering by deliberately driving NIFTY spot 5-15 points beyond PDH or PDL to trigger these stops. The triggered stops become market orders (sells below PDL, buys above PDH), providing the liquidity that institutions need to build their actual positions in the opposite direction. This is the classic 'liquidity hunt' or 'stop sweep' pattern. At 5-second resolution on NIFTY, we observe this stop hunt in real-time: price pierces PDH/PDL, a volume spike appears as clustered stops fire, and within 30-90 seconds price snaps back inside the previous day's range. The entry signal is the moment NIFTY spot RETURNS inside the PDH/PDL boundary after poking beyond it — this is the inflection point where the hunt is complete and the reversal begins. We buy ATM CE options when the PDL fakeout completes (bearish sweep reversing bullish) and ATM PE options when the PDH fakeout completes (bullish sweep reversing bearish). The trade captures 5-12 option points as NIFTY retraces toward the interior of the previous day's range. This edge exists because the stop-hunt dynamic is structural — as long as traders place stops at obvious levels, institutions will sweep them. It persists at 5-second resolution because most traders watching PDH/PDL are on 1-minute or longer bars and cannot react to the sweep completion as precisely as a 5-second system can.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:15 IST",
+  "hold_time_seconds": [20, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["previous_day_ohlc"]
+  },
+
+  "indicators": [
+    {
+      "name": "pdh",
+      "formula": "previous_session_high(NIFTY_spot)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "NIFTY's Previous Day High — the single most watched resistance level in the Indian market. Every retail trader, every algo, every prop desk has PDH marked on their chart. Stop-loss orders from short sellers cluster 5-10 points above this level because it is the 'obvious' place to put a stop when shorting near resistance. This makes PDH a liquidity magnet: institutions know exactly where those stops are and will drive price through PDH to trigger them."
+    },
+    {
+      "name": "pdl",
+      "formula": "previous_session_low(NIFTY_spot)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "NIFTY's Previous Day Low — the mirror of PDH for support. Long position stops cluster 5-10 points below PDL. When NIFTY dips below PDL, those stops fire as market sell orders, creating a brief liquidity cascade that aggressive buyers absorb. PDL fakeouts on NIFTY are slightly more common than PDH fakeouts because retail longs tend to use tighter stops than retail shorts."
+    },
+    {
+      "name": "penetration_depth",
+      "formula": "ABS(close - pdh) when above pdh, or ABS(pdl - close) when below pdl",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Measures how far NIFTY has poked beyond PDH/PDL in spot points. On NIFTY, stop-hunt sweeps typically extend 5-15 points beyond the level. Penetrations less than 3 points may be noise rather than a genuine sweep. Penetrations greater than 20 points suggest a real breakout rather than a fakeout — institutions would not need to sweep that far just to collect stop liquidity. This filter separates genuine hunts from real breakouts."
+    },
+    {
+      "name": "volume_spike_6",
+      "formula": "volume / SMA(volume, 72)",
+      "lookback": 72,
+      "computed_on": "spot",
+      "purpose": "Volume relative to the last 6 minutes (72 bars at 5s). The 6-minute window was chosen because NIFTY's approach to PDH/PDL typically builds over 3-5 minutes as traders test the level, and we need a baseline that includes this approach phase but is short enough to detect the spike when stops actually trigger. A volume spike above 2.0x confirms that stop orders have fired — this is the 'proof' that the liquidity hunt worked. Without the volume spike, the penetration beyond PDH/PDL might just be random drift rather than a deliberate stop sweep."
+    },
+    {
+      "name": "snap_back",
+      "formula": "(close > pdl) after (low < pdl within last 36 bars) for PDL fakeout; (close < pdh) after (high > pdh within last 36 bars) for PDH fakeout",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "The core signal: price has returned inside the previous day's range after piercing beyond it. The 36-bar (3-minute) lookback defines the maximum window for a fakeout to complete. On NIFTY, genuine stop hunts complete their round-trip (poke, trigger, reverse) within 30-180 seconds. If price stays beyond PDH/PDL for more than 3 minutes, the breakout is likely genuine and institutions are positioning WITH the trend, not against it. The 3-minute window was calibrated to NIFTY's typical sweep dynamics — fast enough to catch the snap-back but not so wide that it includes stale signals."
+    },
+    {
+      "name": "atr_60",
+      "formula": "ATR(60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute ATR (60 bars at 5s) used for stop-loss calibration. The 5-minute window captures NIFTY's recent intraday volatility regime without being influenced by the opening auction or overnight gaps. Used to scale the stop dynamically — during high-volatility sessions (budget day, RBI policy), the stop needs to be wider to accommodate larger fakeout overshoots."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "NIFTY spot low breached pdl within the last 36 bars (3 minutes) — price poked below Previous Day Low, indicating a downside stop sweep attempt",
+        "NIFTY spot close is now ABOVE pdl — price has snapped back inside the previous day's range, confirming the sweep is complete",
+        "penetration_depth was between 3 and 20 points at maximum extent — deep enough to trigger clustered stops but not so deep as to indicate a genuine breakdown",
+        "volume_spike_6 >= 1.8 during the penetration phase — confirms that stop-loss orders actually fired during the sweep"
+      ],
+      "confirmation": "The 5s bar that closes back above PDL must have a lower wick (close > open, or wick_down_ratio > 0.3) — this shows buyers aggressively absorbing the stop-triggered selling and is the visual fingerprint of institutional accumulation at the sweep low."
+    },
+    "buy_pe": {
+      "conditions": [
+        "NIFTY spot high breached pdh within the last 36 bars — price poked above Previous Day High, indicating an upside stop sweep",
+        "NIFTY spot close is now BELOW pdh — price has snapped back inside the range",
+        "penetration_depth was between 3 and 20 points at maximum extent",
+        "volume_spike_6 >= 1.8 during the penetration phase"
+      ],
+      "confirmation": "The 5s bar that closes back below PDH must have an upper wick (close < open, or wick_up_ratio > 0.3) — confirming sellers absorbed the stop-triggered buying above PDH."
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "If NIFTY moves 4 option points against us after the snap-back entry (~8 spot points beyond PDH/PDL), the fakeout thesis is dead — price has re-broken through the level with conviction and this is a genuine breakout, not a stop hunt. On NIFTY, the typical fakeout reversal moves 10-25 spot points back inside the range within 1-2 minutes. If after the snap-back entry price reverses and pushes back beyond PDH/PDL by 8+ spot points, the institutional flow is directional, not a sweep. The 4-point stop limits damage to roughly one 15-second adverse move (1-3 option points per 15s typical), keeping the loss manageable relative to the 8-12 point target.",
+    "target_points": 10,
+    "target_rationale": "After a successful stop hunt on NIFTY, price typically retraces 15-30 spot points (7-15 option points) back toward the interior of the previous day's range within 1-3 minutes as the swept liquidity gets absorbed and new participants enter in the reversal direction. The 10-point target captures the middle of this range and represents approximately 40-60% of the move back toward VWAP, which was the original strategy's target. Going beyond 12-15 points would require the reversal to develop into a sustained trend, which only happens when the sweep coincides with a broader mean-reversion setup. The 10:4 target-to-stop ratio (2.5:1) compensates for the ~45% win rate expected from fakeout detection.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 12-25 — above 25, NIFTY trends hard and PDH/PDL breaks are more likely genuine breakouts than fakeouts; below 12, NIFTY is too calm to reach PDH/PDL in the first place, reducing opportunity count",
+    "time_filter": "No trades before 09:30 (need previous day data to be set) or after 14:30 — late-session PDH/PDL tests often reflect genuine positioning for the close rather than stop hunts",
+    "volume_filter": "volume_spike_6 >= 1.8 as core entry condition — without the volume spike confirming stop triggers, the PDH/PDL penetration is not a hunt",
+    "trend_filter": "Skip if NIFTY has moved more than 100 spot points from previous close — on strong trend days, PDH/PDL breaks are continuation, not fakeouts",
+    "spread_filter": "Skip if ATM option bid-ask > 3 points — fakeout reversals happen fast and wide spreads destroy the edge on rapid entries"
+  },
+
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.44,
+    "avg_winner_to_loser": 2.5,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low — stop hunting at obvious levels is a structural feature of markets with clustered retail participation; as long as stops are visible at PDH/PDL, institutions will sweep them"
+  },
+
+  "adaptation_notes": "Four key adaptations from the original 15-minute Nifty200 stock strategy to 5-second NIFTY index options: (1) The fundamental concept translates directly — PDH/PDL on NIFTY index is even MORE watched than on individual stocks, making the stop clustering denser and the sweep more reliable. NIFTY's PDH/PDL are displayed on every brokerage terminal in India. (2) Added penetration_depth filter (3-20 points) that the original lacked. At 5s resolution, we can measure exactly how far the sweep extends. On NIFTY, the sweet spot for fakeouts is 5-15 spot points beyond the level — enough to sweep the first layer of stops but not deep enough to trigger the institutional breakout orders that sit 20-30 points beyond. (3) The original used VWAP as the target, implying a reversion to session fair value. At 5s with a 20-120 second hold, VWAP is too far away (~30-50 spot points typically). The 10-option-point target captures the reliable first-leg reversal without requiring a full mean-reversion to VWAP. (4) Time window for fakeout completion tightened from implicit (any time within the bar) to 36 bars (3 minutes). On NIFTY at 5s, genuine fakeouts complete their sweep-and-reverse cycle within 30-180 seconds. Longer penetrations become genuine breakouts. (5) Volume spike confirmation added because at 5s, price can drift 3-5 points beyond PDH/PDL from normal noise — the volume spike distinguishes genuine stop-trigger cascades from random fluctuation.",
+
+  "weaknesses": [
+    "True breakouts through PDH/PDL with heavy institutional volume will blow through the stop — if NIFTY breaks PDH on genuine buying flow (e.g., positive macro surprise), the 4-point stop fires quickly but the direction call was wrong",
+    "On strong trend days (NIFTY up/down 1%+), PDH/PDL breaks are continuation moves, not fakeouts — the trend filter helps but cannot catch all cases where the market regime has shifted",
+    "Slippage is worst exactly at the snap-back moment because multiple algorithms are competing to fade the same fakeout — the entry fills may be 1-2 points worse than theoretical",
+    "NIFTY can test PDH/PDL multiple times before either breaking or reversing — the first apparent fakeout may be followed by a second sweep that takes out our stop before the real reversal",
+    "Near weekly options expiry (Thursday), gamma effects near PDH/PDL can create erratic price behavior that does not follow the clean sweep-and-reverse pattern"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_120.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "10-30 bars (2.5-7.5 hours)",
+    "original_indicators": ["PDH = REF(high, 1, 'day')", "PDL = REF(low, 1, 'day')"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "VWAP(close)"
+  }
+}

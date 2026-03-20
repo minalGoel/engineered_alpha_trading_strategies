@@ -1,0 +1,96 @@
+{
+  "name": "gap_momentum_continuation_5s",
+  "version": "1.0.0",
+  "author": "adapted from Gemini Quant",
+  "original_strategy": "gap_momentum_continuation",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_349.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Exploits 'Information Momentum'. Gaps > 2% on the open usually indicate significant overnight fundamental news (earnings, orders). The first 15 mins of volume confirms if institutions are buying the news or fading it. Continuation occurs when the 15-min high is broken on high relative volume.",
+  "mechanism": "Large opening gaps that hold above the prior range indicate a genuine overnight revaluation. Participants who missed the gap chase the move, while short-sellers who are wrong-footed cover into the trend. The resulting buy pressure sustains the gap direction for the first 30-60 minutes until the new equilibrium is established.",
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open - prev_close) / prev_close",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "selection"
+    },
+    {
+      "name": "range_15",
+      "formula": "highest(high, 180) @ 09:30",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "trigger"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct > 0.02",
+        "close > range_15",
+        "volume > sma(volume, 20) * 1.5"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct < -0.02",
+        "close < range_15",
+        "volume > sma(volume, 20) * 1.5"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 8,
+    "stop_points": 4,
+    "time_stop_bars": 24,
+    "signal_exit": "close crosses vwap",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 25",
+    "volume_filter": "rel_vol > 1.5",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 7
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Gap fills (reversals) are common",
+    "High slippage on high-momentum names"
+  ],
+  "prior_art": "Gap and Go",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

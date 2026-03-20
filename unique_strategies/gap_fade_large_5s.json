@@ -1,0 +1,134 @@
+{
+  "name": "gap_fade_large_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-fast",
+  "original_strategy": "gap_fade_large_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_201.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Large gaps (>1.5%) in NIFTY 50 stocks are disproportionately caused by overnight sentiment over-reaction to global cues (US market moves, Asian open, commodity prices) rather than stock-specific news. When no earnings or corporate action drives the gap, large gaps fade (partially revert) 55-60% of the time because the overnight price impact overshoots the fundamental information content. The key insight is that Indian markets open 4-5 hours after US close, and overnight futures already priced in the US move \u2014 the cash market open often over-extends due to retail market orders at open. Fading the excess (the gap beyond what NIFTY futures implied) captures this over-reaction.",
+  "mechanism": "Opening gaps trigger stop-loss cascades from overnight position holders, overshooting fair value. As the cascade exhausts, institutional VWAP algorithms begin working counter-gap orders, and fresh participants enter at the perceived discount or premium, driving price back toward the prior close or VWAP level within the first 15-30 minutes.",
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open - prev_close) / prev_close * 100",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "excess_gap",
+      "formula": "gap_pct - NIFTY_implied_gap_pct  # stock gap beyond index gap",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "RSI_14",
+      "formula": "RSI(close, 14)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "MACD_line",
+      "formula": "EMA(close, 12) - EMA(close, 26)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "MACD_signal",
+      "formula": "EMA(MACD_line, 9)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "volume_climax",
+      "formula": "volume > 3 * SMA(volume, 20)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ATR_14",
+      "formula": "ATR(high, low, close, 14)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct < -1.5 (large gap down)",
+        "excess_gap < -0.5 (stock gapped more than index)",
+        "RSI_14 < 25 (deeply oversold on 1-min)",
+        "no earnings or corporate action for the stock today"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct > 1.5 (large gap up)",
+        "excess_gap > 0.5 (stock gapped more than index)",
+        "RSI_14 > 75 (deeply overbought on 1-min)",
+        "no earnings or corporate action for the stock today"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 8,
+    "stop_points": 4,
+    "time_stop_bars": 24,
+    "signal_exit": "if volume_climax fires in gap direction while in trade, exit (new institutional flow confirming gap)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 25; above 25, large gaps are often structural",
+    "volume_filter": "opening 5-min volume > 2x average (confirms institutional participation)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 7
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "The news filter is imperfect \u2014 sometimes gaps are driven by leaked information, off-market block deals, or global events that fundamentally justify the gap, leading to gap-and-go instead of fade",
+    "Low frequency: large gaps (>1.5%) occur on only ~15-20% of trading days for any given stock, requiring monitoring of the full NIFTY 50 universe for sufficient signals",
+    "Wider bid-ask spreads at open on gap days increase effective slippage to 5-8 bps per side, significantly eating into the edge vs normal days"
+  ],
+  "prior_art": "Dyl & Maberly (1992) gap reversal; Fabozzi et al. (2007) on overnight gap return predictability. Indian context similar to findings in Aggarwal & Gupta (2009) on NSE opening returns.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

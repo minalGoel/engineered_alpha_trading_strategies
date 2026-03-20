@@ -1,0 +1,113 @@
+{
+  "name": "gap_continuation_momentum_5s_2",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "gap_continuation_momentum_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_47.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Large gaps (> 1.5%) in Nifty50 stocks tend to continue in the gap direction for the first 30-60 minutes because they are typically news-driven (results, upgrades, block deals). Unlike small gaps that fill, large gaps represent genuine re-pricing. The first 15-minute range AFTER the gap gives a tradeable range: breakout in the gap direction is a continuation signal. Edge persists because retail traders often fade large gaps, creating opposing flow that the trend absorbs.",
+  "mechanism": "Large opening gaps that hold above the prior range indicate a genuine overnight revaluation. Participants who missed the gap chase the move, while short-sellers who are wrong-footed cover into the trend. The resulting buy pressure sustains the gap direction for the first 30-60 minutes until the new equilibrium is established.",
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open_of_day - prev_day_close) / prev_day_close * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "gap magnitude"
+    },
+    {
+      "name": "orb_high_15",
+      "formula": "MAX(high, 09:180 to 09:30)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "post-gap 15-min range high"
+    },
+    {
+      "name": "orb_low_15",
+      "formula": "MIN(low, 09:180 to 09:30)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "post-gap 15-min range low"
+    },
+    {
+      "name": "atr_20_daily",
+      "formula": "ATR on daily bars, 240-period",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "context"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct > 1.5",
+        "close > orb_high_15",
+        "close > vwap",
+        "volume > SMA(volume, 10)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct < -1.5",
+        "close < orb_low_15",
+        "close < vwap",
+        "volume > SMA(volume, 10)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 8,
+    "stop_points": 4,
+    "time_stop_bars": 24,
+    "signal_exit": "close crosses back inside post-gap ORB range",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 25",
+    "volume_filter": "opening volume > 1.5x 20-day avg opening volume",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 7
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Slippage is highest at open (5+ bps); large gaps attract aggressive order flow",
+    "Very low frequency \u2014 gaps > 1.5% in liquid Nifty50 names happen a few times per month",
+    "Gap can be driven by one-off event (delisting, fraud) where continuation logic doesn't apply"
+  ],
+  "prior_art": "Gap continuation \u2014 opposite of gap fill. Well-documented threshold: gaps > 1-1.5% tend to continue.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

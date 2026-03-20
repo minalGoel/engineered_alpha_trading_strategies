@@ -3,6 +3,10 @@
 Thesis: When a single bar's range massively exceeds the average range (ATR),
 it signals an institutional-grade breakout. Direction is determined by the
 bar's open-close relationship, confirmed by volume and VWAP alignment.
+
+# AUDIT FIX: short_entry was missing vol_ok and (close < vwap) filters that
+# long_entry had, causing 3x more short signals than long signals (1032 vs 347).
+# Also removed redundant (close < open_) — bearish already means close < open_.
 """
 import numpy as np
 import polars as pl
@@ -92,7 +96,7 @@ class Strategy(BaseStrategy):
 
         # ── Entry ──
         long_entry = expansion & bullish & vol_ok & (close > vwap) & vix_ok
-        short_entry = expansion & bearish & (close < open_) & vix_ok
+        short_entry = expansion & bearish & vol_ok & (close < vwap) & vix_ok
 
         # ── Target: 1x expansion bar range as pct of close ──
         # Compute per-bar expansion range pct; use a running value

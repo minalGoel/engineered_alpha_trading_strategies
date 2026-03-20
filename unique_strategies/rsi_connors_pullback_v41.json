@@ -1,0 +1,98 @@
+{
+  "name": "rsi_connors_pullback_v41",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "pullback", "rsi", "trend_following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_105.json",
+  "original_name": "rsi_connors_pullback_v41",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms working large directional orders create persistent intraday trends over 20-45 minute windows. Within these trends, reactive retail stops and short-term momentum algos trigger brief 10-30 second counter-trend micro-pullbacks visible as extremely low RSI(6) readings (30-second RSI). The institutional order that created the trend has not been fully filled — when the micro-counter-move exhausts at RSI < 25, the underlying TWAP buy side resumes and NIFTY snaps back in the trend direction within 15-60 seconds. The edge is that RSI(6) detects the last sellers/buyers capitulating before the institutional engine resumes.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "sma_360",
+      "formula": "SMA(close, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-minute intraday trend filter. The original used SMA(200) on 15-min bars = 50 hours of data as a multi-day macro trend filter. At 5s bars, the relevant 'longer-term' context is the intraday trend, not multi-day — NIFTY options expire daily and intraday trend is what drives directional flow. 30 min = 360 bars captures a full TWAP/VWAP cycle that institutional algorithms typically run, without reaching back to prior session data. NOT a 12x blind scale (which would give SMA(2400) = 3.3 hours — too slow for 5s trading)."
+    },
+    {
+      "name": "rsi_6",
+      "formula": "RSI(close, 6)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "30-second RSI exhaustion trigger. Original uses RSI(2) at 15-min = measures exhaustion over 2 bars × 15 min = 30 minutes. We want to match this 'exhaustion time window' proportionally to our hold time: original holds ~200 min, we hold ~30s, ratio ~6x. So 30 min / 6 = 5 min... but at 5s bars RSI(60) = 5 min is too smooth to catch micro-pullbacks. The key insight from Connors RSI(2) is that the RSI period must be SHORT enough to reach extreme levels (< 25 or > 75) on very brief counter-moves. RSI(6) = 30s is the minimum period that yields stable extremes without pure tick noise — RSI(2) at 5s (10s window) would oscillate 0-100 on nearly every bar."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > sma_360 (NIFTY in 30-min intraday uptrend)",
+        "rsi_6 < 25 (30-second RSI shows extreme oversold — micro-pullback exhausted)",
+        "vix < vix_max (avoid high-volatility regimes where mean reversion fails)",
+        "in session 09:30-15:20 IST"
+      ],
+      "confirmation": "All conditions on same 5s bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < sma_360 (NIFTY in 30-min intraday downtrend)",
+        "rsi_6 > 75 (30-second RSI shows extreme overbought — micro-bounce exhausted)",
+        "vix < vix_max",
+        "in session 09:30-15:20 IST"
+      ],
+      "confirmation": "All conditions on same 5s bar"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option points = ~6 spot points of adverse move. If the micro-pullback continues past 6 spot points against trend direction after the RSI signal, the institutional TWAP order has likely paused or reversed — the thesis is invalidated. NIFTY 30-second ATM option moves of 2-5 pts; a 3 pt stop gives room for the signal bar's noise without excessive losses.",
+    "target_points": 5.0,
+    "target_rationale": "5 option points = ~10 spot points of favorable move. NIFTY micro-pullback restorations (RSI(6) exhaustion to trend resumption) typically cover 8-15 spot points in the first 30-60 seconds, translating to 4-7 option points at ATM delta ~0.5. Target of 5 pts captures the lower-median of this distribution, yielding 1:1.67 R:R at stop=3.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "vix < 20 (high VIX sessions see erratic micro-moves that break RSI mean-reversion thesis)",
+    "time_filter": "09:30-15:20 IST — skip first 15 minutes for trend to establish via SMA(360) warmup",
+    "volume_filter": "none (NIFTY index volume is noisy at 5s; rely on price action)",
+    "trend_filter": "SMA(360) direction check embedded in entry conditions",
+    "spread_filter": "none (limit orders at candle close, no spread cost)"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 2.22,
+    "edge_decay_risk": "medium — if institutional TWAP patterns shift or SEBI changes algo regulations, intraday trend persistence changes"
+  },
+  "adaptation_notes": "Three key changes from original: (1) Trend filter compressed from SMA(200) at 15-min (50-hour multi-day trend) to SMA(360) at 5s (30-min intraday trend) — NIFTY options are daily instruments so intraday trend is the relevant context, not multi-day. (2) RSI period: kept the concept of 'very fast RSI' but used RSI(6) instead of RSI(2) — at 5s bars, RSI(2) is pure noise (10s window); RSI(6) = 30s is the minimum period yielding meaningful exhaustion readings. (3) Short entry threshold adapted from RSI(2) > 30 (original, which seems like a bug — likely meant > 70 for Connors symmetry) to RSI(6) > 75, making the short symmetric to the long. Hold time compressed from 150-450 min to 15-60s — we trade the instantaneous micro-bounce, not the multi-hour recovery.",
+  "weaknesses": [
+    "RSI(6) generates many false signals in choppy NIFTY sessions with no intraday trend (common on 2-3 days per week)",
+    "SMA(360) is a lagging trend filter — in fast trend reversals, can be on wrong side for 10-15 minutes",
+    "Micro-pullbacks sometimes deepen into full trend reversals; 3pt stop may get hit repeatedly in whipsaw conditions",
+    "Low trade count per day (3-8) limits statistical significance in short backtests"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_105.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "10-30 bars (150-450 minutes)",
+    "original_indicators": ["SMA(close, 200)", "RSI(close, 2)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "close > SMA(close, 5)"
+  }
+}

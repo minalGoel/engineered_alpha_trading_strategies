@@ -1,0 +1,94 @@
+{
+  "name": "rsi_connors_pullback_v42",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "pullback", "rsi", "connors"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_106.json",
+  "original_name": "rsi_connors_pullback_v42",
+  "mechanism": "When NIFTY sustains above its 17-minute SMA — confirming institutional order flow is net bullish across the morning session — a sharp 30-second selloff that drives RSI(6) below 15 reflects transient stop-loss hunting by HFT scalpers or retail panic liquidation. On the NIFTY index, VWAP-benchmarked institutional algos and index futures arbitrageurs treat these dips as favorable execution opportunities versus their daily benchmark, injecting coordinated buy flow within 15-45 seconds. NIFTY's index composition (50-stock basket) dampens the idiosyncratic gap risk that afflicts individual Connors setups, making the overshoot predictable and the mean-reversion swift. The mirror applies bearishly: RSI(6) > 85 while below the 17-minute SMA signals an exhaustion rally that short-selling algos fade aggressively.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "sma_200",
+      "formula": "SMA(close, 200)",
+      "lookback": 200,
+      "computed_on": "spot",
+      "purpose": "Trend context filter. 200 × 5s = 1000s ≈ 17 minutes. This spans the post-open settling window and captures the current intraday directional bias set by institutional order flow. Shorter SMA (e.g., 60 bars = 5 min) flips too readily on microvolatility; longer (720 bars = 1 hr) misses intraday trend reversals. 17 minutes matches the original's 200-bar 5-minute SMA reduced proportionally to the hold-time ratio (90s hold vs 150min original hold ≈ 60x compression, but SMA context is kept at 17 min rather than 2.5 min because it's a regime filter not a trigger)."
+    },
+    {
+      "name": "rsi_6",
+      "formula": "RSI(close, 6)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Short-term exhaustion detector. 6 × 5s = 30s. The Connors RSI-2 principle requires extreme short-term depletion of directional momentum. At 5-second bars, RSI(2) = 10s captures single-tick noise and is meaningless. RSI(6) = 30s identifies genuine 30-second momentum reversals — the 5-second analog of Connors' original 2-period reading on 5-minute bars (both represent ~10 minutes of price action relative to the bar period). Threshold at 15 (below original's 14) is slightly looser to account for NIFTY's index smoothing vs individual stocks."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > sma_200 (NIFTY above 17-minute trend)",
+        "rsi_6 < rsi_low (default 15: extreme 30-second oversold reading)"
+      ],
+      "confirmation": "Both conditions on same 5-second bar; SMA must be valid (bar > 200)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < sma_200 (NIFTY below 17-minute trend)",
+        "rsi_6 > rsi_high (default 85: extreme 30-second overbought reading — failed rally)"
+      ],
+      "confirmation": "Both conditions on same 5-second bar; SMA must be valid (bar > 200)"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option pts ≈ 6 spot pts. NIFTY RSI(6) < 15 oversold bounces should kick in within the first 6 spot points of continuation. If the index drops a further 6 spot pts (option goes 3 pts against us), the trend-context filter has failed — institutional buyers are not showing up and the pullback is a genuine reversal. Calibrated against 30-second typical NIFTY option moves of 2-5 pts; stop sits at 3 to allow 1 bar of noise but exit before full downleg.",
+    "target_points": 5,
+    "target_rationale": "5 option pts ≈ 10 spot pts. First-leg Connors bounce on NIFTY recovers to the short-period MA within 45-90 seconds. A 30-second oversold spike on NIFTY typically reverts 10-15 spot points as the institutional algos re-accumulate. Targeting 5 option pts captures the lower bound of this reversion (1:1.67 R:R), consistent with typical 1-minute NIFTY option moves of 3-7 pts.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "none (VIX not used — RSI extremes already incorporate volatility regime)",
+    "time_filter": "09:20-15:25 IST; skip first 5 minutes of session (pre-open noise)",
+    "volume_filter": "none (NIFTY index volume is noisy; SMA trend filter is sufficient)",
+    "trend_filter": "SMA(200) on spot close provides the trend regime gate",
+    "spread_filter": "none (limit order execution, no bid-ask spread cost)"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 2.5,
+    "edge_decay_risk": "medium — RSI exhaustion signals are simple and widely known; edge depends on NIFTY's specific institutional structure providing reliable 30-90 second mean reversion"
+  },
+  "adaptation_notes": "Original strategy applies Connors RSI-2 to individual nifty50 stocks (5-min bars, 150-300 min hold). Key adaptations: (1) Universe collapsed from stock basket to NIFTY index directly — the thesis (RSI exhaustion + trend context) applies more cleanly to the index where institutional flow is dominant and idiosyncratic gaps are absent. (2) RSI period changed from 2 (5-min bars = 10 min of data) to 6 (5-second bars = 30 sec of data) — the Connors principle is about EXTREME short-term exhaustion; 30s on the index preserves that spirit while filtering sub-10s tick noise. (3) SMA(200) kept at 200 bars but now at 5-second resolution = 17 min rather than 1000 min — this is the correct time adaptation because 17 min captures the current intraday trend context, which is what the original SMA(200) at 5-min provided for a 150-300 min hold. (4) Hold time compressed from 150-300 min to 15-90 seconds; exit is now time-stop + fixed target rather than 'close > SMA(5)'. (5) Symmetric short side added (rsi_6 > 85 below SMA) — original was long-only; the logic applies symmetrically on an index.",
+  "weaknesses": [
+    "RSI(6) at 5-second resolution fires frequently during trending NIFTY sessions — may produce too many entries without additional momentum confirmation",
+    "SMA(200) trend filter takes 17 minutes to initialize, missing early morning setups",
+    "Connors RSI-2 is primarily a mean-reversion tool; underperforms in strong breakout sessions where NIFTY trends continuously without RSI reversion",
+    "Single-indicator entry (RSI extremes only) is vulnerable to microstructure noise on NIFTY during news events"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_106.json",
+    "original_timeframe": "5min",
+    "original_hold_time": "30-60 bars (150-300 min)",
+    "original_indicators": ["SMA(close, 200)", "RSI(close, 2)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "close > SMA(close, 5)"
+  }
+}

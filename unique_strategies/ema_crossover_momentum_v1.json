@@ -1,0 +1,112 @@
+{
+  "name": "ema_crossover_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["ema", "crossover", "momentum", "trend-following", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_159.json",
+  "original_name": "ema_crossover_momentum_v1",
+  "mechanism": "On NIFTY, when the 1-minute EMA (12 bars at 5s) crosses above the 3-minute EMA (36 bars at 5s), it marks the moment short-term institutional buying has overtaken the recent medium-term trend average — the characteristic microstructure footprint of FII/DII TWAP algorithms that are 40-60% through a directional order. These algorithms execute over 2-5 minute windows, so the 1-min vs 3-min EMA cross fires roughly at the midpoint of the order flow burst, leaving another 60-90 seconds of residual momentum before the order completes. The ADX(36) filter (>20 at 3-min scale) ensures the cross occurs while NIFTY is in a directed microstructure rather than the oscillatory, bid-ask-bouncing regime that generates false crosses, and VWAP alignment confirms the broader intraday institutional bias — VWAP-benchmarked algos accumulate on dips below VWAP (bullish) or distribute on rallies above VWAP (bearish).",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:15 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute fast EMA (12 × 5s = 60s). Chosen to span roughly our hold time of 30-90 seconds — the fast line must react within the trade horizon. NOT the blind 12x scale of EMA(9) on 1-min (which would give 108 bars = 9 minutes, far slower than our hold)."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute slow EMA (36 × 5s = 180s). Exactly 3× the fast period to create meaningful crossover separation. Captures the 3-minute trend direction that TWAP algorithms establish before the cross fires. NOT 21*12=252 bars (21 minutes), which is too slow to provide a useful reference for a 90-second trade."
+    },
+    {
+      "name": "adx_36",
+      "formula": "ADX(high, low, close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute ADX (36 bars). Matches the slow EMA period so trend confirmation and signal are evaluated at the same timescale. A period of 36 bars captures enough swings to distinguish directed flow from noise without being so long that it lags the current session regime. Threshold 20 (not the original's 25) because at 5s resolution, NIFTY's intraday directional bursts score lower ADX than individual stocks do."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume), reset at 09:15 IST",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP acts as the institutional reference price. No scaling needed — cumulative measures don't have lookbacks. Used as a directional filter: only buy CE when close > VWAP (demand above fair value) and buy PE when close < VWAP (supply below fair value), aligning with VWAP-benchmarked algo flow direction."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "EMA(12)[t] > EMA(36)[t]  (cross to bullish side)",
+        "EMA(12)[t-1] <= EMA(36)[t-1]  (was bearish/equal last bar — fresh cross only)",
+        "ADX(36) > 20  (NIFTY microstructure is directional, not oscillating)",
+        "close > VWAP  (above institutional reference price — demand dominates)"
+      ],
+      "confirmation": "All four conditions must be true on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "EMA(12)[t] < EMA(36)[t]  (cross to bearish side)",
+        "EMA(12)[t-1] >= EMA(36)[t-1]  (was bullish/equal last bar — fresh cross only)",
+        "ADX(36) > 20  (NIFTY microstructure is directional, not oscillating)",
+        "close < VWAP  (below institutional reference price — supply dominates)"
+      ],
+      "confirmation": "All four conditions must be true on the same 5-second bar"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts retracement (at delta ~0.5). A valid EMA cross driven by institutional order flow should not reverse 8 spot points within 30 seconds — if it does, the cross was a stop-loss-triggered spike rather than genuine directional flow, and the thesis is invalid.",
+    "target_points": 7.0,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts. A clean EMA(12)/EMA(36) cross on NIFTY preceded by ADX>20 typically generates a 20-30 spot point continuation leg over 60-90 seconds as the institutional TWAP order completes; 7 pts captures roughly 50% of the expected move (1:1.75 R:R).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:15 IST"
+  },
+  "filters": {
+    "vix_filter": "no VIX filter — EMA crossover momentum works across VIX regimes; ADX filter inherently adapts to volatility",
+    "time_filter": "no entries before 09:30 IST (skip opening 15-min noise where false EMA crosses are most frequent) or after 15:15 IST",
+    "volume_filter": "none at bar level — ADX filter implicitly requires volume-driven directional flow",
+    "trend_filter": "ADX(36) > 20 is the primary trend/ranging filter",
+    "spread_filter": "none — limit order execution eliminates spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.50,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.75,
+    "edge_decay_risk": "moderate — EMA crossover is widely known, but on NIFTY at 5-second resolution with ADX and VWAP filters the specific combination is less crowded than equity applications"
+  },
+  "adaptation_notes": "Core crossover logic preserved (fast EMA crosses slow EMA with trend filter). Three major changes: (1) Lookbacks compressed from 9/21 bars on 1-min to 12/36 bars on 5s — this is NOT 12x blind scaling (which would give 108/252 bars = 9/21 minutes); instead both periods were chosen to match the target hold time of 30-90s so the fast EMA spans approximately one hold period. (2) ADX threshold reduced from 25 to 20 because individual NIFTY200 stocks exhibit stronger trending ADX readings than the index itself (index smoothing effect). (3) Per-stock volume filter (volume > SMA20) dropped entirely — index volume at 5s is noisy and doesn't carry the same signal as single-stock volume surges; VWAP alignment serves as the institutional flow confirmation instead.",
+  "weaknesses": [
+    "EMA crossovers generate many false signals during sideways NIFTY sessions — ADX filter helps but cannot eliminate all whipsaws",
+    "At 5-second resolution, EMA(12)/EMA(36) may fire during single-bar spikes (news events, large block prints) that reverse immediately",
+    "VWAP alignment can keep the strategy out of good trades when NIFTY oscillates around VWAP for extended periods",
+    "ADX(36) has ~2-minute lag — by the time trend is confirmed, the best entry may be past"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_159.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["EMA(9)", "EMA(21)", "ADX(14)", "VWAP", "ATR(14)", "SMA(volume,20)"],
+    "original_stop": "0.2% from entry OR reverse EMA cross",
+    "original_target": "0.4% from entry"
+  }
+}

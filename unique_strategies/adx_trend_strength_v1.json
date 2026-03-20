@@ -1,0 +1,111 @@
+{
+  "name": "adx_trend_strength_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["adx", "trend-strength", "directional-movement", "momentum", "trend-following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_161.json",
+  "original_name": "adx_trend_strength_v1",
+  "mechanism": "On NIFTY, large institutional TWAP algorithms executing directional orders over a 5-minute window create sustained directional pressure visible as ADX(60) rising through 25 — the cumulative high-low ranges skew consistently in one direction as the algorithm absorbs opposing liquidity. The +DI/-DI spread widening above 8 confirms the imbalance is directional rather than choppy two-sided volatility. At 5-second resolution, we enter when ADX is STILL RISING through the 25 level, meaning the institutional order is only partially filled and the next 30-90 seconds will see continued directional pressure before the order completes. The VWAP filter ensures we trade with the session flow, not against accumulated directional drift.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ADX_60",
+      "formula": "Wilder ADX(high, low, close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute ADX as trend context filter. Original used 14-bar on 1-min (14 minutes). We compress to 5 minutes because our hold is 30-90s — we need a trend that formed recently enough that institutional order flow is still active. 14-min context is too stale for a 90s hold. The 5-min window (60 bars) captures trends that started within the last 5 minutes, ensuring the driving order is still partially unfilled."
+    },
+    {
+      "name": "plus_DI_60",
+      "formula": "+DI(60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Positive directional indicator on same 5-min window as ADX. Measures upward directional movement fraction. Same period as ADX for consistency."
+    },
+    {
+      "name": "minus_DI_60",
+      "formula": "-DI(60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Negative directional indicator. DI spread (+DI - -DI) > 8 confirms genuinely directional bias rather than noise; threshold of 8 instead of original's 10 accounts for NIFTY's smoother index-level moves vs individual stocks."
+    },
+    {
+      "name": "VWAP",
+      "formula": "cumulative sum(price * volume) / cumulative sum(volume) from 09:15 IST",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP — no scaling needed, cumulative measure. Confirms that the ADX-driven move aligns with session directional flow. Trend entries above VWAP (CE) or below VWAP (PE) have higher continuation probability as they align with VWAP-benchmarked institutional positioning."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ADX(60) > adx_threshold (default 25)",
+        "ADX(60)[t] > ADX(60)[t-1] (ADX still rising — institutional order still active)",
+        "+DI(60) - -DI(60) > di_spread_min (default 8) — confirmed bullish directional bias",
+        "close > VWAP — price above session benchmark, aligns with institutional accumulation"
+      ],
+      "confirmation": "All four conditions must be true simultaneously on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ADX(60) > adx_threshold (default 25)",
+        "ADX(60)[t] > ADX(60)[t-1] (ADX still rising)",
+        "-DI(60) - +DI(60) > di_spread_min (default 8) — confirmed bearish directional bias",
+        "close < VWAP — price below session benchmark, aligns with institutional distribution"
+      ],
+      "confirmation": "All four conditions must be true simultaneously"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. If a genuine 5-min institutional trend stalls by 8 spot pts within 90s, the directional order has either completed or reversed — thesis is invalidated. For a 5-min trend context, 8 spot pt adverse move in 90s is the failure threshold.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts. A fresh 5-min institutional trend at ADX 25-35 typically extends 20-30 spot pts from the entry bar; capturing 14 pts (50-70% of the first leg) within 90s is conservative and achievable. 1:1.75 risk-reward at 4 stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — ADX-based trend entries work across VIX regimes on NIFTY; VIX regime determines trend magnitude, not direction",
+    "time_filter": "no entries before 09:25 (ADX needs 120-bar warmup = 10 min) or after 15:20",
+    "volume_filter": "none — NIFTY index volume is noisy at 5s; ADX intrinsically captures directional volume via high-low range",
+    "trend_filter": "DI spread > 8 IS the trend filter; avoids choppy consolidation periods when DI lines converge",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.50,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.75,
+    "edge_decay_risk": "moderate — ADX > 25 on NIFTY is not frequent (2-4 genuine trend periods per day), limiting trade count but improving signal quality"
+  },
+  "adaptation_notes": "Original strategy traded ADX cross on NIFTY200 individual stocks with 20-60 min holds. Conversion: (1) ADX period compressed from 14-bar/1-min (14 min) to 60-bar/5s (5 min) — hold time compression from 20-60 min to 30-90s requires a proportionally shorter trend detection window. (2) DI spread threshold relaxed from 10 to 8 — NIFTY index is smoother than individual stocks, DI lines are less volatile. (3) Added ADX-still-rising condition (ADX[t] > ADX[t-1]) as entry trigger — this detects the NASCENT trend (institutional order ongoing) rather than mature trend. (4) Removed volume filter — NIFTY volume at 5s is too noisy; ADX already captures directional range pressure. (5) Session start delayed to 09:25 for ADX warmup.",
+  "weaknesses": [
+    "ADX(60) on 5-second NIFTY bars is inherently smoother and slower than individual stock ADX — fewer trend transitions per day",
+    "NIFTY index rarely exceeds ADX 35+ at 5-min resolution; most signals cluster near the 25 threshold where false positives are more frequent",
+    "Correlated signals: when NIFTY trends, multiple consecutive bars will all fire — need trade limiter to prevent over-entry"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_161.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "20-60 minutes",
+    "original_indicators": ["ADX(14)", "+DI(14)", "-DI(14)", "VWAP", "ATR(14)"],
+    "original_stop": "0.25% from entry",
+    "original_target": "0.5% from entry"
+  }
+}

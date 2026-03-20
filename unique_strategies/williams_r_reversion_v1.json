@@ -1,0 +1,116 @@
+{
+  "name": "williams_r_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["williams-r", "mean-reversion", "range-extreme", "momentum-exhaustion", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_158.json",
+  "original_name": "williams_r_reversion_v1",
+  "mechanism": "On NIFTY, algorithmic momentum flows periodically push the index to the extreme of its 3-minute high-low range — Williams %R below -88 — accompanied by an elevated volume ratio, signaling a climax bar where aggressive sellers have cleared the near-side order book. At this point, passive buy orders resting below market begin absorbing remaining supply, and delta-neutral market makers short gamma (from ATM option selling) start hedging by buying NIFTY futures, creating a swift reversion toward mid-range. At 5-second resolution we capture the first 30-90 seconds of this rebound as Williams %R turns back from -90 toward -50, before the move dissipates into the session equilibrium. The VWAP proximity filter ensures we avoid entering during sustained institutional directional TWAP flows where the extreme can persist.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "williams_r_36",
+      "formula": "((highest_high(36) - close) / (highest_high(36) - lowest_low(36))) * -100",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "36 bars = 3 minutes. NOT 12x blind scaling — original 20-min lookback on 1-min bars cannot be directly scaled (that would give 240 bars = 20 min, far too long for a 15-90s hold). We hold 15-90 seconds and enter at the TURNING POINT from extreme, so the detection window must be tight: a 3-minute extreme on NIFTY (~15-30 spot pt range) is still actionable at 30-90s because the reversion from range extreme is fast. A 20-min extreme would require much larger deviations and much longer holds to mean-revert."
+    },
+    {
+      "name": "vol_ratio_24",
+      "formula": "volume / SMA(volume, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars = 2-minute rolling average volume denominator. Detects climax/capitulation volume at the Williams %R extreme. 2-min window avoids over-averaging (which would dilute genuine spikes) while providing a reliable session baseline. Threshold reduced from original 2.0x to 1.5x because NIFTY index volume is inherently smoother than individual stocks — a 1.5x ratio on NIFTY is genuinely significant."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume) from 09:15 IST each day",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP as a proximity filter. No lookback scaling needed — VWAP is always cumulative from 09:15. Only trade Williams %R extremes that occur within ±1.5% of VWAP. In sustained NIFTY trending sessions (driven by FII directional flows), Williams %R can stay in extreme territory for minutes — the VWAP filter avoids these false reversals."
+    },
+    {
+      "name": "wr_slope_3",
+      "formula": "williams_r_36[t] - williams_r_36[t-3]",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "3-bar (15-second) Williams %R slope confirms the turn is already underway. Avoids entering at a falling knife: we require %R to be rising (for buy CE) or falling (for buy PE) over the last 15 seconds. This is retained directly from the original strategy's wr_slope logic but compressed from 3 bars on 1-min (3 minutes) to 3 bars on 5s (15 seconds) because at this granularity, a 15-second turn is already a confirming signal."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "williams_r_36 < -88 (extreme oversold within 3-min range)",
+        "vol_ratio_24 > 1.5 (elevated volume = climax selling pressure)",
+        "close > vwap * 0.985 (within 1.5% of VWAP — not in runaway NIFTY downtrend)",
+        "vix_close < 25 (normal volatility regime; high VIX means extremes can persist)",
+        "wr_slope_3 > 0 (Williams %R already turning up from extreme over last 15s)",
+        "consecutive bars in extreme < 5 (not stuck trending — filtered out)"
+      ],
+      "confirmation": "close >= open on the entry bar (NIFTY closing above the bar open = immediate buy-side pressure absorbing the extreme)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "williams_r_36 > -12 (extreme overbought within 3-min range)",
+        "vol_ratio_24 > 1.5 (elevated volume = climax buying pressure)",
+        "close < vwap * 1.015 (within 1.5% of VWAP — not in runaway NIFTY uptrend)",
+        "vix_close < 25",
+        "wr_slope_3 < 0 (Williams %R already turning down from extreme over last 15s)",
+        "consecutive bars in extreme < 5"
+      ],
+      "confirmation": "close <= open on the entry bar (NIFTY closing at or below bar open = immediate sell-side pressure at the extreme)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at ATM delta ~0.5. If a 3-min range extreme fails to trigger reversion within 15-30 seconds, NIFTY is likely continuing its trend and the thesis is wrong. NIFTY's typical 90s move is 3-7 option pts, so 4 pts provides adequate room for the bounce to develop. A 5-pt option adverse move equates to ~10 spot pts beyond the extreme — at that level the 3-min range has been decisively broken."
+,
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts. A 3-minute Williams %R range on NIFTY is typically 20-35 spot pts; reverting from the extreme (WR ~-90) to mid-range (WR ~-50) covers roughly 50% of that range = 10-17 spot pts → 5-8 option pts at delta 0.5. 7 pts captures the median reversion leg with a 1:1.75 risk-reward ratio.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "VIX < 25 — in high-VIX regimes, NIFTY range extremes driven by macro fear can persist rather than revert",
+    "time_filter": "09:25-15:20 IST — skip first 2 minutes of opening noise; stop new entries before EOD flatten",
+    "volume_filter": "vol_ratio_24 > 1.5 — essential signal quality gate; a drift to range extreme without volume surge is likely a slow trend, not a capitulation",
+    "trend_filter": "close within ±1.5% of VWAP — avoids counter-trend entries during sustained NIFTY institutional TWAP flows",
+    "spread_filter": "N/A — limit orders on index options at 5-second bar close"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.39,
+    "edge_decay_risk": "moderate — Williams %R extremes with volume spikes are less crowded than RSI/Stochastic on NIFTY, but the mean reversion thesis shares mechanism with oscillator-based strategies"
+  },
+  "adaptation_notes": "Original trades NIFTY200 stocks on 1-min bars with 20-bar Williams %R (20 min). Key changes: (1) Lookback compressed from 20 min (240 bars) to 3 min (36 bars) — we hold 15-90s, not 5-20 min; catching the fast initial bounce requires a tighter range window. (2) Volume spike threshold lowered from 2.0x to 1.5x — NIFTY index volume is smoother than individual stocks; a 1.5x ratio is meaningfully elevated for the index. (3) VWAP proximity widened from ±1% to ±1.5% — index is less prone to single-stock gaps but can trend further from VWAP during FII flows. (4) Williams %R slope confirmation compressed from 3-bar 1-min (3 min) to 3-bar 5s (15s) — at 5s resolution a 15s turn-up is already a valid confirmation. (5) Eliminated stock-specific filters (earnings, ADV, stock bid-ask spread). (6) Added 'not stuck in extreme >5 bars' filter to avoid false reversals in trending NIFTY sessions.",
+  "weaknesses": [
+    "Williams %R is unsmoothed — at 5-second bars, a single large NIFTY candle can temporarily spike WR to extreme without genuine exhaustion",
+    "NIFTY volume data at 5s is noisy; vol_ratio_24 threshold may need per-session calibration for monthly expiry / RBI / FED event days",
+    "Mean reversion fails in strong trending regimes (FII net buying/selling days, global risk events), which are exactly the sessions that generate the most signals"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_158.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-20 minutes",
+    "original_indicators": ["williams_r(20)", "volume_spike(20)", "VWAP", "ATR_14", "wr_slope(3)"],
+    "original_stop": "0.2% from entry",
+    "original_target": "williams_r crosses -50 OR 0.25% profit"
+  }
+}

@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """Narrow Range 7 Breakout — gemini_14_of_20
 
 Thesis: When today's range is the narrowest of the last 7 days, volatility
@@ -119,9 +120,13 @@ class Strategy(BaseStrategy):
         vol_sma20 = np.where(vol_sma20 > 1e-10, vol_sma20, 1.0)
         rel_vol = volume / vol_sma20
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
-        long_entry = is_nr7 & (close > prev_day_high) & (rel_vol > vol_mult)
-        short_entry = is_nr7 & (close < prev_day_low) & (rel_vol > vol_mult)
+        long_entry = is_nr7 & (close > prev_day_high) & (rel_vol > vol_mult) & in_session
+        short_entry = is_nr7 & (close < prev_day_low) & (rel_vol > vol_mult) & in_session
 
         # Target/stop as fraction of prev day range, converted to pct of close
         safe_close = np.where(close > 1e-10, close, 1e-10)

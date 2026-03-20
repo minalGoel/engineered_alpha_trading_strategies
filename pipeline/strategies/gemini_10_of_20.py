@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """Afternoon Profit Fade — gemini_10_of_20
 
 Thesis: Near end of day, extreme intraday moves (> 3% from open) tend to
@@ -71,8 +72,11 @@ class Strategy(BaseStrategy):
         safe_open = np.where(day_open > 1e-10, day_open, 1e-10)
         day_return = (close - day_open) / safe_open
 
-        # After 14:45
-        after_time = time_mins >= 885
+        # Session window filter
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
+        # After 14:45 (885) — also enforce session_end (925)
+        after_time = (time_mins >= 885) & in_session
 
         atr14 = _compute_atr(high, low, close, 14)
 

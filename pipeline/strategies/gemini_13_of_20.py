@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """Nifty-Bank Lag Arbitrage — gemini_13_of_20
 
 Thesis: Bank Nifty components sometimes lag the broader index. When the index
@@ -65,6 +66,10 @@ class Strategy(BaseStrategy):
             if abs(close[i - lookback]) > 1e-10:
                 stock_ret5[i] = (close[i] - close[i - lookback]) / close[i - lookback] * 100.0
 
+        # Session window filter
+        time_mins_arr = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins_arr >= self.session_start) & (time_mins_arr <= self.session_end)
+
         vix_ok = vix < vix_max
 
         # Long: index up > thresh%, stock lagging (< stock_ret_max%)
@@ -72,6 +77,7 @@ class Strategy(BaseStrategy):
             (index_ret5 > index_ret_thresh)
             & (stock_ret5 < stock_ret_max)
             & vix_ok
+            & in_session
         )
 
         # Short: index down > thresh%, stock lagging (> -stock_ret_max%)
@@ -79,6 +85,7 @@ class Strategy(BaseStrategy):
             (index_ret5 < -index_ret_thresh)
             & (stock_ret5 > -stock_ret_max)
             & vix_ok
+            & in_session
         )
 
         return StrategySignals(

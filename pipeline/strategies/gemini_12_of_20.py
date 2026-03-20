@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """ADX Strong Trend Pullback — gemini_12_of_20
 
 Thesis: In strong trending markets (high ADX), pullbacks to the EMA(20)
@@ -104,12 +105,17 @@ class Strategy(BaseStrategy):
             for i in range(adx_start + 1, n):
                 adx[i] = (adx[i - 1] * (adx_period - 1) + dx[i]) / adx_period
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: ADX > thresh, +DI > -DI, low touches EMA(20) but close above
         long_entry = (
             (adx > adx_min)
             & (plus_di > minus_di)
             & (low <= ema20)
             & (close > ema20)
+            & in_session
         )
 
         # Short: ADX > thresh, -DI > +DI, high touches EMA(20) but close below
@@ -118,6 +124,7 @@ class Strategy(BaseStrategy):
             & (minus_di > plus_di)
             & (high >= ema20)
             & (close < ema20)
+            & in_session
         )
 
         # Signal exit: ADX drops below exit threshold

@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """Multi EMA Ribbon Squeeze — gemini_16_of_20
 
 Thesis: When the EMA(9), EMA(21), and EMA(50) converge into a tight squeeze,
@@ -82,11 +83,15 @@ class Strategy(BaseStrategy):
         vol_sma20 = np.where(vol_sma20 > 1e-10, vol_sma20, 1.0)
         vol_ok = volume > (vol_mult_thresh * vol_sma20)
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: squeeze + close > max(all EMAs) + volume > SMA(20)
-        long_entry = squeeze & (close > ema_max) & vol_ok
+        long_entry = squeeze & (close > ema_max) & vol_ok & in_session
 
         # Short: squeeze + close < min(all EMAs) + volume > SMA(20)
-        short_entry = squeeze & (close < ema_min) & vol_ok
+        short_entry = squeeze & (close < ema_min) & vol_ok & in_session
 
         # Signal exit: close crosses EMA(50) — stop-like
         signal_exit_long = close < ema50

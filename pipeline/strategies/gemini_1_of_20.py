@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """VWAP Z-Score Mean Reversion — gemini_1_of_20
 
 Thesis: When price deviates significantly from VWAP in a low-trend environment
@@ -108,9 +109,13 @@ class Strategy(BaseStrategy):
         # ATR(20)
         atr20 = _compute_atr(high, low, close, 20)
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
-        long_entry = (zscore < zs_long) & (adx < adx_max) & (vix < vix_max)
-        short_entry = (zscore > zs_short) & (adx < adx_max) & (vix < vix_max)
+        long_entry = (zscore < zs_long) & (adx < adx_max) & (vix < vix_max) & in_session
+        short_entry = (zscore > zs_short) & (adx < adx_max) & (vix < vix_max) & in_session
 
         return StrategySignals(
             long_entry=long_entry,

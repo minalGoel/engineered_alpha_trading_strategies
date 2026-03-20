@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """Gap Momentum Continuation — gemini_11_of_20
 
 Thesis: Stocks that gap significantly and then break the opening range high
@@ -106,10 +107,14 @@ class Strategy(BaseStrategy):
         vol_sma20 = np.where(vol_sma20 > 1e-10, vol_sma20, 1.0)
         rel_vol = volume / vol_sma20
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
         vix_ok = vix < vix_max
-        long_entry = (gap > gap_pct) & (close > prev_range_high) & (rel_vol > vol_mult) & vix_ok
-        short_entry = (gap < -gap_pct) & (close < prev_range_low) & (rel_vol > vol_mult) & vix_ok
+        long_entry = (gap > gap_pct) & (close > prev_range_high) & (rel_vol > vol_mult) & vix_ok & in_session
+        short_entry = (gap < -gap_pct) & (close < prev_range_low) & (rel_vol > vol_mult) & vix_ok & in_session
 
         return StrategySignals(
             long_entry=long_entry,

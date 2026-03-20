@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window enforcement — entries were firing outside session_start/session_end
 """Mean Reversion Hull MA — gemini_15_of_20
 
 Thesis: The Hull Moving Average (HMA) responds quickly to price changes.
@@ -84,11 +85,15 @@ class Strategy(BaseStrategy):
         safe_hma = np.where(np.abs(hma) > 1e-10, hma, 1e-10)
         pct_from_hma = (close - hma) / safe_hma * 100.0
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: close < HMA - dev%, HMA rising (expect reversion up)
-        long_entry = (pct_from_hma < -dev_pct) & hma_rising
+        long_entry = (pct_from_hma < -dev_pct) & hma_rising & in_session
 
         # Short: close > HMA + dev%, HMA falling (expect reversion down)
-        short_entry = (pct_from_hma > dev_pct) & hma_falling
+        short_entry = (pct_from_hma > dev_pct) & hma_falling & in_session
 
         # Signal exit: touch HMA
         signal_exit_long = close >= hma

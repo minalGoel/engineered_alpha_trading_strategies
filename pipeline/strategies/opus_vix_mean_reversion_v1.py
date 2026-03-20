@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window time filter — entries were firing outside session_start/session_end
 """VIX Intraday Mean Reversion — Opus_25
 
 Thesis: When VIX spikes >3% from its opening level but then starts
@@ -58,6 +59,7 @@ class Strategy(BaseStrategy):
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=20.0)
         day_id = df["day_id"].to_numpy()
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # ── VIX open per day (first bar's VIX) ──
         vix_open = np.zeros(n, dtype=np.float64)
@@ -84,11 +86,14 @@ class Strategy(BaseStrategy):
 
         atr14 = _compute_atr(high, low, close, 14)
 
+        # ── Session window filter ──
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Long: VIX spiked up >3% but now declining ──
-        long_entry = (vix_change > vix_thresh) & vix_declining
+        long_entry = (vix_change > vix_thresh) & vix_declining & time_ok
 
         # ── Short: VIX dropped >3% but now rising ──
-        short_entry = (vix_change < -vix_thresh) & vix_rising
+        short_entry = (vix_change < -vix_thresh) & vix_rising & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

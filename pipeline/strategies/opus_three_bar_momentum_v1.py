@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window time filter — entries were firing outside session_start/session_end
 """Three-Bar Momentum — Opus_16
 
 Thesis: Three consecutive bars in the same direction with expanding volume
@@ -51,6 +52,7 @@ class Strategy(BaseStrategy):
         low = df["low"].to_numpy().astype(np.float64)
         volume = df["volume"].to_numpy().astype(np.float64)
         day_id = df["day_id"].to_numpy()
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         bar_range = high - low
         is_green = close > open_
@@ -58,11 +60,16 @@ class Strategy(BaseStrategy):
 
         atr14 = _compute_atr(high, low, close, 14)
 
+        # ── Session window filter ──
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Three consecutive bars same direction, expanding vol & range ──
         long_entry = np.zeros(n, dtype=np.bool_)
         short_entry = np.zeros(n, dtype=np.bool_)
 
         for i in range(2, n):
+            if not time_ok[i]:
+                continue
             # Must be same day for all 3 bars
             if day_id[i] != day_id[i - 1] or day_id[i] != day_id[i - 2]:
                 continue

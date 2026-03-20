@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window time filter — entries were firing outside session_start/session_end
 """VIX Regime Switch — Opus_23
 
 Thesis: When VIX spikes above its Bollinger upper band but starts declining,
@@ -59,6 +60,7 @@ class Strategy(BaseStrategy):
         index_close = df["index_close"].to_numpy().astype(np.float64)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=20.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # ── Bollinger Bands on VIX (20-bar) ──
         bb_period = 20
@@ -85,16 +87,21 @@ class Strategy(BaseStrategy):
 
         atr14 = _compute_atr(high, low, close, 14)
 
+        # ── Session window filter ──
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Long: VIX > BB_upper AND declining AND index not crashing ──
         long_entry = ((vix > bb_upper) &
                       (vix_change_60 < 0) &
                       (index_ret_60 > idx_ret_floor) &
-                      (bb_upper > 0))
+                      (bb_upper > 0) &
+                      time_ok)
 
         # ── Short: VIX < BB_lower AND rising ──
         short_entry = ((vix < bb_lower) &
                        (vix_change_60 > 0) &
-                       (bb_lower > 0))
+                       (bb_lower > 0) &
+                       time_ok)
 
         return StrategySignals(
             long_entry=long_entry,

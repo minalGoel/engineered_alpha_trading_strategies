@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window time filter — entries were firing outside session_start/session_end
 """Volatility Breakout (ATR Expansion) — Opus_24
 
 Thesis: When the ratio of short-term ATR(10) to long-term ATR(60)
@@ -62,6 +63,7 @@ class Strategy(BaseStrategy):
         low = df["low"].to_numpy().astype(np.float64)
         volume = df["volume"].to_numpy().astype(np.float64)
         day_id = df["day_id"].to_numpy()
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # ── VWAP ──
         df_vwap = df.with_columns([
@@ -94,8 +96,11 @@ class Strategy(BaseStrategy):
         expanding = vol_expansion > exp_thresh
         vol_ok = rel_vol > vol_mult
 
-        long_entry = expanding & is_bullish & vol_ok & (close > vwap)
-        short_entry = expanding & is_bearish & vol_ok & (close < vwap)
+        # ── Session window filter ──
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
+        long_entry = expanding & is_bullish & vol_ok & (close > vwap) & time_ok
+        short_entry = expanding & is_bearish & vol_ok & (close < vwap) & time_ok
 
         # ── Signal exit: expansion contracts below threshold ──
         sig_exit_long = vol_expansion < cont_exit

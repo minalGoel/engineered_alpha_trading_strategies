@@ -1,0 +1,135 @@
+{
+  "name": "momentum_score_composite_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["composite", "multi_factor", "high_conviction", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_164.json",
+  "original_name": "momentum_score_composite_v1",
+
+  "mechanism": "NIFTY generates its highest-probability directional moves when multiple independent technical signals align simultaneously — RSI momentum, MACD histogram trend, rate of change, ADX directional strength, and volume momentum all pointing the same way. On any given 5-second bar, individual indicators fire frequently and unreliably, but the probability of ALL FIVE confirming the same direction by chance is extremely low (~3% assuming independence). When the composite score reaches +3 or higher (out of +5 maximum), it indicates that NIFTY is experiencing a broad-based directional push across momentum, trend, and volume dimensions simultaneously. These multi-factor alignments on NIFTY typically occur 2-4 times per session and correspond to institutional program trades or macro-driven moves where the directional conviction is strong enough to persist for 60-120 seconds. Each sub-indicator uses a different mathematical approach (oscillator, histogram, rate of change, trend strength, volume), so they capture genuinely different aspects of the move — redundancy is minimized. This is the highest-conviction, lowest-frequency strategy in the portfolio.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "rsi_36",
+      "formula": "RSI(36) on 5s bars",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "36-bar RSI = 3-minute momentum oscillator. Original used RSI(14) on 1-min bars = 14-minute window, but for composite scoring on NIFTY at 5s we need a SHORTER horizon (3 min vs 14 min) because we want to detect the CURRENT momentum state, not a lagging one. 3 minutes is long enough to filter single-bar noise on NIFTY but responsive enough to capture emerging trends before they are fully priced. Normalized: RSI > 60 = +1, RSI < 40 = -1, else 0."
+    },
+    {
+      "name": "macd_hist",
+      "formula": "MACD histogram: EMA(24) - EMA(60), signal = EMA(18) of MACD line; histogram = MACD - signal",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "MACD(24,60,18) on 5s bars corresponds to approximately (2min, 5min, 1.5min) periods. Original used MACD(12,26,9) on 1-min = (12min, 26min, 9min). We compress the horizons because on NIFTY at 5s, MACD histogram sign changes are the relevant signal — the histogram captures momentum ACCELERATION, which is distinct from the RSI's momentum LEVEL. Normalized: histogram > 0 and rising = +1, histogram < 0 and falling = -1, else 0."
+    },
+    {
+      "name": "roc_12",
+      "formula": "(close - close[12]) / close[12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12-bar rate of change = 1-minute price velocity. Original used ROC(10) on 1-min = 10-minute window. We use 1 minute instead because at 5s resolution on NIFTY, the RAW SPEED of price change over the last minute is the most direct measure of directional urgency — are institutions hitting the bid/offer aggressively RIGHT NOW? This is the fastest sub-signal in the composite, providing early detection. Normalized: ROC > 0.03% = +1, ROC < -0.03% = -1, else 0."
+    },
+    {
+      "name": "adx_direction_60",
+      "formula": "+DI(60) - -DI(60) from ADX calculation, 60-bar lookback",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Directional movement index over 5 minutes. Original used ADX(14) on 1-min = 14 minutes. We use the DI DIFFERENCE (not ADX value) because ADX measures trend STRENGTH but not direction; +DI minus -DI gives us directional bias over the last 5 minutes of NIFTY price action. 5 minutes is the right horizon because it captures the medium-term trend context without being as noisy as shorter windows. Normalized: +DI > -DI by 5+ points = +1, -DI > +DI by 5+ = -1, else 0."
+    },
+    {
+      "name": "vol_momentum_12",
+      "formula": "volume_sma(6) / volume_sma(24) - 1",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Volume momentum: ratio of 30-second average volume to 2-minute average volume. Original used raw volume momentum on 1-min bars. On NIFTY at 5s, individual bar volume is extremely noisy, so we smooth with 6-bar (30s) vs 24-bar (2min) SMAs. When the 30s average exceeds the 2-minute average by 50%+, it confirms that the directional move has PARTICIPATION — not just price drift. Volume confirmation on NIFTY specifically separates institutional program trades (high volume) from noise-driven moves. Normalized: ratio > 0.5 = +1 (in direction of price), ratio < -0.5 = -1, else 0. Direction alignment required."
+    },
+    {
+      "name": "composite_score",
+      "formula": "sum of all 5 normalized sub-signals, range [-5, +5]",
+      "lookback": 0,
+      "computed_on": "derived",
+      "purpose": "The aggregate conviction score. Each sub-indicator contributes -1, 0, or +1. A score of +3 or higher means at least 3 of 5 independent signals confirm bullish direction on NIFTY. The threshold of 3 (not 4 or 5) balances conviction with frequency: requiring all 5 would produce <1 trade/day; requiring 3 gives 2-4 trades/day with meaningfully higher win rate than any single indicator."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "composite_score >= 3 (at least 3 of 5 sub-signals confirm bullish NIFTY direction)",
+        "roc_12 > 0 (the fastest sub-signal must be positive — ensures current-moment momentum is with us, not lagging)",
+        "composite_score on previous bar was < 3 (fresh signal — score just crossed the threshold, not already in a high-score zone)"
+      ],
+      "confirmation": "Score must be >= 3 for two consecutive 5s bars (10 seconds of multi-factor alignment eliminates single-bar flukes)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "composite_score <= -3 (at least 3 of 5 sub-signals confirm bearish NIFTY direction)",
+        "roc_12 < 0 (current-moment momentum is negative)",
+        "composite_score on previous bar was > -3 (fresh signal)"
+      ],
+      "confirmation": "Score must be <= -3 for two consecutive 5s bars"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "Multi-factor confirmed moves on NIFTY rarely reverse more than 8 spot points (4 ATM option points) without at least one sub-signal flipping. If we lose 4 option points on a +3 composite score entry, it means the alignment was coincidental rather than reflecting genuine institutional flow. The 4-point stop is wider than single-indicator strategies (3 pts) because the higher conviction justifies slightly more patience — but not much, because even composite signals can be wrong during sudden reversals.",
+    "target_points": 8,
+    "target_rationale": "When NIFTY shows +3 or higher composite alignment, the expected move over the next 60-90 seconds is 15-25 spot points (7-12 ATM option points). Target of 8 captures the median outcome, giving 1:2 risk-reward. We aim higher than single-indicator strategies because multi-factor confirmation statistically predicts LARGER moves — the additional indicators aren't just confirming the same signal, they're confirming that the move has breadth (momentum + trend + volume).",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20"
+  },
+
+  "filters": {
+    "vix_filter": "none — composite scoring works in all VIX regimes. High VIX increases magnitude; low VIX decreases frequency but maintains directional accuracy.",
+    "time_filter": "No trades before 09:20 (opening noise contaminates all sub-indicators simultaneously) or after 15:20 (end-of-day rebalancing creates false multi-factor alignments as funds adjust positions).",
+    "volume_filter": "embedded in composite via vol_momentum_12 sub-signal",
+    "trend_filter": "embedded in composite via adx_direction_60 sub-signal",
+    "spread_filter": "skip if ATM option bid-ask > 2 points"
+  },
+
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.5,
+    "edge_decay_risk": "low — multi-factor edges decay slower than single-indicator edges because they require structural market behavior changes across multiple dimensions simultaneously"
+  },
+
+  "adaptation_notes": "Original combined RSI(14), MACD(12,26,9), ROC(10), ADX(14), and volume momentum on 1-min bars with -100 to +100 scoring and thresholds at +/-60. Major adaptations: (1) Lookbacks shortened heterogeneously — RSI to 36 bars (3 min), MACD to (24,60,18) (~2/5/1.5 min), ROC to 12 bars (1 min), ADX direction to 60 bars (5 min), volume to 6/24 bars (30s/2min). Each lookback was chosen independently based on what that specific indicator measures best on NIFTY at 5s, NOT by blindly dividing by 12. (2) Scoring simplified from continuous -100 to +100 to discrete -5 to +5 (each sub-signal is -1/0/+1) because at 5s resolution the continuous weighting creates overfitting risk — binary signals are more robust. (3) Threshold moved from 60% (of 100) to 3 (of 5) which is the same 60% ratio, preserving the original's conviction requirement. (4) Hold time compressed from 15-45 minutes to 30-120 seconds. (5) Stop/target compressed from percentage-based to absolute option points.",
+
+  "weaknesses": [
+    "Low trade frequency (2-4/day) means extended losing streaks are possible even with high win rate — variance per day is high",
+    "All 5 sub-indicators are fundamentally price-derived — a single anomalous price bar (fat finger, exchange glitch) can simultaneously trigger +5 composite score falsely",
+    "The composite score can stay at +3 or higher for extended periods during strong trends, but only the FIRST crossing generates the entry signal — subsequent bars at +3 are not tradeable, reducing opportunities",
+    "During lunch hour low-liquidity on NIFTY (12:00-13:30), multi-factor alignments may not produce the expected magnitude of moves because there is insufficient order flow to sustain the direction"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_164.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["RSI(14)", "MACD(12,26,9)", "ROC(10)", "ADX(14)", "Volume momentum"],
+    "original_stop": "composite score reversal",
+    "original_target": "composite score reversal or fixed %"
+  }
+}

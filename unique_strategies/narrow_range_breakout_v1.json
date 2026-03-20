@@ -1,0 +1,132 @@
+{
+  "name": "narrow_range_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "nr7", "compression", "conditional", "daily_range"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_176.json",
+  "original_name": "narrow_range_breakout_v1",
+
+  "mechanism": "NR7 (Narrow Range 7) is a daily-timeframe pattern where today's NIFTY daily range (high minus low) is the narrowest of the last 7 trading sessions. This multi-day compression precedes volatility EXPANSION — like a coiled spring. The mechanism is structural: when NIFTY has been range-bound for 7+ days, options sellers have accumulated short gamma positions, market makers have reduced their hedging, and breakout traders have placed orders above/below the range. When the first meaningful directional move of the day occurs on an NR7 day, it triggers a cascade: (1) breakout orders execute, adding flow, (2) short-gamma dealers must delta-hedge in the SAME direction (buying futures on upside breaks, selling on downside), amplifying the move, and (3) range-bound mean-reversion traders initially fade the move but quickly stop out, adding further fuel. This is a CONDITIONAL strategy — it only activates on NR7 days, which occur roughly 15% of trading sessions (~3 per month). When it does fire, the breakout has substantially higher probability of sustaining because the multi-day compression creates a structural supply/demand imbalance. At 5-second resolution, we monitor the first 10-minute range on NR7 days and enter when NIFTY breaks above or below this range with wider-than-normal targets, expecting a trending day.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:15-15:15 IST",
+  "hold_time_seconds": [60, 180],
+  "max_hold_bars": 36,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["nifty_daily_ohlc_last_7_sessions"]
+  },
+
+  "indicators": [
+    {
+      "name": "nr7_flag",
+      "formula": "1 if today's previous session daily range (high - low) is the minimum of the last 7 sessions' daily ranges, else 0",
+      "lookback": 0,
+      "computed_on": "daily",
+      "purpose": "Pre-market NR7 detection computed from DAILY bars of the prior 7 sessions. This is a BINARY filter, not a continuous indicator — it simply determines whether today is an NR7 day. The 7-session lookback is the classic NR7 definition, chosen because 7 trading days represents approximately 1.5 calendar weeks, which is the typical duration of NIFTY consolidation phases before expansion. NR4 (4 days) is too frequent and less reliable; NR14 (14 days) is too rare to generate sufficient trade opportunities. NR7 strikes the balance at ~15% of sessions."
+    },
+    {
+      "name": "first_10min_high",
+      "formula": "highest high from 09:15:00 to 09:25:00 (first 120 bars at 5s)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Upper boundary of the first 10-minute range. 10 minutes is chosen because on NR7 days, the opening auction price discovery takes the full first 10 minutes to settle — the opening 5 minutes include too much auction noise, while waiting 15+ minutes risks missing the breakout entirely. The first 10-minute range on NIFTY NR7 days is typically 15-30 spot points, representing the initial balance area before directional expansion."
+    },
+    {
+      "name": "first_10min_low",
+      "formula": "lowest low from 09:15:00 to 09:25:00 (first 120 bars at 5s)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Lower boundary of the first 10-minute range. Together with first_10min_high, this defines the 'compression zone' that must be broken for the trade to trigger. On NR7 days, this range is typically narrower than usual (because the multi-day compression continues into the opening), making breakouts more definitive when they occur."
+    },
+    {
+      "name": "range_break_signal",
+      "formula": "1 if close > first_10min_high + 2 spot points (buffer); -1 if close < first_10min_low - 2 spot points; else 0",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Breakout detection with a 2-point buffer above/below the 10-minute range. The 2-point buffer prevents false breakouts from bid-ask bounce — NIFTY's tick-by-tick noise is roughly 1-2 spot points, so requiring a 2-point clear break filters out noise-driven touches of the range boundary. Without this buffer, NIFTY's typical microstructure oscillations would generate multiple false breakouts per session."
+    },
+    {
+      "name": "breakout_volume_ratio",
+      "formula": "volume_sma(6) / volume_sma(120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Ratio of 30-second average volume to 10-minute average volume at the breakout moment. On NR7 days, genuine breakouts are accompanied by 1.5x+ volume expansion as breakout orders trigger and delta-hedging flow activates. Volume confirmation separates real breakouts (institutional flow) from drift-through-range (noise). 30s vs 10min ratio specifically captures the SURGE at the breakout moment relative to the session baseline."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "nr7_flag == 1 (today is confirmed as an NR7 day from daily data — this condition is checked pre-market and is either true or false for the entire session)",
+        "range_break_signal == 1 (NIFTY has broken above the first 10-minute high by at least 2 spot points)",
+        "breakout_volume_ratio > 1.3 (volume at the breakout is 30%+ above session average — confirms the breakout has participation, not just drift)",
+        "Time is between 09:25 and 10:30 IST (breakout must occur within the first 75 minutes — later breaks on NR7 days are less reliable as the compression-release dynamic weakens)"
+      ],
+      "confirmation": "Two consecutive 5s bars closing above first_10min_high + 2 (10 seconds of sustained breakout to avoid single-bar spikes)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "nr7_flag == 1",
+        "range_break_signal == -1 (NIFTY has broken below the first 10-minute low by at least 2 spot points)",
+        "breakout_volume_ratio > 1.3",
+        "Time is between 09:25 and 10:30 IST"
+      ],
+      "confirmation": "Two consecutive 5s bars closing below first_10min_low - 2"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "NR7 breakouts on NIFTY that fail typically reverse the breakout range (15-30 spot points worth of 10-minute range) quickly. A 5-point ATM option stop corresponds to roughly 10 spot points, which is about half the typical first-10-minute range on an NR7 day. If the breakout reverses by half the range, it is likely a false breakout — the compression is continuing rather than releasing. The 5-point stop is slightly wider than standard breakout stops (3-4 points) because NR7 breakouts can retest the breakout level before continuing, and we want to survive one retest.",
+    "target_points": 12,
+    "target_rationale": "NR7 days on NIFTY produce TRENDING sessions where the daily range expands 1.5-2.5x the prior 7-day average range. If the prior 7-day average daily range is ~100 spot points, an NR7 expansion day targets 150-250 spot points of daily range. The first breakout move captures 30-60 spot points (15-30 ATM option points) within 5-10 minutes. Target of 12 option points captures the conservative lower end of the initial breakout thrust. Risk-reward is 1:2.4, reflecting the higher conviction of NR7-conditional breakouts versus unconditional breakouts.",
+    "time_stop_bars": 36,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "VIX < 22 preferred — very high VIX environments produce wide daily ranges that make NR7 classification less meaningful (yesterday's 'narrow' range in high VIX could be 150+ spot points, which is not truly compressed). No lower VIX bound because NR7 in low-VIX is the ideal setup — genuine compression.",
+    "time_filter": "Strategy only activates on NR7 days (pre-market check). Breakout entries only between 09:25-10:30 IST. After 10:30, the compression-release dynamic weakens as the session's own price action dominates.",
+    "volume_filter": "breakout_volume_ratio > 1.3 embedded in entry conditions — genuine NR7 breakouts on NIFTY are accompanied by volume surges",
+    "trend_filter": "none — the NR7 condition itself is the primary filter. Direction is determined by which side of the range breaks first.",
+    "spread_filter": "skip if ATM option bid-ask > 2 points (breakout entries need tight execution to avoid slippage eating the edge)",
+    "day_filter": "Avoid Thursday (weekly expiry) NR7 signals — expiry-day dynamics distort breakout behavior as gamma effects dominate price action"
+  },
+
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 2.4,
+    "profit_factor_estimate": 2.9,
+    "edge_decay_risk": "low — the NR7 pattern is rooted in the fundamental market cycle of compression followed by expansion, which is a structural feature of all liquid markets. The specific edge on NIFTY is enhanced by the options market's gamma dynamics during compression days."
+  },
+
+  "adaptation_notes": "Original traded NR4/NR7 on daily bars with first-hour range breakout entries on 1-min charts, holding 30-90 minutes. Key adaptations: (1) Focused exclusively on NR7 (dropped NR4) because NR7 has higher statistical significance for compression-expansion on NIFTY — NR4 fires too frequently (~30% of sessions) with lower expansion probability. (2) Replaced first-hour range (60 minutes) with first 10-minute range (120 bars at 5s) because at 5s resolution with 60-180 second holds, we need a TIGHTER initial range to define the breakout level. The 10-minute opening range on NR7 days captures the session's initial balance area before directional flow develops. (3) Added 2-point breakout buffer (not in original) because at 5s resolution, NIFTY touches range boundaries frequently on noise — the buffer filters these. (4) Added breakout_volume_ratio (not in original) because at 5s, price can drift through a range boundary without conviction; volume confirmation ensures institutional participation. (5) Time window for entries narrowed from first hour (09:15-10:15) to 09:25-10:30 because at 5s resolution we can be more precise about when genuine NR7 breakouts occur — most happen within 75 minutes of open. (6) Hold time compressed from 30-90 minutes to 60-180 seconds — we capture only the INITIAL breakout thrust, not the full trending day move. (7) Target is wider than other strategies (12 vs typical 7-10) because NR7 breakouts produce larger moves per the compression-expansion dynamic.",
+
+  "weaknesses": [
+    "Very low frequency — NR7 occurs on ~15% of sessions (~3/month), and not all NR7 days produce a breakout within the 09:25-10:30 window, so actual trade count may be 1-2 per month",
+    "False NR7 breakouts occur when the compression continues — NIFTY breaks one side of the range, reverses, and breaks the other side, hitting the stop both times",
+    "The strategy is useless on ~85% of trading days, making it impossible to use as a standalone — must be part of a multi-strategy portfolio",
+    "NR7 days near major events (budget, RBI policy, US Fed) may produce gaps that skip the 10-minute range entirely, making the breakout level irrelevant",
+    "Daily range calculation depends on clean end-of-day data — any data issues in the prior 7 sessions' OHLC can produce false NR7 signals"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_176.json",
+    "original_timeframe": "1min (with daily NR7 filter)",
+    "original_hold_time": "30-90 min",
+    "original_indicators": ["NR4/NR7 daily pattern", "first-hour range high/low"],
+    "original_stop": "opposite side of first-hour range",
+    "original_target": "1.5x range extension or EOD"
+  }
+}

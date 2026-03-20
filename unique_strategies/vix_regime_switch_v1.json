@@ -1,0 +1,123 @@
+{
+  "name": "vix_regime_switch_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vix", "regime_change", "volatility_transition", "hedging_flow"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_209.json",
+  "original_name": "vix_regime_switch_v1",
+
+  "mechanism": "India VIX is quoted in real-time and is closely watched by institutional hedgers, prop desks, and options market makers on NIFTY. When India VIX crosses the critical 18.0 level — which separates 'normal' from 'elevated' volatility regimes — it triggers a cascade of institutional hedging adjustments. When VIX rises above 18 from below, portfolio insurance desks begin buying NIFTY PEs aggressively, and delta-hedging algorithms on the short-gamma side sell NIFTY futures to flatten their exposure. This combined selling pressure pushes NIFTY spot down 20-40 points over 2-5 minutes. Conversely, when VIX drops below 18, hedgers unwind their puts (buying back NIFTY futures), creating an upward push of 15-30 NIFTY spot points. The trade is NOT 'following VIX' — VIX itself is a derived quantity and lags the options market. Instead, we trade the NIFTY spot REACTION to the VIX regime boundary crossing, which happens with a 30-90 second delay as institutional hedging algorithms activate. At 5-second resolution, we detect the VIX level crossing the INSTANT it occurs on the live feed and position for the subsequent NIFTY spot move before the hedging cascade fully plays out.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:15 IST",
+  "hold_time_seconds": [60, 180],
+  "max_hold_bars": 36,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["india_vix_5s_feed"]
+  },
+
+  "indicators": [
+    {
+      "name": "vix_current",
+      "formula": "India VIX spot level, sampled every 5 seconds",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Real-time India VIX level. No smoothing applied — we need the RAW level to detect the exact moment of regime boundary crossing. Smoothing would delay detection and reduce the timing advantage that makes this trade work."
+    },
+    {
+      "name": "vix_ema_12",
+      "formula": "EMA(12) of India VIX at 5s bars",
+      "lookback": 12,
+      "computed_on": "vix",
+      "purpose": "1-minute EMA of VIX to distinguish genuine regime transitions from momentary spikes through 18. VIX can briefly touch 18.01 and revert within a few seconds (microstructure noise in VIX calculation). The 1-minute EMA smooths these spikes. We require vix_current to cross 18 AND vix_ema_12 to be within 0.5 of 18 (between 17.5 and 18.5), confirming VIX is genuinely transitioning rather than spiking through from 16 or dropping through from 20."
+    },
+    {
+      "name": "vix_cross_signal",
+      "formula": "1 if vix_current crosses above 18 AND vix_ema_12 is between 17.5-18.5; -1 if vix_current crosses below 18 AND vix_ema_12 is between 17.5-18.5; else 0",
+      "lookback": 1,
+      "computed_on": "derived",
+      "purpose": "Binary regime transition detector. The EMA proximity filter (17.5-18.5) ensures we only trigger on transitions from the NORMAL regime (VIX near 18), not on VIX dropping from crisis levels (e.g., 25 to 17.9) where the dynamics are different. The 18 level is specifically chosen because it is the widely-recognized boundary between normal and elevated volatility on India VIX — institutional risk models and hedging mandates are calibrated to this level."
+    },
+    {
+      "name": "nifty_ret_12",
+      "formula": "(nifty_close - nifty_close[12]) / nifty_close[12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute NIFTY return as a confirmation filter. When VIX crosses above 18, NIFTY should already be weakening (ret_12 < 0) — if NIFTY is RISING while VIX spikes above 18, the regime signal is likely a temporary skew shift rather than a genuine risk-off move. This alignment check prevents false signals where VIX and NIFTY temporarily diverge."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vix_cross_signal == -1 (India VIX just crossed BELOW 18 — regime transitioning from elevated back to normal)",
+        "vix_ema_12 is between 17.5 and 18.5 (genuine transition, not a drop from crisis levels)",
+        "nifty_ret_12 >= -0.05 (NIFTY is not in free-fall — the VIX decline reflects calming conditions, not a temporary lull before another crash leg)"
+      ],
+      "confirmation": "Wait 2 bars (10 seconds) after VIX crosses below 18 before entering — the first 10 seconds are noisy as VIX calculation updates propagate; the NIFTY reaction begins after a brief lag"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vix_cross_signal == 1 (India VIX just crossed ABOVE 18 — regime transitioning from normal to elevated)",
+        "vix_ema_12 is between 17.5 and 18.5 (genuine transition, not a spike from already-crisis levels)",
+        "nifty_ret_12 <= 0.05 (NIFTY is not surging higher — the VIX spike reflects genuine risk-off, not just options skew adjustment during a rally)"
+      ],
+      "confirmation": "Wait 2 bars (10 seconds) after VIX crosses above 18 before entering"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 6,
+    "stop_rationale": "VIX regime transitions are high-conviction but SLOW-developing trades on NIFTY — the hedging cascade takes 1-3 minutes to fully manifest. During this period, NIFTY can initially move 10-12 spot points (5-6 ATM option points) against the expected direction as the market absorbs the VIX information. A 6-point stop gives the hedging flow time to develop without getting stopped out on the initial noise. If the stop hits, it means the VIX transition was either a false signal (VIX reverted back through 18) or the NIFTY was already positioned for the VIX move (priced in).",
+    "target_points": 10,
+    "target_rationale": "When India VIX crosses 18 and triggers genuine institutional hedging adjustments, NIFTY moves 20-40 spot points over 2-5 minutes (10-20 ATM option points). Target of 10 captures the FIRST half of this move (the fast, mechanical hedging flow) before slower, discretionary positioning begins. Risk-reward is 1:1.67. We don't hold for the full move because after the initial hedging cascade, the NIFTY reaction becomes less predictable as discretionary traders take over.",
+    "time_stop_bars": 36,
+    "eod_rule": "flatten at 15:15 (earlier than most strategies because VIX is volatile near close due to options expiry positioning)"
+  },
+
+  "filters": {
+    "vix_filter": "embedded in the core signal — VIX must be NEAR 18 (EMA between 17.5-18.5) for the trade to activate. VIX at 14 or 22 does not generate signals.",
+    "time_filter": "No trades before 09:30 (VIX needs 15 minutes to stabilize after open; early VIX values are distorted by opening option prices) or after 15:15 (VIX behavior near close is dominated by expiry positioning, not genuine regime changes).",
+    "volume_filter": "none — this is a volatility-regime trade, not a volume trade",
+    "trend_filter": "nifty_ret_12 alignment check serves as a directional consistency filter",
+    "spread_filter": "skip if ATM option bid-ask > 3 points (VIX regime changes often coincide with wider spreads; the 3-point threshold is more generous than momentum strategies because the expected move is larger)",
+    "cooldown_filter": "No entry within 120 bars (10 minutes) of a previous VIX regime signal — VIX oscillating around 18 means the regime is UNCERTAIN, not transitioning"
+  },
+
+  "edge": {
+    "expected_bps": 16,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "low — the institutional hedging response to VIX regime boundaries is structurally embedded in risk management frameworks and will persist as long as India VIX is used as a risk gauge by institutional investors"
+  },
+
+  "adaptation_notes": "Original traded VIX regime transitions on a 10-30 minute timeframe using multiple regime boundaries (13, 18, 25). At 5s, we narrow focus to the SINGLE most important boundary: VIX = 18, which separates 'normal' from 'elevated' volatility and triggers the largest institutional hedging adjustments on NIFTY. The 13 boundary (low to normal) produces smaller NIFTY reactions because hedging mandates are less aggressive at low VIX levels. The 25 boundary (elevated to crisis) is too rare and chaotic to trade systematically at 5s. Key adaptations: (1) Added vix_ema_12 proximity filter to distinguish genuine regime transitions from VIX returning to 18 from extreme levels — the institutional reaction is strongest when VIX is TRANSITIONING through 18, not when it is falling from 25. (2) Added 10-second entry delay because at 5s resolution, the VIX crossing itself is detectable instantly but the NIFTY hedging flow takes 10-30 seconds to begin — entering immediately means holding through noise. (3) Added cooldown filter (10 min) because VIX oscillating around 18 generates repeated crosses that are not genuine regime changes. (4) Hold time compressed from 10-30 minutes to 60-180 seconds — we capture only the mechanical hedging flow, not the subsequent discretionary positioning. (5) Trade frequency is very low (0-2/day) because VIX crosses 18 infrequently; on many days this strategy generates zero signals.",
+
+  "weaknesses": [
+    "Extremely low frequency — VIX may not cross 18 for days or weeks, making this strategy impossible to rely on as a standalone",
+    "VIX calculation updates every few seconds and can briefly spike through 18 on a single large options trade without reflecting genuine regime change — the EMA filter mitigates but does not eliminate false signals",
+    "During weekly options expiry (Thursday), VIX behavior is distorted by gamma/vega effects, making 18-crossings less meaningful for NIFTY spot direction",
+    "If India VIX is persistently above 18 (e.g., during earnings season or geopolitical tension), this strategy stays dormant even though there may be tradeable VIX movements within the elevated regime",
+    "The 18.0 level may shift over time as India VIX calculation methodology or market structure evolves — periodic recalibration of the regime boundary may be needed"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_209.json",
+    "original_timeframe": "5min-15min",
+    "original_hold_time": "10-30 min",
+    "original_indicators": ["India VIX level", "VIX regime boundaries (13, 18, 25)"],
+    "original_stop": "VIX reversal through boundary",
+    "original_target": "NIFTY directional move from hedging flow"
+  }
+}

@@ -38,9 +38,6 @@ class Strategy(BaseStrategy):
         skew = np.zeros(n)
 
         if option_df is not None and not option_df.is_empty():
-            # Get unique session dates and compute skew per date
-            spot_dates = spot_df.select("datetime", "session_date", "atm_strike").to_pandas()
-
             # Group option data by session_date for efficiency
             for day_id_val in spot_df["day_id"].unique().to_list():
                 day_mask = spot_df["day_id"].to_numpy() == day_id_val

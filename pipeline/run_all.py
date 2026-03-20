@@ -29,8 +29,10 @@ from pipeline.data_loader import (
     build_data_inventory, load_all_data, add_atm_strike, integration_test,
 )
 from pipeline.option_utils import get_strike_step
-from pipeline.state_machine import warmup_numba
+from pipeline.state_machine import run_state_machine, warmup_numba, EXIT_REASON_MAP
 from pipeline.leaderboard import build_leaderboard
+from pipeline.metrics import compute_metrics
+from pipeline.cost_model import get_lot_size
 
 # ── Logging setup ──
 logging.basicConfig(
@@ -64,6 +66,165 @@ def _sanitise_for_json(obj):
     if isinstance(obj, (list, tuple)):
         return [_sanitise_for_json(v) for v in obj]
     return obj
+
+
+import numpy as np
+import polars as pl
+
+
+def build_option_premium_arrays(
+    spot_df: pl.DataFrame,
+    option_df: pl.DataFrame,
+    underlying: str,
+) -> tuple:
+    """Build per-bar ATM CE and PE option premium arrays aligned to spot bars.
+
+    For each spot bar, looks up the ATM strike's nearest-expiry CE and PE
+    close premium using an asof-join (last option bar at or before spot time).
+
+    Returns (option_ce_close, option_pe_close, is_expiry) — all length n.
+    """
+    n = len(spot_df)
+    option_ce_close = np.zeros(n, dtype=np.float64)
+    option_pe_close = np.zeros(n, dtype=np.float64)
+    is_expiry = np.zeros(n, dtype=np.bool_)
+
+    if option_df is None or option_df.is_empty():
+        return option_ce_close, option_pe_close, is_expiry
+
+    expiry_dates = set(option_df["expiry"].unique().to_list())
+    day_ids = spot_df["day_id"].to_numpy()
+    atm_strike = spot_df["atm_strike"].to_numpy()
+    datetimes = spot_df["datetime"].to_list()
+    session_dates = spot_df["session_date"].to_list()
+
+    # Mark expiry days
+    for i in range(n):
+        if session_dates[i] in expiry_dates:
+            is_expiry[i] = True
+
+    # Process day-by-day for efficiency
+    for day_val in sorted(spot_df["day_id"].unique().to_list()):
+        day_mask = day_ids == day_val
+        day_indices = np.where(day_mask)[0]
+        if len(day_indices) == 0:
+            continue
+
+        sd = session_dates[day_indices[0]]
+
+        # Get options for this session date
+        day_opts = option_df.filter(pl.col("session_date") == sd)
+        if day_opts.is_empty():
+            continue
+
+        # Pick nearest expiry
+        nearest_expiry = day_opts["expiry"].min()
+        day_opts = day_opts.filter(pl.col("expiry") == nearest_expiry)
+
+        # Get unique ATM strikes used on this day
+        day_atm_set = set(atm_strike[day_indices])
+
+        for strike_val in day_atm_set:
+            for opt_type, out_arr in [("CE", option_ce_close), ("PE", option_pe_close)]:
+                opts = day_opts.filter(
+                    (pl.col("strike") == strike_val) &
+                    (pl.col("option_type") == opt_type)
+                ).sort("datetime")
+
+                if opts.is_empty():
+                    continue
+
+                opt_times = opts["datetime"].to_list()
+                opt_closes = opts["close"].to_numpy()
+
+                # For each spot bar with this ATM strike, find the last option close
+                strike_indices = day_indices[atm_strike[day_indices] == strike_val]
+                opt_idx = 0
+                for si in strike_indices:
+                    bar_time = datetimes[si]
+                    # Advance opt_idx to last entry at or before bar_time
+                    while opt_idx < len(opt_times) - 1 and opt_times[opt_idx + 1] <= bar_time:
+                        opt_idx += 1
+                    if opt_idx < len(opt_times) and opt_times[opt_idx] <= bar_time:
+                        out_arr[si] = opt_closes[opt_idx]
+
+    return option_ce_close, option_pe_close, is_expiry
+
+
+def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=None):
+    """Run full backtest: compute signals → state machine → metrics.
+
+    Returns (trades_df, metrics_dict) or (None, empty_metrics) on failure.
+    """
+    from pipeline.config import (
+        EOD_FLATTEN_H, EOD_FLATTEN_M,
+        EXPIRY_FLATTEN_H, EXPIRY_FLATTEN_M,
+    )
+    from pipeline.metrics import _empty_metrics
+
+    if params is None:
+        params = {tp.name: tp.default for tp in strategy.tunable_params()}
+
+    # Compute signals
+    signals = strategy.compute(spot_df, option_df, vix_df, params)
+    n = len(spot_df)
+
+    # Build option premium arrays
+    option_ce_close, option_pe_close, is_expiry_arr = build_option_premium_arrays(
+        spot_df, option_df, strategy.underlying,
+    )
+
+    # Run state machine
+    eod_mins = EOD_FLATTEN_H * 60 + EOD_FLATTEN_M
+    exp_mins = EXPIRY_FLATTEN_H * 60 + EXPIRY_FLATTEN_M
+
+    result = run_state_machine(
+        spot_close=spot_df["close"].to_numpy().astype(np.float64),
+        option_ce_close=option_ce_close,
+        option_pe_close=option_pe_close,
+        day_id=spot_df["day_id"].to_numpy().astype(np.int32),
+        time_minutes=spot_df["time_minutes"].to_numpy().astype(np.int32),
+        buy_ce=signals.buy_ce,
+        buy_pe=signals.buy_pe,
+        sell_ce=signals.sell_ce,
+        sell_pe=signals.sell_pe,
+        stop_points=signals.stop_points,
+        target_points=signals.target_points,
+        time_stop_bars=signals.time_stop_bars,
+        eod_flatten_minutes=eod_mins,
+        session_start_minutes=strategy.session_start_minutes,
+        session_end_minutes=strategy.session_end_minutes,
+        max_trades_per_day=signals.max_trades_per_day,
+        lot_size=lot_size,
+        warmup_bars=strategy.max_lookback,
+        is_expiry=is_expiry_arr,
+        expiry_flatten_minutes=exp_mins,
+    )
+
+    entry_bars, exit_bars, sides, entry_prems, exit_prems, exit_reasons, pnls, trade_count = result
+
+    if trade_count == 0:
+        return None, _empty_metrics()
+
+    # Build trades DataFrame
+    dt_list = spot_df["datetime"].to_list()
+    trades_df = pl.DataFrame({
+        "entry_bar": entry_bars[:trade_count],
+        "exit_bar": exit_bars[:trade_count],
+        "side": sides[:trade_count],
+        "entry_premium": entry_prems[:trade_count],
+        "exit_premium": exit_prems[:trade_count],
+        "exit_reason": [EXIT_REASON_MAP.get(int(r), "?") for r in exit_reasons[:trade_count]],
+        "pnl": pnls[:trade_count],
+        "entry_time": [dt_list[int(b)] for b in entry_bars[:trade_count]],
+        "exit_time": [dt_list[int(b)] for b in exit_bars[:trade_count]],
+        "holding_bars": (exit_bars[:trade_count] - entry_bars[:trade_count]).astype(np.int64),
+    })
+
+    total_days = spot_df["day_id"].n_unique()
+    metrics = compute_metrics(trades_df, lot_size=lot_size, total_trading_days=total_days)
+
+    return trades_df, metrics
 
 
 def _load_strategy_class(strategy_name: str):
@@ -189,20 +350,22 @@ def main():
             continue
 
         try:
-            # Compute signals with default params
-            default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
-            signals = strategy.compute(spot_df, option_df, vix_df, default_params)
+            # Run full backtest
+            trades_df, metrics = backtest_strategy(
+                strategy, spot_df, option_df, vix_df, lot_size,
+            )
 
-            n_ce = int(signals.buy_ce.sum())
-            n_pe = int(signals.buy_pe.sum())
-            log.info("  Signals: %d CE, %d PE", n_ce, n_pe)
+            n_trades = metrics.get("total_trades", 0)
+            sharpe = metrics.get("sharpe_annualized", 0.0)
+            total_pnl = metrics.get("total_pnl", 0.0)
+            log.info("  Trades: %d, Sharpe: %.4f, Net PnL: INR %.0f",
+                     n_trades, sharpe, total_pnl)
 
             all_results.append({
                 "name": name,
-                "verdict": "SMOKE_TEST_OK",
+                "verdict": "BACKTEST_OK" if n_trades > 0 else "ZERO_TRADES",
                 "underlying": underlying,
-                "ce_signals": n_ce,
-                "pe_signals": n_pe,
+                "metrics": metrics,
             })
 
         except Exception as e:

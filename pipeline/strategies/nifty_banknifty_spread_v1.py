@@ -32,11 +32,13 @@ class Strategy(BaseStrategy):
         time_min = spot_df["time_minutes"].to_numpy().astype(np.int32)
         day_id = spot_df["day_id"].to_numpy().astype(np.int32)
 
-        # We need BANKNIFTY data — load it from the same spot file
-        from pipeline.config import SPOT_FILE, BANKNIFTY_SYMBOL
-        from pipeline.data_loader import load_spot_data
+        # We need BANKNIFTY data — load once and cache on the class
+        if not hasattr(self, '_bn_cache') or self._bn_cache is None:
+            from pipeline.config import BANKNIFTY_SYMBOL
+            from pipeline.data_loader import load_spot_data
+            self._bn_cache = load_spot_data(BANKNIFTY_SYMBOL)
 
-        bn_df = load_spot_data(BANKNIFTY_SYMBOL)
+        bn_df = self._bn_cache
         bn_close = np.full(n, 0.0)
 
         if bn_df is not None and not bn_df.is_empty():

@@ -189,9 +189,13 @@ def load_all_data() -> dict:
 
 
 def add_atm_strike(spot_df: pl.DataFrame, step: int) -> pl.DataFrame:
-    """Add ATM strike column to spot data."""
+    """Add ATM strike column to spot data.
+
+    Uses floor(x + 0.5) instead of round() to avoid banker's rounding
+    (round-half-to-even) at exact midpoints between strikes.
+    """
     return spot_df.with_columns(
-        (pl.col("close") / step).round(0).cast(pl.Float64).mul(step).alias("atm_strike")
+        (pl.col("close") / step + 0.5).floor().cast(pl.Float64).mul(step).alias("atm_strike")
     )
 
 

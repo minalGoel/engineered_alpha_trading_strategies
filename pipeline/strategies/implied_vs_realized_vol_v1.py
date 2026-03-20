@@ -54,8 +54,11 @@ class Strategy(BaseStrategy):
             rv[i] = np.std(log_ret[i-720:i]) * annualize * 100  # in % like VIX
             vrp[i] = vix_close[i] - rv[i]
 
-        for i in range(720, n):
-            window = vrp[max(0, i-720):i]
+        # VRP z-score needs at least 720 bars of valid VRP data.
+        # VRP itself only starts at bar 720, so z-score is valid from bar 1440.
+        vrp_z_start = 720 * 2  # need 720 bars of valid VRP for z-score
+        for i in range(vrp_z_start, n):
+            window = vrp[i-720:i]
             vrp_mean[i] = np.mean(window)
             s = np.std(window)
             vrp_std[i] = s if s > 0.1 else 0.1
@@ -67,7 +70,7 @@ class Strategy(BaseStrategy):
         target_pts = params.get("target_pts", 10.0)
 
         in_session = (time_min >= self.session_start_minutes) & (time_min < self.session_end_minutes)
-        warmed = np.arange(n) >= 720
+        warmed = np.arange(n) >= vrp_z_start
 
         # VRP very high (VIX way above RV) → fear overpriced → BUY_CE
         buy_ce = in_session & warmed & (vrp_z > z_high)

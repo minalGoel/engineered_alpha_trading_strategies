@@ -1,0 +1,128 @@
+{
+  "name": "volatility_contraction_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["atr-squeeze", "volatility-contraction", "breakout", "intraday", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_177.json",
+  "original_name": "volatility_contraction_breakout_v1",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP programs temporarily pause directional orders during data assimilation windows — post-news absorption, pre-lunch lulls, pre-event waits — creating 3-5 minute stretches where every 5-second bar has below-average range and volume, pushing the 60-second ATR below the 20th percentile of its 10-minute rolling distribution. When this equilibrium cracks, market makers adjusting delta hedges and trapped short-side participants covering wrong-way positions create a concentrated burst of flow visible as a single 5-second bar with range > 1.5× recent ATR and volume > 1.8× 5-minute average. At 5-second resolution we enter exactly that expansion bar rather than waiting for a full 1-minute confirmation, capturing the first 10-20 NIFTY spot points of the breakout leg. VWAP direction filters out mid-session noise: above-VWAP squeezes that break up are institutionally supported; below-VWAP squeezes breaking down confirm selling pressure.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "atr_12",
+      "formula": "SMA(TrueRange, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars × 5s = 60-second ATR. Original used ATR(14) on 1-min (= 14-min window). Compressed to 1-min because we hold 15-90s — we need to detect squeeze at the same timescale as our hold, not at a 14-min scale which would be insensitive to intraday micro-compressions relevant to our trade."
+    },
+    {
+      "name": "atr_pctile_120",
+      "formula": "percentile_rank(atr_12[i-119:i+1]) within rolling 120-bar (10-min) window, per day",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute rolling window for session percentile. Original used full-session percentile; a 10-min rolling window is more stable intraday — early-session ATR spikes (opening volatility) can skew a full-session distribution and make genuine mid-session squeezes appear normal. 10-min window keeps the reference local and responsive."
+    },
+    {
+      "name": "squeeze_count",
+      "formula": "consecutive bars where atr_pctile_120 < threshold (resets at day boundary)",
+      "lookback": 72,
+      "computed_on": "spot",
+      "purpose": "Required minimum 36 bars (3 min) of sustained low-ATR bars. Original required 10 min of squeeze (10 bars × 1-min); scaled proportionally: our hold is 3-5× shorter than original (90s vs 15-45 min), so squeeze requirement also compresses. 3-min squeeze on NIFTY is sufficient to trap participants and create the overshoot when it resolves."
+    },
+    {
+      "name": "vol_ratio_60",
+      "formula": "volume / SMA(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60 bars = 5-min volume SMA. Detects the expansion-bar volume surge (> 1.8×) that distinguishes a genuine breakout from a drift. Same principle as original's 2× volume surge on 20-bar SMA; 5-min SMA captures a representative intraday volume baseline."
+    },
+    {
+      "name": "bar_range",
+      "formula": "high - low",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Expansion bar trigger: bar_range > atr_12 * 1.5 signals ATR regime change. Original used 1.5× ATR threshold on 1-min bars; same ratio applies at 5-second resolution."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from day open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open — no scaling needed. Provides directional bias: breakout above VWAP is institutionally supported (buy flow dominant); breakout below VWAP reflects distribution."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "squeeze_count in last 5 bars >= 36 (sustained 3-min squeeze recently ended)",
+        "current bar NOT in squeeze (atr_pctile >= threshold)",
+        "bar_range > atr_12 * expansion_ratio (expansion bar: range expansion)",
+        "vol_ratio_60 > volume_ratio_threshold (volume surge confirms genuine breakout)",
+        "close > vwap (bullish institutional context)"
+      ],
+      "confirmation": "All 5 conditions simultaneously true at bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "squeeze_count in last 5 bars >= 36 (sustained 3-min squeeze recently ended)",
+        "current bar NOT in squeeze (atr_pctile >= threshold)",
+        "bar_range > atr_12 * expansion_ratio (expansion bar)",
+        "vol_ratio_60 > volume_ratio_threshold (volume surge)",
+        "close < vwap (bearish institutional context)"
+      ],
+      "confirmation": "All 5 conditions simultaneously true at bar close"
+    },
+    "entry_price": "limit order at bar close"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option pts = ~6 NIFTY spot pts at delta 0.5. A genuine squeeze breakout should not retrace into the squeeze range within 30 seconds — if NIFTY gives back 6 pts immediately, the expansion bar was a false signal (seller absorbed) and we exit.",
+    "target_points": 6,
+    "target_rationale": "6 option pts = ~12 NIFTY spot pts. NIFTY squeeze breakouts from 3-5 min compressions typically extend 15-25 spot pts on the first leg; 12 pts captures the lower-end median at 1:2 R:R, leaving room for the thesis to be right without requiring a perfect setup.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none (VIX not used; strategy relies on micro ATR percentile which adapts to the prevailing vol regime)",
+    "time_filter": "09:30-15:20 IST; skip first 15 min to allow sufficient session history for stable ATR percentile",
+    "volume_filter": "vol_ratio_60 > 1.8 on expansion bar (genuine breakout, not random drift)",
+    "trend_filter": "VWAP alignment required — close > VWAP for CE, close < VWAP for PE",
+    "spread_filter": "limit orders, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.50,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.0,
+    "edge_decay_risk": "medium — squeeze breakout patterns are well-known (TTM Squeeze) but ATR percentile at 5-second resolution with volume surge filter is less commonly exploited on NIFTY index directly"
+  },
+  "adaptation_notes": "Three major changes from the equity original: (1) Squeeze requirement compressed from 10 min to 3 min (36 bars) proportional to the 5× shorter hold time; (2) ATR period compressed from 14 to 12 bars (1 min) to detect micro-contractions relevant to 15-90s holds; (3) ATR percentile window changed from full-session to rolling 10-min to avoid early-session vol distortion. The core concept — low-ATR compression → expansion bar with volume → directional continuation — translates directly to NIFTY because the index experiences the same institutional order-pause dynamics, just at shorter timescales.",
+  "weaknesses": [
+    "NIFTY index volume is noisier than single-stock volume at 5s granularity — vol_ratio threshold may generate false positives during random volume spikes",
+    "ATR percentile with rolling 10-min window can misclassify the first 10 min of each session where history is sparse",
+    "3-min squeeze minimum may be too short on high-volatility days when 'squeezes' form and break repeatedly without directional follow-through",
+    "Stop at 3 pts is tight for ATM options — theta decay and bid-ask noise at 5s may hit stops on valid setups"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_177.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["ATR(14)", "ATR_session_percentile", "squeeze_bars(>=10)", "VWAP", "volume_ratio(20)"],
+    "original_stop": "opposite side of squeeze range",
+    "original_target": "2.0 * ATR_14"
+  }
+}

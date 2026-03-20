@@ -1,0 +1,128 @@
+{
+  "name": "volume_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volume", "breakout", "session-high-low", "institutional-flow", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_178.json",
+  "original_name": "volume_breakout_v1",
+  "mechanism": "On NIFTY, session highs and lows are well-known algorithmic trigger levels watched simultaneously by institutional participants, index ETF arbitrageurs, and systematic momentum strategies. When NIFTY volume on a single 5-second bar exceeds 5x its 20-minute baseline while price simultaneously prints a new session high (or low), it signals that multiple large buy (or sell) programs were executed aggressively at that level, overwhelming all resting supply (or demand) at the breakout point. Unlike individual stocks where 5x spikes often reflect single-participant block deals with no directional intent, a NIFTY index volume spike of this magnitude represents broad multi-participant coordination — FII directional flow, domestic MF rebalancing, and futures arbitrage converging on the same side at the same moment. This breadth of participation creates 30-120 second momentum persistence as trailing systematic strategies recognize the breakout confirmation and add to the move.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-14:30 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "0-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vol_sma_240",
+      "formula": "SMA(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "240 bars = 20-minute volume baseline, identical TIME window to original SMA(20) on 1-min bars. The same 20-minute context is needed to judge what is 'normal' volume for the current session period. Compressing to a shorter window would capture transient volume variation rather than the true intraday baseline; a longer window would miss intraday volume regime shifts (e.g., post-news elevated activity)."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume / vol_sma_240",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Volume spike ratio. Threshold 5x kept identical to original — the core selectivity filter. At 5s resolution on NIFTY, a 5x spike compresses approximately 16 minutes of average volume into a single 5-second bar, which is an even more extreme concentration than the original equity application and thus carries higher conviction for institutional participation."
+    },
+    {
+      "name": "session_high",
+      "formula": "running_max(high) since 09:15 IST",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative session high — no scaling needed, this is a fixed time window from market open. New session high on current bar detected by comparing high[i] > session_high[i-1]."
+    },
+    {
+      "name": "session_low",
+      "formula": "running_min(low) since 09:15 IST",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative session low — symmetric to session_high. Same fixed-time-window logic, no bar-count scaling needed."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative (typical_price * volume) / cumulative_volume from 09:15 IST",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP as trend/regime alignment filter. Bullish breakouts require close > VWAP (price pushing above fair value supported by volume), bearish breakouts require close < VWAP. No scaling — VWAP is always session-cumulative regardless of bar frequency."
+    },
+    {
+      "name": "close_position",
+      "formula": "(close - low) / (high - low)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Bar close position in range [0=low, 1=high]. Requires >= 0.70 for bullish breakout (strong conviction — bar closed near its high, not faded). Directly translated from original condition '(close-low)/(high-low) > 0.7' — applies identically at 5s resolution."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_ratio >= 5.0 (volume spike at least 5x 20-minute average)",
+        "high > prev_session_high (new all-time intraday high on this bar)",
+        "close > open (green/bullish bar)",
+        "close > vwap (above session fair value)",
+        "close_position >= 0.70 (closed in top 30% of bar range)"
+      ],
+      "confirmation": "All 5 conditions met simultaneously on the same 5-second bar. No next-bar confirmation (unlike original 1-min strategy) — simultaneous multi-condition filtering on 5s bars provides equivalent selectivity."
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_ratio >= 5.0 (volume spike at least 5x 20-minute average)",
+        "low < prev_session_low (new all-time intraday low on this bar)",
+        "close < open (red/bearish bar)",
+        "close < vwap (below session fair value)",
+        "close_position <= 0.30 (closed in bottom 30% of bar range)"
+      ],
+      "confirmation": "All 5 conditions met simultaneously on the same 5-second bar."
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts (~10 spot pts at ATM delta ~0.5). A volume-confirmed session high breakout that reverses 10 spot points within 120 seconds signals the institutional buying was absorbed and the thesis has failed. This is tight by design — genuine momentum breakouts should not retrace to within 10 pts of the breakout level if the institutional flow thesis is correct.",
+    "target_points": 8,
+    "target_rationale": "8 option pts (~16 spot pts). NIFTY breakouts with institutional volume confirmation typically extend 15-25 spot points over 30-120 seconds (per observed 2-minute NIFTY move magnitudes: 5-10 option pts). Targeting 16 spot pts captures roughly 65% of the median expected continuation while maintaining 1:1.6 R:R — avoids overstaying a rapidly-moving, time-limited trade.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 14:30 IST"
+  },
+  "filters": {
+    "vix_filter": "none — volume breakouts are structurally valid in both high and low volatility regimes; VIX level does not change whether institutional flow is present",
+    "time_filter": "09:30-14:30 IST; skip first 15 min (opening auction distortion identical to original 09:30 start); end 14:30 to avoid final-hour forced-close liquidity effects",
+    "volume_filter": "5x 20-min SMA is the core filter — extremely strict, by design. Expect 0-2 qualifying signals per session.",
+    "trend_filter": "VWAP alignment required — breakout direction must match price vs VWAP relationship",
+    "spread_filter": "not applicable — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low-moderate — 5x threshold is stricter than most implementations; NIFTY institutional volume patterns are structurally stable"
+  },
+  "adaptation_notes": "Core thesis preserved: extreme volume (5x) + simultaneous price breakout to new session extreme signals genuine institutional participation. Key adaptations: (1) Universe shifted from NIFTY 200 stocks to NIFTY index itself — same volume principle, but NIFTY volume represents aggregate multi-participant institutional flow rather than single-stock events, increasing signal quality. (2) Lookback kept at 240 bars = 20 minutes (same TIME window as original SMA(20) on 1-min). The absolute time window matters, not the bar count. (3) Next-bar confirmation dropped — at 5s resolution, the simultaneous 5-condition requirement on a single bar provides equivalent filtering without requiring a 5-second delay. (4) Stop/target recalibrated from equity-style percentages (0.25%/0.50% = 55/110 spot pts) to option premium points appropriate for 30-120s holds: 5/8 pts targeting 10-16 spot pt moves. (5) ATR_14 from original dropped — not meaningful for 30-120s option hold periods. (6) Session end extended slightly from original 14:00 to 14:30 to capture more afternoon institutional flow while still avoiding final-hour dynamics.",
+  "weaknesses": [
+    "5x volume spikes on NIFTY index are extremely rare — may see 0-1 qualifying signals per session",
+    "NIFTY index volume at 5s resolution can be zero or unreliable on low-activity periods; vol_sma=0 bars produce no signal (safe but further reduces frequency)",
+    "Session high/low breakouts in first 30 minutes (pre-filter window) can be fakeouts; the 09:30 time filter mitigates but doesn't eliminate this",
+    "No next-bar confirmation means a single aggressive bar that immediately reverses can trigger a false entry before the signal decays"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_178.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["vol_spike (volume/SMA20)", "session_high", "session_low", "VWAP", "ATR_14"],
+    "original_stop": "VWAP or 0.25% from entry (whichever tighter)",
+    "original_target": "0.5% from entry"
+  }
+}

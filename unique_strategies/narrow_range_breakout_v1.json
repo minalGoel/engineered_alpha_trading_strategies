@@ -1,0 +1,117 @@
+{
+  "name": "narrow_range_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["narrow-range", "volatility-compression", "breakout", "intraday", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_176.json",
+  "original_name": "narrow_range_breakout_v1 (equity NR4/NR7)",
+  "mechanism": "When NIFTY consolidates into a 60-second narrow range — where the 12-bar high-low spread falls below 60% of the prior 10-minute average range — it signals a momentary equilibrium where algorithmic market-makers have balanced their books on both sides and directional order flow has been absorbed without price movement. This micro-compression acts as a coiled spring: once price breaks above or below the compressed zone, it triggers cascading algorithmic entries from stat-arb systems, CTA trend-followers, and options delta-hedgers rebalancing simultaneously. On NIFTY specifically, these micro-compressions are reliable pre-breakout signals because the index's continuous institutional participation (TWAP/VWAP algos) creates predictable flow patterns — a break above the compressed range confirms that one side's outstanding orders have finally overwhelmed the equilibrium, with follow-through lasting 30-90 seconds before the next equilibrium forms.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-10",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "high_12",
+      "formula": "rolling_max(high, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 60 seconds — the compression window. The original NR4/NR7 used the first-hour range (60 min) as the reference range for the breakout. We scale from 60-minute first-hour range to a 60-second intraday micro-range, proportional to our 30-90s hold time vs the original 30-90 minute hold. NOT a 12x mechanical scaling — the 12-bar choice reflects the minimum compression window that can meaningfully distinguish equilibrium from random noise at 5s resolution."
+    },
+    {
+      "name": "low_12",
+      "formula": "rolling_min(low, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Lower bound of the 60-second compression zone. Used as the breakout threshold for bearish entries (close < low_12 of prior bar)."
+    },
+    {
+      "name": "range_12",
+      "formula": "high_12 - low_12",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "The width of the 60-second range. The core compression metric — compared against range_mean_120 to determine if a 'narrow range' condition is active."
+    },
+    {
+      "name": "range_mean_120",
+      "formula": "rolling_mean(range_12, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "120 bars = 10 minutes of range_12 history. The original strategy needed 4-7 trading days of daily ranges to define 'narrow.' At 5s intraday, we use the prior 10 minutes to define 'typical' range for the current session's volatility regime. 10 minutes (not longer) because session volatility character shifts frequently on NIFTY — early session, pre-event, and late session have very different range distributions. Using a longer window would mix regimes and blur the compression signal."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset per session_date",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Direction filter aligned with the original strategy's VWAP filter. Buying CE only when close > VWAP ensures breakouts are aligned with session-level institutional demand. Prevents fading the dominant intraday order flow direction."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "range_12[i-1] < nr_ratio * range_mean_120[i-1]  (prior bar was in narrow range compression)",
+        "close[i] > high_12[i-1]  (current bar closes above the compressed range)",
+        "close[i] > vwap[i]  (direction aligned with session VWAP)"
+      ],
+      "confirmation": "Single-bar confirmation — close must break above the prior bar's 12-bar range high while above VWAP. No second-bar required (unlike original) because at 5s we can't afford 2-bar wait at 30-90s hold."
+    },
+    "buy_pe": {
+      "conditions": [
+        "range_12[i-1] < nr_ratio * range_mean_120[i-1]  (prior bar was in narrow range compression)",
+        "close[i] < low_12[i-1]  (current bar closes below the compressed range)",
+        "close[i] < vwap[i]  (direction aligned with session VWAP)"
+      ],
+      "confirmation": "Single-bar confirmation — close must break below the prior bar's 12-bar range low while below VWAP."
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points corresponds to ~8 NIFTY spot points retracement (delta ~0.5). If NIFTY reverses 8+ points back into the compression zone within 30 seconds, the breakout thesis has failed — genuine compression breakouts on NIFTY should not immediately retrace more than half the typical 10-minute range (range_mean_120 / 2 ≈ 8-12 spot pts). This also gives 1:1.75 risk-reward at the 7-pt target.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. NIFTY compression breakouts (where 60s range < 60% of 10-min mean) typically extend 15-25 spot points on the initial leg as cascading algorithmic entries pile in. 7 pts captures the lower end of this range conservatively, consistent with the 30-90s time stop. Risk-reward is 1:1.75 (stop 4, target 7), so we need ~37% win rate to break even; with genuine directional edge expected at 50-55%, this strategy should be profitable.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — VIX not used; compression ratio is self-normalizing to current session volatility",
+    "time_filter": "entries only 09:30-15:20 IST; skip first 15 minutes of session (09:15-09:30) where NR detection is unreliable before range_mean_120 warms up",
+    "volume_filter": "none explicit — volume implicitly filtered via VWAP direction alignment",
+    "trend_filter": "VWAP alignment (close > VWAP for CE, close < VWAP for PE) serves as session-level trend filter",
+    "spread_filter": "limit order execution — no spread filter needed"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.89,
+    "edge_decay_risk": "moderate — if NIFTY microstructure becomes more efficient (e.g., more HFT participation), compression breakout follow-through may shorten. Current NIFTY structure with large institutional TWAP flows supports this pattern."
+  },
+  "adaptation_notes": "The original NR4/NR7 strategy required multi-day daily range data (4-7 trading days) to define 'narrow' and traded the first-hour breakout on a 30-90 minute hold. The conversion replaces multi-day daily range compression with intraday micro-compression: instead of comparing today's daily range to the last 4-7 days, we compare the 60-second range to the prior 10-minute mean range. The hold time compresses proportionally from 30-90 minutes to 30-90 seconds. The VWAP alignment filter is preserved from the original. The NR7 preferred over NR4 nuance (stronger signal) is captured implicitly by the tunable nr_ratio parameter — a lower nr_ratio is a stronger compression signal. The original's first-hour range breakout is replaced by a breakout above/below the compressed 12-bar zone on the breakout bar itself (no 2-bar confirmation — too slow at 5s resolution).",
+  "weaknesses": [
+    "At 5s resolution, false breakouts from the compression zone are more frequent than daily NR patterns — noise is higher",
+    "range_mean_120 needs 240 bars (20 min) of warmup, limiting entry signals early in each session",
+    "Compression breakouts near session-level VWAP are less reliable when VWAP is itself in a narrow range",
+    "High trade frequency (4-10/day) means transaction costs compound faster than the daily original"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_176.json",
+    "original_timeframe": "1-min bars",
+    "original_hold_time": "30-90 minutes",
+    "original_indicators": ["is_NR4", "is_NR7", "first_hour_high", "first_hour_low", "ATR_14d", "VWAP", "volume_SMA_20"],
+    "original_stop": "midpoint of first-hour range",
+    "original_target": "1.5 × ATR(14d)"
+  }
+}

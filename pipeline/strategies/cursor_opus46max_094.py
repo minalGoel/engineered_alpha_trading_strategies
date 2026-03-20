@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session time filter — entries were firing outside session_start=570/session_end=870
 """ORB Failure Trade v1 — cursor_opus46max_094
 
 Thesis: Failed ORB breakouts (price breaks then reverses within 15 bars)
@@ -147,11 +148,12 @@ class Strategy(BaseStrategy):
 
         rsi = _compute_rsi(close, 14)
         vix_ok = (vix >= vix_lo) & (vix <= vix_hi)
+        time_ok = (time_min >= 570) & (time_min <= 870)
 
         # ── Failed down => go long (trapped shorts liquidating) ──
-        long_entry = failed_down & (rsi > rsi_long) & (close > orb_low) & vix_ok
+        long_entry = failed_down & (rsi > rsi_long) & (close > orb_low) & vix_ok & time_ok
         # ── Failed up => go short (trapped longs liquidating) ──
-        short_entry = failed_up & (rsi < rsi_short) & (close < orb_high) & vix_ok
+        short_entry = failed_up & (rsi < rsi_short) & (close < orb_high) & vix_ok & time_ok
 
         signal_exit_long = np.zeros(n, dtype=np.bool_)
         signal_exit_short = np.zeros(n, dtype=np.bool_)

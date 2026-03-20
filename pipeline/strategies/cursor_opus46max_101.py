@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session time filter — entries fired before session_start=575 (times 555-574)
 """Bid-Ask Imbalance v1 — cursor_opus46max_101
 
 Thesis: When bid-side depth significantly exceeds ask-side depth (approximated
@@ -111,11 +112,13 @@ class Strategy(BaseStrategy):
             sustained_short[i] = bai_zscore[i] < -1.0 and bai_zscore[i-1] < -1.0
 
         vix_ok = vix < vix_max
+        time_min_arr = df["time_minutes"].to_numpy()
+        time_ok = (time_min_arr >= 575) & (time_min_arr <= 915)
 
         long_entry = ((bai_zscore > bai_zs_thresh) & (vol_ratio > vol_ratio_thresh) &
-                      (close > vwap) & vix_ok & sustained_long)
+                      (close > vwap) & vix_ok & sustained_long & time_ok)
         short_entry = ((bai_zscore < -bai_zs_thresh) & (vol_ratio > vol_ratio_thresh) &
-                       (close < vwap) & vix_ok & sustained_short)
+                       (close < vwap) & vix_ok & sustained_short & time_ok)
 
         # Signal exit: BAI_zscore crosses zero
         sig_exit_long = np.zeros(n, dtype=np.bool_)

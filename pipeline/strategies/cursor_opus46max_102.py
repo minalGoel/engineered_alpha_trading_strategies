@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session time filter — entries fired before session_start=575 (times 555-574)
 """Trade Size Clustering v1 — cursor_opus46max_102
 
 Thesis: Institutional orders split into round-lot sizes create detectable
@@ -101,8 +102,11 @@ class Strategy(BaseStrategy):
             if all_high and cluster_dir[i] < 0:
                 sustained_short[i] = True
 
-        long_entry = (large_flag > 0.4) & (cluster_dir > 0) & (close >= vwap) & sustained_long
-        short_entry = (large_flag > 0.4) & (cluster_dir < 0) & (close <= vwap) & sustained_short
+        time_min_arr = df["time_minutes"].to_numpy()
+        time_ok = (time_min_arr >= 575) & (time_min_arr <= 920)
+
+        long_entry = (large_flag > 0.4) & (cluster_dir > 0) & (close >= vwap) & sustained_long & time_ok
+        short_entry = (large_flag > 0.4) & (cluster_dir < 0) & (close <= vwap) & sustained_short & time_ok
 
         # Signal exit: cluster direction reverses sign
         sig_exit_long = np.zeros(n, dtype=np.bool_)

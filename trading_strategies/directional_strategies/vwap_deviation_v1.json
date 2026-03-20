@@ -1,0 +1,8 @@
+{
+  "strategy_name": "vwap_deviation_v1",
+  "category": "mean_reversion",
+  "thesis": "Price far from 5-min VWAP tends to revert. VWAP is meaningful as a multi-minute reference level.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/vwap_deviation_v1.py"
+}

@@ -1,0 +1,8 @@
+{
+  "strategy_name": "vix_spot_predict_v1",
+  "category": "cross_instrument",
+  "thesis": "VIX spikes 5-15 seconds before NIFTY drops. Fear index leads spot.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/vix_spot_predict_v1.py"
+}

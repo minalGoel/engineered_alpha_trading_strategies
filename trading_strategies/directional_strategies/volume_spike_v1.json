@@ -1,0 +1,8 @@
+{
+  "strategy_name": "volume_spike_v1",
+  "category": "microstructure",
+  "thesis": "Sudden outsized volume on underlying indicates aggressive order flow predicting continuation.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/volume_spike_v1.py"
+}

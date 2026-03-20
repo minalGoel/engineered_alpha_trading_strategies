@@ -1,0 +1,8 @@
+{
+  "strategy_name": "spot_acceleration_v1",
+  "category": "momentum",
+  "thesis": "Accelerating price moves have more energy and are more likely to continue. Deceleration signals exhaustion.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/spot_acceleration_v1.py"
+}

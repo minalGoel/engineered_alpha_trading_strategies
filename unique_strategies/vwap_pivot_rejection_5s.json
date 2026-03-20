@@ -1,0 +1,97 @@
+{
+  "name": "vwap_pivot_rejection_5s",
+  "version": "1.0.0",
+  "author": "adapted from aggregated_from_x_indian_traders",
+  "original_strategy": "vwap_pivot_rejection_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_14.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 20,
+  "thesis": "Exploiting rejection/pullback at VWAP + pivot zone confluence due to institutional benchmark execution. Inefficiency from retail ignoring multi-confirmation. Survives because zone width filter + index direction required; manual traders can't execute at scale.",
+  "mechanism": "VWAP is the institutional execution benchmark. When spot deviates significantly from session VWAP, algorithmic execution engines increase order flow to mean-revert their fills toward VWAP. This creates measurable gravitational pull, especially during lower-volume mid-session periods when fewer competing flows are present.",
+  "indicators": [
+    {
+      "name": "vwap_pivot_zone",
+      "formula": "abs(vwap - pivot_s4) < 0.2% OR abs(vwap - pivot_r1) < 0.2%",
+      "lookback": 12,
+      "computed_on": "option",
+      "purpose": "confluence zone"
+    },
+    {
+      "name": "rejection",
+      "formula": "doji or pinbar at zone",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "entry trigger"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_pivot_zone == True",
+        "price above zone AND rejection == True",
+        "vix < 20"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_pivot_zone == True",
+        "price below zone AND rejection == True",
+        "vix < 20"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "exit on opposing signal",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 20",
+    "volume_filter": "volume > average",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Regime dependency: fails when zone is wide (>0.2%)",
+    "Liquidity constraints: pivot levels crowded on expiry",
+    "Crowding: heavily shared on X by multiple educators"
+  ],
+  "prior_art": "VWAP + Pivot combo (popularized by @learntotrade365 on X)",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; apply to NIFTY/BANKNIFTY index instead of FnO universe; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

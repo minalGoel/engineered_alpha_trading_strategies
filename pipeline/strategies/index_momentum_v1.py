@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session time filter — entries were firing outside session_start/session_end window
 """Index Momentum — GPT_10_of_10
 
 Thesis: When the Nifty50 index has strong 5-bar return (>0.2%), individual stocks
@@ -30,6 +31,10 @@ class Strategy(BaseStrategy):
 
         n = len(df)
 
+        # ── Session time filter ──
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Index 5-bar return (%) ──
         idx_close = df["index_close"].to_numpy().astype(np.float64)
         idx_close = np.nan_to_num(idx_close, nan=0.0)
@@ -40,8 +45,8 @@ class Strategy(BaseStrategy):
                 idx_ret_5[i] = (idx_close[i] - idx_close[i - 5]) / idx_close[i - 5] * 100.0
 
         # ── Entry ──
-        long_entry = idx_ret_5 > ret_thresh
-        short_entry = idx_ret_5 < -ret_thresh
+        long_entry = (idx_ret_5 > ret_thresh) & time_ok
+        short_entry = (idx_ret_5 < -ret_thresh) & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

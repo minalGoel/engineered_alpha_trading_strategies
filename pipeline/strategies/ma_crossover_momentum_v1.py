@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session time filter — entries were firing outside session_start/session_end window
 """MA Crossover Momentum — Grok_7_of_10
 
 Thesis: 9/21 EMA crossover with volume and index direction confirmation
@@ -52,6 +53,10 @@ class Strategy(BaseStrategy):
         vix = np.nan_to_num(df["vix"].to_numpy().astype(np.float64), nan=99.0)
         idx = np.nan_to_num(df["index_close"].to_numpy().astype(np.float64), nan=0.0)
 
+        # ── Session time filter ──
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         atr14 = _compute_atr(high, low, close, 14)
 
         # EMA 9 and 21
@@ -77,8 +82,8 @@ class Strategy(BaseStrategy):
         vol_ok = rel_vol > rv_thresh
 
         # Entry: EMA crossover + direction confirmation
-        long_entry = (ema9 > ema21) & vol_ok & vix_ok & (idx_ret5 > 0)
-        short_entry = (ema9 < ema21) & vol_ok & vix_ok & (idx_ret5 < 0)
+        long_entry = (ema9 > ema21) & vol_ok & vix_ok & (idx_ret5 > 0) & time_ok
+        short_entry = (ema9 < ema21) & vol_ok & vix_ok & (idx_ret5 < 0) & time_ok
 
         # Signal exit: opposite crossover
         signal_exit_long = ema9 < ema21

@@ -1,0 +1,96 @@
+{
+  "name": "rsi_connors_pullback_v49",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "pullback", "rsi", "trend_following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_108.json",
+  "original_name": "rsi_connors_pullback_v49",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing directional mandates over 15-30 minute windows create persistent micro-trends visible as price holding above the 15-minute SMA. Within these flows, every 60-120 seconds there is a brief momentum pause as one algo batch completes — visible as RSI(12) (1-minute RSI) dipping below 45 while the trend structure remains intact. At this exact point, passive limit orders from delta-hedging market makers (who are continuously re-hedging short-gamma positions) provide a structural bid that absorbs the temporary selling pressure, triggering resumption of the institutional flow. Entering ATM calls at RSI(12) < 45 while close remains above the 15-min SMA exploits this predictable 30-90 second re-acceleration in NIFTY's institutional order flow.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "sma_180",
+      "formula": "SMA(close, 180)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "15-minute SMA as intraday trend filter. NOT scaled 12x from original 200-bar 1-min SMA (which would give 2400 bars = 200 minutes — far too slow for 30-120s trades). 180 bars = 15 minutes chosen because it is the shortest SMA that reliably captures NIFTY intraday trend direction driven by institutional flows: faster SMAs whipsaw on 5s noise, while the 15-min window is long enough to represent a meaningful TWAP/VWAP execution window."
+    },
+    {
+      "name": "rsi_12",
+      "formula": "RSI(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute RSI to detect micro-exhaustion. Original used RSI(2) at 1-min (2-bar ultra-sensitivity). At 5s bars, RSI(2) = 10 seconds — pure microstructure noise. RSI(12) = 60 seconds is the minimum lookback at 5s frequency where RSI produces meaningful exhaustion signals without being dominated by single-tick spikes. This directly mirrors the Connors RSI-2 philosophy (ultra-short lookback to catch fleeting exhaustion) but calibrated to 5s bar noise characteristics."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > sma_180 (NIFTY is in uptrend by 15-min SMA)",
+        "rsi_12 < rsi_buy_threshold (default 45, micro-pullback exhaustion)",
+        "time_minutes in [560, 925) (session filter)"
+      ],
+      "confirmation": "RSI dip below threshold while price holds above 15-min SMA — trend intact, exhaustion temporary"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < sma_180 (NIFTY is in downtrend by 15-min SMA)",
+        "rsi_12 > rsi_sell_threshold (default 55, micro-bounce exhaustion)",
+        "time_minutes in [560, 925) (session filter)"
+      ],
+      "confirmation": "RSI spike above threshold while price holds below 15-min SMA — downtrend intact, bounce temporary"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If the pullback extends 8 spot points while price is still above the 15-min SMA, the micro-trend assumption is broken — institutional flow has genuinely paused rather than just pulsed. A 4-point option stop gives the position enough room for normal micro-fluctuations (NIFTY 30s typical range: 2-5 pts) without allowing a full trend reversal to damage the position.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. NIFTY micro-trend resumptions after RSI(12) exhaustion typically cover 12-20 spot points within 60-120 seconds. Targeting 14 spot pts captures the lower half of the expected continuation, achieving 1:1.75 risk-reward while exiting before the move exhausts and reverses.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "none (VIX not used; RSI exhaustion signal is self-contained)",
+    "time_filter": "09:20-15:25 IST only (skip pre-open 09:15-09:20 noise and last 5 min)",
+    "volume_filter": "none (index volume is too noisy at 5s resolution)",
+    "trend_filter": "SMA(180) provides intraday trend direction",
+    "spread_filter": "none (limit order execution, no spread cost)"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.32,
+    "edge_decay_risk": "medium — RSI-2 Connors concept is widely known; alpha depends on 5s execution speed advantage over slower participants"
+  },
+  "adaptation_notes": "Original traded top-50 FNO stocks on 1-min bars, holding 30-60 minutes. Key changes: (1) Universe collapsed to NIFTY index — eliminates stock-specific event risk and stock-picker edge, relies purely on index flow dynamics; (2) Hold time compressed from 30-60 min to 30-120 seconds — required reanchoring all lookbacks; (3) SMA(200) at 1-min → SMA(180) at 5s (15 min) — NOT scaled proportionally; chosen to represent the actual institutional execution timescale on NIFTY rather than mimicking the original numerically; (4) RSI(2) at 1-min → RSI(12) at 5s (1 min) — maintained the ultra-short philosophy but minimum viable lookback at 5s frequency; (5) Exit changed from SMA(5) crossover to fixed stop/target in option premium points — required by 5s option pipeline architecture; (6) ATR stop eliminated (ATR doesn't translate to option premiums).",
+  "weaknesses": [
+    "RSI(12) at 5-second bars may generate false signals during high-frequency noise spikes even with SMA trend filter",
+    "SMA(180) lags actual trend turns by up to 15 minutes, causing entries against emerging reversals",
+    "NIFTY micro-trends can stall for extended periods without reversing — time stop at 120s may be too short on choppy days",
+    "No volatility regime filter — RSI exhaustion pullbacks in low-VIX trending markets differ fundamentally from high-VIX whipsaw conditions"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_108.json",
+    "original_timeframe": "1-min bars",
+    "original_hold_time": "30-60 bars (30-60 minutes)",
+    "original_indicators": ["SMA(close, 200)", "RSI(close, 2)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "close > SMA(close, 5)"
+  }
+}

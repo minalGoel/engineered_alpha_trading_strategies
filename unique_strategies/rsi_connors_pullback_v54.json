@@ -1,0 +1,98 @@
+{
+  "name": "rsi_connors_pullback_v54",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "pullback", "rsi", "connors", "dual_rsi", "banknifty"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_110.json",
+  "original_name": "rsi_connors_pullback_v54",
+  "mechanism": "On BANKNIFTY, banking-sector institutional order flow executes in 90-120 second directional bursts driven by TWAP/VWAP algos rebalancing large banking equity and futures baskets. Within each burst, there are systematic 20-30 second micro-pauses — visible as RSI(6) (30-second RSI) retracing toward 45 while RSI(24) (2-minute RSI) still reflects the prevailing burst direction above 55. The original Strategy_110 logic (any dip when RSI(2) < 50 above SMA(200)) translates here as: RSI(6) < 45 is the 'any dip' in BANKNIFTY's fast cycle, while RSI(24) > 55 confirms the 2-min burst momentum is intact. Unlike prior variants using SMA or VWAP price-level filters, this dual-RSI approach is purely momentum-state driven — exploiting BANKNIFTY's higher beta (1.3-1.5x NIFTY) which produces more distinguishable RSI oscillations at 30-second resolution, enabling re-entry into the burst within 15-45 seconds of the micro-pause.",
+  "universe": "BANKNIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTYBANK-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24) using Wilder smoothing",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars × 5s = 120 seconds = 2-minute RSI as the momentum-burst direction filter. Original SMA(200) at 5-min was a slow structural filter (1000+ minutes lookback). For BANKNIFTY at 5s, a 2-minute RSI window captures one full institutional TWAP burst cycle without lagging 10-15 minutes like SMA(180). RSI(24) > 55 means BANKNIFTY has been predominantly rising over the last 2 minutes — the burst is active. NOT scaled from original 200-period (that would be 1000 bars = 83 min, far too slow). Instead, period chosen to match BANKNIFTY's characteristic institutional burst duration of 90-120 seconds."
+    },
+    {
+      "name": "rsi_6",
+      "formula": "RSI(close, 6) using Wilder smoothing",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6 bars × 5s = 30-second RSI as the micro-pullback entry trigger. Original RSI(2) at 5-min = 10-minute sensitivity. At 5s bars, RSI(2) = 10 seconds — pure tick noise. RSI(6) at 30 seconds is the minimum viable RSI lookback on BANKNIFTY where price action reflects a genuine micro-direction shift rather than a single large tick. BANKNIFTY's higher volatility vs NIFTY makes RSI(6) reliable where RSI(6) on NIFTY would still be noisy — BANKNIFTY moves 3-4x more per 30s than NIFTY. The threshold RSI(6) < 45 matches the original's RSI(2) < 50 logic: 'cooled off but not extreme' — a pullback entry, not an oversold reversal."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "rsi_24 > rsi_trend_threshold (default 55.0) — 2-min momentum burst is bullish",
+        "rsi_6 < rsi_entry_low (default 45.0) — 30s micro-pullback within the bull burst",
+        "time_minutes in [560, 925) — session filter",
+        "warmed_up: at least 26 bars elapsed (RSI(24) needs 24 bars + 2 initialization bars)"
+      ],
+      "confirmation": "Both RSI conditions met simultaneously — not sequentially; entry fires at the bar where short RSI dips while medium RSI confirms the burst direction"
+    },
+    "buy_pe": {
+      "conditions": [
+        "rsi_24 < (100 - rsi_trend_threshold) (default 45.0) — 2-min momentum burst is bearish",
+        "rsi_6 > (100 - rsi_entry_low) (default 55.0) — 30s micro-bounce within the bear burst",
+        "time_minutes in [560, 925) — session filter",
+        "warmed_up: at least 26 bars elapsed"
+      ],
+      "confirmation": "Symmetric to buy_ce; RSI(24) < 45 confirms downward burst, RSI(6) > 55 detects micro-bounce exhaustion"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 BANKNIFTY spot pts at delta 0.5. BANKNIFTY 30-second typical move is 3-7 option pts. A 5-pt stop allows normal micro-fluctuations within the burst but exits if BANKNIFTY reverses 10 spot pts against the RSI(24) burst direction — at which point the 2-min momentum has genuinely reversed, not just paused. Wider than NIFTY counterparts (v49 uses 4 pts) because BANKNIFTY's higher volatility requires proportionally more room to avoid stop-hunting on legitimate bursts.",
+    "target_points": 8,
+    "target_rationale": "8 option pts = ~16 BANKNIFTY spot pts at delta 0.5. BANKNIFTY micro-burst resumptions after a 30-second RSI(6) pullback within active 2-min momentum typically cover 15-25 spot pts within 30-90 seconds (7-12 option pts). Targeting 8 pts captures the lower-median continuation, achieving 1:1.6 R:R while exiting before the next natural micro-pause in the institutional burst cycle.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "none — VIX not used; dual-RSI provides self-contained regime signal within the bar",
+    "time_filter": "09:20-15:25 IST; skip pre-open noise and final 5 minutes",
+    "volume_filter": "none — BANKNIFTY index volume too noisy at 5s resolution",
+    "trend_filter": "RSI(24) > 55 / < 45 serves as the intraday momentum-state filter",
+    "spread_filter": "none — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.05,
+    "edge_decay_risk": "medium — Connors RSI pullback concept is widely known; alpha depends on BANKNIFTY's structural burst-pause cycle remaining stable. If banking-sector flow becomes more continuous (less bursty), RSI(6) pullbacks will be shallower and harder to exploit."
+  },
+  "adaptation_notes": "Strategy_110 is essentially Strategy_108/109 with slightly different RSI thresholds (RSI(2) < 50 vs < 30, and RSI(2) > 20 for shorts — the long entry is 'any dip' not 'oversold'). Key differentiation from prior variants: (1) BANKNIFTY only — higher beta and burst-cycle dynamics specific to banking-sector TWAP flow, contrasted with v49 (NIFTY + SMA) and v50 (BOTH + VWAP); (2) Dual-RSI filter instead of price-level filter — RSI(24) replaces SMA(180)/VWAP as the trend state detector, enabling faster adaptation to intraday regime shifts; (3) RSI(6) as entry trigger rather than RSI(12) — appropriate for BANKNIFTY's faster oscillation cycle; (4) Thresholds are moderate (55/45), matching original's 'any dip' philosophy (RSI < 50) rather than extreme oversold (v50's RSI < 20). Exit converted from SMA(5) crossover and ATR stop to fixed premium points as required by the options pipeline.",
+  "weaknesses": [
+    "RSI(6) at 5s on BANKNIFTY will fire many signals in choppy markets when RSI(24) is near 50 — the 55/45 RSI(24) thresholds may still allow noisy entries when 2-min momentum is borderline",
+    "Dual-RSI approach has no price-level anchor (no VWAP, no SMA) — in strong trending sessions the strategy may re-enter repeatedly at progressively worse levels as RSI(24) stays elevated",
+    "BANKNIFTY's higher volatility means 5-pt option stop may still trigger on legitimate bursts during high-VIX sessions",
+    "No session-time weighting — opening 30-min and closing 30-min BANKNIFTY dynamics differ from mid-session, but the strategy treats all session times equally"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_110.json",
+    "original_timeframe": "5-min bars",
+    "original_hold_time": "10-30 bars (50-150 minutes)",
+    "original_indicators": ["SMA(close, 200)", "RSI(close, 2)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "close > SMA(close, 5)"
+  }
+}

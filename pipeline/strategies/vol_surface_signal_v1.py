@@ -67,9 +67,13 @@ class Strategy(BaseStrategy):
                 # For each bar, compute skew
                 day_atm = atm_strike[day_indices]
 
-                for local_i, global_i in enumerate(day_indices):
+                # Pre-compute skew more efficiently: sample every 12th bar (1 per minute)
+                datetimes = spot_df["datetime"].to_list()
+                sample_step = 12  # every minute instead of every 5s
+                for local_i in range(0, len(day_indices), sample_step):
+                    global_i = int(day_indices[local_i])
                     atm = day_atm[local_i]
-                    bar_time = spot_df["datetime"][global_i]
+                    bar_time = datetimes[global_i]
 
                     # Get OTM put (ATM - 100) and OTM call (ATM + 100) premiums
                     otm_put = day_opts.filter(
@@ -87,7 +91,11 @@ class Strategy(BaseStrategy):
                         put_prem = otm_put["close"].tail(1).to_list()[0]
                         call_prem = otm_call["close"].tail(1).to_list()[0]
                         if call_prem > 0:
-                            skew[global_i] = put_prem / call_prem - 1.0
+                            s = put_prem / call_prem - 1.0
+                            # Fill forward to next sample
+                            end = min(local_i + sample_step, len(day_indices))
+                            for j in range(local_i, end):
+                                skew[int(day_indices[j])] = s
 
         # Skew z-score
         skew_mean = np.zeros(n)

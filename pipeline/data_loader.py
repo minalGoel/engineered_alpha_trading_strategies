@@ -76,9 +76,11 @@ def _add_time_columns(df: pl.DataFrame) -> pl.DataFrame:
         df = df.drop("_date")
 
     # time_minutes = minutes from midnight IST
+    # CRITICAL: dt.hour() returns Int8 (max 127). 9*60=540 overflows Int8.
+    # Must cast to Int32 BEFORE multiplication.
     df = df.with_columns(
-        (pl.col("datetime").dt.hour() * 60 + pl.col("datetime").dt.minute())
-        .cast(pl.Int32)
+        (pl.col("datetime").dt.hour().cast(pl.Int32) * 60
+         + pl.col("datetime").dt.minute().cast(pl.Int32))
         .alias("time_minutes")
     )
     return df

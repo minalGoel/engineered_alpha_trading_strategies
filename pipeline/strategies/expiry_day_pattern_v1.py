@@ -51,7 +51,7 @@ class Strategy(BaseStrategy):
                     continue
 
                 day_indices = np.where(day_mask)[0]
-                session_date = spot_df["session_date"][day_indices[0]]
+                session_date = spot_df["session_date"].to_list()[int(day_indices[0])]
 
                 day_opts = option_df.filter(
                     (pl.col("session_date") == session_date) &

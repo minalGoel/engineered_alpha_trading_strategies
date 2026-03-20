@@ -1,0 +1,130 @@
+{
+  "name": "vwap_pivot_rejection_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vwap", "pivot", "mean_reversion", "microstructure", "rejection"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_14.json",
+  "original_name": "vwap_pivot_rejection_v1",
+  "mechanism": "On NIFTY, when the session VWAP drifts within 25 spot points of a daily pivot level (S1, PP, or R1 computed from previous day's H/L/C), two independent algorithmic order clusters concentrate at the same price region — VWAP-benchmarked futures algorithms defending their average fill cost and pivot-level conditional order queues (stop-clusters and entry triggers built around round-number pivot math). A 30-second price test into this double-friction zone followed by a dominant directional wick (close ending in the opposite direction from the test, 55%+ of 30s range as the rejection wick) signals institutional absorption held: both VWAP defenders and pivot algo buyers/sellers absorbed supply/demand and the zone validated. The next 45-90 seconds typically see 15-25 NIFTY spot points of follow-through as momentum algorithms confirm the zone defended and pile in.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["previous_day_ohlc_for_pivots"]
+  },
+  "indicators": [
+    {
+      "name": "session_vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume), reset each session",
+      "lookback": null,
+      "computed_on": "spot",
+      "purpose": "Cumulative measure from session open — no lookback scaling needed. VWAP is the universal benchmark for NIFTY futures/options execution algorithms; its convergence with a pivot level is the core zone-activation signal."
+    },
+    {
+      "name": "pivot_pp",
+      "formula": "(prev_day_high + prev_day_low + prev_day_close) / 3",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Standard pivot point from previous day's OHLC — fixed daily calculation, no frequency scaling required. PP is the strongest magnetic level in standard pivot theory and is watched by index futures algo desks."
+    },
+    {
+      "name": "pivot_r1",
+      "formula": "2 * pivot_pp - prev_day_low",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "First resistance pivot — the most commonly traded pivot level above PP. Institutional option market makers use R1 to set gamma-hedge triggers on NIFTY. When VWAP aligns here, upside tests face double resistance."
+    },
+    {
+      "name": "pivot_s1",
+      "formula": "2 * pivot_pp - prev_day_high",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "First support pivot — mirror of R1 below PP. Algo buy triggers cluster at S1 from index rebalancing and protective put delta-hedge demand. When VWAP aligns here, downside tests face double support."
+    },
+    {
+      "name": "zone_active",
+      "formula": "min(abs(vwap - pivot_s1), abs(vwap - pivot_pp), abs(vwap - pivot_r1)) <= confluence_pts",
+      "lookback": null,
+      "computed_on": "spot",
+      "purpose": "Boolean flag that the double-friction zone exists at this bar. Without this filter, VWAP rejection signals are ordinary; the pivot confluence is what makes them high-conviction. Default confluence_pts=25 (tunable 10-50)."
+    },
+    {
+      "name": "wick_rejection_6",
+      "formula": "Over 6-bar (30s) window: lower_wick_frac = (close - roll_low) / roll_range, upper_wick_frac = (roll_high - close) / roll_range",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "30-second rejection window — the minimum needed at 5s resolution to identify a genuine test-and-reject pattern. A single 5s bar is too noisy (any large tick creates a wick). 6 bars captures a full probe-and-defense sequence. Longer than 12 bars (60s) would confirm too late, after the initial move is already underway."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "zone_active == True (VWAP within confluence_pts of any pivot level)",
+        "abs(close - vwap) <= vwap_proximity_pts (price currently near VWAP)",
+        "6-bar lower wick fraction >= wick_threshold (bullish rejection wick dominates)",
+        "6-bar net move is positive (close > open of 6 bars ago)",
+        "vix < vix_threshold",
+        "time in 09:30-15:20 IST"
+      ],
+      "confirmation": "Wick fraction >= 0.55 ensures at least 55% of the 30s range was rejected downside — institutional buyers absorbed the test"
+    },
+    "buy_pe": {
+      "conditions": [
+        "zone_active == True (VWAP within confluence_pts of any pivot level)",
+        "abs(close - vwap) <= vwap_proximity_pts (price currently near VWAP)",
+        "6-bar upper wick fraction >= wick_threshold (bearish rejection wick dominates)",
+        "6-bar net move is negative (close < open of 6 bars ago)",
+        "vix < vix_threshold",
+        "time in 09:30-15:20 IST"
+      ],
+      "confirmation": "Wick fraction >= 0.55 ensures institutional sellers absorbed the upside test at the zone"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (≈8 NIFTY spot points at delta ~0.5) — a genuine VWAP+pivot zone defense should not allow more than 8 spot points of re-entry into the zone; if NIFTY closes back through the zone center, both the VWAP defense and pivot level have been breached and the thesis is wrong. This is tighter than typical because rejection signals at double-friction zones should be high-conviction.",
+    "target_points": 7,
+    "target_rationale": "7 option points (≈14 NIFTY spot points) — successful VWAP+pivot rejections typically see 15-25 spot point directional follow-through in the first 45-90 seconds as momentum algos join the institutional move. 7 pts captures the lower bound of this range at 1:1.75 risk-reward.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "vix < 20 (tunable 14-28) — at VIX > 20 pivot zones tend to break rather than hold as fear overrides benchmark execution discipline",
+    "time_filter": "09:30-15:20 IST — skip first 15 minutes (ORB noise and VWAP unstable until ~30 bars), flatten 10 min before close",
+    "volume_filter": "none — NIFTY index volume is structural and not directly indicative of zone defense quality",
+    "trend_filter": "none — rejection works in both directions relative to zone",
+    "spread_filter": "none (limit order execution)"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.2,
+    "edge_decay_risk": "medium — as NIFTY pivot trading becomes more algorithmic, zones may be front-run, reducing the number of clean rejection setups per day"
+  },
+  "adaptation_notes": "Original uses top-50 FnO stocks with 1-min bars and holds 8-25 min. Three changes for 5s NIFTY: (1) Universe narrowed from 50 stocks to NIFTY index only — pivot + VWAP confluence is more reliable on the liquid index than individual stocks because index VWAP resets cleanly and institutional coverage is higher. (2) Pivot levels simplified from S4/R1 (an unusual pairing from the original — S4 is the 4th Camarilla level, very far below) to S1/PP/R1 (the standard institutional reference set for NIFTY algo desks). S4 is not widely watched on NIFTY. (3) Entry trigger replaced from doji/pinbar pattern on 1-min bars to 6-bar (30s) wick fraction on 5s bars — the same mechanical idea (dominant rejection wick) but adapted to sub-minute resolution where single-bar pattern recognition is too noisy. Original's 0.6*ATR stop converted to fixed 4 option points based on typical NIFTY zone-rejection move magnitudes.",
+  "weaknesses": [
+    "Zone sparsity: VWAP only aligns with a pivot level a few times per session — trade frequency is inherently low (3-6 per day)",
+    "Day 1 data: No previous day pivot on the first day of data; strategy skips first session",
+    "Fast sessions: In strongly trending NIFTY sessions, VWAP drifts far from pivots — zone never activates",
+    "S1/PP/R1 crowding on expiry day: pivot levels extremely well-known and may be front-run, reducing rejection quality"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_14.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "8-25 bars (8-25 min)",
+    "original_indicators": ["vwap", "pivot_s4", "pivot_r1", "doji/pinbar rejection"],
+    "original_stop": "0.6 * ATR(20)",
+    "original_target": "next pivot level"
+  }
+}

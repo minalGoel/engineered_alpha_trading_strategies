@@ -1,0 +1,118 @@
+{
+  "name": "vwap_zscore_bounce_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vwap", "z-score", "mean-reversion", "statistical", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_140.json",
+  "original_name": "vwap_zscore_bounce_v1",
+  "mechanism": "When NIFTY's VWAP z-score crosses ±2.0 sigma, the index is at a statistically rare deviation from session VWAP — a level where TWAP/VWAP-benchmarked institutional algorithms (mutual fund block desks, FII VWAP execution) start getting significantly worse fills relative to their benchmark. This creates mechanical reversal pressure: at z < −2.0, TWAP buy orders accelerate (buying cheap vs. benchmark), injecting demand that arrests the selloff; at z > +2.0, TWAP sell orders accelerate, capping the rally. At 5-second resolution we detect the exact bar where z-score begins turning back from its extreme (zscore_delta3 sign flip), entering the reversion within the first 15 seconds rather than waiting for a full 1-minute confirmation bar on the original timeframe.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset per session",
+      "lookback": "session_cumulative",
+      "computed_on": "spot",
+      "purpose": "Session cumulative VWAP — no bar-size scaling needed as it is inherently time-independent. Same concept at 5s as at 1-min: accumulated price-volume average from 09:15."
+    },
+    {
+      "name": "vwap_dev",
+      "formula": "close - vwap",
+      "lookback": "session_cumulative",
+      "computed_on": "spot",
+      "purpose": "Raw deviation from session VWAP in index points. Feeds the rolling normalizer below."
+    },
+    {
+      "name": "vwap_dev_std",
+      "formula": "STDEV(vwap_dev, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Rolling 30-minute (360 bars × 5s) standard deviation of VWAP deviations — SAME 30-min window as original (STDEV(vwap_dev, 30) on 1-min bars). This is NOT scaled blindly; 30 minutes is the correct session-regime window regardless of bar size: it captures how much NIFTY typically deviates from VWAP TODAY without becoming stale. Shorter windows (e.g., 5 min) would be too noisy; longer would miss intraday regime shifts."
+    },
+    {
+      "name": "vwap_zscore",
+      "formula": "vwap_dev / vwap_dev_std",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Normalized VWAP deviation. Threshold ±2.0 corresponds to the 5% tail of deviations — the zone where institutional flow reversal is mechanical rather than discretionary."
+    },
+    {
+      "name": "zscore_delta3",
+      "formula": "vwap_zscore[t] - vwap_zscore[t-3]",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "15-second rate-of-change of z-score. Replaces the original's single-bar '> prev bar' turning confirmation. At 5s, a 3-bar (15s) window filters false turns from 5-second noise while still capturing the reversion onset far earlier than a 1-minute bar would. A positive delta3 after z < −2.0 means the extreme is definitively behind us."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_zscore < -zscore_threshold (default -2.0)",
+        "zscore_delta3 > 0 (z-score turning upward over 15 seconds)",
+        "vix_close < vix_max (default 24.0)",
+        "time_minutes in [570, 920) (09:30–15:20 IST)"
+      ],
+      "confirmation": "zscore_delta3 > 0 — z-score has already begun reverting at entry bar, not just touched the threshold"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_zscore > +zscore_threshold (default +2.0)",
+        "zscore_delta3 < 0 (z-score turning downward over 15 seconds)",
+        "vix_close < vix_max (default 24.0)",
+        "time_minutes in [570, 920) (09:30–15:20 IST)"
+      ],
+      "confirmation": "zscore_delta3 < 0 — z-score already reversing before we enter"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "A NIFTY 2-sigma VWAP deviation typically spans 25-40 spot points. If the reversion thesis is correct, NIFTY should not move an additional 8 spot points against the position within the first 30 seconds of entry. 4 option points (≈8 spot pts at delta 0.5) grants enough room for normal 5-second volatility noise while cutting the trade if the trend is overwhelming the TWAP reversal.",
+    "target_points": 6,
+    "target_rationale": "Median first-leg reversion from a 2-sigma NIFTY VWAP deviation covers 20-30 spot points. Targeting 6 option points (≈12 spot pts) captures 40-50% of the expected move — the fastest, most reliable portion before momentum fades and re-entries by opposite-side TWAP orders stall the bounce. Gives 1:1.5 R:R vs. the 4-point stop.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 24 — above 24 NIFTY moves too violently for 2-sigma to mark a reliable extreme; z-score means less when realized vol is in a spike regime",
+    "time_filter": "09:30–15:20 IST; skip first 15 min (09:15–09:30) for VWAP stabilization with enough price-volume history",
+    "volume_filter": "none — index volume is noisy at 5s; VWAP already incorporates volume weighting",
+    "trend_filter": "none — strategy is counter-trend by design; strong trends are handled by stop_points",
+    "spread_filter": "N/A — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.49,
+    "edge_decay_risk": "low-moderate — VWAP benchmarking by institutions is a structural feature of Indian equity markets; will persist as long as SEBI-regulated mutual funds use VWAP benchmarks"
+  },
+  "adaptation_notes": "Three key changes from original: (1) Universe shifted from NIFTY 100 stocks to the NIFTY index itself — index is far more liquid, smoother, and more directly driven by institutional TWAP flow. (2) Lookback for vwap_dev_std kept at 30 minutes (360 bars) — same time window as original's STDEV(30 on 1-min) because session-regime volatility is the correct denominator at any bar size. (3) Confirmation changed from a single-bar z-score turn to a 3-bar (15s) zscore_delta3 — finer detection enabled by 5s bars. The VIX filter is unchanged from original (< 24). Volume surge filter dropped: index volume at 5s is too noisy to be informative.",
+  "weaknesses": [
+    "Z-score calculation requires ~10 bars minimum and ideally 360 bars (30 min) for a stable std; early-session signals are lower quality despite the 09:30 session start",
+    "In persistent trending sessions (e.g., post-budget, FOMC nights), z-score can breach ±2.0 and keep going — the TWAP reversal pressure may not overcome directional institutional demand",
+    "Rolling std can compress in low-volatility sessions, making z-score thresholds easier to breach on smaller absolute deviations than the strategy intends"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_140.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-45 minutes",
+    "original_indicators": ["VWAP (session cumulative)", "vwap_dev = close - VWAP", "vwap_dev_std = STDEV(vwap_dev, 30)", "vwap_zscore = vwap_dev / vwap_dev_std", "ATR(14)"],
+    "original_stop": "1.2 * ATR(14) fixed stop",
+    "original_target": "vwap_zscore crosses 0 (full reversion)"
+  }
+}

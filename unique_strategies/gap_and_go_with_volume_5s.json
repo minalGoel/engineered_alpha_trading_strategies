@@ -1,0 +1,113 @@
+{
+  "name": "gap_and_go_with_volume_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "gap_and_go_with_volume_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_49.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Stocks that gap up/down AND show > 3x normal volume in the first 5 minutes are experiencing genuine institutional interest, not just noise. When these stocks pull back to VWAP within the first 30 minutes and bounce, the continuation is highly reliable because the volume signature confirms real demand/supply. Edge persists because combining gap + volume + VWAP pullback is a 3-factor setup that most single-factor gap traders miss.",
+  "mechanism": "Large opening gaps that hold above the prior range indicate a genuine overnight revaluation. Participants who missed the gap chase the move, while short-sellers who are wrong-footed cover into the trend. The resulting buy pressure sustains the gap direction for the first 30-60 minutes until the new equilibrium is established.",
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open_of_day - prev_day_close) / prev_day_close * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "gap direction and size"
+    },
+    {
+      "name": "vol_5min_ratio",
+      "formula": "SUM(volume, 5) from 09:15 / SMA(SUM(volume, 5) from 09:15, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "is opening volume abnormal"
+    },
+    {
+      "name": "vwap_touch",
+      "formula": "abs(low - vwap) / vwap < 0.001 (for gap up) OR abs(high - vwap) / vwap < 0.001 (for gap down)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "VWAP pullback detection"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct > 0.5",
+        "vol_5min_ratio > 3.0",
+        "vwap_touch == True (price pulled back to VWAP)",
+        "close > vwap (bounced off VWAP)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct < -0.5",
+        "vol_5min_ratio > 3.0",
+        "vwap_touch == True",
+        "close < vwap"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 8,
+    "stop_points": 4,
+    "time_stop_bars": 24,
+    "signal_exit": "close breaks below VWAP (for longs)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 22",
+    "volume_filter": "vol_5min_ratio > 3.0 is core filter",
+    "expiry_filter": "skip on expiry day"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 7
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "VWAP pullback may not happen if gap momentum is too strong \u2014 missed entries",
+    "Opening 30 min spreads and slippage are elevated (4+ bps)",
+    "The 3x volume threshold is arbitrary \u2014 needs calibration per stock"
+  ],
+  "prior_art": "Gap and Go (Andrew Aziz, Warrior Trading) \u2014 adapted with VWAP pullback confirmation for Indian markets",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; apply to NIFTY/BANKNIFTY index instead of FnO universe; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

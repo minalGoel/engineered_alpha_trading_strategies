@@ -1,0 +1,120 @@
+{
+  "name": "fractal_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-3",
+  "original_strategy": "fractal_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_284.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 24,
+  "thesis": "Williams Fractals identify swing highs and lows as 5-bar patterns where the middle bar has the highest high (up fractal) or lowest low (down fractal) compared to the 2 bars on each side. On 1-min Indian intraday charts, fractal breakouts \u2014 when price breaks above an up fractal or below a down fractal \u2014 signal the start of a new micro-trend lasting 5-15 minutes. The inefficiency exists because: (1) fractals are commonly used on daily charts but rarely on 1-min charts where they identify institutional price discovery waves, (2) the 5-bar pattern provides natural noise filtering (random 1-bar spikes don't create fractals), (3) fractal levels align with where institutional limit orders cluster (at recent swing points), making breakouts significant. We combine fractals with the Alligator indicator (Bill Williams) to filter breakouts in trending vs ranging conditions.",
+  "mechanism": "Consolidation periods accumulate resting orders above resistance and below support. A breakout triggers these resting orders as stop-losses and breakout entries fire simultaneously. The resulting order flow imbalance overwhelms the resting liquidity, and market makers widen spreads in the breakout direction, accelerating the move.",
+  "indicators": [
+    {
+      "name": "fractal_up",
+      "formula": "1 if high[2] > high[0] AND high[2] > high[1] AND high[2] > high[3] AND high[2] > high[4] else 0 (confirmed 2 bars after formation)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "fractal_down",
+      "formula": "1 if low[2] < low[0] AND low[2] < low[1] AND low[2] < low[3] AND low[2] < low[4] else 0",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "alligator_jaw",
+      "formula": "SMA(median_price, 13) shifted forward 8 bars (where median_price = (high+low)/2)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "alligator_teeth",
+      "formula": "SMA(median_price, 8) shifted forward 5 bars",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "alligator_lips",
+      "formula": "SMA(median_price, 5) shifted forward 3 bars",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > most_recent_fractal_up_level (breakout above up fractal)",
+        "alligator_lips > alligator_teeth > alligator_jaw (Alligator is 'eating' \u2014 trending up)",
+        "close > VWAP",
+        "fractal_up_level is within last 20 bars (fresh fractal, not stale)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < most_recent_fractal_down_level (breakdown below down fractal)",
+        "alligator_lips < alligator_teeth < alligator_jaw (Alligator trending down)",
+        "close < VWAP",
+        "fractal_down_level is within last 20 bars"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "opposite fractal forms (up fractal after long entry signals potential top)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX between 12 and 25",
+    "volume_filter": "breakout bar volume > SMA(volume, 10) (volume confirms breakout)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Fractals are confirmed 2 bars after formation (need bars -1, 0, +1, +2 beyond the fractal bar). By the time the breakout is confirmed, the move may be 30-50% complete.",
+    "On range-bound days, fractal levels cluster densely, generating many false breakouts. The Alligator filter helps but doesn't eliminate all false signals.",
+    "The Alligator indicator with shifted SMAs introduces additional lag \u2014 the 'lips/teeth/jaw separated' condition confirms trends that are already well-established."
+  ],
+  "prior_art": "Williams (1995) 'Trading Chaos' \u2014 original fractal and Alligator system. Williams (1998) 'New Trading Dimensions'. Mandelbrot (1982) 'The Fractal Geometry of Nature' for mathematical fractal theory. In India, Williams' system is taught in advanced technical analysis courses.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

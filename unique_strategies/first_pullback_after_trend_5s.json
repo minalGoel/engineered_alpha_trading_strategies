@@ -1,0 +1,122 @@
+{
+  "name": "first_pullback_after_trend_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "first_pullback_after_trend_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_33.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "The first pullback in a new intraday trend (defined as 0.5%+ move from open in the first 45 min) is the highest-probability continuation entry. Early institutional flow that initiated the trend creates a 'base' of positioned traders. The first pullback attracts profit-takers, but the remaining institutional flow absorbs the selling, creating a continuation. Second and third pullbacks are progressively weaker. Edge persists because timing the 'first' pullback requires real-time structural analysis that's hard to do manually.",
+  "mechanism": "In a trending market, pullbacks occur when short-term profit-taking temporarily overwhelms the dominant institutional flow. The pullback exhausts as profit-takers finish selling, and the underlying institutional buying resumes. The pullback low creates a higher-probability entry point because the macro flow direction remains intact.",
+  "indicators": [
+    {
+      "name": "return_from_open",
+      "formula": "(close - open_of_day) / open_of_day * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "trend magnitude from open"
+    },
+    {
+      "name": "ema_9",
+      "formula": "EMA(close, 108)",
+      "lookback": 108,
+      "computed_on": "spot",
+      "purpose": "pullback level"
+    },
+    {
+      "name": "pullback_count",
+      "formula": "number of times close has touched ema_9 from the trend side since open",
+      "lookback": 3600,
+      "computed_on": "spot",
+      "purpose": "is this the first pullback"
+    },
+    {
+      "name": "rsi_14",
+      "formula": "RSI(close, 168)",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": "not too overextended"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "return_from_open > 0.5",
+        "pullback_count == 1 (first pullback only)",
+        "close <= ema_9 * 1.001 (price touches EMA 9)",
+        "close > vwap",
+        "rsi_14 > 40 AND rsi_14 < 70"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "return_from_open < -0.5",
+        "pullback_count == 1",
+        "close >= ema_9 * 0.999",
+        "close < vwap",
+        "rsi_14 > 30 AND rsi_14 < 60"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 6,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "close below vwap for longs, above vwap for shorts",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 25",
+    "volume_filter": "pullback bar volume < avg volume (light selling = healthy pullback)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 5
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Defining 'first pullback' algorithmically is tricky \u2014 small wiggles may count as pullbacks falsely",
+    "On V-shaped reversal days, the 'first pullback' is actually the start of a full reversal",
+    "Limited to morning session (before lunch), reducing total opportunity set significantly"
+  ],
+  "prior_art": "First pullback (Al Brooks, Lance Beggs) \u2014 price action concept systematized",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

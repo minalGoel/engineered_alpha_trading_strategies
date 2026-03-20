@@ -1,0 +1,98 @@
+{
+  "name": "european_open_momentum_continuation_5s",
+  "version": "1.0.0",
+  "author": "adapted from Gemini Quant",
+  "original_strategy": "european_open_momentum_continuation",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_344.json",
+  "underlying": "BANKNIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Exploits the liquidity influx from the London/European market open (13:30 IST). Arbitrageurs and global macro funds trade ADR/GDR underlyings at this time, creating a directional 'push' in liquid Indian large-caps that persists until the US pre-market opens.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "momentum_30",
+      "formula": "close / close[360]",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "trend_confirmation"
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "support_resistance"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time == 13:31",
+        "close > vwap",
+        "momentum_30 > 1.005",
+        "index_close > index_vwap"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "time == 13:31",
+        "close < vwap",
+        "momentum_30 < 0.995",
+        "index_close < index_vwap"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 6,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit on opposing signal",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25",
+    "volume_filter": "volume > average",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 5
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "European macro events can trigger reversals",
+    "Reliance on global flows which can be absent on European holidays"
+  ],
+  "prior_art": "Intraday Global Flow Arbitrage",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to BANKNIFTY index."
+}

@@ -1,0 +1,110 @@
+{
+  "name": "vix_regime_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from quant_system",
+  "original_strategy": "vix_regime_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_73.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "When India VIX spikes sharply intraday (>10% increase from prior close), it signals fear-driven selling. Historically, these spikes are short-lived and mean-revert within hours. The inefficiency exists because retail traders panic-sell during VIX spikes, creating temporary dislocations in liquid names. Not arbitraged because sizing during high-vol events is risky and most systematic funds reduce exposure exactly when this signal fires.",
+  "mechanism": "Short-term selling exhausts available demand at a price level, creating a temporary liquidity vacuum. Market makers who absorbed the selling begin marking prices back to reduce inventory risk. Limit buy orders resting below create a floor, and new participants entering the long side accelerate the reversion as the forced selling pressure dissipates.",
+  "indicators": [
+    {
+      "name": "vix_change_pct",
+      "formula": "(vix - vix_prev_close) / vix_prev_close * 100",
+      "lookback": 12,
+      "computed_on": "vix",
+      "purpose": "intraday VIX change from prior close"
+    },
+    {
+      "name": "vix_intraday_high",
+      "formula": "running_max(vix, from session start)",
+      "lookback": 12,
+      "computed_on": "vix",
+      "purpose": "track VIX peak"
+    },
+    {
+      "name": "vix_pullback",
+      "formula": "(vix_intraday_high - vix) / vix_intraday_high * 100",
+      "lookback": 12,
+      "computed_on": "vix",
+      "purpose": "VIX retracement from intraday peak"
+    },
+    {
+      "name": "nifty_return_60",
+      "formula": "(nifty50_close - nifty50_close[720]) / nifty50_close[60] * 100",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": "index return to confirm oversold"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vix_change_pct > 10",
+        "vix_pullback > 3",
+        "nifty_return_60 < -0.5",
+        "close > low of last 10 bars"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "directional signal bearish"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if VIX makes new intraday high after entry",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix spike > 10% from prior close (entry condition, not a filter)",
+    "volume_filter": "volume must be > 1.5x average (confirming real selling, not thin drift)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "reversion_threshold",
+      "default": 0.0005,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "VIX spikes caused by genuine regime change (war, financial crisis) do NOT mean-revert intraday. The VIX 30 cap helps but isn't foolproof. 2020 March would have been a bloodbath.",
+    "Low frequency: signal fires maybe 2-4 times per month. Not enough trades for statistical significance in short backtests.",
+    "Slippage during VIX spikes is extreme \u2014 5 bps may be optimistic. Real fills in panicky markets can be 10+ bps."
+  ],
+  "prior_art": "VIX mean-reversion is well-known in options literature. Adapted to equity intraday context. See CBOE research papers.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

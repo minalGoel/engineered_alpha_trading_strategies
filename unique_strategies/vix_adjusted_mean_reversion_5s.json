@@ -1,0 +1,111 @@
+{
+  "name": "vix_adjusted_mean_reversion_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "vix_adjusted_mean_reversion_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_64.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 16,
+  "thesis": "Standard VWAP mean reversion uses fixed thresholds (e.g., z-score < -1.5). But the optimal z-score threshold varies with VIX regime: in low VIX (< 14), even -1.0 z-score is a tradeable dislocation. In high VIX (> 20), you need -2.5+ z-score because dislocations are larger but also more noise. This adaptive strategy adjusts the entry z-score threshold based on current VIX level, capturing more trades in calm markets and being more selective in volatile markets. Edge persists because adaptive thresholds require continuous calibration that fixed-rule traders don't implement.",
+  "mechanism": "Short-term selling exhausts available demand at a price level, creating a temporary liquidity vacuum. Market makers who absorbed the selling begin marking prices back to reduce inventory risk. Limit buy orders resting below create a floor, and new participants entering the long side accelerate the reversion as the forced selling pressure dissipates.",
+  "indicators": [
+    {
+      "name": "vwap_zscore",
+      "formula": "(close - vwap) / rolling_std(close - vwap, 720)",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": "VWAP deviation"
+    },
+    {
+      "name": "adaptive_threshold",
+      "formula": "12.0 + (vix - 12) * 0.1 (scales from 1.0 at VIX=12 to 2.0 at VIX=22)",
+      "lookback": 12,
+      "computed_on": "option",
+      "purpose": "VIX-adaptive z-score threshold"
+    },
+    {
+      "name": "rsi_14",
+      "formula": "RSI(close, 168)",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": "confirmation"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_zscore < -1 * adaptive_threshold",
+        "rsi_14 < 40",
+        "vix < 25 (absolute cap)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_zscore > adaptive_threshold",
+        "rsi_14 > 60",
+        "vix < 25"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "vwap_zscore crosses 0",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 25 (absolute cap)",
+    "volume_filter": "volume > 50% of SMA(volume, 20)",
+    "expiry_filter": "skip on stock result days, expiry day"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "The linear scaling formula (1.0 + (vix-12)*0.1) is arbitrary \u2014 optimal mapping needs calibration",
+    "In VIX transitional zones, the threshold may flip between bars causing erratic behavior",
+    "Adding VIX dependence to the threshold adds a parameter that could be overfit"
+  ],
+  "prior_art": "Adaptive mean reversion \u2014 combining VWAP z-score with VIX regime. Novel parametrization.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

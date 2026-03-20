@@ -1,3 +1,7 @@
+# AUDIT FIX: skip-anomaly loop used range(start, i) which always includes the
+# triggering bar i-1 (arrival_ratio[i-1] > arr_thresh is the confirmation
+# condition), so every signal was cancelled.  Changed to range(start, i-1)
+# to exclude the triggering bar from the prior-anomaly check.
 """Trade Arrival Rate v1 — cursor_opus46max_109
 
 Thesis: When trade arrival rate deviates significantly from expected intraday
@@ -95,11 +99,11 @@ class Strategy(BaseStrategy):
                 sig_exit_long[i] = True
                 sig_exit_short[i] = True
 
-        # Skip if recent anomaly (within last 10 bars)
+        # Skip if recent anomaly (within last 10 bars, excluding triggering bar i-1)
         for i in range(n):
             if long_entry[i] or short_entry[i]:
                 start = max(0, i - 10)
-                for j in range(start, i):
+                for j in range(start, i - 1):
                     if arrival_ratio[j] > arr_thresh:
                         long_entry[i] = False
                         short_entry[i] = False

@@ -1,3 +1,6 @@
+# AUDIT FIX: long_entry and short_entry were not gated by a session time filter,
+# causing signals to fire before session_start (570) and after session_end (885).
+# Fix: apply time_ok mask to both entry arrays.
 """IT Sector Correlation Arbitrage — Opus_22
 
 Thesis: The log price ratio of a stock to its index mean-reverts on
@@ -64,6 +67,7 @@ class Strategy(BaseStrategy):
         high = df["high"].to_numpy().astype(np.float64)
         low = df["low"].to_numpy().astype(np.float64)
         index_close = df["index_close"].to_numpy().astype(np.float64)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # ── Log ratio ──
         safe_close = np.clip(close, 1e-8, None)
@@ -75,8 +79,9 @@ class Strategy(BaseStrategy):
 
         atr14 = _compute_atr(high, low, close, 14)
 
-        long_entry = zscore < -zs_entry
-        short_entry = zscore > zs_entry
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+        long_entry = (zscore < -zs_entry) & time_ok
+        short_entry = (zscore > zs_entry) & time_ok
 
         # ── Signal exit: zscore crosses zero ──
         sig_exit_long = np.zeros(n, dtype=np.bool_)

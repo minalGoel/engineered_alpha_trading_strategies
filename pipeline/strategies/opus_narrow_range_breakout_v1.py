@@ -1,3 +1,6 @@
+# AUDIT FIX: long_entry and short_entry had no session time filter, causing signals
+# to fire outside [session_start=570, session_end=870].
+# Fix: extract time_minutes and apply time_ok mask to both entry arrays.
 """Narrow Range (NR7) Breakout — Opus_15
 
 Thesis: A bar whose range is the narrowest of the past 7 bars signals
@@ -64,6 +67,7 @@ class Strategy(BaseStrategy):
         high = df["high"].to_numpy().astype(np.float64)
         low = df["low"].to_numpy().astype(np.float64)
         volume = df["volume"].to_numpy().astype(np.float64)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         bar_range = high - low
 
@@ -113,8 +117,9 @@ class Strategy(BaseStrategy):
                 if close[i] < nr7_low[i - 1]:
                     breakout_short[i] = True
 
-        long_entry = breakout_long & atr_declining & (close > ema20) & vol_ok
-        short_entry = breakout_short & atr_declining & (close < ema20) & vol_ok
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+        long_entry = breakout_long & atr_declining & (close > ema20) & vol_ok & time_ok
+        short_entry = breakout_short & atr_declining & (close < ema20) & vol_ok & time_ok
 
         # ── Signal exit: close back inside NR7 range ──
         sig_exit_long = np.zeros(n, dtype=np.bool_)

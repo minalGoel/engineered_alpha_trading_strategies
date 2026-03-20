@@ -1,3 +1,7 @@
+# AUDIT FIX: range_high/range_low were computed including the current bar (i+1),
+# making close[i] > range_high[i] structurally impossible (close <= high <= range_high).
+# Fix: use range_high/range_low from previous bar (i, exclusive) so the breakout
+# comparison is against the prior consolidated range.
 """Momentum Ignition — Opus_10
 
 Thesis: After 30+ bars of range-bound price action (0.2-0.8% width),
@@ -38,13 +42,16 @@ class Strategy(BaseStrategy):
         volume = np.nan_to_num(volume, nan=1.0)
         time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
-        # ── Rolling range high/low over min_bars ──
+        # ── Rolling range high/low over min_bars (exclusive of current bar) ──
+        # Use i (exclusive) so that range_high[i] is the max of bars BEFORE bar i,
+        # making close[i] > range_high[i] a valid breakout condition.
         range_high = np.zeros(n, dtype=np.float64)
-        range_low = np.zeros(n, dtype=np.float64)
-        for i in range(n):
+        range_low = np.full(n, np.inf, dtype=np.float64)
+        for i in range(1, n):
             start = max(0, i - min_bars)
-            range_high[i] = np.max(high[start:i + 1])
-            range_low[i] = np.min(low[start:i + 1])
+            range_high[i] = np.max(high[start:i])
+            range_low[i] = np.min(low[start:i])
+        range_low[range_low == np.inf] = 0.0
 
         safe_mid = np.clip((range_high + range_low) / 2.0, 1e-10, None)
         range_width_pct = (range_high - range_low) / safe_mid

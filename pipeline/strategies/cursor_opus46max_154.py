@@ -1,3 +1,6 @@
+# AUDIT FIX: vroc_sig was asymmetric (+1 only, never -1), capping max bearish consensus at -4
+# while max bullish consensus was +5, making short signals structurally rare.
+# Fixed vroc_sig to be directional: +1 when high volume on up move, -1 on down move.
 """Multi-Indicator Consensus v1 — cursor_opus46max_154
 
 Thesis: Requiring consensus from 5 diverse indicators (VWAP, RSI, MACD,
@@ -124,7 +127,10 @@ class Strategy(BaseStrategy):
         rsi_sig = np.where(rsi < rsi_lt, 1, np.where(rsi > rsi_st, -1, 0)).astype(np.float64)
         macd_sig = np.where(macd > macd_signal, 1, -1).astype(np.float64)
         stoch_sig = np.where(stoch_k < stoch_lt, 1, np.where(stoch_k > stoch_st, -1, 0)).astype(np.float64)
-        vroc_sig = np.where(vol_roc > 50.0, 1, 0).astype(np.float64)
+        price_dir = np.zeros(n, dtype=np.float64)
+        for i in range(10, n):
+            price_dir[i] = 1.0 if close[i] > close[i - 10] else -1.0
+        vroc_sig = np.where(vol_roc > 50.0, price_dir, 0).astype(np.float64)
 
         consensus = vwap_sig + rsi_sig + macd_sig + stoch_sig + vroc_sig
 

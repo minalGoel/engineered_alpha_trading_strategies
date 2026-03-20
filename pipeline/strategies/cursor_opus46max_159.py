@@ -1,3 +1,5 @@
+# AUDIT FIX: sharpe_entry default lowered from 2.0 to 1.0 — per-bar Sharpe on 1-min data never reaches 2.0
+# AUDIT FIX: sharpe_confirm default lowered from 1.5 to 0.8 to match achievable Sharpe range
 """Mean-Variance Optimal v1 — cursor_opus46max_159
 
 Thesis: Compute rolling instantaneous Sharpe (EMA of returns / sqrt(variance))
@@ -30,8 +32,8 @@ class Strategy(BaseStrategy):
 
     def tunable_params(self) -> list[TunableParam]:
         return [
-            TunableParam("sharpe_entry", default=2.0, low=1.0, high=3.5),
-            TunableParam("sharpe_confirm", default=1.5, low=0.8, high=2.5),
+            TunableParam("sharpe_entry", default=1.0, low=1.0, high=3.5),
+            TunableParam("sharpe_confirm", default=0.8, low=0.8, high=2.5),
             TunableParam("target_pct", default=0.0045, low=0.003, high=0.007),
             TunableParam("stop_loss_pct", default=0.0025, low=0.0015, high=0.004),
             TunableParam("trailing_stop_pct", default=0.0015, low=0.001, high=0.003),
@@ -39,8 +41,8 @@ class Strategy(BaseStrategy):
         ]
 
     def compute(self, df: pl.DataFrame, params: dict) -> StrategySignals:
-        sharpe_entry = params.get("sharpe_entry", 2.0)
-        sharpe_conf = params.get("sharpe_confirm", 1.5)
+        sharpe_entry = params.get("sharpe_entry", 1.0)
+        sharpe_conf = params.get("sharpe_confirm", 0.8)
         target_pct = params.get("target_pct", 0.0045)
         stop_pct = params.get("stop_loss_pct", 0.0025)
         trail_pct = params.get("trailing_stop_pct", 0.0015)

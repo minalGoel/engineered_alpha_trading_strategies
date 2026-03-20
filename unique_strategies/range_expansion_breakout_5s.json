@@ -1,0 +1,129 @@
+{
+  "name": "range_expansion_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "range_expansion_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_179.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "When a stock trades in a tight intraday base (range < 0.3% over 30+ bars), it represents a balance between supply and demand at a specific price level. When this base 'expands' \u2014 a single bar has a range > 3x the average bar range of the base period \u2014 it signals that the equilibrium has broken. The direction of expansion (above or below the base) predicts continuation because: (1) limit orders that formed the base are consumed, (2) stops placed just outside the base trigger, creating additional momentum, (3) the flat base attracted options sellers who now need to delta-hedge, amplifying the move. The edge exists because identifying tight bases in real-time and measuring expansion relative to the base requires custom computation.",
+  "mechanism": "Consolidation periods accumulate resting orders above resistance and below support. A breakout triggers these resting orders as stop-losses and breakout entries fire simultaneously. The resulting order flow imbalance overwhelms the resting liquidity, and market makers widen spreads in the breakout direction, accelerating the move.",
+  "indicators": [
+    {
+      "name": "base_range",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "avg_bar_range_30",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "current_bar_range",
+      "formula": "",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "expansion_ratio",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "ATR_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "base_range < 0.3 (tight base over last 30 bars)",
+        "expansion_ratio > 3.0 (current bar range is 3x the base average)",
+        "close > max(high, 30)[t-1] (breakout above base high)",
+        "volume > SMA(volume, 30) * 2.0",
+        "close > VWAP"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "base_range < 0.3",
+        "expansion_ratio > 3.0",
+        "close < min(low, 30)[t-1] (breakdown below base low)",
+        "volume > SMA(volume, 30) * 2.0",
+        "close < VWAP"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if price closes back within the base for 2 bars (false expansion)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 22; tight bases are more meaningful in moderate vol",
+    "volume_filter": "expansion bar volume > 2x 30-bar average volume",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Tight bases are rare intraday \u2014 may see 0-1 qualifying setups per day across the universe",
+    "The 3x expansion ratio can be triggered by a single anomalous bar (news flash, fat finger) \u2014 not always genuine momentum",
+    "Using base range as the target may be too ambitious if the base is very tight (0.1% base = 0.1% target, below costs)"
+  ],
+  "prior_art": "Base breakout is a core concept in Minervini ('Trade Like a Stock Market Wizard') for daily charts. William O'Neil's CANSLIM uses tight weekly consolidations. Intraday base breakouts are discussed in Andrew Aziz ('How to Day Trade for a Living'). The specific expansion ratio metric (3x bar range vs base average) adds quantitative rigor to a visual pattern.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

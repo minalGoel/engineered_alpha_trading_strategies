@@ -1,0 +1,122 @@
+{
+  "name": "relative_momentum_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "relative_momentum_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_165.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Stocks showing intraday return > 2x NIFTY 50 intraday return (when NIFTY is up) exhibit persistent relative momentum for the remainder of the session. This occurs because institutional allocation decisions (mutual funds, FIIs) that drive one stock to outperform unfold over hours, not minutes. If HDFC Bank is +1.5% while NIFTY is +0.5% at 11 AM, the buying flow that caused this outperformance likely has more volume to execute. The edge exists because intraday relative strength is rarely quantified \u2014 most use end-of-day RS. The inefficiency persists because measuring real-time relative momentum requires comparing individual stock returns to the index continuously, which is beyond standard charting.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "stock_return",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "nifty_return",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "relative_return",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "option",
+      "purpose": ""
+    },
+    {
+      "name": "relative_return_30",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "option",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "relative_return > 0.5",
+        "relative_return_30 > 0.3",
+        "nifty_return > -0.5 (market not crashing)",
+        "close > VWAP",
+        "bar_count_from_open > 75 (after 10:30)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "relative_return < -0.5",
+        "relative_return_30 < -0.3",
+        "nifty_return < 0.5 (market not rallying hard)",
+        "close < VWAP",
+        "bar_count_from_open > 75"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 6,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if relative_return_30 flips sign (short-term RS lost)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "no specific filter \u2014 relative momentum is market-condition-agnostic",
+    "volume_filter": "volume > 0.8x SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 5
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Relative strength can be entirely driven by a single morning block deal \u2014 not sustained institutional flow",
+    "By 10:30 when the signal fires, much of the day's outperformance may already be priced in (look-ahead problem)",
+    "This is a directional bet on one stock (not hedged) \u2014 exposed to market risk even though it is RS-motivated"
+  ],
+  "prior_art": "Relative strength momentum: Levy (1967), Jegadeesh & Titman (1993) on daily/monthly timeframes. IBD Relative Strength Rating (daily). Intraday RS continuation is less documented. Minervini ('Trade Like a Stock Market Wizard') discusses RS leaders but on daily charts. Intraday adaptation is relatively novel.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

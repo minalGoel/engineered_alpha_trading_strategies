@@ -1,0 +1,118 @@
+{
+  "name": "pivot_camarilla_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-3",
+  "original_strategy": "pivot_camarilla_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_286.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 16,
+  "thesis": "Camarilla pivot points, derived from the previous day's OHLC using specific multipliers (1.1/12, 1.1/6, 1.1/4, 1.1/2), create 8 intraday support/resistance levels (S1-S4, R1-R4) that are more tightly clustered around the previous close than standard pivot points. The key Camarilla trade: price bouncing between S3/R3 levels (mean reversion zone) accounts for ~65% of trading days, while S4/R4 breakouts signal trend days (~35%). In Indian markets, Camarilla levels work particularly well because: (1) the previous close anchors retail trader sentiment heavily (Indian retail psychology fixates on daily P&L), (2) institutional VWAP algorithms naturally create support/resistance near these mathematically derived levels, (3) the S3/R3 bounce is a self-fulfilling prophecy \u2014 Indian technical analysis channels widely teach Camarilla, creating order flow at these levels.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "cam_R4",
+      "formula": "prev_close + (prev_high - prev_low) * 1.1 / 2",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "cam_R3",
+      "formula": "prev_close + (prev_high - prev_low) * 1.1 / 4",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "cam_S3",
+      "formula": "prev_close - (prev_high - prev_low) * 1.1 / 4",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "cam_S4",
+      "formula": "prev_close - (prev_high - prev_low) * 1.1 / 2",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "cam_zone",
+      "formula": "'range' if close between cam_S3 and cam_R3; 'breakout_up' if close > cam_R4; 'breakout_down' if close < cam_S4; 'transition' otherwise",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "(cam_zone == 'range' AND close <= cam_S3 * 1.001) \u2014 bouncing at S3 support",
+        "OR (cam_zone == 'breakout_up' AND close > cam_R4) \u2014 breakout above R4 (trend day)",
+        "close > low of last 3 bars (for S3 bounce) OR volume surge (for R4 breakout)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "(cam_zone == 'range' AND close >= cam_R3 * 0.999) \u2014 rejecting at R3 resistance",
+        "OR (cam_zone == 'breakout_down' AND close < cam_S4) \u2014 breakdown below S4",
+        "close < high of last 3 bars (for R3 rejection) OR volume surge (for S4 breakdown)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "cam_zone changes (transition between range and breakout mode)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 22 for range trades (S3/R3 bounce). No VIX filter for breakout trades.",
+    "volume_filter": "breakout trades require volume > 1.5x average at breakout bar",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "On gap-up/gap-down days (opening beyond S4/R4), Camarilla levels are already breached and provide no useful structure for the day.",
+    "The 65/35 range/breakout day split is an average \u2014 in volatile regimes (VIX > 20), breakout days may dominate, and the range strategy will generate consecutive losses.",
+    "Camarilla levels are static (computed from previous day) and don't adapt to intraday price discovery. VWAP-based dynamic levels may be more appropriate."
+  ],
+  "prior_art": "Nick Stott \u2014 original Camarilla equation (1989). Pivot point trading methodology is covered in Murphy (1999) 'Technical Analysis of the Financial Markets'. In India, Camarilla pivots are featured on moneycontrol.com and are standard on Zerodha Kite charts.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

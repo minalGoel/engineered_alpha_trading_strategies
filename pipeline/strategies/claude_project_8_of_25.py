@@ -52,17 +52,24 @@ class Strategy(BaseStrategy):
         # ── VIX filter ──
         vix_ok = vix < vix_max
 
+        # ── Session time filter ──
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Long: index up significantly, stock lagging ──
         long_entry = (
             (idx_ret > idx_ret_thresh)
             & (stock_ret < idx_ret * lag_ratio)
             & vix_ok
+            & time_ok
         )
         # ── Short: index down significantly, stock lagging on downside ──
         short_entry = (
             (idx_ret < -idx_ret_thresh)
             & (stock_ret > idx_ret * lag_ratio)
             & vix_ok
+            & time_ok
         )
 
         return StrategySignals(

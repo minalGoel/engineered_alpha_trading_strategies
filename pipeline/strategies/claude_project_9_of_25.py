@@ -90,9 +90,14 @@ class Strategy(BaseStrategy):
         near_vwap_below = (close >= vwap * (1 - vwap_band)) & (close <= vwap)
         near_vwap_above = (close <= vwap * (1 + vwap_band)) & (close >= vwap)
 
+        # ── Session time filter ──
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Entry ──
-        long_entry = bull_div & (rsi < rsi_thresh) & near_vwap_below
-        short_entry = bear_div & (rsi > rsi_short) & near_vwap_above
+        long_entry = bull_div & (rsi < rsi_thresh) & near_vwap_below & time_ok
+        short_entry = bear_div & (rsi > rsi_short) & near_vwap_above & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

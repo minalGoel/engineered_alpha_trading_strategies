@@ -64,10 +64,15 @@ class Strategy(BaseStrategy):
         # ── Price recovering: close near or above VWAP ──
         price_near_vwap = (close >= vwap * 0.995)
 
+        # ── Session time filter ──
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Entry ──
         spike_ok = vix_change > vix_spike
         pullback_ok = vix_from_peak > vix_pb
-        long_entry = spike_ok & pullback_ok & price_near_vwap
+        long_entry = spike_ok & pullback_ok & price_near_vwap & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

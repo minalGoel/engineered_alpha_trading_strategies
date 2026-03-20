@@ -124,15 +124,22 @@ class Strategy(BaseStrategy):
 
         # ── Filters ──
         vix_ok = (vix >= vix_min) & (vix <= vix_max)
-        time_ok = time_mins <= 870  # no entry after 14:30
+        # AUDIT FIX 1: missing session lower bound in time_ok caused out-of-session entries
+        # AUDIT FIX 2: ema_bull/ema_bear are regime states (fire on every bar), not crossover
+        #   events — changed to crossover detection to keep signal frequency <= 10%
+        time_ok = (time_mins >= self.session_start) & (time_mins <= 870)
 
-        # ── EMA cross detection ──
+        # ── EMA crossover detection (only the bar where cross occurs) ──
         ema_bull = ema9 > ema21
         ema_bear = ema9 < ema21
+        ema_bull_prev = np.concatenate([[ema_bull[0]], ema_bull[:-1]])
+        ema_bear_prev = np.concatenate([[ema_bear[0]], ema_bear[:-1]])
+        ema_bull_cross = ema_bull & ~ema_bull_prev
+        ema_bear_cross = ema_bear & ~ema_bear_prev
 
         # ── Entry ──
-        long_entry = ema_bull & (adx > adx_thresh) & (close > vwap) & vix_ok & time_ok
-        short_entry = ema_bear & (adx > adx_thresh) & (close < vwap) & vix_ok & time_ok
+        long_entry = ema_bull_cross & (adx > adx_thresh) & (close > vwap) & vix_ok & time_ok
+        short_entry = ema_bear_cross & (adx > adx_thresh) & (close < vwap) & vix_ok & time_ok
 
         # ── Signal exit: EMA cross against position ──
         signal_exit_long = ema_bear

@@ -128,8 +128,11 @@ class Strategy(BaseStrategy):
 
         # ── Entry conditions ──
         vol_ok = volume > vol_ratio * avg_vol
-        long_entry = profile_valid & (close > vah) & vol_ok & (close > vwap)
-        short_entry = profile_valid & (close < val_arr) & vol_ok & (close < vwap)
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+        long_entry = profile_valid & (close > vah) & vol_ok & (close > vwap) & time_ok
+        short_entry = profile_valid & (close < val_arr) & vol_ok & (close < vwap) & time_ok
 
         # Trailing stop in pct from ATR
         median_atr = np.median(atr[atr > 0]) if np.any(atr > 0) else 0.0

@@ -147,9 +147,14 @@ class Strategy(BaseStrategy):
             + (w_vix / total_w) * vix_zscore
         )
 
+        # ── Session time filter ──
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Entry ──
-        long_entry = composite < -composite_thresh
-        short_entry = composite > composite_thresh
+        long_entry = (composite < -composite_thresh) & time_ok
+        short_entry = (composite > composite_thresh) & time_ok
 
         # ── Signal exit: composite crosses 0 ──
         signal_exit_long = composite > 0.0

@@ -121,15 +121,17 @@ class Strategy(BaseStrategy):
         # ── Filters ──
         first_30 = bar_in_day < 30
         vix_ok = vix < vix_max
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # ── Entry ──
         # Gap down fade (long): gap between -gap_max and -gap_min + RSI < thresh
         gap_down = (gap_pct < -gap_min) & (gap_pct > -gap_max)
-        long_entry = gap_down & (rsi < rsi_long_th) & first_30 & vix_ok
+        long_entry = gap_down & (rsi < rsi_long_th) & first_30 & vix_ok & time_ok
 
         # Gap up fade (short): gap between +gap_min and +gap_max + RSI > thresh
         gap_up = (gap_pct > gap_min) & (gap_pct < gap_max)
-        short_entry = gap_up & (rsi > rsi_short_th) & first_30 & vix_ok
+        short_entry = gap_up & (rsi > rsi_short_th) & first_30 & vix_ok & time_ok
 
         # Breakeven after 50% fill ~ 0.5 * gap_pct median
         breakeven_pct = 0.5 * (gap_min + gap_max) / 2.0

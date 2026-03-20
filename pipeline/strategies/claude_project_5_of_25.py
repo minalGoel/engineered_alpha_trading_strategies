@@ -75,9 +75,14 @@ class Strategy(BaseStrategy):
         # ── VIX filter ──
         vix_ok = vix < vix_max
 
+        # ── Session time filter ──
+        # AUDIT FIX: missing session time filter caused entries outside session window
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Entry ──
-        long_entry = long_persist & vix_ok
-        short_entry = short_persist & vix_ok
+        long_entry = long_persist & vix_ok & time_ok
+        short_entry = short_persist & vix_ok & time_ok
 
         # ── Signal exit: z-score crosses zero ──
         signal_exit_long = zscore > 0

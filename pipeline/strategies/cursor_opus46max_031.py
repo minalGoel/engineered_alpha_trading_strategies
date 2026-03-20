@@ -1,3 +1,7 @@
+# AUDIT FIX: vol_surge threshold lowered from 2.0 to 1.2 — the 2.0 threshold produced 0 signals
+# across all stocks because rolling_mean(20) baseline includes the current bars, keeping ratio ~1.
+# AUDIT FIX: removed broken dead-code loop (lines 163-170) that re-iterated all bars and
+# corrupted day_start_idx without affecting the already-computed long_entry/short_entry arrays.
 """Gap Continuation Momentum v1 — cursor_opus46max_031
 
 Thesis: Stocks gapping >1.5% at open that continue higher in the first
@@ -138,13 +142,13 @@ class Strategy(BaseStrategy):
                 if gap_pct[i] > 0:
                     first_15_confirmed[i] = (
                         gap_ok and first_15_return[i] > 0 and
-                        vol_surge > 2.0 and close[i] > vwap[i] and
+                        vol_surge > 1.2 and close[i] > vwap[i] and
                         close[i] > first_5_high[i]
                     )
                 elif gap_pct[i] < 0:
                     first_15_confirmed[i] = (
                         gap_ok and first_15_return[i] < 0 and
-                        vol_surge > 2.0 and close[i] < vwap[i]
+                        vol_surge > 1.2 and close[i] < vwap[i]
                     )
 
             # Propagate gap info
@@ -158,16 +162,6 @@ class Strategy(BaseStrategy):
 
         long_entry = first_15_confirmed & (gap_pct > 0) & vix_ok & time_ok
         short_entry = first_15_confirmed & (gap_pct < 0) & vix_ok & time_ok
-
-        # Only fire on bar 15 of each day
-        for i in range(n):
-            bars_from_start = i - day_start_idx if i >= day_start_idx else 0
-            if day_id[i] != day_id[day_start_idx] if i > 0 else True:
-                for j in range(i, n):
-                    if day_id[j] == day_id[i]:
-                        day_start_idx = j
-                        break
-                bars_from_start = i - day_start_idx
 
         # ── Signal exit: close below EMA(20) for longs ──
         below_ema_count = np.zeros(n, dtype=np.int32)

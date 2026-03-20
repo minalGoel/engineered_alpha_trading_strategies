@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """Support/Resistance Reversal — Grok_10_of_10
 
 Thesis: Reversals at 2+ day support/resistance levels with higher-low/lower-high
@@ -116,10 +117,12 @@ class Strategy(BaseStrategy):
         # Filters
         vix_ok = vix < vix_max
         vol_ok = rel_vol > rv_thresh
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # Entry
-        long_entry = near_support & higher_low & vix_ok & vol_ok
-        short_entry = near_resistance & lower_high & vix_ok & vol_ok
+        long_entry = near_support & higher_low & vix_ok & vol_ok & in_session
+        short_entry = near_resistance & lower_high & vix_ok & vol_ok & in_session
 
         return StrategySignals(
             long_entry=long_entry,

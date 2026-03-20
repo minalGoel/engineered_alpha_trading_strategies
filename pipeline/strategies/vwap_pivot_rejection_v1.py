@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """VWAP Pivot Rejection — Grok_4_of_10
 
 Thesis: Rejection at VWAP + previous-day pivot confluence zone signals reversal.
@@ -91,10 +92,12 @@ class Strategy(BaseStrategy):
 
         # ── Filters ──
         vix_ok = vix < vix_max
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # ── Entry ──
-        long_entry = zone_ok & bullish_pin & (close > vwap) & vix_ok
-        short_entry = zone_ok & bearish_pin & (close < vwap) & vix_ok
+        long_entry = zone_ok & bullish_pin & (close > vwap) & vix_ok & in_session
+        short_entry = zone_ok & bearish_pin & (close < vwap) & vix_ok & in_session
 
         return StrategySignals(
             long_entry=long_entry,

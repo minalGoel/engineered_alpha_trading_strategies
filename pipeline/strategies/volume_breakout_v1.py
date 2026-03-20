@@ -1,3 +1,7 @@
+# AUDIT FIX: rolling_max/min(5) includes current bar, so close > high_5 is always False
+#             (since close <= high[i] which is included in rolling_max(5)).
+#             Fix: shift the rolling window by 1 to reference *previous* 5 bars only.
+# AUDIT FIX: Added session window filter (time_mins <= session_end) to prevent post-session signals.
 """Volume Breakout — GPT_8_of_10
 
 Thesis: High-volume breakouts above the 5-bar high or below the 5-bar low
@@ -31,9 +35,12 @@ class Strategy(BaseStrategy):
         close = df["close"].to_numpy().astype(np.float64)
         volume = df["volume"].to_numpy().astype(np.float64)
 
-        # ── 5-bar rolling high / low ──
-        high_5 = df["high"].rolling_max(5).to_numpy().astype(np.float64)
-        low_5 = df["low"].rolling_min(5).to_numpy().astype(np.float64)
+        # ── 5-bar rolling high / low (shifted by 1 so current bar is excluded) ──
+        # rolling_max(5) on "high" includes current bar; close can never exceed
+        # current bar's high, so close > rolling_max(5) is always False.
+        # Shift by 1 to compare against the *previous* 5 bars' range.
+        high_5 = df["high"].rolling_max(5).shift(1).to_numpy().astype(np.float64)
+        low_5 = df["low"].rolling_min(5).shift(1).to_numpy().astype(np.float64)
         high_5 = np.nan_to_num(high_5, nan=1e10)
         low_5 = np.nan_to_num(low_5, nan=-1e10)
 
@@ -43,9 +50,9 @@ class Strategy(BaseStrategy):
         avg_vol_10 = np.clip(avg_vol_10, 1.0, None)
         vol_ok = volume > vol_mult * avg_vol_10
 
-        # ── Time filter: skip first 10 bars ──
+        # ── Time filter: skip first 10 bars and enforce session end ──
         time_mins = df["time_minutes"].to_numpy().astype(np.int32)
-        time_ok = time_mins >= 565  # 09:25 IST
+        time_ok = (time_mins >= 565) & (time_mins <= self.session_end)  # 09:25–15:15 IST
 
         # ── Entry ──
         long_entry = (close > high_5) & vol_ok & time_ok

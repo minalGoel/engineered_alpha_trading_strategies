@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """Pullback Momentum — Grok_9_of_10
 
 Thesis: Pullbacks to VWAP in strong momentum stocks offer low-risk entries.
@@ -83,10 +84,12 @@ class Strategy(BaseStrategy):
         # Filters
         vix_ok = vix < vix_max
         vol_ok = rel_vol > rv_thresh
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # Entry: pullback from VWAP
-        long_entry = (zscore < -zs_thresh) & vol_ok & vix_ok & (idx_ret5 > 0.001)
-        short_entry = (zscore > zs_thresh) & vol_ok & vix_ok & (idx_ret5 < -0.001)
+        long_entry = (zscore < -zs_thresh) & vol_ok & vix_ok & (idx_ret5 > 0.001) & in_session
+        short_entry = (zscore > zs_thresh) & vol_ok & vix_ok & (idx_ret5 < -0.001) & in_session
 
         # Target: VWAP touch
         target_indicator = vwap.copy()

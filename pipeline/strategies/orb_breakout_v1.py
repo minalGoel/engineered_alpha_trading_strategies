@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """Opening Range Breakout with volume/VIX/index filters — Grok_1_of_10
 
 Thesis: Directional breakouts from the 15-min opening range caused by
@@ -70,11 +71,12 @@ class Strategy(BaseStrategy):
 
         # Filters
         after_or = time_mins >= 570
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
         vix_ok = vix < vix_max
         vol_ok = rel_vol > rv_thresh
 
-        long_entry = (close > or_high) & after_or & vix_ok & vol_ok & (idx_ret5 > -0.0015)
-        short_entry = (close < or_low) & after_or & vix_ok & vol_ok & (idx_ret5 < 0.0015)
+        long_entry = (close > or_high) & after_or & in_session & vix_ok & vol_ok & (idx_ret5 > -0.0015)
+        short_entry = (close < or_low) & after_or & in_session & vix_ok & vol_ok & (idx_ret5 < 0.0015)
 
         return StrategySignals(
             long_entry=long_entry,

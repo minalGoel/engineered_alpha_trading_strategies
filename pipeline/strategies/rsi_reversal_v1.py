@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """RSI Reversal — GPT_4_of_10
 
 Thesis: Extreme RSI readings (< 30 oversold, > 70 overbought) signal temporary
@@ -96,12 +97,14 @@ class Strategy(BaseStrategy):
         # ── Filters ──
         vix_ok = vix < vix_max
         vol_ok = volume > avg_vol_20
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # ── Entry: RSI extreme + EMA200 trend confirmation ──
         # Long: RSI < oversold AND close below EMA200 (deep oversold in downtrend → bounce)
-        long_entry = (rsi < rsi_os) & (close < ema200) & vix_ok & vol_ok
+        long_entry = (rsi < rsi_os) & (close < ema200) & vix_ok & vol_ok & in_session
         # Short: RSI > overbought AND close above EMA200 (overextended in uptrend → pullback)
-        short_entry = (rsi > rsi_ob) & (close > ema200) & vix_ok & vol_ok
+        short_entry = (rsi > rsi_ob) & (close > ema200) & vix_ok & vol_ok & in_session
 
         return StrategySignals(
             long_entry=long_entry,

@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """SMA Crossover BankNifty — GPT_1_of_10
 
 Thesis: Aligned moving averages (SMA10 > SMA29 > SMA100) indicate strong
@@ -52,8 +53,10 @@ class Strategy(BaseStrategy):
         alignment = (close > sma_10) & (sma_10 > sma_29) & (sma_29 > sma_100)
         vol_ok = volume > vol_mult * avg_vol_30
         vix_ok = vix < vix_max
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
-        long_entry = alignment & vol_ok & vix_ok
+        long_entry = alignment & vol_ok & vix_ok & in_session
         short_entry = np.zeros(n, dtype=np.bool_)
 
         return StrategySignals(

@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to prevent signals outside session_start/session_end.
 """VWAP Mean Reversion — GPT_2_of_10
 
 Thesis: Price often reverts to VWAP (intraday fair value) after overshooting.
@@ -56,10 +57,10 @@ class Strategy(BaseStrategy):
         avg_vol_30 = np.clip(avg_vol_30, 1.0, None)
         vol_ok = volume > vol_mult * avg_vol_30
 
-        # ── Time filter: skip first 10 bars of day ──
+        # ── Time filter: skip first 10 bars of day and enforce session end ──
         time_mins = df["time_minutes"].to_numpy().astype(np.int32)
         # First 10 bars = 09:15 to 09:24 = minutes 555 to 564
-        time_ok = time_mins >= 565
+        time_ok = (time_mins >= 565) & (time_mins <= self.session_end)
 
         # NaN safety
         zscore = np.nan_to_num(zscore, nan=0.0)

@@ -32,17 +32,25 @@ def get_strike_step(underlying: str) -> int:
 # ── ATM strike ───────────────────────────────────────────────────────
 
 def nearest_strike(spot_price: float, step: int) -> float:
-    """Round spot price to the nearest strike (e.g. 24350 → 24350 for step=50)."""
-    return round(spot_price / step) * step
+    """Round spot price to the nearest strike (e.g. 24350 → 24350 for step=50).
+
+    Uses math.floor(x + 0.5) instead of Python's round() to avoid banker's
+    rounding (round-half-to-even), which causes inconsistent ATM strike
+    assignment at exact midpoints.
+    """
+    return int(math.floor(spot_price / step + 0.5)) * step
 
 
 def atm_strike_series(spot_close: pl.Series | np.ndarray, step: int) -> np.ndarray:
-    """Vectorised ATM strike for every bar. Returns float64 array."""
+    """Vectorised ATM strike for every bar. Returns float64 array.
+
+    Uses floor(x + 0.5) to avoid numpy's banker's rounding at midpoints.
+    """
     if isinstance(spot_close, pl.Series):
         arr = spot_close.to_numpy().astype(np.float64)
     else:
         arr = np.asarray(spot_close, dtype=np.float64)
-    return np.round(arr / step) * step
+    return np.floor(arr / step + 0.5) * step
 
 
 # ── Time to expiry ────────────────────────────────────────────────────
@@ -162,5 +170,5 @@ def add_atm_strike_to_spot(spot_df: pl.DataFrame, underlying: str) -> pl.DataFra
     """Add 'atm_strike' column to a spot DataFrame."""
     step = get_strike_step(underlying)
     return spot_df.with_columns(
-        (pl.col("close") / step).round(0).cast(pl.Float64).mul(step).alias("atm_strike")
+        (pl.col("close") / step + 0.5).floor().cast(pl.Float64).mul(step).alias("atm_strike")
     )

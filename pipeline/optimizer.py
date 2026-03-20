@@ -52,6 +52,9 @@ def run_leave_one_day_out_cv(
 
     default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
 
+    # Import backtest function for actual PnL computation
+    from pipeline.run_all import backtest_strategy
+
     for test_day_id in day_ids:
         # Test on one day
         test_spot = spot_df.filter(pl.col("day_id") == test_day_id)
@@ -65,28 +68,20 @@ def run_leave_one_day_out_cv(
             test_date = str(test_spot["session_date"].head(1).to_list()[0])
 
         try:
-            signals = strategy.compute(test_spot, option_df, vix_df, default_params)
+            # Run full backtest on test day
+            trades_df, metrics = backtest_strategy(
+                strategy, test_spot, option_df, vix_df, lot_size, default_params,
+            )
 
-            # Quick check: any signals at all?
-            n_signals = int(np.sum(signals.buy_ce)) + int(np.sum(signals.buy_pe))
-            if n_signals == 0:
-                day_results.append({
-                    "day": test_day_id,
-                    "date": test_date,
-                    "pnl": 0.0,
-                    "trades": 0,
-                    "profitable": False,
-                })
-                continue
+            n_trades = metrics.get("total_trades", 0)
+            day_pnl = metrics.get("total_pnl", 0.0)
 
-            # Simplified PnL: count signals × avg expected PnL
-            # Full state machine run happens in the main pipeline
             day_results.append({
                 "day": test_day_id,
                 "date": test_date,
-                "pnl": 0.0,  # placeholder — filled by full pipeline
-                "trades": n_signals,
-                "profitable": n_signals > 0,  # placeholder
+                "pnl": day_pnl,
+                "trades": n_trades,
+                "profitable": day_pnl > 0,
             })
 
         except Exception as e:
@@ -140,18 +135,22 @@ def run_optimization(
     default_params = {k: v[0] for k, v in tunable.items()}
     param_bounds = {k: [v[1], v[2]] for k, v in tunable.items()}
 
+    from pipeline.run_all import backtest_strategy
+
     def objective(trial: optuna.Trial) -> float:
         overrides = {}
         for name, (default, lo, hi) in tunable.items():
             overrides[name] = trial.suggest_float(name, lo, hi)
 
         try:
-            signals = strategy.compute(spot_df, option_df, vix_df, overrides)
-            n_signals = int(np.sum(signals.buy_ce)) + int(np.sum(signals.buy_pe))
-            if n_signals < MIN_TRADES_FULL:
+            trades_df, metrics = backtest_strategy(
+                strategy, spot_df, option_df, vix_df, lot_size, overrides,
+            )
+            n_trades = metrics.get("total_trades", 0)
+            if n_trades < MIN_TRADES_FULL:
                 return -999.0
-            # Return signal count as proxy (full Sharpe requires state machine)
-            return float(n_signals) / total_trading_days
+            sharpe = metrics.get("sharpe_annualized", -999.0)
+            return sharpe
         except Exception:
             return -999.0
 

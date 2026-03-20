@@ -42,21 +42,35 @@ class Strategy(BaseStrategy):
         for i in range(180, n):
             current_vol[i] = np.std(ret[i-180:i])
 
-        # Expected vol by time bucket (estimate from data)
-        # Group by time_minutes (5-min buckets) and compute mean vol
+        # Expected vol by time bucket (estimate from PRIOR days only — no look-ahead)
+        # Group by time_minutes (5-min buckets), compute RUNNING mean from past days
         time_bucket = (time_min // 5) * 5  # round to 5-min
         expected_vol = np.zeros(n)
-        bucket_vols = {}
+        # Track per-bucket running sum/count using only PAST days
+        bucket_sum = {}    # bucket -> cumulative sum of vol from completed days
+        bucket_count = {}  # bucket -> count
+        # First pass: accumulate vol per day per bucket, then use prior-day averages
+        prev_day = -1
+        day_bucket_vals = {}  # current day's bucket vals
         for i in range(180, n):
             bucket = time_bucket[i]
-            if bucket not in bucket_vols:
-                bucket_vols[bucket] = []
-            bucket_vols[bucket].append(current_vol[i])
-        # Compute running mean per bucket
-        bucket_means = {b: np.mean(v) for b, v in bucket_vols.items() if len(v) > 0}
-        for i in range(n):
-            bucket = time_bucket[i]
-            expected_vol[i] = bucket_means.get(bucket, 0.001)
+            if day_id[i] != prev_day:
+                # New day: flush previous day's data into running sums
+                if prev_day >= 0:
+                    for b, vals in day_bucket_vals.items():
+                        bucket_sum[b] = bucket_sum.get(b, 0.0) + sum(vals)
+                        bucket_count[b] = bucket_count.get(b, 0) + len(vals)
+                prev_day = day_id[i]
+                day_bucket_vals = {}
+            # Record current vol for end-of-day flush
+            if bucket not in day_bucket_vals:
+                day_bucket_vals[bucket] = []
+            day_bucket_vals[bucket].append(current_vol[i])
+            # Use only prior-day averages for expected vol
+            if bucket in bucket_count and bucket_count[bucket] > 0:
+                expected_vol[i] = bucket_sum[bucket] / bucket_count[bucket]
+            else:
+                expected_vol[i] = 0.001  # no prior data for this bucket
 
         # Vol surprise
         vol_surprise = np.ones(n)

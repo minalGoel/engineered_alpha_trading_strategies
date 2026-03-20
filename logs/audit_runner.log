@@ -1,20 +1,308 @@
-2026-03-20 09:55:00 ═══ PREFLIGHT ═══
+2026-03-20 10:51:28 ═══ PREFLIGHT ═══
 Sample stock: india_vix_1h.parquet
 Total strategies:   358
-Already audited:    70
-Remaining:          288
-Batches:            29
+Already audited:    140
+Remaining:          218
+Batches:            22
 
 ════════════════════════════════════════════════════════════
-  AUDIT BATCH 1 — strategies 1-10 of 288
-  2026-03-20 09:55:03
+  AUDIT BATCH 1 — strategies 1-10 of 218
+  2026-03-20 10:51:32
 ════════════════════════════════════════════════════════════
-  Attempt 1/2 → audit_batch1_a1_095503.log
+  Attempt 1/2 → audit_batch1_a1_105132.log
+  Results: 9 pass, 1 fixed, 0 unfixable, 0 unknown
+  Committed.
+  Progress: 10/218 | 4m elapsed | ~103m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 2 — strategies 11-20 of 218
+  2026-03-20 10:56:31
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch2_a1_105631.log
+  Results: 3 pass, 7 fixed, 0 unfixable, 0 unknown
+  Committed.
+  Progress: 20/218 | 13m elapsed | ~137m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 3 — strategies 21-30 of 218
+  2026-03-20 11:05:24
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch3_a1_110524.log
   Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
-  Progress: 10/288 | 4m elapsed | ~132m left
+  Progress: 30/218 | 20m elapsed | ~130m left
 
 ════════════════════════════════════════════════════════════
-  AUDIT BATCH 2 — strategies 11-20 of 288
-  2026-03-20 09:59:51
+  AUDIT BATCH 4 — strategies 31-40 of 218
+  2026-03-20 11:12:16
 ════════════════════════════════════════════════════════════
-  Attempt 1/2 → audit_batch2_a1_095951.log
+  Attempt 1/2 → audit_batch4_a1_111216.log
+  Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
+  Progress: 40/218 | 26m elapsed | ~118m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 5 — strategies 41-50 of 218
+  2026-03-20 11:18:00
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch5_a1_111800.log
+  Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
+  Progress: 50/218 | 28m elapsed | ~98m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 6 — strategies 51-60 of 218
+  2026-03-20 11:20:32
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch6_a1_112032.log
+  Results: 8 pass, 2 fixed, 0 unfixable, 0 unknown
+  Committed.
+  Progress: 60/218 | 36m elapsed | ~98m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 7 — strategies 61-70 of 218
+  2026-03-20 11:28:26
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch7_a1_112826.log
+  Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
+  Progress: 70/218 | 52m elapsed | ~111m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 8 — strategies 71-80 of 218
+  2026-03-20 11:43:44
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch8_a1_114344.log
+  Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
+  Progress: 80/218 | 61m elapsed | ~107m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 9 — strategies 81-90 of 218
+  2026-03-20 11:53:19
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch9_a1_115320.log
+  ? No result for cursor_opus46max_183
+  ? No result for cursor_opus46max_184
+  ? No result for cursor_opus46max_185
+  ? No result for cursor_opus46max_186
+  ? No result for cursor_opus46max_187
+  ? No result for cursor_opus46max_188
+  ? No result for cursor_opus46max_189
+  ? No result for cursor_opus46max_190
+  ? No result for cursor_opus46max_191
+  ? No result for cursor_opus46max_192
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Progress: 90/218 | 96m elapsed | ~138m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 10 — strategies 91-100 of 218
+  2026-03-20 12:27:41
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch10_a1_122741.log
+  ? No result for cursor_opus46max_193
+  ? No result for cursor_opus46max_194
+  ? No result for cursor_opus46max_195
+  ? No result for cursor_opus46max_196
+  ? No result for cursor_opus46max_197
+  ? No result for cursor_opus46max_198
+  ? No result for cursor_opus46max_199
+  ? No result for cursor_opus46max_200
+  ? No result for ema_crossover_v1
+  ? No result for ema200_dip_reversal_v1
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 100/218 | 139m elapsed | ~167m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 11 — strategies 101-110 of 218
+  2026-03-20 13:10:50
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch11_a1_131050.log
+  ? No result for gap_fade_v1
+  ? No result for gap_momentum_v1
+  ? No result for gemini_1_of_20
+  ? No result for gemini_10_of_20
+  ? No result for gemini_11_of_20
+  ? No result for gemini_12_of_20
+  ? No result for gemini_13_of_20
+  ? No result for gemini_14_of_20
+  ? No result for gemini_15_of_20
+  ? No result for gemini_16_of_20
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 110/218 | 143m elapsed | ~143m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 12 — strategies 111-120 of 218
+  2026-03-20 13:15:35
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch12_a1_131535.log
+  ? No result for gemini_17_of_20
+  ? No result for gemini_18_of_20
+  ? No result for gemini_19_of_20
+  ? No result for gemini_2_of_20
+  ? No result for gemini_20_of_20
+  ? No result for gemini_3_of_20
+  ? No result for gemini_4_of_20
+  ? No result for gemini_5_of_20
+  ? No result for gemini_6_of_20
+  ? No result for gemini_7_of_20
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 120/218 | 153m elapsed | ~127m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 13 — strategies 121-130 of 218
+  2026-03-20 13:24:36
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch13_a1_132436.log
+  ? No result for gemini_8_of_20
+  ? No result for gemini_9_of_20
+  ? No result for gemini31pro_bollinger_squeeze_breakout_v82
+  ? No result for gemini31pro_gap_fade_reversion_v103
+  ? No result for gemini31pro_gap_fade_reversion_v104
+  ? No result for gemini31pro_gap_fade_reversion_v106
+  ? No result for gemini31pro_gap_fade_reversion_v116
+  ? No result for gemini31pro_index_relative_strength_v181
+  ? No result for gemini31pro_index_relative_strength_v182
+  ? No result for gemini31pro_index_relative_strength_v183
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 130/218 | 159m elapsed | ~110m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 14 — strategies 131-140 of 218
+  2026-03-20 13:30:58
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch14_a1_133058.log
+  ? No result for gemini31pro_index_relative_strength_v187
+  ? No result for gemini31pro_index_relative_strength_v189
+  ? No result for gemini31pro_index_relative_strength_v192
+  ? No result for gemini31pro_index_relative_strength_v200
+  ? No result for gemini31pro_inside_bar_breakout_v177
+  ? No result for gemini31pro_macd_trend_continuation_v71
+  ? No result for gemini31pro_orb_momentum_v22
+  ? No result for gemini31pro_orb_momentum_v29
+  ? No result for gemini31pro_orb_momentum_v32
+  ? No result for gemini31pro_pdh_pdl_fakeout_v141
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 140/218 | 163m elapsed | ~93m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 15 — strategies 141-150 of 218
+  2026-03-20 13:34:57
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch15_a1_133457.log
+  Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
+  Progress: 150/218 | 168m elapsed | ~78m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 16 — strategies 151-160 of 218
+  2026-03-20 13:40:21
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch16_a1_134021.log
+  Results: 8 pass, 2 fixed, 0 unfixable, 0 unknown
+  Committed.
+  Progress: 160/218 | 174m elapsed | ~65m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 17 — strategies 161-170 of 218
+  2026-03-20 13:46:17
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch17_a1_134617.log
+  Results: 8 pass, 2 fixed, 0 unfixable, 0 unknown
+  Committed.
+  Progress: 170/218 | 179m elapsed | ~52m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 18 — strategies 171-180 of 218
+  2026-03-20 13:50:43
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch18_a1_135043.log
+  ? No result for opus_first_pullback_v1
+  ? No result for opus_gap_and_go_v1
+  ? No result for opus_gap_continuation_v1
+  ? No result for opus_gap_vwap_momentum_trifecta_v1
+  ? No result for opus_implied_realized_vol_v1
+  ? No result for opus_index_constituent_spread_v1
+  ? No result for opus_index_gap_constituent_lag_v1
+  ? No result for opus_index_momentum_stock_selection_v1
+  ? No result for opus_intraday_rsi_divergence_v1
+  ? No result for opus_intraday_trend_following_v1
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 180/218 | 185m elapsed | ~41m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 19 — strategies 181-190 of 218
+  2026-03-20 13:56:51
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch19_a1_135651.log
+  ? No result for opus_it_sector_corr_arb_v1
+  ? No result for opus_last_30_min_momentum_v1
+  ? No result for opus_low_vol_compression_v1
+  ? No result for opus_lunch_hour_compression_v1
+  ? No result for opus_microstructure_volume_v1
+  ? No result for opus_momentum_ignition_v1
+  ? No result for opus_monday_reversal_v1
+  ? No result for opus_multi_timeframe_confirmation_v1
+  ? No result for opus_narrow_range_breakout_v1
+  ? No result for opus_opening_range_breakout_v1
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 190/218 | 193m elapsed | ~30m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 20 — strategies 191-200 of 218
+  2026-03-20 14:05:21
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch20_a1_140521.log
+  ? No result for opus_orb_plus_sector_filter_v1
+  ? No result for opus_order_flow_imbalance_v1
+  ? No result for opus_overnight_gap_reversion_v1
+  ? No result for opus_pairs_plus_vix_overlay_v1
+  ? No result for opus_partial_gap_fill_v1
+  ? No result for opus_pdh_pdl_breakout_v1
+  ? No result for opus_pre_market_auction_v1
+  ? No result for opus_relative_strength_momentum_v1
+  ? No result for opus_rsi_extreme_reversion_v1
+  ? No result for opus_sector_pair_reversion_v1
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 200/218 | 198m elapsed | ~19m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 21 — strategies 201-210 of 218
+  2026-03-20 14:09:46
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch21_a1_140946.log
+  ? No result for opus_sector_rotation_v1
+  ? No result for opus_three_bar_momentum_v1
+  ? No result for opus_vix_adjusted_mean_reversion_v1
+  ? No result for opus_vix_mean_reversion_v1
+  ? No result for opus_vix_regime_switch_v1
+  ? No result for opus_volatility_breakout_v1
+  ? No result for opus_vwap_band_reversion_v1
+  ? No result for opus_vwap_crossover_flow_v1
+  ? No result for opus_vwap_mean_reversion_v1
+  ? No result for opus_vwap_rsi_volume_confluence_v1
+  Results: 0 pass, 0 fixed, 0 unfixable, 10 unknown
+  Committed.
+  Progress: 210/218 | 227m elapsed | ~10m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 22 — strategies 211-218 of 218
+  2026-03-20 14:39:00
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch22_a1_143900.log
+  Results: 0 pass, 8 fixed, 0 unfixable, 0 unknown
+  Committed.
+  Progress: 218/218 | 235m elapsed | ~0m left
+
+════════════════════════════════════════════════════════════
+  AUDIT COMPLETE
+  Runtime:      235 min
+  Audited:      358 / 358
+  Passed:       96
+  Fixed:        22
+  Unfixable:    0
+  Deployable:   118
+════════════════════════════════════════════════════════════
+Pushed.

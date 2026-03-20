@@ -1,0 +1,14 @@
+All 10 strategies passed the audit with no bugs found:
+
+AUDIT_RESULT: cursor_opus46max_083 STATUS=PASS SIGNALS=1238,1135 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_084 STATUS=PASS SIGNALS=9132,10188 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_085 STATUS=PASS SIGNALS=4,3 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_086 STATUS=PASS SIGNALS=5,4 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_087 STATUS=PASS SIGNALS=847,916 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_088 STATUS=PASS SIGNALS=452,514 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_089 STATUS=PASS SIGNALS=125,142 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_090 STATUS=PASS SIGNALS=1,6 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_091 STATUS=PASS SIGNALS=466,567 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_092 STATUS=PASS SIGNALS=752,868 ISSUES=0
+
+All 10 strategies (083-092) are clean — correct array lengths, dtypes, no NaNs, and reasonable signal counts. The low counts on 085/086/090 are by design (restrictive entry conditions), not bugs.

@@ -1,0 +1,22 @@
+Here are the audit results for all 10 strategies:
+
+AUDIT_RESULT: cursor_opus46max_153 STATUS=PASS SIGNALS=1590,1590 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_154 STATUS=FIXED SIGNALS=10,27 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_155 STATUS=PASS SIGNALS=2332,2460 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_156 STATUS=PASS SIGNALS=2277,2255 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_157 STATUS=PASS SIGNALS=827,817 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_158 STATUS=PASS SIGNALS=5630,5206 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_159 STATUS=FIXED SIGNALS=72,29 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_160 STATUS=PASS SIGNALS=24,14 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_161 STATUS=PASS SIGNALS=437,337 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_162 STATUS=PASS SIGNALS=23,15 ISSUES=0
+
+---
+
+**Summary: 8 PASS, 2 FIXED, 0 UNFIXABLE**
+
+**Fixes applied:**
+
+- **cursor_opus46max_154** — `vroc_sig` (Volume ROC signal) was asymmetric: it could contribute +1 (bullish) but never -1 (bearish), capping bearish consensus at -4 vs bullish at +5. Fixed to be directional: +1 when high volume accompanies upward price movement, -1 when downward.
+
+- **cursor_opus46max_159** — Default `sharpe_entry` threshold (2.0) and `sharpe_confirm` (1.5) were too high — the instantaneous Sharpe on 1-min bars never reaches 2.0 in practice (max ~1.8), causing zero signals. Fixed by lowering defaults to `sharpe_entry=1.0` and `sharpe_confirm=0.8`.

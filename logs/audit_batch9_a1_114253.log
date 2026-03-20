@@ -1,0 +1,34 @@
+AUDIT LOG — Batch 9 (cursor_opus46max_163 through cursor_opus46max_172)
+Date: 2026-03-20
+Auditor: Claude Sonnet 4.6
+
+Test data: RELIANCE, stocks_1min.parquet (~388K bars, ~1040 trading days)
+Reference: pipeline/strategies/CONVENTIONS.md, pipeline/strategies/base.py
+
+Checks performed per strategy:
+1. Import and instantiate
+2. compute() on real data
+3. Array lengths (all == len(df))
+4. Dtypes (bool/int8 for entry/exit, float64 for atr/target)
+5. No NaN in any arrays
+6. Signal sanity (not all-zero, not all-True)
+7. Stop/target pct positive and non-NaN
+8. is_long_only respected
+9. Session window respected (entries only in session)
+10. VWAP daily reset verified via .over("day_id")
+
+NOTE: Confirmed test data uses IST time_minutes (UTC + 330 min, cast Int32 before multiply)
+to avoid Int8 overflow. All 10 strategies pass all checks.
+
+AUDIT_RESULT: cursor_opus46max_163 STATUS=PASS SIGNALS=336,747 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_164 STATUS=PASS SIGNALS=10234,10568 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_165 STATUS=PASS SIGNALS=8689,9265 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_166 STATUS=PASS SIGNALS=23356,26540 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_167 STATUS=PASS SIGNALS=2286,2492 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_168 STATUS=PASS SIGNALS=20901,22832 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_169 STATUS=PASS SIGNALS=9358,11458 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_170 STATUS=PASS SIGNALS=21746,22854 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_171 STATUS=PASS SIGNALS=3218,3009 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_172 STATUS=PASS SIGNALS=24249,24553 ISSUES=0
+
+Summary: 10 PASS, 0 FIXED, 0 UNFIXABLE

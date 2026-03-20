@@ -1,0 +1,19 @@
+Audit complete. Here are the results for all 10 strategies:
+
+| Strategy | Status | Long/Short Entries | Issues |
+|---|---|---|---|
+| opus_first_pullback_v1 | FIXED | 363 / 104 | 2 |
+| opus_gap_and_go_v1 | PASS | 2017 / 1425 | 0 |
+| opus_gap_continuation_v1 | PASS | 4 / 90 | 0 |
+| opus_gap_vwap_momentum_trifecta_v1 | PASS | 2935 / 2296 | 0 |
+| opus_implied_realized_vol_v1 | PASS | 13250 / 0 | 0 |
+| opus_index_constituent_spread_v1 | FIXED | 14947 / 16022 | 2 |
+| opus_index_gap_constituent_lag_v1 | PASS | 874 / 736 | 0 |
+| opus_index_momentum_stock_selection_v1 | PASS | 23104 / 26697 | 0 |
+| opus_intraday_rsi_divergence_v1 | PASS | 989 / 848 | 0 |
+| opus_intraday_trend_following_v1 | PASS | 19878 / 24715 | 0 |
+
+**8 passed, 2 fixed:**
+
+- **opus_first_pullback_v1**: Session window not enforced — pullback loop had no upper bound on `time_minutes`, and final entry masks lacked `time_ok` filter. Fixed both.
+- **opus_index_constituent_spread_v1**: `time_minutes` was never extracted, so no session filter was applied to entries. Added `time_ok` filter to both long and short entry masks.

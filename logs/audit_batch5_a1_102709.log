@@ -1,0 +1,14 @@
+All 10 strategies audited and fixed. Here are the results:
+
+AUDIT_RESULT: cursor_opus46max_073 STATUS=FIXED SIGNALS=708,621 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_074 STATUS=FIXED SIGNALS=20,86 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_075 STATUS=FIXED SIGNALS=646,605 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_076 STATUS=FIXED SIGNALS=13,58 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_077 STATUS=FIXED SIGNALS=299,348 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_078 STATUS=FIXED SIGNALS=5996,5989 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_079 STATUS=FIXED SIGNALS=19932,20529 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_080 STATUS=FIXED SIGNALS=1779,1625 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_081 STATUS=FIXED SIGNALS=177,172 ISSUES=1
+AUDIT_RESULT: cursor_opus46max_082 STATUS=FIXED SIGNALS=5959,6021 ISSUES=1
+
+**Common bug across all 10 strategies:** Entry signals were firing outside the declared session window (`session_start` to `session_end`). Each strategy was fixed by applying an `in_session` mask (derived from `time_minutes`) to all `long_entry` and `short_entry` arrays. All other checks (array lengths, dtypes, no NaN, stop/target price validity) passed cleanly.

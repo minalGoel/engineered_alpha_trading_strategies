@@ -1,0 +1,14 @@
+All 10 strategies pass cleanly with no bugs found. Here are the results:
+
+AUDIT_RESULT: cursor_opus46max_123 STATUS=PASS SIGNALS=12338,11653 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_124 STATUS=PASS SIGNALS=7114,7725 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_125 STATUS=PASS SIGNALS=1447,1151 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_126 STATUS=PASS SIGNALS=102,172 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_127 STATUS=PASS SIGNALS=27827,29573 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_128 STATUS=PASS SIGNALS=2710,2939 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_129 STATUS=PASS SIGNALS=1638,1551 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_130 STATUS=PASS SIGNALS=247,454 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_131 STATUS=PASS SIGNALS=3811,3659 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_132 STATUS=PASS SIGNALS=561,552 ISSUES=0
+
+All 10 strategies were verified against real GLENMARK 1-min data (388k bars, 2022–2025) with real BANKNIFTY `index_close`. All checks passed: correct array lengths, proper dtypes, no NaN in stop/target prices, valid signal rates, session window compliance, and daily VWAP resets.

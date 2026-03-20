@@ -1,0 +1,14 @@
+The audit is complete. All 10 strategies passed with no bugs found. Here are the results:
+
+AUDIT_RESULT: cursor_opus46max_173 STATUS=PASS SIGNALS=2020,1895 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_174 STATUS=PASS SIGNALS=6820,6628 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_175 STATUS=PASS SIGNALS=41766,27836 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_176 STATUS=PASS SIGNALS=43322,46255 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_177 STATUS=PASS SIGNALS=1146,1479 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_178 STATUS=PASS SIGNALS=12224,11763 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_179 STATUS=PASS SIGNALS=71985,66571 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_180 STATUS=PASS SIGNALS=1914,1876 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_181 STATUS=PASS SIGNALS=3357,2991 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_182 STATUS=PASS SIGNALS=14,29 ISSUES=0
+
+**Summary:** 10/10 strategies passed. No files modified. All strategies produce correctly-shaped arrays with valid dtypes, no NaN in stop/target prices, and signal counts within expected ranges. Strategy 182 (Wavelet Decomposition) is notably selective with only ~14/29 signals, while 179 (OU Process mean reversion) fires most frequently (~72k/67k signals).

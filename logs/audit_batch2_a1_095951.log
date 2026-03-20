@@ -1,0 +1,14 @@
+All 10 strategies passed the full audit with no issues:
+
+AUDIT_RESULT: cursor_opus46max_043 STATUS=PASS SIGNALS=70,63 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_044 STATUS=PASS SIGNALS=30,22 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_045 STATUS=PASS SIGNALS=104,104 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_046 STATUS=PASS SIGNALS=1255,1483 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_047 STATUS=PASS SIGNALS=26,18 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_048 STATUS=PASS SIGNALS=3191,2808 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_049 STATUS=PASS SIGNALS=1821,1491 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_050 STATUS=PASS SIGNALS=143,146 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_051 STATUS=PASS SIGNALS=3286,3027 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_052 STATUS=PASS SIGNALS=779,1047 ISSUES=0
+
+All 10 strategies were tested on real HDFCBANK 1-minute data (~388K bars). Every check passed: correct array lengths, proper dtypes, no NaN values, reasonable signal counts, session window compliance, and correct daily VWAP resets. No files were modified.

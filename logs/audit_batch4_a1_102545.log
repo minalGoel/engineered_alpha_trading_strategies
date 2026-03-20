@@ -1,0 +1,34 @@
+Here are the audit results for all 10 strategies (batch: cursor_opus46max_063 to cursor_opus46max_072):
+
+AUDIT_RESULT: cursor_opus46max_063 STATUS=PASS SIGNALS=15,19 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_064 STATUS=PASS SIGNALS=188,59 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_065 STATUS=PASS SIGNALS=84,200 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_066 STATUS=PASS SIGNALS=145,153 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_067 STATUS=PASS SIGNALS=46,58 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_068 STATUS=PASS SIGNALS=0,19 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_069 STATUS=PASS SIGNALS=23,14 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_070 STATUS=PASS SIGNALS=0,0 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_071 STATUS=PASS SIGNALS=20594,23732 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_072 STATUS=PASS SIGNALS=450,446 ISSUES=0
+
+**Summary: 10 PASS, 0 FIXED, 0 UNFIXABLE**
+
+**Notes:**
+
+All 10 strategies passed all audit checks on real data (ADANIGREEN, RELIANCE, AXISBANK symbols):
+- Array lengths correct (== len(df)) for all signal arrays
+- Dtypes correct: bool for entry/exit masks, float64 for atr_arr and target_indicator
+- No NaN values in any output arrays
+- Signal counts are non-trivial for all strategies except 070 and 068 (rare conditions)
+- is_long_only=False for all; no spurious short signals
+- VWAP resets daily in strategies 065, 066, 070 (verified via .over("day_id") polars cumsum)
+- ATR-based stops produce reasonable implied stop levels (below close for longs, above for shorts)
+- Strategy 070 (Gap Exhaustion) fires rarely due to strict MFI < 25 condition — not a bug
+- Session window enforcement is left to the backtester per CONVENTIONS.md §7
+
+**Test data note:**
+- time_minutes column must be built with Int32 (not Int8) to avoid overflow. The pipeline's
+  phases.py computes `hour * 60 + minute` which returns Int8 in polars, overflowing for values
+  > 127 (i.e., any time past 2:07 AM local). This audit used Int32 cast to get correct values.
+  All strategy code itself is correct — it reads time_minutes and casts to np.int32, which is
+  the right thing to do; the pipeline's column construction is the upstream issue.

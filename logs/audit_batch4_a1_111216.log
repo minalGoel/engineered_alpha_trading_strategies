@@ -1,0 +1,14 @@
+All 10 strategies passed the audit with no bugs found. Here are the results:
+
+AUDIT_RESULT: cursor_opus46max_133 STATUS=PASS SIGNALS=3485,3361 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_134 STATUS=PASS SIGNALS=6268,6155 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_135 STATUS=PASS SIGNALS=4525,4411 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_136 STATUS=PASS SIGNALS=4678,4547 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_137 STATUS=PASS SIGNALS=3122,3036 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_138 STATUS=PASS SIGNALS=5015,4836 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_139 STATUS=PASS SIGNALS=16961,17586 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_140 STATUS=PASS SIGNALS=54718,60463 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_141 STATUS=PASS SIGNALS=865,747 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_142 STATUS=PASS SIGNALS=1413,1607 ISSUES=0
+
+All checks passed across 386,127 bars of real data: correct array lengths, proper dtypes, no NaN in any signal arrays, no session-window violations, and sane signal rates. Strategies 133-140 are sector/pairs mean-reversion using stock-vs-index spread z-scores; 141 uses ABCD harmonic patterns; 142 uses Elliott Wave 3 breakout logic.

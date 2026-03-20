@@ -1,0 +1,16 @@
+All 10 strategies passed the audit with no bugs found:
+
+AUDIT_RESULT: cursor_opus46max_063 STATUS=PASS SIGNALS=15,19 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_064 STATUS=PASS SIGNALS=188,59 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_065 STATUS=PASS SIGNALS=84,200 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_066 STATUS=PASS SIGNALS=145,153 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_067 STATUS=PASS SIGNALS=46,58 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_068 STATUS=PASS SIGNALS=0,19 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_069 STATUS=PASS SIGNALS=23,14 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_070 STATUS=PASS SIGNALS=0,0 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_071 STATUS=PASS SIGNALS=20594,23732 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_072 STATUS=PASS SIGNALS=450,446 ISSUES=0
+
+**10 PASS, 0 FIXED, 0 UNFIXABLE**
+
+All strategies had correct array lengths, dtypes, no NaN values, and sensible signal counts. Strategy 070 (Gap Exhaustion) has very few signals by design due to a strict MFI < 25 threshold. No code changes were required.

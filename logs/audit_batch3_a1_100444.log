@@ -1,0 +1,24 @@
+Here are the audit results for all 10 strategies:
+
+AUDIT_RESULT: cursor_opus46max_053 STATUS=PASS SIGNALS=3581,3658 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_054 STATUS=PASS SIGNALS=16468,14717 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_055 STATUS=FIXED SIGNALS=35989,0 ISSUES=2
+AUDIT_RESULT: cursor_opus46max_056 STATUS=PASS SIGNALS=67,15 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_057 STATUS=PASS SIGNALS=2412,1821 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_058 STATUS=PASS SIGNALS=1185,1484 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_059 STATUS=PASS SIGNALS=171,150 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_060 STATUS=FIXED SIGNALS=0,25572 ISSUES=2
+AUDIT_RESULT: cursor_opus46max_061 STATUS=PASS SIGNALS=2,21 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_062 STATUS=PASS SIGNALS=23,64 ISSUES=0
+
+**Summary: 8 PASS, 2 FIXED, 0 UNFIXABLE**
+
+**Fixes applied:**
+
+**cursor_opus46max_055** (ETF NAV Arbitrage):
+1. Session window bug — `time_ok` had no lower bound, allowing pre-session entries. Fixed to `(time_mins >= 560) & (time_mins <= 900)`.
+2. Short exit logic — `pd_bps < 0` was always True because stock price vs large index makes bps permanently negative. Replaced with `pd_z < 0` (z-score reversion).
+
+**cursor_opus46max_060** (Cross Listed Arb):
+1. No session time filter — entries fired at any time including pre/post-market. Added `time_ok` guard.
+2. Exit logic — same bps comparison bug as 055. Replaced with z-score crossing zero.

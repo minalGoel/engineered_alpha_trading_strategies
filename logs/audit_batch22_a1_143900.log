@@ -1,0 +1,16 @@
+All 8 strategies have been audited and fixed. Here's the summary:
+
+AUDIT_RESULT: orb_breakout_v1 STATUS=FIXED SIGNALS=10389,12412 ISSUES=1
+AUDIT_RESULT: pullback_momentum_v1 STATUS=FIXED SIGNALS=1141,921 ISSUES=1
+AUDIT_RESULT: rsi_reversal_v1 STATUS=FIXED SIGNALS=5835,6961 ISSUES=1
+AUDIT_RESULT: sma_crossover_banknifty_v1 STATUS=FIXED SIGNALS=12548,0 ISSUES=1
+AUDIT_RESULT: support_resistance_reversal_v1 STATUS=FIXED SIGNALS=1006,864 ISSUES=1
+AUDIT_RESULT: volume_breakout_v1 STATUS=FIXED SIGNALS=11271,10879 ISSUES=2
+AUDIT_RESULT: vwap_mean_reversion_v1 STATUS=FIXED SIGNALS=17191,14575 ISSUES=1
+AUDIT_RESULT: vwap_pivot_rejection_v1 STATUS=FIXED SIGNALS=2622,2623 ISSUES=1
+
+**Two categories of bugs were fixed:**
+
+1. **Session window not enforced (7/8 strategies):** Strategies were emitting signals outside `session_start`/`session_end` because no time filter was applied to entry conditions. Fixed by ANDing `in_session` into both `long_entry` and `short_entry`.
+
+2. **`volume_breakout_v1` logic bug:** `rolling_max(5)` included the current bar, making `close > high_5` always False (zero signals). Fixed by using `.shift(1)` to compare against the previous 5 bars only.

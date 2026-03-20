@@ -1,0 +1,20 @@
+All 10 strategies pass all checks. Let me print the required audit results:
+
+AUDIT_RESULT: cursor_opus46max_143 STATUS=PASS SIGNALS=2588,2302 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_144 STATUS=PASS SIGNALS=18472,22677 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_145 STATUS=PASS SIGNALS=640,685 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_146 STATUS=PASS SIGNALS=4797,4787 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_147 STATUS=PASS SIGNALS=555,510 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_148 STATUS=PASS SIGNALS=14865,12590 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_149 STATUS=PASS SIGNALS=312,360 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_150 STATUS=PASS SIGNALS=18,13 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_151 STATUS=PASS SIGNALS=367,472 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_152 STATUS=PASS SIGNALS=2021,2244 ISSUES=0
+
+All 10 strategies (143–152) passed the full audit with no issues:
+- Correct array lengths matching `len(df)`
+- No NaN values in any arrays
+- Proper bool dtypes for entry/exit masks
+- Entries confined within `session_start`/`session_end` windows
+- Reasonable signal counts (non-zero, non-saturated)
+- No `is_long_only` violations

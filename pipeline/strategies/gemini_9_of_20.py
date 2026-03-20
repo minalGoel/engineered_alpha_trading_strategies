@@ -1,3 +1,4 @@
+# AUDIT FIX: Added time_ok session filter to long_entry and short_entry (were firing outside session window)
 """Psychological Level Mean Reversion — gemini_9_of_20
 
 Thesis: Price tends to bounce off round psychological numbers (multiples of 50
@@ -73,6 +74,7 @@ class Strategy(BaseStrategy):
         close = df["close"].to_numpy().astype(np.float64)
         high = df["high"].to_numpy().astype(np.float64)
         low = df["low"].to_numpy().astype(np.float64)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # RSI(14)
         rsi14 = _compute_rsi(close, 14)
@@ -87,9 +89,12 @@ class Strategy(BaseStrategy):
 
         atr14 = _compute_atr(high, low, close, 14)
 
+        # Session filter
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
-        long_entry = near_round & (rsi14 < rsi_long)
-        short_entry = near_round & (rsi14 > rsi_short)
+        long_entry = near_round & (rsi14 < rsi_long) & time_ok
+        short_entry = near_round & (rsi14 > rsi_short) & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

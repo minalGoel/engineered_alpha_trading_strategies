@@ -1,3 +1,4 @@
+# AUDIT FIX: Added time_ok session filter to long_entry and short_entry (were firing outside session window)
 """Pullback to VWAP Trend Ride — gemini_8_of_20
 
 Thesis: In a strong trend (ADX > 30), pullbacks to VWAP offer low-risk entries.
@@ -53,6 +54,7 @@ class Strategy(BaseStrategy):
         high = df["high"].to_numpy().astype(np.float64)
         low = df["low"].to_numpy().astype(np.float64)
         opn = df["open"].to_numpy().astype(np.float64)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # VWAP
         df_v = df.with_columns([
@@ -105,11 +107,14 @@ class Strategy(BaseStrategy):
         bullish_bar = close > opn
         bearish_bar = close < opn
 
+        # Session filter
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
         long_entry = ((adx > adx_min) & (plus_di > minus_di) &
-                       near_vwap & bullish_bar)
+                       near_vwap & bullish_bar & time_ok)
         short_entry = ((adx > adx_min) & (minus_di > plus_di) &
-                        near_vwap & bearish_bar)
+                        near_vwap & bearish_bar & time_ok)
 
         # Signal exit: ADX drops below threshold
         signal_exit_long = adx < adx_exit

@@ -130,8 +130,16 @@ class Strategy(BaseStrategy):
             rel_ret[i] = stock_ret - idx_ret
 
         # ── Base high/low (25 bar rolling) ──
-        base_high = _rolling_max(high, 25)
-        base_low = _rolling_min(low, 25)
+        # AUDIT FIX: _rolling_max/min is inclusive of the current bar so close > base_high
+        # is always False (close <= high <= rolling_max(high)).  Shift by 1 to compare
+        # against PREVIOUS 25-bar high/low (breakout requires exceeding past range).
+        _raw_base_high = _rolling_max(high, 25)
+        _raw_base_low = _rolling_min(low, 25)
+        base_high = np.zeros(n, dtype=np.float64)
+        base_low = np.full(n, np.inf, dtype=np.float64)
+        base_high[1:] = _raw_base_high[:-1]
+        base_low[1:] = _raw_base_low[:-1]
+        base_low = np.where(np.isinf(base_low), low, base_low)
 
         # ── Relative volume ──
         vol_sma20 = df["volume"].rolling_mean(20).to_numpy().astype(np.float64)

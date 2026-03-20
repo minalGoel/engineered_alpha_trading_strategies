@@ -172,6 +172,11 @@ class Strategy(BaseStrategy):
                 idx_ret_15[i] = index_close[i] / index_close[i - 15] - 1.0
 
         # ── OR range filter ──
+        # AUDIT FIX: The original threshold of 1.8 * ATR(14) was calibrated for a
+        # 1-min ATR, but the opening range covers ~15 bars.  A 15-bar range is
+        # naturally ~sqrt(15) ≈ 3.9x the 1-min ATR under random-walk assumptions.
+        # Using 1.8 excluded every single day.  Corrected to 6.0 * ATR(14) which
+        # only filters genuinely extreme gap/spike open days (>6σ equivalent).
         unique_days = np.unique(day_ids)
         or_range_ok = np.ones(n, dtype=np.bool_)
         for d in unique_days:
@@ -183,7 +188,7 @@ class Strategy(BaseStrategy):
                 continue
             or_rng = np.max(high[or_bars]) - np.min(low[or_bars])
             atr_val = atr[or_bars[-1]] if atr[or_bars[-1]] > 0 else atr[idx[-1]]
-            if atr_val > 0 and or_rng > 1.8 * atr_val:
+            if atr_val > 0 and or_rng > 6.0 * atr_val:
                 or_range_ok[idx] = False
 
         # ── Time filter: 09:25-11:15 (565-675) ──

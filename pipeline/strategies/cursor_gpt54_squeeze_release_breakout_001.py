@@ -119,8 +119,16 @@ class Strategy(BaseStrategy):
         ema21 = _compute_ema(close, 21)
 
         # ── 10-bar high/low ──
-        squeeze_high = _rolling_max(high, 10)
-        squeeze_low = _rolling_min(low, 10)
+        # AUDIT FIX: _rolling_max/min is inclusive of the current bar, so close > squeeze_high
+        # is always False (close <= high <= rolling_max(high)).  Shift by 1 so we compare
+        # against the PREVIOUS 10-bar high/low (breakout logic requires exceeding past range).
+        _raw_squeeze_high = _rolling_max(high, 10)
+        _raw_squeeze_low = _rolling_min(low, 10)
+        squeeze_high = np.zeros(n, dtype=np.float64)
+        squeeze_low = np.full(n, np.inf, dtype=np.float64)
+        squeeze_high[1:] = _raw_squeeze_high[:-1]
+        squeeze_low[1:] = _raw_squeeze_low[:-1]
+        squeeze_low = np.where(np.isinf(squeeze_low), low, squeeze_low)
 
         # ── Relative volume ──
         vol_sma20 = df["volume"].rolling_mean(20).to_numpy().astype(np.float64)

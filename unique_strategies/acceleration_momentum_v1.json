@@ -1,0 +1,121 @@
+{
+  "name": "acceleration_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "second-derivative", "acceleration", "early-entry", "trend-following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_167.json",
+  "original_name": "acceleration_momentum_v1",
+  "mechanism": "On NIFTY, large directional institutional orders (FII flow, ETF rebalancing, index arb) are executed incrementally via TWAP/VWAP algos, causing the 1-minute ROC to ramp up progressively before the full move is obvious. When the 30-second change in 1-minute momentum (ROC_accel) turns positive for 15+ consecutive seconds and its own slope is rising, NIFTY is in the 'jerk phase' — the third derivative is positive, meaning algorithmic participation is actively growing. At 5-second resolution we can enter during this early acceleration window, capturing the first 6-12 option points before reactive momentum traders pile in and the acceleration peaks.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "roc_12",
+      "formula": "(close - close[t-12]) / close[t-12] * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 60 seconds of momentum. Original used ROC(10) on 1-min = 10-min context; for a 30-90s hold we need 1-min momentum, not 10-min. Holding 30-90s and measuring 10-min momentum would make the signal too lagged — by the time 10-min ROC turns positive the move is already half over."
+    },
+    {
+      "name": "roc_accel",
+      "formula": "roc_12[t] - roc_12[t-6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6 bars = 30 seconds — the 30-second change in 1-minute momentum. Positive means momentum is actively building (not just sustained). Original used 5-bar (5-min) change in 10-min ROC; compressed to maintain the same ratio of accel_window / hold_time (30s window / 90s hold ≈ 5min / 20min original)."
+    },
+    {
+      "name": "roc_accel_slope",
+      "formula": "linreg_slope(roc_accel, 3)",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "3 bars = 15-second trend of acceleration. Confirms the acceleration is rising (not just a single-bar spike). Minimal 3-bar window to detect direction of the second derivative without over-smoothing."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume) from 09:15",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session-cumulative VWAP as trend direction filter — ensures we trade accelerating momentum aligned with the intraday dominant trend, not against it."
+    },
+    {
+      "name": "vol_sma20",
+      "formula": "SMA(volume, 20)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "100-second volume context. Above-average volume during acceleration confirms institutional participation, not retail noise."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "roc_12 > 0 (positive 1-minute momentum)",
+        "roc_accel > accel_threshold for 3+ consecutive bars (15s of confirmed acceleration)",
+        "roc_accel_slope > 0 (acceleration itself is rising)",
+        "close > vwap (aligned with intraday trend)",
+        "volume > vol_sma20 (institutional participation)"
+      ],
+      "confirmation": "3 consecutive bars with roc_accel > threshold (15 seconds of sustained acceleration)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "roc_12 < 0 (negative 1-minute momentum)",
+        "roc_accel < -accel_threshold for 3+ consecutive bars (15s of confirmed deceleration/acceleration down)",
+        "roc_accel_slope < 0 (deceleration itself accelerating)",
+        "close < vwap (aligned with intraday downtrend)",
+        "volume > vol_sma20 (institutional participation)"
+      ],
+      "confirmation": "3 consecutive bars with roc_accel < -threshold (15 seconds of sustained downside acceleration)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option points = ~6 NIFTY spot points. A momentum acceleration signal that immediately reverses 6 spot points within seconds means the acceleration was noise; at delta ~0.5 that is 3 option pts. If the jerk-phase thesis is correct, drawdowns should not exceed 4-6 spot pts before the continuation begins.",
+    "target_points": 6,
+    "target_rationale": "6 option points = ~12 NIFTY spot points. NIFTY 30-90 second momentum bursts following confirmed acceleration typically cover 15-25 spot points; targeting 6 option pts captures ~50% of the expected continuation leg with a 1:2 R:R.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — momentum acceleration is valid across VIX regimes; high VIX actually amplifies moves",
+    "time_filter": "no entries before 09:25 (first 10 min is pre-open noise) or after 15:20",
+    "volume_filter": "volume > vol_sma20 — confirms institutional participation",
+    "trend_filter": "close vs VWAP — trade only with intraday trend direction",
+    "spread_filter": "not needed — limit orders, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.2,
+    "edge_decay_risk": "moderate — second-derivative signals are noisier at 5s than at 1-min; the 3-bar confirmation and slope filter are critical noise gatekeepers"
+  },
+  "adaptation_notes": "Original strategy ran on NIFTY200 equity stocks at 1-min bars with 10-30 min holds. Key changes: (1) ROC_10 on 1-min → ROC_12 on 5s (same 1-minute window, same time, more bars); however lookback compressed from 10-min ROC to 1-min ROC because our hold is 30-90s not 10-30 min. (2) ROC_accel window: 5 bars (5-min) → 6 bars (30s), maintaining ~1/3 ratio of accel_window to hold_time. (3) Removed ATR stop (not applicable to option premiums), replaced with fixed option-point stop calibrated to typical NIFTY 30-90s move. (4) Volume filter kept but now applies to index volume as institutional participation proxy. (5) VWAP filter kept unchanged — session-cumulative VWAP has no lookback scaling issue.",
+  "weaknesses": [
+    "Second derivative amplifies noise quadratically — the 3-bar confirmation and slope filter are essential but may still produce false signals on choppy NIFTY sessions",
+    "Confirmation delay: 3 bars = 15 seconds of confirmed acceleration may enter too late on very fast momentum bursts (which complete in 20-30 seconds)",
+    "NIFTY volume is noisy at 5s frequency — vol_sma20 filter may not reliably distinguish institutional from retail flow at this timescale",
+    "Strategy may under-trade on low-volatility range days where momentum never accelerates enough to meet all conditions"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_167.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 minutes",
+    "original_indicators": ["ROC(10)", "ROC_accel (ROC_10 diff over 5 bars)", "ROC_accel_slope (linreg 5 bars)", "VWAP", "ATR(14)"],
+    "original_stop": "0.25% from entry with trailing stop at 0.15%",
+    "original_target": "exit when ROC_accel turns negative (peak momentum)"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "name": "ma_crossover_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "crossover", "ema", "trend-following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_17.json",
+  "original_name": "ma_crossover_momentum_v1",
+  "mechanism": "On NIFTY, when the 2-minute EMA crosses above the 10-minute EMA with positive 1-minute spot return, multiple VWAP-benchmarked and systematic momentum algorithms simultaneously detect a directional regime shift and start building positions in parallel. This synchronous institutional order flow creates a self-reinforcing burst lasting 30-120 seconds — clean on NIFTY because the index aggregates individual stock noise and institutional TWAP orders must execute continuously, not in sporadic spikes. The freshness filter (crossover within last 5 minutes) prevents entry into stale trends where the momentum wave has already peaked; only the early acceleration phase is targeted.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_fast",
+      "formula": "EMA(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute fast EMA — NOT the 9×12=108 blind scale. We target 30-60s holds, so the trigger lookback must be 1-3 min, not 9 min. EMA(24) responds to NIFTY direction changes within 2 minutes, matching the expected duration of a momentum burst."
+    },
+    {
+      "name": "ema_slow",
+      "formula": "EMA(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute slow EMA as trend context filter. Original used 21-min EMA; compressed to 10 min because at 5s frequency, a 21-min EMA is too lagged to reflect intraday regime — 10 min captures the current session's directional bias without being a rearview mirror."
+    },
+    {
+      "name": "ret_12",
+      "formula": "(close - close[i-12]) / close[i-12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute return as momentum confirmation. Replaces original's rel_volume (unreliable on NIFTY index at 5s bars) and nifty_return_5 (redundant since we ARE trading NIFTY). Ensures the EMA crossover is happening in a live momentum context, not flat drift."
+    },
+    {
+      "name": "crossover_age",
+      "formula": "bars since ema_fast last crossed ema_slow in current direction",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Freshness filter: only enter within 60 bars (5 min) of the crossover. Beyond that the momentum wave has already been absorbed by faster participants. 60 bars is generous enough to allow confirmation but cuts off stale signals."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ema_fast > ema_slow (bullish EMA alignment)",
+        "EMA crossover occurred within last 60 bars (5 minutes)",
+        "ret_12 > threshold (1-min return confirms positive momentum)",
+        "vix_close < vix_max (low-volatility regime, default 20)",
+        "in session 09:20-15:25"
+      ],
+      "confirmation": "ret_12 positive ensures crossover is momentum-driven, not range noise"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ema_fast < ema_slow (bearish EMA alignment)",
+        "EMA crossover occurred within last 60 bars (5 minutes)",
+        "ret_12 < -threshold (1-min return confirms negative momentum)",
+        "vix_close < vix_max (low-volatility regime, default 20)",
+        "in session 09:20-15:25"
+      ],
+      "confirmation": "ret_12 negative ensures crossover is momentum-driven, not range noise"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option pts = ~6 spot pts retracement. If NIFTY gives back 6 spot pts within 30s after an EMA crossover with volume, the momentum thesis is wrong — institutional flow reversed. NIFTY 30s typical move is 2-5 pts; stop at the upper end of typical noise.",
+    "target_points": 5,
+    "target_rationale": "5 option pts = ~10 spot pts continuation. A fresh EMA(24/120) crossover with positive 1-min return on NIFTY typically extends 15-25 spot pts before the next pullback; 10 pts captures the near-certain leg (~40% of expected move) at 1:1.67 R:R.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "vix < 20 (same as original — prevents entries during high vol regimes where EMA crossovers whipsaw)",
+    "time_filter": "09:20-15:25 IST",
+    "volume_filter": "none (rel_volume unreliable on NIFTY index at 5s; ret_12 serves as proxy)",
+    "trend_filter": "crossover_age <= 60 bars prevents stale trend entries",
+    "spread_filter": "limit order execution — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.9,
+    "edge_decay_risk": "medium — EMA crossover is widely known; edge comes from 5s frequency (faster than retail 1-min charts) and freshness filter"
+  },
+  "adaptation_notes": "Original trades top-50 FnO stocks on 1-min bars, using EMA(9/21). Converted to NIFTY index at 5s. (1) Universe: FnO stocks → NIFTY index directly (the original already used nifty_return_5 as a filter, now it IS the signal). (2) Periods: EMA(9/21 min) → EMA(24/120 bars = 2/10 min). NOT 12x scaled (which would give 108/252 bars). Compressed because hold drops from 10-35 min to 15-120s. (3) rel_volume dropped — NIFTY index volume at 5s is too noisy; replaced by ret_12 as momentum proxy. (4) Freshness filter added (crossover_age ≤ 60) — on 5s bars a crossover can persist for hours; must limit to early-phase entries only. (5) Stops/targets in option premium pts, not ATR%.",
+  "weaknesses": [
+    "EMA crossovers on NIFTY generate false signals in choppy pre-noon sessions (10:30-12:30)",
+    "Freshness filter may miss slow-developing crossovers where momentum builds gradually",
+    "VIX < 20 filter may be too loose on high-vol days; could tighten to 18"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_17.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-35 bars (10-35 min)",
+    "original_indicators": ["EMA(9)", "EMA(21)", "rel_volume", "VIX", "nifty_return_5"],
+    "original_stop": "1 * ATR(14)",
+    "original_target": "2 * ATR(14)"
+  }
+}

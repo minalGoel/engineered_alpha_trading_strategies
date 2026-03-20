@@ -1,0 +1,103 @@
+{
+  "name": "institutional_flow_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["institutional", "flow-detection", "volume-spike", "momentum", "vwap"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_168.json",
+  "original_name": "institutional_flow_momentum_v1",
+  "mechanism": "On NIFTY and BANKNIFTY, large directional institutional orders — FII block buys/sells, index ETF rebalancing, or algo momentum-ignition sequences — produce visible 5-second volume spikes of 4-8x the 10-minute rolling baseline. When such a spike bar is also strongly directional (bar return > 0.03%, roughly 6+ index points in 5 seconds) and closes on the correct side of the session VWAP, it signals net institutional conviction in that direction. Other quantitative participants detect the large print within 1-3 bars and layer in behind it, creating a 15-45 second follow-through window before price fully absorbs the order. Because NIFTY and BANKNIFTY are highly liquid and smooth compared to individual stocks, false volume spikes from thin-book bounces are rare, making the volume signal cleaner than on single equities.",
+  "universe": "BOTH",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX | NSE:NIFTYBANK-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vol_spike_ratio",
+      "formula": "volume / SMA(volume, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "120 bars = 10 minutes rolling volume baseline. Original used 20 1-min bars = 20 min context; compressed to 10 min because at 5s bars we need responsiveness to intraday volume regime shifts (post-news spikes raise the baseline quickly). 20 min at 5s = 240 bars would mix opening-hour volatility into the mid-session baseline. 10 min captures the current regime without over-smoothing."
+    },
+    {
+      "name": "bar_return_pct",
+      "formula": "(close - open) / open * 100",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Measures directional price impact within the single 5-second spike bar. Threshold 0.03% = ~6 NIFTY points or ~13 BANKNIFTY points in one 5s bar — meaningful only when paired with a large volume spike. Replaces original's 0.2% on 1-min bars; the threshold is lower because 0.2% in 5 seconds would be an extreme 40+ point NIFTY move requiring news-level events."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume) from session open",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP unchanged from original. Acts as institutional benchmark: a volume spike closing above VWAP signals buy-side institutional demand outpacing supply; below VWAP signals institutional selling. Cumulative measures don't need lookback scaling."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_spike_ratio > 4.0 (volume at least 4x the 10-min average)",
+        "bar_return_pct > 0.03 (green bar with meaningful price impact)",
+        "close > vwap (institutional buy-side conviction above benchmark)"
+      ],
+      "confirmation": "No additional bar wait — enter on next bar after the spike bar closes. At 5s resolution, waiting 2 bars like the original (= 10 seconds) risks missing the follow-through window."
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_spike_ratio > 4.0",
+        "bar_return_pct < -0.03 (red bar with meaningful price impact)",
+        "close < vwap (institutional sell-side pressure below benchmark)"
+      ],
+      "confirmation": "Enter on next bar after spike bar closes."
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot points. If genuine institutional momentum is driving the move, the index should not retrace 8 spot points within 30-60 seconds — that magnitude of reversal implies the spike was absorbed by opposing institutional flow or was a false print. At delta ~0.5, 8 spot pts maps to ~4 option pts.",
+    "target_points": 6,
+    "target_rationale": "6 option pts = ~12 NIFTY spot points. Institutional momentum follow-through on NIFTY typically extends 10-20 spot points within the 15-60 second window (per 30s typical move of 2-5 option pts). Targeting 6 pts captures the lower-end continuation (1:1.5 R:R) and covers costs with margin at typical 7-lot sizing.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — institutional flows occur regardless of VIX level; volume spike itself is the noise filter",
+    "time_filter": "09:20-15:20 IST; skip first 5 min (09:15-09:20) for opening auction distortion",
+    "volume_filter": "vol_spike_ratio > 4.0 is the primary filter",
+    "trend_filter": "VWAP direction confirms the spike direction",
+    "spread_filter": "none — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 12,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.76,
+    "edge_decay_risk": "moderate — volume spike thresholds may need re-tuning as NIFTY lot size changes or market microstructure evolves; FII flow seasonality affects frequency"
+  },
+  "adaptation_notes": "Three key changes from original: (1) Universe changed from NIFTY100 stock basket to NIFTY/BANKNIFTY index directly — removes need for institutional_ownership filter, block_deal data, and spread filter; (2) Volume SMA lookback compressed from 20 1-min bars (20 min) to 120 5s bars (10 min) to stay responsive to intraday regime shifts; (3) Entry moved from 2-bar wait (2 min in original) to immediate next bar — at 5s resolution any wait risks the follow-through window closing. Bar return threshold reduced from 0.2% to 0.03% to be meaningful on 5-second bars. Hold time compressed from 10-30 min to 15-60 seconds.",
+  "weaknesses": [
+    "NIFTY/BANKNIFTY volume data from index proxies can be noisy — futures volume is cleaner but may not always be available",
+    "Opening 5 minutes excluded but remaining early session still has elevated vol_spike false positives",
+    "4x volume threshold may generate very few signals on low-volume days",
+    "At 5-second resolution, bar_return of 0.03% requires genuine price movement — very low VIX days have smaller moves and may filter out signals"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_168.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 minutes",
+    "original_indicators": ["vol_spike (volume/SMA(volume,20))", "bar_return", "VWAP", "ATR_14", "price_impact"],
+    "original_stop": "0.2% from entry",
+    "original_target": "0.4% from entry"
+  }
+}

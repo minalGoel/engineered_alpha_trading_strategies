@@ -1,0 +1,107 @@
+{
+  "name": "gap_fade_reversion_v116",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "mean_reversion", "opening", "reversal_candle"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_116.json",
+  "original_name": "gap_fade_reversion_v116",
+  "mechanism": "When NIFTY gaps down >0.5% overnight, the first 5-10 minutes involve chaotic two-way flow as trapped overnight longs and opportunistic gap-extenders compete. Once NIFTY prints a 1-minute reversal candle — close in the upper 40% of its 1-minute high-low range and net positive over that minute — it signals that sell-at-open flows have been absorbed: VWAP-benchmarked institutional buyers, who are getting fills well below yesterday's close, have stepped in and overwhelmed the sellers. At 5-second resolution, we can detect this absorption signature (close-above-midrange + net 1-min gain) approximately 15-30 seconds before the bulk of the gap-fade impulse, entering with directional confirmation rather than blindly fading at open. This is structurally different from catching the first fade tick: we wait for the reversal candle to form, reducing false entries on gap-and-go days.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-09:45 IST",
+  "hold_time_seconds": [60, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(day_open - prev_day_close) / prev_day_close",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Overnight gap magnitude using first bar's open vs previous day's last close. No bar-period scaling — this is a day-level reference. Threshold 0.5% (~100 NIFTY pts) chosen to be larger than v103's 0.3%: v116 waits for confirmed reversal candle so the gap needs to be substantial enough that institutional VWAP absorption is unambiguous and not just micro noise."
+    },
+    {
+      "name": "net_return_12",
+      "formula": "(close[i] - close[i-12]) / close[i-12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute (12 bars × 5s) net return. This is the 5-second analog of the original's 'close > open' reversal candle condition. On a 15-min bar the condition 'close > open' means the entire 15-min bar is bullish. Compressed to 1-min because we're targeting the first reversal confirmation, not the full candle. 12 bars gives exactly 60 seconds — long enough for a real reversal structure to emerge at 5s, short enough that we're still early in the fade impulse."
+    },
+    {
+      "name": "range_position_12",
+      "formula": "(close[i] - min(low[i-11:i+1])) / (max(high[i-11:i+1]) - min(low[i-11:i+1]))",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Close position within the 1-minute high-low range (0=at low, 1=at high). Threshold 0.6 for bullish (gap-down fade) and 0.4 for bearish (gap-up fade). This is the key differentiator from v103: the original's 'close > open' is structurally equivalent to price closing in the upper portion of the day's range, which at 5s maps to close above the midpoint of the 1-min range. A range position >0.6 means buying pressure dominated the last 60 seconds, confirming absorption."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct < -gap_threshold (significant overnight gap-down, default 0.5%)",
+        "net_return_12 > reversal_threshold (close above 1-min-ago close — reversal candle forming)",
+        "range_position_12 > 0.6 (close in upper 40% of 1-min range — bullish absorption)",
+        "time_minutes in [560, 585) — 09:20-09:45 IST (after initial volatility, before gap resolves)",
+        "vix between 10 and 25 (filter structural/macro gaps)"
+      ],
+      "confirmation": "1-minute reversal candle absorption structure (net positive + upper range close)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct > gap_threshold (significant overnight gap-up, default 0.5%)",
+        "net_return_12 < -reversal_threshold (close below 1-min-ago close — bearish reversal)",
+        "range_position_12 < 0.4 (close in lower 40% of 1-min range — distribution)",
+        "time_minutes in [560, 585) — 09:20-09:45 IST",
+        "vix between 10 and 25"
+      ],
+      "confirmation": "1-minute reversal candle distribution structure (net negative + lower range close)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5.0,
+    "stop_rationale": "5 option points (~10 NIFTY spot pts at delta 0.5). After a confirmed 1-minute reversal candle, if NIFTY reverses another 10 spot pts against us, the absorption thesis has definitively failed — the gap is extending not fading. Slightly wider than v103's 4 pts because we enter ~5-10 min into the session when volatility is lower but moves can be more sustained; a 10-pt adverse move at this stage is unambiguous gap-and-go.",
+    "target_points": 8.0,
+    "target_rationale": "8 option points (~16 NIFTY spot pts). The post-absorption fade impulse on NIFTY — after the reversal candle confirms — typically covers 15-25 spot pts in the next 60-90 seconds. Targeting 16 pts captures ~65% of the median expected move (1:1.6 R:R). Wider than v103's 7 pts because we enter with higher conviction (confirmed reversal candle) and can afford a bigger target.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 09:45 (strategy window closed)"
+  },
+  "filters": {
+    "vix_filter": "vix 10-25 — same rationale as v103; below 10 means no overnight fear so gap is microstructural noise; above 25 means macro panic and gap won't fade behaviorally",
+    "time_filter": "09:20-09:45 IST only — starts 5 min later than v103 (skip initial noisy open), ends 10 min later (allows time for reversal candle to form); gap fades resolved or structural by 09:45",
+    "volume_filter": "none — reversal candle structure (range position + net return) already implies volume; adding explicit volume threshold would over-filter at 5s resolution",
+    "trend_filter": "none — gap fade is mean-reverting; gap direction determines trade direction, not prior trend",
+    "spread_filter": "none — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.60,
+    "profit_factor_estimate": 2.20,
+    "edge_decay_risk": "medium-low — VWAP benchmarking and institutional gap-fade behavior is structurally persistent; reversal candle filter reduces crowding risk vs pure gap-fade"
+  },
+  "adaptation_notes": "Original v116 trades top-50 F&O stocks on 15-min bars, holding 10-30 bars (2.5-7.5 hrs) targeting full gap fill to prev_close. Key conversion insight: the original's entry condition 'close > open' on a gap-down day is a reversal candle — the 15-min bar itself turned bullish. At 5s, this maps to the 1-minute close being in the upper portion of the 1-minute range AND positive vs 1-min-ago. Changes from original: (1) Target compressed from full gap fill (~200 pts) to post-absorption impulse (~16 pts = 8 option pts). (2) Time window 09:20-09:45 — 5 min later than v103 to allow the reversal candle to form, not just the first fade tick. (3) Replaced volume > SMA(volume,5) with range_position_12 — at 5s on NIFTY index, range position is a cleaner proxy for absorption than raw volume comparisons. (4) Differentiation from v103: v103 catches the FIRST fade impulse using 3-bar momentum direction; v116 catches the CONFIRMED REVERSAL using 1-min candle structure, trading fewer but higher-conviction setups.",
+  "weaknesses": [
+    "Gap-and-go days (gap-down then continued down) will hit stops — 1-min reversal candle reduces but doesn't eliminate false entries",
+    "Fewer opportunities than v103 (only after confirmed reversal forms) — some days the reversal candle forms after 09:45 and misses the window",
+    "NIFTY index gaps of >0.5% occur on fewer than 30% of trading days, limiting frequency",
+    "First 5 min of session (09:15-09:20) excluded; may miss the fastest fade on strong gap days"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_116.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "10-30 bars (2.5-7.5 hours)",
+    "original_indicators": ["gap_pct = (open - prev_close)/prev_close", "reversal_candle: close > open on gap-down", "volume > SMA(volume,5)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "prev_close (full gap fill)"
+  }
+}

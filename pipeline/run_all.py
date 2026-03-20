@@ -187,11 +187,14 @@ def build_option_premium_grid(
     return ce_grid, pe_grid, strikes_arr, atm_strike_idx, is_expiry
 
 
-def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=None):
+def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=None, capital=None):
     """Run full backtest: compute signals → state machine → metrics.
 
     Returns (trades_df, metrics_dict) or (None, empty_metrics) on failure.
     """
+    from pipeline.cost_model import CAPITAL_PER_ENTRY
+    if capital is None:
+        capital = CAPITAL_PER_ENTRY
     from pipeline.config import (
         EOD_FLATTEN_H, EOD_FLATTEN_M,
         EXPIRY_FLATTEN_H, EXPIRY_FLATTEN_M,
@@ -270,7 +273,7 @@ def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=Non
     })
 
     total_days = spot_df["day_id"].n_unique()
-    metrics = compute_metrics(trades_df, lot_size=lot_size, total_trading_days=total_days)
+    metrics = compute_metrics(trades_df, lot_size=lot_size, total_trading_days=total_days, capital=capital)
 
     return trades_df, metrics
 

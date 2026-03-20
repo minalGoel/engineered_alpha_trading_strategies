@@ -1,2 +1,0 @@
-sma_crossover_banknifty_v1
-index_momentum_v1

@@ -157,7 +157,7 @@ def generate_report(
 
     lines.append("## Standard Assumptions")
     lines.append("- All option entries fill at bar close premium")
-    lines.append("- Cost model ON: bid-ask spread, STT, brokerage, exchange charges")
+    lines.append("- Cost model ON: STT, brokerage, exchange charges (limit orders, no spread)")
     lines.append("- EOD flatten at 15:25 IST, expiry day flatten at 15:20 IST")
     lines.append("- One position at a time (no simultaneous CE + PE)")
     lines.append("- ATM strike = nearest strike to spot close at entry")

@@ -1,23 +1,27 @@
 """
 Cost model for NSE index option trades (NIFTY / BANKNIFTY).
-Based on Upstox brokerage charges (https://upstox.com/brokerage-charges/).
+Based on Upstox brokerage charges: https://upstox.com/brokerage-charges/
 
-All values in INR unless noted. Premium values are in option points.
-Turnover = premium × lot_size × lots (in INR, since 1 option point = ₹1).
+All values in INR unless noted. Premium values are in option points (₹1/point/unit).
+Turnover = premium × lot_size × lots (in INR).
 
-Charges for INTRADAY OPTIONS on NSE:
+Charges for EQUITY OPTIONS on NSE (rates effective from 1 Oct 2024):
 ─────────────────────────────────────────────────────────────────────
   Brokerage:           ₹20 flat per executed order (not per lot)
-  STT:                 0.025% on sell-side turnover
-  Exchange Txn:        0.03553% on premium turnover (both sides) [Mar 2026]
+  STT:                 0.15% on sell-side premium turnover (from 1 Apr 2025)
+  Exchange Txn (NSE):  0.03553% on premium turnover (both sides)
   SEBI Fee:            ₹10/crore on turnover (both sides)
   Stamp Duty:          0.003% on buy-side turnover
   IPFT:                ₹0.50/lakh on premium turnover (both sides)
   GST:                 18% on (brokerage + exchange txn + IPFT)
 ─────────────────────────────────────────────────────────────────────
+
+Execution model: limit orders at candle close prices. No bid-ask spread.
 """
 
-# Lot sizes
+import math
+
+# ── Lot sizes ────────────────────────────────────────────────────────────
 NIFTY_LOT = 65
 BANKNIFTY_LOT = 30
 
@@ -28,17 +32,17 @@ LOT_SIZES = {
     "NSE:NIFTYBANK-INDEX": BANKNIFTY_LOT,
 }
 
-# ── Upstox actual charges ──────────────────────────────────────────
-BROKERAGE_PER_ORDER = 20.0       # ₹20 flat per order (1 lot or 100 lots = same)
-STT_RATE = 0.00025               # 0.025% on sell-side turnover
+# ── Upstox charges (equity options, from 1 Oct 2024) ─────────────────────
+BROKERAGE_PER_ORDER = 20.0       # ₹20 flat per executed order
+STT_RATE = 0.0015                # 0.15% on sell-side premium turnover (from 1 Apr 2025)
 EXCHANGE_TXN_RATE = 0.0003553    # 0.03553% on premium turnover (both sides)
-SEBI_FEE_RATE = 0.000001         # ₹10/crore = 0.0001%
+SEBI_FEE_RATE = 0.000001         # ₹10/crore = 0.0001% on turnover (both sides)
 STAMP_DUTY_RATE = 0.00003        # 0.003% on buy-side turnover
-IPFT_RATE = 0.000005             # ₹0.50/lakh = 0.0005%
-GST_RATE = 0.18                  # 18% on (brokerage + exchange + IPFT)
+IPFT_RATE = 0.000005             # ₹0.50/lakh on premium turnover (both sides)
+GST_RATE = 0.18                  # 18% on (brokerage + exchange txn + IPFT)
 
-# Bid-ask spread assumption (configurable per analysis)
-SPREAD_POINTS = 1.5              # default: ₹1.50 per side in option premium points
+# ── Capital deployment ───────────────────────────────────────────────────
+CAPITAL_PER_ENTRY = 100_000      # ₹1 lakh per strategy entry (modifiable at backtest time)
 
 
 def get_lot_size(underlying: str) -> int:
@@ -50,12 +54,24 @@ def get_lot_size(underlying: str) -> int:
     raise KeyError(f"Unknown underlying: {underlying}")
 
 
+def compute_lots(entry_premium: float, lot_size: int, capital: float = CAPITAL_PER_ENTRY) -> int:
+    """Compute number of lots affordable with given capital.
+
+    lots = floor(capital / (entry_premium × lot_size))
+    Always returns at least 1 (minimum trade size).
+    """
+    if entry_premium <= 0 or lot_size <= 0:
+        return 1
+    lots = int(capital / (entry_premium * lot_size))
+    return max(lots, 1)
+
+
 def compute_trade_costs(
     entry_premium: float,
     exit_premium: float,
     lot_size: int,
-    lots: int = 1,
-    spread_per_side: float = SPREAD_POINTS,
+    lots: int = 0,
+    capital: float = CAPITAL_PER_ENTRY,
 ) -> dict:
     """
     Compute full cost breakdown for an option buy-then-sell round trip.
@@ -64,52 +80,52 @@ def compute_trade_costs(
     ----------
     entry_premium  : option premium at entry (points, ₹1 per point per unit)
     exit_premium   : option premium at exit (points)
-    lot_size       : contract lot size (75 for NIFTY, 15 for BANKNIFTY)
-    lots           : number of lots in the order
-    spread_per_side: bid-ask spread assumption in points per side
+    lot_size       : contract lot size (65 for NIFTY, 30 for BANKNIFTY)
+    lots           : number of lots (0 = auto-compute from capital)
+    capital        : capital budget per entry in INR (default ₹1,00,000)
 
     Returns
     -------
     dict with full cost breakdown, all in INR
     """
+    if lots <= 0:
+        lots = compute_lots(entry_premium, lot_size, capital)
     qty = lot_size * lots
-    buy_turnover = entry_premium * qty     # INR
-    sell_turnover = exit_premium * qty     # INR
+    buy_turnover = entry_premium * qty
+    sell_turnover = exit_premium * qty
     total_turnover = buy_turnover + sell_turnover
 
     gross_pnl = (exit_premium - entry_premium) * qty
 
-    # 1. Bid-ask spread: lost on both entry and exit
-    spread_cost = spread_per_side * 2 * qty
-
-    # 2. STT: 0.025% on sell-side turnover only
+    # 1. STT: 0.15% on sell-side premium turnover only
     stt = sell_turnover * STT_RATE
 
-    # 3. Exchange transaction charges: 0.03553% on both sides
+    # 2. Exchange transaction charges: 0.03553% on premium turnover (both sides)
     exchange_txn = total_turnover * EXCHANGE_TXN_RATE
 
-    # 4. SEBI fee: ₹10/crore on both sides
+    # 3. SEBI fee: ₹10/crore on turnover (both sides)
     sebi_fee = total_turnover * SEBI_FEE_RATE
 
-    # 5. Stamp duty: 0.003% on buy-side turnover only
+    # 4. Stamp duty: 0.003% on buy-side turnover only
     stamp_duty = buy_turnover * STAMP_DUTY_RATE
 
-    # 6. IPFT: ₹0.50/lakh on both sides
+    # 5. IPFT: ₹0.50/lakh on premium turnover (both sides)
     ipft = total_turnover * IPFT_RATE
 
+    # 6. Brokerage: ₹20 per order × 2 (entry + exit), flat regardless of lots
+    brokerage = BROKERAGE_PER_ORDER * 2
+
     # 7. GST: 18% on (brokerage + exchange txn + IPFT)
-    brokerage = BROKERAGE_PER_ORDER * 2  # entry order + exit order (flat, not per lot)
     gst = (brokerage + exchange_txn + ipft) * GST_RATE
 
-    # Regulatory total = exchange_txn + sebi + stamp + ipft
     regulatory = exchange_txn + sebi_fee + stamp_duty + ipft
-
-    total_cost = spread_cost + stt + brokerage + regulatory + gst
+    total_cost = stt + brokerage + regulatory + gst
     net_pnl = gross_pnl - total_cost
 
     return {
+        "lots": lots,
+        "qty": qty,
         "gross_pnl": gross_pnl,
-        "spread_cost": spread_cost,
         "stt": stt,
         "brokerage": brokerage,
         "exchange_txn": exchange_txn,
@@ -127,17 +143,22 @@ def net_pnl_quick(
     entry_premium: float,
     exit_premium: float,
     lot_size: int,
-    lots: int = 1,
-    spread_per_side: float = SPREAD_POINTS,
+    lots: int = 0,
+    capital: float = CAPITAL_PER_ENTRY,
 ) -> float:
-    """Return just the net PnL (INR) for a round trip. Fast path."""
+    """Return just the net PnL (INR) for a round trip. Fast path.
+
+    If lots=0, auto-computes from capital / (entry_premium × lot_size).
+    """
+    if lots <= 0:
+        lots = compute_lots(entry_premium, lot_size, capital)
     qty = lot_size * lots
     buy_to = entry_premium * qty
     sell_to = exit_premium * qty
     total_to = buy_to + sell_to
 
     gross = (exit_premium - entry_premium) * qty
-    spread_cost = spread_per_side * 2 * qty
+
     stt = sell_to * STT_RATE
     exchange_txn = total_to * EXCHANGE_TXN_RATE
     sebi = total_to * SEBI_FEE_RATE
@@ -146,23 +167,23 @@ def net_pnl_quick(
     brokerage = BROKERAGE_PER_ORDER * 2
     gst = (brokerage + exchange_txn + ipft) * GST_RATE
 
-    costs = spread_cost + stt + brokerage + exchange_txn + sebi + stamp + ipft + gst
+    costs = stt + brokerage + exchange_txn + sebi + stamp + ipft + gst
     return gross - costs
 
 
 def min_points_to_breakeven(
     lot_size: int,
     entry_premium: float = 100.0,
-    lots: int = 1,
-    spread_per_side: float = SPREAD_POINTS,
+    lots: int = 0,
+    capital: float = CAPITAL_PER_ENTRY,
 ) -> float:
     """Minimum premium move (points) needed for a round-trip to break even."""
-    # Approximate: assume exit ≈ entry + delta, delta small vs entry
+    if lots <= 0:
+        lots = compute_lots(entry_premium, lot_size, capital)
     qty = lot_size * lots
     turnover_approx = entry_premium * qty * 2  # both sides ≈ same premium
 
     fixed = BROKERAGE_PER_ORDER * 2
-    spread = spread_per_side * 2 * qty
     stt = entry_premium * qty * STT_RATE
     exchange_txn = turnover_approx * EXCHANGE_TXN_RATE
     sebi = turnover_approx * SEBI_FEE_RATE
@@ -170,20 +191,22 @@ def min_points_to_breakeven(
     ipft = turnover_approx * IPFT_RATE
     gst = (fixed + exchange_txn + ipft) * GST_RATE
 
-    total = fixed + spread + stt + exchange_txn + sebi + stamp + ipft + gst
+    total = fixed + stt + exchange_txn + sebi + stamp + ipft + gst
     return total / qty
 
 
-def print_cost_breakdown(entry_premium, exit_premium, lot_size, lots, spread_per_side=SPREAD_POINTS):
+def print_cost_breakdown(entry_premium, exit_premium, lot_size, lots=0, capital=CAPITAL_PER_ENTRY):
     """Print a human-readable cost breakdown."""
-    c = compute_trade_costs(entry_premium, exit_premium, lot_size, lots, spread_per_side)
+    if lots <= 0:
+        lots = compute_lots(entry_premium, lot_size, capital)
+    c = compute_trade_costs(entry_premium, exit_premium, lot_size, lots, capital)
     qty = lot_size * lots
-    print(f"  Entry: ₹{entry_premium:.2f} × {qty} units ({lots} lot{'s' if lots>1 else ''} × {lot_size})")
-    print(f"  Exit:  ₹{exit_premium:.2f} × {qty} units")
+    print(f"  Capital: ₹{capital:,.0f} → {lots} lot{'s' if lots>1 else ''} × {lot_size} = {qty} units")
+    print(f"  Entry: ₹{entry_premium:.2f} × {qty} units = ₹{entry_premium * qty:,.2f}")
+    print(f"  Exit:  ₹{exit_premium:.2f} × {qty} units = ₹{exit_premium * qty:,.2f}")
     print(f"  Gross PnL:       ₹{c['gross_pnl']:>10.2f}")
     print(f"  ─── Costs ───")
-    print(f"  Spread ({spread_per_side}×2×{qty}):  ₹{c['spread_cost']:>10.2f}")
-    print(f"  STT (0.025%×sell):  ₹{c['stt']:>10.2f}")
+    print(f"  STT (0.15%×sell): ₹{c['stt']:>10.2f}")
     print(f"  Brokerage (₹20×2): ₹{c['brokerage']:>10.2f}")
     print(f"  Exchange txn:      ₹{c['exchange_txn']:>10.2f}")
     print(f"  SEBI fee:          ₹{c['sebi_fee']:>10.2f}")

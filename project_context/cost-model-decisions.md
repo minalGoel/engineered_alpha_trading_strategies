@@ -95,19 +95,24 @@ At 7 lots: minimum drops to ~₹192/lot = 2.56 points (brokerage diluted).
 
 This is tight. It means only strategies with high directional accuracy AND good timing are viable.
 
-## Decisions Made
-- Spread assumption: ₹1.00/side as the "realistic" case (achievable with limit orders on ATM weeklies during liquid hours)
-- Run sensitivity analysis at 4 spread levels: 0.50, 0.75, 1.00, 1.50
-- Brokerage is flat per order — correct modeling gives meaningful advantage at scale
-- Report BOTH gross and net metrics everywhere — gross shows if the signal has edge, net shows if the trade is profitable
+## Decisions Made (March 2026 overhaul)
+- **Spread = 0**: Limit order execution at candle close prices eliminates bid-ask spread entirely
+- **STT corrected to 0.15%**: Was 0.025% in code, hiked to 0.1% from Oct 2024, then to 0.15% from 1 Apr 2025
+- **Capital per entry = ₹1,00,000**: Determines lot count. At ₹200 premium, NIFTY gets 7 lots (455 units)
+- Brokerage is flat per order (₹40 RT) — diluted across lots at scale
+- STT (0.15%) is the dominant cost at scale — percentage-based, not dilutable
+- Breakeven at ₹200 premium: ~0.58 pts (NIFTY, 7 lots) / ~0.57 pts (BANKNIFTY, 16 lots)
+- Report BOTH gross and net metrics everywhere
 
 ## Pitfalls & Anti-patterns
-- **Assuming spread scales linearly with lots**: Spread × quantity is correct. But brokerage is fixed per order. The prior model charged brokerage per lot, overstating costs at scale.
-- **Using gross Sharpe for optimization objective**: When costs are on, the optimizer must use after-cost Sharpe. Otherwise it optimizes for maximum trading frequency (more trades = more gross PnL) while ignoring that each trade costs ₹200+.
-- **Ignoring spread as "small"**: At ₹1.50/side, a 3-point winner is wiped out entirely by spread alone. Spread is the single most important cost component for options scalping.
+- **Using gross Sharpe for optimization objective**: When costs are on, the optimizer must use after-cost Sharpe.
+- **Ignoring STT at scale**: STT (0.15% of sell turnover) doesn't dilute with more lots — it's the floor cost. At 7 lots NIFTY (₹200 premium), STT alone is ~₹139/trade.
+- **Assuming 1-lot trades**: With ₹1L capital, most trades are 5-30 lots. Cost structure is dominated by percentage fees, not flat brokerage.
 
 ## Corrections Log
 - ~~Cost model charged brokerage per lot~~ → Brokerage is flat per ORDER (₹20 regardless of lots)
-- ~~Spread assumed at ₹1.50/side~~ → Revised to ₹1.00/side as "realistic" with limit orders; ₹1.50 retained as "conservative"
-- ~~NIFTY lot size = 75~~ → Corrected to 65 in latest pipeline run (verify current lot sizes — they change)
+- ~~Spread assumed at ₹1.50/side~~ → ~~Revised to ₹1.00/side~~ → **Removed entirely** (limit orders at candle close)
+- ~~NIFTY lot size = 75~~ → Corrected to 65
 - ~~BANKNIFTY lot size = 15~~ → Corrected to 30
+- ~~STT = 0.025%~~ → ~~0.1% (Oct 2024)~~ → **0.15%** (from 1 Apr 2025)
+- Added CAPITAL_PER_ENTRY = ₹1,00,000 for realistic lot sizing

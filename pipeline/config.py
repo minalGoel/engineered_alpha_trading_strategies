@@ -47,11 +47,11 @@ NIFTY_LOT = 65
 BANKNIFTY_LOT = 30
 
 # ── Cost model ───────────────────────────────────────────────────────────
-SPREAD_POINTS = 1.5           # bid-ask spread per side in premium points
-STT_RATE = 0.000625           # 0.0625% on sell-side premium × qty
+STT_RATE = 0.0015             # 0.15% on sell-side premium (from 1 Apr 2025)
 BROKERAGE_PER_ORDER = 20      # INR flat per order
-EXCHANGE_PER_LOT = 5          # INR per lot per side (approx)
-MIN_POINTS_VIABLE = 4.0       # minimum premium move per trade to be viable
+EXCHANGE_TXN_RATE = 0.0003553 # 0.03553% on premium turnover (both sides, NSE Mar 2026)
+CAPITAL_PER_ENTRY = 100_000   # ₹1 lakh per strategy entry order
+MIN_POINTS_VIABLE = 1.5       # minimum premium move per trade to be viable
 
 # ── Optimization ────────────────────────────────────────────────────────
 OPTUNA_TRIALS = 100

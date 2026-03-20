@@ -14,21 +14,23 @@ import math
 from typing import Optional
 
 from pipeline.config import TOTAL_TRADING_DAYS
-from pipeline.cost_model import net_pnl_quick, SPREAD_POINTS
+from pipeline.cost_model import net_pnl_quick, CAPITAL_PER_ENTRY
 
 
 def compute_metrics(
     trades_df: pl.DataFrame,
-    lot_size: int = 75,
+    lot_size: int = 65,
     total_trading_days: Optional[int] = None,
+    capital: float = CAPITAL_PER_ENTRY,
 ) -> dict:
     """Compute aggregate performance metrics from a trades DataFrame.
 
     Args:
         trades_df: DataFrame with columns: pnl, entry_premium, exit_premium,
                    entry_time, exit_time, holding_bars, exit_reason, side
-        lot_size: Contract lot size (75 for NIFTY, 15 for BANKNIFTY).
+        lot_size: Contract lot size (65 for NIFTY, 30 for BANKNIFTY).
         total_trading_days: Total calendar trading days (for Sharpe).
+        capital: Capital deployed per entry in INR (for lot sizing and returns).
 
     Returns:
         Metrics dict.
@@ -51,7 +53,7 @@ def compute_metrics(
             entry_prems = trades_df["entry_premium"].to_numpy()
             exit_prems = trades_df["exit_premium"].to_numpy()
             net_pnls = np.array([
-                net_pnl_quick(ep, xp, lot_size) for ep, xp in zip(entry_prems, exit_prems)
+                net_pnl_quick(ep, xp, lot_size, capital=capital) for ep, xp in zip(entry_prems, exit_prems)
             ])
         else:
             net_pnls = pnls  # fallback
@@ -91,7 +93,7 @@ def compute_metrics(
             sorted_entry = sorted_df["entry_premium"].to_numpy()
             sorted_exit = sorted_df["exit_premium"].to_numpy()
             sorted_net = np.array([
-                net_pnl_quick(ep, xp, lot_size) for ep, xp in zip(sorted_entry, sorted_exit)
+                net_pnl_quick(ep, xp, lot_size, capital=capital) for ep, xp in zip(sorted_entry, sorted_exit)
             ])
         else:
             sorted_net = sorted_df["pnl"].to_numpy().astype(np.float64)
@@ -109,7 +111,7 @@ def compute_metrics(
             entry_prems_daily = trades_df["entry_premium"].to_numpy()
             exit_prems_daily = trades_df["exit_premium"].to_numpy()
             net_pnl_arr = np.array([
-                net_pnl_quick(ep, xp, lot_size)
+                net_pnl_quick(ep, xp, lot_size, capital=capital)
                 for ep, xp in zip(entry_prems_daily, exit_prems_daily)
             ])
             trades_with_net = trades_df.with_columns(
@@ -127,9 +129,7 @@ def compute_metrics(
         ).sort("trade_date")
 
         days_with_trades = len(daily_pnl)
-        # Use lot_size as a proxy for capital deployed
-        capital_proxy = lot_size * 200  # approx premium × lot_size
-        daily_returns_arr = daily_pnl["daily_pnl"].to_numpy() / max(capital_proxy, 1)
+        daily_returns_arr = daily_pnl["daily_pnl"].to_numpy() / max(capital, 1)
 
         # Zero-fill non-trading days
         total_days = max(total_trading_days, days_with_trades)
@@ -142,8 +142,7 @@ def compute_metrics(
         else:
             daily_returns_full = daily_returns_arr
     else:
-        capital_proxy = lot_size * 200
-        daily_returns_full = np.array([total_pnl / max(capital_proxy, 1)])
+        daily_returns_full = np.array([total_pnl / max(capital, 1)])
         days_with_trades = 1
 
     # ── Sharpe ratio ──
@@ -192,6 +191,7 @@ def compute_sharpe_from_trades(
     trades_df: pl.DataFrame,
     lot_size: int,
     total_trading_days: int,
+    capital: float = CAPITAL_PER_ENTRY,
 ) -> float:
     """Quick Sharpe computation for Optuna objective. Uses NET PnL (after costs)."""
     if trades_df is None or trades_df.is_empty() or len(trades_df) < 5:
@@ -202,7 +202,7 @@ def compute_sharpe_from_trades(
         entry_p = trades_df["entry_premium"].to_numpy()
         exit_p = trades_df["exit_premium"].to_numpy()
         net_pnl_arr = np.array([
-            net_pnl_quick(ep, xp, lot_size) for ep, xp in zip(entry_p, exit_p)
+            net_pnl_quick(ep, xp, lot_size, capital=capital) for ep, xp in zip(entry_p, exit_p)
         ])
         trades_with_net = trades_df.with_columns(pl.Series("_net_pnl", net_pnl_arr))
     else:
@@ -215,8 +215,7 @@ def compute_sharpe_from_trades(
         pl.col("_net_pnl").sum().alias("daily_pnl")
     )
 
-    capital_proxy = lot_size * 200
-    daily_returns = daily_pnl["daily_pnl"].to_numpy() / max(capital_proxy, 1)
+    daily_returns = daily_pnl["daily_pnl"].to_numpy() / max(capital, 1)
     days_with_trades = len(daily_returns)
 
     # Zero fill

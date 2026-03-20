@@ -99,15 +99,25 @@ Same columns as `spot_df` but for "NSE:INDIAVIX-INDEX".
 
 ## 4. Cost Model (always ON)
 
+**Execution model:** Limit orders at candle close prices. Entry at bar i close, exit at bar j close (j > i). No market orders, no bid-ask spread cost.
+
 Every trade incurs:
-- **Bid-ask spread:** ~1.5 points per side (3 points round trip)
-- **STT:** 0.0625% on sell-side (exit premium × 0.000625 × qty)
-- **Brokerage:** ₹20 per order (₹40 round trip)
-- **Exchange charges:** ~₹5 per lot per side
+- **STT:** 0.15% on sell-side premium turnover (from 1 Apr 2025)
+- **Brokerage:** ₹20 per order (₹40 round trip, flat regardless of lots)
+- **Exchange txn (NSE):** 0.03553% on premium turnover (both sides)
+- **SEBI fee:** ₹10/crore on turnover (both sides)
+- **Stamp duty:** 0.003% on buy-side turnover
+- **IPFT:** ₹0.50/lakh on premium turnover (both sides)
+- **GST:** 18% on (brokerage + exchange txn + IPFT)
+- **No bid-ask spread** — limit order execution at candle close prices
 
-**Minimum premium move to breakeven:** ~4 points for NIFTY (lot=75), ~6 points for BANKNIFTY (lot=15)
+**Capital per entry:** ₹1,00,000 (configurable). Lots = floor(capital / (premium × lot_size)).
+At premium ₹200, NIFTY: floor(100000 / (200 × 65)) = 7 lots = 455 units.
 
-A strategy must clear ~4 option points per trade after costs to be viable.
+**Minimum premium move to breakeven:** ~0.6 pts for NIFTY at 7 lots (₹200 premium), ~0.9 pts at 1 lot.
+Brokerage (₹40 flat) is diluted across more units at scale; STT (0.15%) dominates at scale.
+
+A strategy must predict direction well enough to clear ~0.6-1.0 option points per trade after costs.
 
 ---
 
@@ -115,8 +125,8 @@ A strategy must clear ~4 option points per trade after costs to be viable.
 
 | Underlying | Lot Size | Strike Step |
 |-----------|----------|-------------|
-| NIFTY | 75 | 50 |
-| BANKNIFTY | 15 | 100 |
+| NIFTY | 65 | 50 |
+| BANKNIFTY | 30 | 100 |
 
 ---
 
@@ -329,7 +339,7 @@ class Strategy(BaseStrategy):
 11. **UTC→IST conversion** — timestamps in data are UTC, convert with `convert_time_zone("Asia/Kolkata")`
 12. **Forward-fill** NaN in Polars before `.to_numpy()`
 13. **Loops acceptable** — hot path is state_machine.py via Numba
-14. **Cost model always ON** — strategies must clear ~4 pts/trade
+14. **Cost model always ON** — strategies must clear ~0.6-1.0 pts/trade (limit orders, ₹1L capital, STT 0.15%)
 
 ---
 
@@ -423,6 +433,8 @@ Typical NIFTY/BANKNIFTY moves at different timescales (ATM option points, delta 
 | 5 minutes (60 bars) | 7-15 pts | 10-25 pts |
 
 Use this to sanity-check stops and targets against hold time.
+
+**Directional Edge Focus:** With ₹1L capital per entry and limit order execution, breakeven is ~0.6 pts at typical premiums (₹200, 7 lots NIFTY). Strategies targeting even 1-2 pt option moves are viable. The critical requirement is **directional accuracy** — predicting whether NIFTY/BANKNIFTY will move up or down in the next 15-120 seconds. A strategy that is right 55% of the time with symmetric 3:3 stop:target is profitable at this cost structure. Focus signal design on direction prediction quality.
 
 ### 10.5 Gold Standard Conversion Examples
 

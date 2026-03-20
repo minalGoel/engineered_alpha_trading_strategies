@@ -1,4 +1,8 @@
-"""Vol Surface Signal: uses put-call IV skew to predict direction."""
+"""Vol Surface Signal: uses put-call IV skew to predict direction.
+
+FIXED: Skew is computed from FIXED reference strikes per day (day-open ATM ±100),
+not from shifting ATM. This eliminates discontinuities when ATM shifts bar-to-bar.
+"""
 from pipeline.strategies.base import BaseStrategy, OptionSignals, TunableParam
 import numpy as np
 import polars as pl
@@ -12,7 +16,7 @@ class Strategy(BaseStrategy):
     max_trades_per_day = 4
     max_lookback = 240  # 20 min warmup
     assumptions = [
-        "Put-call skew computed from ATM±2 strikes in nearest expiry",
+        "Put-call skew computed from FIXED day-open ATM±100 strikes in nearest expiry",
         "Skew change rate signals institutional positioning shifts",
         "OTM put IV > OTM call IV = normal skew",
         "12 trading days — limited skew history",
@@ -30,81 +34,94 @@ class Strategy(BaseStrategy):
         n = len(spot_df)
         close = spot_df["close"].fill_null(strategy="forward").to_numpy().astype(np.float64)
         time_min = spot_df["time_minutes"].to_numpy().astype(np.int32)
+        day_id = spot_df["day_id"].to_numpy().astype(np.int32)
         atm_strike = spot_df["atm_strike"].fill_null(strategy="forward").to_numpy().astype(np.float64)
 
-        # Compute put-call skew from option data
-        # For each bar: get nearest-expiry ATM±100 put IV proxy vs call IV proxy
-        # Use option premium as IV proxy (higher premium ≈ higher IV for ATM options)
         skew = np.zeros(n)
 
         if option_df is not None and not option_df.is_empty():
-            # Group option data by session_date for efficiency
+            datetimes = spot_df["datetime"].to_list()
+
             for day_id_val in spot_df["day_id"].unique().to_list():
-                day_mask = spot_df["day_id"].to_numpy() == day_id_val
-                if not np.any(day_mask):
+                day_mask = day_id == day_id_val
+                day_indices = np.where(day_mask)[0]
+                if len(day_indices) == 0:
                     continue
 
-                day_indices = np.where(day_mask)[0]
                 day_spot = spot_df.filter(pl.col("day_id") == day_id_val)
-
                 if day_spot.is_empty():
                     continue
 
                 session_date = day_spot["session_date"].head(1).to_list()[0]
 
-                # Get options for this day
+                # FIXED: Use the ATM strike at the FIRST bar of the day as
+                # the reference for the entire day. This prevents strike-switching
+                # noise in the skew indicator.
+                day_open_atm = atm_strike[day_indices[0]]
+                fixed_put_strike = day_open_atm - 100  # OTM put
+                fixed_call_strike = day_open_atm + 100  # OTM call
+
                 day_opts = option_df.filter(pl.col("session_date") == session_date)
                 if day_opts.is_empty():
                     continue
 
-                # Get nearest expiry
                 nearest_expiry = day_opts["expiry"].min()
                 day_opts = day_opts.filter(pl.col("expiry") == nearest_expiry)
 
-                # For each bar, compute skew
-                day_atm = atm_strike[day_indices]
+                # Pre-fetch the two fixed strike series for the entire day
+                put_series = day_opts.filter(
+                    (pl.col("strike") == fixed_put_strike) &
+                    (pl.col("option_type") == "PE")
+                ).sort("datetime")
 
-                # Pre-compute skew more efficiently: sample every 12th bar (1 per minute)
-                datetimes = spot_df["datetime"].to_list()
-                sample_step = 12  # every minute instead of every 5s
+                call_series = day_opts.filter(
+                    (pl.col("strike") == fixed_call_strike) &
+                    (pl.col("option_type") == "CE")
+                ).sort("datetime")
+
+                if put_series.is_empty() or call_series.is_empty():
+                    continue
+
+                put_times = put_series["datetime"].to_list()
+                put_closes = put_series["close"].to_numpy()
+                call_times = call_series["datetime"].to_list()
+                call_closes = call_series["close"].to_numpy()
+
+                # Two-pointer fill: for each spot bar, get latest put and call premium
+                put_idx = 0
+                call_idx = 0
+                sample_step = 12  # every minute
+
                 for local_i in range(0, len(day_indices), sample_step):
                     global_i = int(day_indices[local_i])
-                    atm = day_atm[local_i]
                     bar_time = datetimes[global_i]
 
-                    # Get OTM put (ATM - 100) and OTM call (ATM + 100) premiums
-                    otm_put = day_opts.filter(
-                        (pl.col("strike") == atm - 100) &
-                        (pl.col("option_type") == "PE") &
-                        (pl.col("datetime") <= bar_time)
-                    )
-                    otm_call = day_opts.filter(
-                        (pl.col("strike") == atm + 100) &
-                        (pl.col("option_type") == "CE") &
-                        (pl.col("datetime") <= bar_time)
-                    )
+                    # Advance put pointer
+                    while put_idx < len(put_times) - 1 and put_times[put_idx + 1] <= bar_time:
+                        put_idx += 1
+                    # Advance call pointer
+                    while call_idx < len(call_times) - 1 and call_times[call_idx + 1] <= bar_time:
+                        call_idx += 1
 
-                    if not otm_put.is_empty() and not otm_call.is_empty():
-                        put_prem = otm_put["close"].tail(1).to_list()[0]
-                        call_prem = otm_call["close"].tail(1).to_list()[0]
+                    if (put_idx < len(put_times) and put_times[put_idx] <= bar_time and
+                            call_idx < len(call_times) and call_times[call_idx] <= bar_time):
+                        put_prem = put_closes[put_idx]
+                        call_prem = call_closes[call_idx]
                         if call_prem > 0:
                             s = put_prem / call_prem - 1.0
-                            # Fill forward to next sample
                             end = min(local_i + sample_step, len(day_indices))
                             for j in range(local_i, end):
                                 skew[int(day_indices[j])] = s
 
         # Skew z-score
-        skew_mean = np.zeros(n)
-        skew_std = np.ones(n)
         skew_z = np.zeros(n)
         lookback = 240
         for i in range(lookback, n):
             window = skew[i-lookback:i]
-            skew_mean[i] = np.mean(window)
-            s = np.std(window)
-            skew_std[i] = s if s > 0.001 else 0.001
-            skew_z[i] = (skew[i] - skew_mean[i]) / skew_std[i]
+            mean = np.mean(window)
+            std = np.std(window)
+            if std > 0.001:
+                skew_z[i] = (skew[i] - mean) / std
 
         z_high = params.get("skew_z_high", 2.0)
         z_low = params.get("skew_z_low", -2.0)

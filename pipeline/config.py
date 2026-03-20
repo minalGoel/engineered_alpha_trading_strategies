@@ -43,8 +43,8 @@ MIN_TRADES_FULL = 50              # minimum trades on full training period
 MIN_TRADES_PER_UNDERLYING = 30    # Chan's minimum for statistical validity
 
 # ── Lot sizes ────────────────────────────────────────────────────────────
-NIFTY_LOT = 75
-BANKNIFTY_LOT = 15
+NIFTY_LOT = 65
+BANKNIFTY_LOT = 30
 
 # ── Cost model ───────────────────────────────────────────────────────────
 SPREAD_POINTS = 1.5           # bid-ask spread per side in premium points

@@ -4,6 +4,9 @@ Handles FLAT → LONG_CE / LONG_PE → FLAT state transitions.
 PnL is computed in option premium points × lot size.
 No simultaneous CE + PE positions.
 No option writing/selling to open — buy CE or buy PE only, sell to close.
+
+CRITICAL: Entry strike is LOCKED for the duration of the trade.
+Premium lookup always uses the entry strike, not the current ATM strike.
 """
 from __future__ import annotations
 import numpy as np
@@ -36,11 +39,12 @@ EXIT_REASON_MAP = {
 def run_state_machine(
     # Spot price data (for signal timing — length n)
     spot_close: np.ndarray,       # float64[n] — index close
-    # Option premium data (for PnL — length n)
-    # These are the close prices of the option being traded at each bar.
-    # For bars where no position is held, values are ignored.
-    option_ce_close: np.ndarray,  # float64[n] — ATM CE close premium
-    option_pe_close: np.ndarray,  # float64[n] — ATM PE close premium
+    # Option premium grid (for PnL — n × n_strikes)
+    # Each cell [bar, strike_idx] = close premium of that strike at that bar.
+    ce_grid: np.ndarray,          # float64[n, n_strikes]
+    pe_grid: np.ndarray,          # float64[n, n_strikes]
+    # ATM strike index per bar
+    atm_strike_idx: np.ndarray,   # int32[n] — index into strikes dimension
     # Day/time info
     day_id: np.ndarray,           # int32[n]
     time_minutes: np.ndarray,     # int32[n] — IST minutes from midnight
@@ -69,7 +73,7 @@ def run_state_machine(
     is_expiry: np.ndarray,        # bool[n]
     expiry_flatten_minutes: int,  # e.g., 920 for 15:20 IST
 ) -> tuple:
-    """Run the option trading state machine.
+    """Run the option trading state machine with strike-locked positions.
 
     Returns:
         entry_bar: int64[max_trades]
@@ -79,6 +83,8 @@ def run_state_machine(
         exit_premium: float64[max_trades] — option premium at exit
         exit_reason: int8[max_trades]
         pnl: float64[max_trades] — (exit-entry) × lot_size per trade
+        entry_strike_indices: int32[max_trades] — locked strike index
+        premium_missing: bool[max_trades] — True if premium was missing at exit
         trade_count: int
     """
     n = len(spot_close)
@@ -92,16 +98,21 @@ def run_state_machine(
     out_exit_premium = np.empty(max_trades, dtype=np.float64)
     out_exit_reason = np.empty(max_trades, dtype=np.int8)
     out_pnl = np.empty(max_trades, dtype=np.float64)
+    out_entry_strike_idx = np.empty(max_trades, dtype=np.int32)
+    out_premium_missing = np.zeros(max_trades, dtype=np.bool_)
 
     trade_count = 0
     state = _FLAT
     entry_premium = 0.0
     entry_bar_idx = 0
+    entry_strike_idx_locked = 0   # strike index locked at entry
     stop_price = 0.0
     target_price = 0.0
     bars_held = 0
     current_day = -1
     daily_trades = 0
+    last_known_premium = 0.0
+    premium_was_missing = False
 
     for i in range(n):
         # ── Day boundary detection ──
@@ -117,11 +128,18 @@ def run_state_machine(
         if state != _FLAT:
             bars_held += 1
 
-            # Get current option premium
+            # Get current option premium at LOCKED strike
             if state == _LONG_CE:
-                current_premium = option_ce_close[i]
+                current_premium = ce_grid[i, entry_strike_idx_locked]
             else:
-                current_premium = option_pe_close[i]
+                current_premium = pe_grid[i, entry_strike_idx_locked]
+
+            # Handle missing premium data (0 or NaN)
+            if current_premium <= 0.0 or current_premium != current_premium:
+                current_premium = last_known_premium
+                premium_was_missing = True
+            else:
+                last_known_premium = current_premium
 
             exit_triggered = False
             reason = _EXIT_NONE
@@ -181,6 +199,8 @@ def run_state_machine(
                 out_exit_premium[trade_count] = fill_premium
                 out_exit_reason[trade_count] = reason
                 out_pnl[trade_count] = pnl
+                out_entry_strike_idx[trade_count] = entry_strike_idx_locked
+                out_premium_missing[trade_count] = premium_was_missing
                 trade_count += 1
                 state = _FLAT
 
@@ -192,15 +212,19 @@ def run_state_machine(
                 continue
 
             entered = False
+            s_idx = atm_strike_idx[i]
 
             # Check CE entry (bullish)
             if buy_ce[i]:
-                premium = option_ce_close[i]
+                premium = ce_grid[i, s_idx]
                 # Guard: premium must be valid (not NaN, not zero)
                 if premium == premium and premium > 0:
                     state = _LONG_CE
                     entry_premium = premium
                     entry_bar_idx = i
+                    entry_strike_idx_locked = s_idx
+                    last_known_premium = premium
+                    premium_was_missing = False
                     bars_held = 0
                     entered = True
 
@@ -221,11 +245,14 @@ def run_state_machine(
 
             # Check PE entry (bearish) — only if not just entered CE
             if not entered and buy_pe[i]:
-                premium = option_pe_close[i]
+                premium = pe_grid[i, s_idx]
                 if premium == premium and premium > 0:
                     state = _LONG_PE
                     entry_premium = premium
                     entry_bar_idx = i
+                    entry_strike_idx_locked = s_idx
+                    last_known_premium = premium
+                    premium_was_missing = False
                     bars_held = 0
                     entered = True
 
@@ -249,9 +276,13 @@ def run_state_machine(
     # ── Force-close open position at end of data ──
     if state != _FLAT and trade_count < max_trades:
         if state == _LONG_CE:
-            fill_premium = option_ce_close[n - 1]
+            fill_premium = ce_grid[n - 1, entry_strike_idx_locked]
         else:
-            fill_premium = option_pe_close[n - 1]
+            fill_premium = pe_grid[n - 1, entry_strike_idx_locked]
+
+        if fill_premium <= 0.0 or fill_premium != fill_premium:
+            fill_premium = last_known_premium
+            premium_was_missing = True
 
         pnl = (fill_premium - entry_premium) * lot_size
 
@@ -262,6 +293,8 @@ def run_state_machine(
         out_exit_premium[trade_count] = fill_premium
         out_exit_reason[trade_count] = _EXIT_EOD
         out_pnl[trade_count] = pnl
+        out_entry_strike_idx[trade_count] = entry_strike_idx_locked
+        out_premium_missing[trade_count] = premium_was_missing
         trade_count += 1
 
     return (
@@ -272,6 +305,8 @@ def run_state_machine(
         out_exit_premium[:trade_count],
         out_exit_reason[:trade_count],
         out_pnl[:trade_count],
+        out_entry_strike_idx[:trade_count],
+        out_premium_missing[:trade_count],
         trade_count,
     )
 
@@ -279,7 +314,10 @@ def run_state_machine(
 def warmup_numba():
     """Pre-compile the Numba function with small dummy data."""
     n = 100
-    dummy = np.abs(np.random.randn(n).astype(np.float64)) + 50.0  # option premiums
+    n_strikes = 5
+    ce_grid = np.abs(np.random.randn(n, n_strikes).astype(np.float64)) + 50.0
+    pe_grid = np.abs(np.random.randn(n, n_strikes).astype(np.float64)) + 50.0
+    atm_idx = np.full(n, 2, dtype=np.int32)  # middle strike
     spot = np.abs(np.random.randn(n).astype(np.float64)) * 100 + 24000
     day_ids = np.zeros(n, dtype=np.int32)
     time_mins = np.full(n, 600, dtype=np.int32)
@@ -289,7 +327,7 @@ def warmup_numba():
     is_exp = np.zeros(n, dtype=np.bool_)
 
     run_state_machine(
-        spot, dummy, dummy,
+        spot, ce_grid, pe_grid, atm_idx,
         day_ids, time_mins,
         bools, bools, bools, bools,
         stops, targets,

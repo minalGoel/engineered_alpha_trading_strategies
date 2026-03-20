@@ -72,38 +72,65 @@ import numpy as np
 import polars as pl
 
 
-def build_option_premium_arrays(
+def build_option_premium_grid(
     spot_df: pl.DataFrame,
     option_df: pl.DataFrame,
     underlying: str,
 ) -> tuple:
-    """Build per-bar ATM CE and PE option premium arrays aligned to spot bars.
+    """Build 2D premium grids: ce_grid[n, n_strikes] and pe_grid[n, n_strikes].
 
-    For each spot bar, looks up the ATM strike's nearest-expiry CE and PE
-    close premium using an asof-join (last option bar at or before spot time).
+    For each spot bar and each strike, stores the latest option close premium
+    at or before that bar's timestamp (nearest expiry only).
 
-    Returns (option_ce_close, option_pe_close, is_expiry) — all length n.
+    This allows the state machine to lock the entry strike and track the
+    SAME contract's premium throughout the trade, even if ATM shifts.
+
+    Returns (ce_grid, pe_grid, strikes_arr, atm_strike_idx, is_expiry).
     """
     n = len(spot_df)
-    option_ce_close = np.zeros(n, dtype=np.float64)
-    option_pe_close = np.zeros(n, dtype=np.float64)
-    is_expiry = np.zeros(n, dtype=np.bool_)
 
     if option_df is None or option_df.is_empty():
-        return option_ce_close, option_pe_close, is_expiry
+        # Return minimal grid
+        ce_grid = np.zeros((n, 1), dtype=np.float64)
+        pe_grid = np.zeros((n, 1), dtype=np.float64)
+        strikes_arr = np.array([0.0])
+        atm_strike_idx = np.zeros(n, dtype=np.int32)
+        is_expiry = np.zeros(n, dtype=np.bool_)
+        return ce_grid, pe_grid, strikes_arr, atm_strike_idx, is_expiry
 
-    expiry_dates = set(option_df["expiry"].unique().to_list())
-    day_ids = spot_df["day_id"].to_numpy()
-    atm_strike = spot_df["atm_strike"].to_numpy()
-    datetimes = spot_df["datetime"].to_list()
-    session_dates = spot_df["session_date"].to_list()
+    # Build strike index
+    all_strikes = sorted(option_df["strike"].unique().to_list())
+    n_strikes = len(all_strikes)
+    strike_to_idx = {}
+    for i_s, s in enumerate(all_strikes):
+        strike_to_idx[s] = i_s
+    strikes_arr = np.array(all_strikes, dtype=np.float64)
+
+    ce_grid = np.zeros((n, n_strikes), dtype=np.float64)
+    pe_grid = np.zeros((n, n_strikes), dtype=np.float64)
+    is_expiry = np.zeros(n, dtype=np.bool_)
+
+    # ATM strike index per bar
+    atm_raw = spot_df["atm_strike"].to_numpy()
+    atm_strike_idx = np.zeros(n, dtype=np.int32)
+    for i in range(n):
+        atm = atm_raw[i]
+        if atm in strike_to_idx:
+            atm_strike_idx[i] = strike_to_idx[atm]
+        else:
+            atm_strike_idx[i] = int(np.argmin(np.abs(strikes_arr - atm)))
 
     # Mark expiry days
+    expiry_dates = set(option_df["expiry"].unique().to_list())
+    day_ids = spot_df["day_id"].to_numpy()
+    session_dates = spot_df["session_date"].to_list()
+    datetimes = spot_df["datetime"].to_list()
+
     for i in range(n):
         if session_dates[i] in expiry_dates:
             is_expiry[i] = True
 
-    # Process day-by-day for efficiency
+    # Fill grid day-by-day
     for day_val in sorted(spot_df["day_id"].unique().to_list()):
         day_mask = day_ids == day_val
         day_indices = np.where(day_mask)[0]
@@ -112,20 +139,31 @@ def build_option_premium_arrays(
 
         sd = session_dates[day_indices[0]]
 
-        # Get options for this session date
         day_opts = option_df.filter(pl.col("session_date") == sd)
         if day_opts.is_empty():
             continue
 
-        # Pick nearest expiry
         nearest_expiry = day_opts["expiry"].min()
         day_opts = day_opts.filter(pl.col("expiry") == nearest_expiry)
 
-        # Get unique ATM strikes used on this day
-        day_atm_set = set(atm_strike[day_indices])
+        # Get the set of ATM strikes used this day + neighbours (±2 strikes)
+        day_atm_set = set(atm_raw[day_indices])
+        strikes_needed = set()
+        for atm_val in day_atm_set:
+            if atm_val in strike_to_idx:
+                idx = strike_to_idx[atm_val]
+                for offset in range(-2, 3):
+                    neighbor = idx + offset
+                    if 0 <= neighbor < n_strikes:
+                        strikes_needed.add(all_strikes[neighbor])
 
-        for strike_val in day_atm_set:
-            for opt_type, out_arr in [("CE", option_ce_close), ("PE", option_pe_close)]:
+        # Process each (strike, option_type) combination
+        for strike_val in strikes_needed:
+            if strike_val not in strike_to_idx:
+                continue
+            s_idx = strike_to_idx[strike_val]
+
+            for opt_type, grid in [("CE", ce_grid), ("PE", pe_grid)]:
                 opts = day_opts.filter(
                     (pl.col("strike") == strike_val) &
                     (pl.col("option_type") == opt_type)
@@ -137,18 +175,16 @@ def build_option_premium_arrays(
                 opt_times = opts["datetime"].to_list()
                 opt_closes = opts["close"].to_numpy()
 
-                # For each spot bar with this ATM strike, find the last option close
-                strike_indices = day_indices[atm_strike[day_indices] == strike_val]
+                # Two-pointer fill: for each spot bar, find last option close
                 opt_idx = 0
-                for si in strike_indices:
+                for si in day_indices:
                     bar_time = datetimes[si]
-                    # Advance opt_idx to last entry at or before bar_time
                     while opt_idx < len(opt_times) - 1 and opt_times[opt_idx + 1] <= bar_time:
                         opt_idx += 1
                     if opt_idx < len(opt_times) and opt_times[opt_idx] <= bar_time:
-                        out_arr[si] = opt_closes[opt_idx]
+                        grid[si, s_idx] = opt_closes[opt_idx]
 
-    return option_ce_close, option_pe_close, is_expiry
+    return ce_grid, pe_grid, strikes_arr, atm_strike_idx, is_expiry
 
 
 def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=None):
@@ -169,8 +205,8 @@ def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=Non
     signals = strategy.compute(spot_df, option_df, vix_df, params)
     n = len(spot_df)
 
-    # Build option premium arrays
-    option_ce_close, option_pe_close, is_expiry_arr = build_option_premium_arrays(
+    # Build option premium grid (2D: bars × strikes)
+    ce_grid, pe_grid, strikes_arr, atm_strike_idx, is_expiry_arr = build_option_premium_grid(
         spot_df, option_df, strategy.underlying,
     )
 
@@ -180,8 +216,9 @@ def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=Non
 
     result = run_state_machine(
         spot_close=spot_df["close"].to_numpy().astype(np.float64),
-        option_ce_close=option_ce_close,
-        option_pe_close=option_pe_close,
+        ce_grid=ce_grid,
+        pe_grid=pe_grid,
+        atm_strike_idx=atm_strike_idx,
         day_id=spot_df["day_id"].to_numpy().astype(np.int32),
         time_minutes=spot_df["time_minutes"].to_numpy().astype(np.int32),
         buy_ce=signals.buy_ce,
@@ -201,13 +238,17 @@ def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=Non
         expiry_flatten_minutes=exp_mins,
     )
 
-    entry_bars, exit_bars, sides, entry_prems, exit_prems, exit_reasons, pnls, trade_count = result
+    (entry_bars, exit_bars, sides, entry_prems, exit_prems,
+     exit_reasons, pnls, entry_strike_indices, premium_missing, trade_count) = result
 
     if trade_count == 0:
         return None, _empty_metrics()
 
     # Build trades DataFrame
     dt_list = spot_df["datetime"].to_list()
+    spot_close_arr = spot_df["close"].to_numpy()
+    atm_arr = spot_df["atm_strike"].to_numpy()
+
     trades_df = pl.DataFrame({
         "entry_bar": entry_bars[:trade_count],
         "exit_bar": exit_bars[:trade_count],
@@ -219,6 +260,13 @@ def backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size, params=Non
         "entry_time": [dt_list[int(b)] for b in entry_bars[:trade_count]],
         "exit_time": [dt_list[int(b)] for b in exit_bars[:trade_count]],
         "holding_bars": (exit_bars[:trade_count] - entry_bars[:trade_count]).astype(np.int64),
+        "entry_strike": [float(strikes_arr[int(si)]) for si in entry_strike_indices[:trade_count]],
+        "entry_strike_idx": entry_strike_indices[:trade_count].astype(np.int32),
+        "atm_at_entry": [float(atm_arr[int(b)]) for b in entry_bars[:trade_count]],
+        "atm_at_exit": [float(atm_arr[int(b)]) for b in exit_bars[:trade_count]],
+        "spot_at_entry": [float(spot_close_arr[int(b)]) for b in entry_bars[:trade_count]],
+        "spot_at_exit": [float(spot_close_arr[int(b)]) for b in exit_bars[:trade_count]],
+        "premium_missing_at_exit": premium_missing[:trade_count],
     })
 
     total_days = spot_df["day_id"].n_unique()

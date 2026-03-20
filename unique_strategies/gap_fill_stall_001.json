@@ -1,0 +1,133 @@
+{
+  "name": "gap_fill_stall_001",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "mean_reversion", "opening_range", "fakeout", "vwap"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_129.json",
+  "original_name": "gap_fill_stall_001",
+  "mechanism": "On NIFTY, overnight gap-downs exceeding 1.2% reflect FII-driven or macro-driven price dislocation. During the first 15 minutes (09:15-09:30), algorithmic market makers and liquidity providers absorb order flow and establish the opening range. When NIFTY subsequently dips below the OR low within a single 5-second bar — triggering resting stop-loss orders and programmatic short entries — but fails to sustain below it (close recovers back above OR low in the same bar), the short-side flow is exhausted and absorbed. VWAP-benchmarked institutional buyers, who are already tracking a benchmark significantly above current price, step in aggressively to exploit the dip, driving a reversal toward session VWAP. At 5-second resolution, we detect this fakeout in real time and enter at the exact bar of stall rather than waiting for the full 1-minute confirmation, capturing the early leg of the reversal.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-10:45 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["gap_pct_day_level", "opening_range_levels"]
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumulative(close * volume) / cumulative(volume) from 09:15",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP is cumulative from day open — no lookback scaling needed. Acts as the gap-fill target; the thesis is that NIFTY reverts toward VWAP after the fakeout, so VWAP must be above price to justify a bullish entry."
+    },
+    {
+      "name": "or_high",
+      "formula": "MAX(high) over bars where time_minutes in [555, 570)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Opening range is a FIXED TIME WINDOW (09:15-09:30 = 180 bars at 5s). Same 15 minutes as original — not scaled by bar size. OR high is the fakeout level on gap-up days: a brief spike above triggers stops that then get absorbed."
+    },
+    {
+      "name": "or_low",
+      "formula": "MIN(low) over bars where time_minutes in [555, 570)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Same FIXED TIME WINDOW as or_high. OR low is the fakeout level on gap-down days: a brief dip below triggers stop cascades. If NIFTY closes back above OR low in the same 5s bar, the breakdown has failed and reversal begins."
+    },
+    {
+      "name": "gap_pct",
+      "formula": "day_open / prev_day_close - 1",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Overnight gap size — a session-level condition computed once at open and carried through the day. Threshold of 1.2% matches original and identifies genuine macro/FII dislocation rather than intraday noise. Gaps below this threshold produce weaker OR fakeouts because there is less trapped short interest."
+    },
+    {
+      "name": "rel_vol_120",
+      "formula": "volume / SMA(volume, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Relative volume vs 10-min rolling average (120 bars x 5s). Original used 20-min average on 1-min bars. Compressed to 10 min because at 5s resolution, the volume surge accompanying a fakeout bar is a 5-15 second event — a stale 20-min baseline would wash out the signal. Threshold 1.2x ensures the fakeout bar has real participation, not a thin-market artifact."
+    },
+    {
+      "name": "nifty_ret_60",
+      "formula": "close / close[-60] - 1",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-min NIFTY return (60 bars x 5s). Original used 15-min index return to filter one-way trending markets. Compressed to 5 min because we hold 15-90s — if NIFTY is in a strong 5-min directional move (>0.4%), the gap-fade mean-reversion thesis is invalidated. A trailing strong trend suppresses the OR fakeout bounce."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct <= -gap_threshold (gap-down day, default 1.2%)",
+        "low < or_low (current bar touched below OR low — fakeout test)",
+        "close >= or_low (price closes back above OR low — stall confirmed)",
+        "close < vwap (upside gap-fill potential toward VWAP)",
+        "close > open (bullish candle close on the fakeout bar)",
+        "rel_vol_120 >= rel_vol_threshold (volume surge confirms participation, default 1.2x)",
+        "abs(nifty_ret_60) <= trend_threshold (NIFTY not in one-way trend, default 0.4%)",
+        "time_minutes in [570, 645) (09:30-10:45 window, OR fully formed)"
+      ],
+      "confirmation": "Single-bar signal — fakeout and recovery in same 5s candle"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct >= gap_threshold (gap-up day, default 1.2%)",
+        "high > or_high (current bar touched above OR high — fakeout test)",
+        "close <= or_high (price closes back below OR high — stall confirmed)",
+        "close > vwap (downside gap-fill potential toward VWAP)",
+        "close < open (bearish candle close on the fakeout bar)",
+        "rel_vol_120 >= rel_vol_threshold",
+        "abs(nifty_ret_60) <= trend_threshold",
+        "time_minutes in [570, 645)"
+      ],
+      "confirmation": "Single-bar signal — fakeout and rejection in same 5s candle"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "If NIFTY sustains below OR low, the fakeout thesis is invalid — NIFTY typically moves 8-12 spot pts from OR low before finding structural support. 4 option points (delta ~0.5 = 8 spot pts) represents the threshold where the bounce is no longer a fakeout but a genuine breakdown.",
+    "target_points": 7,
+    "target_rationale": "Gap fill from OR low toward session VWAP typically covers 15-25 spot pts on NIFTY in the 09:30-10:45 window; 7 option pts captures ~50-60% of expected move (delta ~0.5, 7 pts = ~14 spot pts), giving 1:1.75 R:R. The 7-pt target is calibrated to 60-90s hold time where 1-2 min NIFTY moves average 3-7 option pts.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 10:45 IST (645 min)"
+  },
+  "filters": {
+    "vix_filter": "none — gap fakeouts occur across all VIX regimes; the OR structure itself provides the volatility context",
+    "time_filter": "09:30-10:45 IST only; OR must be fully formed (180 bars = 15 min completed)",
+    "volume_filter": "rel_vol_120 >= 1.2 ensures the fakeout bar has real market participation",
+    "trend_filter": "abs(nifty_ret_60) <= 0.004 excludes trending markets where OR fakeout reversals are overridden by sustained directional flow",
+    "spread_filter": "none — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.24,
+    "edge_decay_risk": "medium — OR fakeout patterns are well-known; execution at 5s granularity reduces crowding risk vs 1-min bars, but pattern frequency on NIFTY index is lower than on stocks"
+  },
+  "adaptation_notes": "Original traded top-200 nifty500 stocks for gap fades. Converted to NIFTY index because the gap-stall-at-OR pattern is cleaner on the index (no single-stock idiosyncratic risk, driven purely by macro/FII flow, index volume is deep). Stock-specific rel_volume filter kept but baseline compressed from 20-min to 10-min for responsiveness at 5s. Index conflict filter (original: abs(nifty50_return_15min) < 0.4%) repurposed as self-referential 5-min trend filter on NIFTY (abs(nifty_ret_60) < 0.4%). Hold time compressed from 5-15 min to 15-90s because we enter at the exact fakeout bar rather than confirming on the next 1-min bar. VWAP removed from exits — the time_stop_bars=18 (90s) handles the hold time instead of VWAP crossing.",
+  "weaknesses": [
+    "Gap frequency on NIFTY index is lower than individual stocks (1-2 qualifying gap-down/up days per week vs multiple stocks daily) — low trade frequency",
+    "OR fakeout detection is single-bar dependent at 5s: data gaps or latency spikes could cause false signals or missed entries",
+    "If a second macro event hits during the 09:30-10:45 window, gap can widen rather than fill, converting a fakeout entry into a losing gap-extension trade"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_129.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-15 bars (5-15 min)",
+    "original_indicators": ["VWAP", "ATR(14)", "rel_volume_20", "gap_pct", "or_high", "or_low", "index_return_15"],
+    "original_stop": "0.50% from entry or failed OR break level",
+    "original_target": "session VWAP, then opening print"
+  }
+}

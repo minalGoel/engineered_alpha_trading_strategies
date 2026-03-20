@@ -1,0 +1,104 @@
+{
+  "name": "inside_bar_breakout_v177",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["price_action", "breakout", "microstructure", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_121.json",
+  "original_name": "inside_bar_breakout_v177",
+  "mechanism": "On NIFTY, sharp 5-second directional bars (≥5 index points range) represent algorithmic momentum bursts where a single institutional order temporarily dominates. The subsequent inside bar forms as market makers reprice and resting limit orders absorb the thrust — a micro-equilibrium where neither bulls nor bears commit. When the next 5-second bar closes beyond the inside bar's boundary in the direction of the mother bar, trapped opposing-side stop-losses trigger and the momentum algos re-enter, driving a 10-20 spot point continuation. The 5s resolution lets us enter at the exact moment directional consensus re-establishes, 30-90 seconds before the move completes.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "4-10",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "is_inside",
+      "formula": "high[i] < high[i-1] AND low[i] > low[i-1]",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Structural relationship — detects whether bar i is fully contained within bar i-1. No time scaling needed: an inside bar is a bar-count concept (1 bar back), not a time-duration concept. Valid at any frequency."
+    },
+    {
+      "name": "mother_range",
+      "formula": "high[i-2] - low[i-2]",
+      "lookback": 2,
+      "computed_on": "spot",
+      "purpose": "Range of the mother bar (the bar that the inside bar was contained within). Used to filter noise: at 5s on NIFTY, tiny inside bars (e.g., 1-2 pt range mother) are pure microstructure noise with no directional content. Require ≥5 pts to ensure a meaningful directional thrust preceded the consolidation."
+    },
+    {
+      "name": "trend_36",
+      "formula": "close[i] - close[i-36]",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute trend momentum. At 5s holds (15-60s), we want breakouts aligned with the prevailing 3-minute direction. 36 bars = 3 min is the right trade-trigger lookback: shorter than 5-min (context filter) but longer than the inside bar micro-pattern itself. NOT 12x the original's lookback — original used no trend filter; we add it specifically to reduce false breakouts at 5s noise levels."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "Previous bar (i-1) was an inside bar: high[i-1] < high[i-2] AND low[i-1] > low[i-2]",
+        "Mother bar range (high[i-2] - low[i-2]) >= min_mother_range_pts threshold",
+        "Current close breaks above inside bar high: close[i] > high[i-1]",
+        "3-min trend is non-negative: close[i] >= close[i-36]"
+      ],
+      "confirmation": "Close above inside bar high (not just a wick)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "Previous bar (i-1) was an inside bar: high[i-1] < high[i-2] AND low[i-1] > low[i-2]",
+        "Mother bar range (high[i-2] - low[i-2]) >= min_mother_range_pts threshold",
+        "Current close breaks below inside bar low: close[i] < low[i-1]",
+        "3-min trend is non-positive: close[i] <= close[i-36]"
+      ],
+      "confirmation": "Close below inside bar low (not just a wick)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "Inside bar breakouts on NIFTY that fail reverse quickly — if the move was not genuine, price returns to the inside bar range within 5-10s (≈2-5 spot pts). At delta ~0.5, a 6 spot pt reversal = 3 option pts. 3 pts cuts the losing trade before the false breakout extends into a full reversion.",
+    "target_points": 5,
+    "target_rationale": "A successful 5s inside bar breakout on NIFTY typically extends 10-15 spot pts in the first 60 seconds as the trapped-side stops clear. 5 option pts ≈ 10 spot pts at delta 0.5, capturing the median first-leg move at 1:1.67 risk-reward.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "none — pattern is structural, not regime-dependent",
+    "time_filter": "09:20-15:20 IST — avoid pre-open gaps and EOD illiquidity",
+    "volume_filter": "implicit via mother bar range requirement (large range implies large volume at 5s)",
+    "trend_filter": "36-bar (3-min) momentum must align with breakout direction",
+    "spread_filter": "none — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.70,
+    "edge_decay_risk": "medium — stop-hunt algos specifically prey on inside bar breakouts; wicks can trigger false signals at 5s resolution"
+  },
+  "adaptation_notes": "Original used 15-min bars on nifty200 stocks (top 50 by volume) with volume surge confirmation. The core inside bar concept translates directly to NIFTY 5s bars. Three key changes: (1) Replaced equity volume surge with mother bar range threshold — index volume at 5s is too noisy to be meaningful, but a large-range mother bar implies significant order flow. (2) Added 36-bar (3-min) trend filter — at 5s, inside bars are far more frequent than at 15-min, so trend alignment filters down to high-conviction setups. (3) Compressed stops/targets from ATR-multiples (designed for 30-60 min holds) to option premium points calibrated for 15-60s holds on NIFTY.",
+  "weaknesses": [
+    "At 5s resolution, inside bars are common even in flat/noisy markets — mother bar range filter is critical but may still over-trigger",
+    "Wick-hunting algos can trigger the breakout condition on a 5s wick that immediately reverses before the next bar",
+    "Session open (first 15 min) can produce exaggerated mother bars unrelated to intraday trend, generating false signals"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_121.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "30-60 bars (~7.5-15 hours; likely 30-60 min intended)",
+    "original_indicators": ["prev_high (REF(high,1))", "prev_low (REF(low,1))", "is_inside"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "14 * ATR(14) from entry"
+  }
+}

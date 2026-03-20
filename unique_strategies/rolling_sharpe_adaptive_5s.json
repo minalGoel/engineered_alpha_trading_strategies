@@ -1,0 +1,120 @@
+{
+  "name": "rolling_sharpe_adaptive_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "rolling_sharpe_adaptive_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_313.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 16,
+  "thesis": "A strategy's real-time performance (measured by rolling Sharpe ratio of its own recent trades) provides information about whether current market conditions are favorable. By computing a rolling Sharpe ratio over the last 20 trade outcomes and scaling position size proportionally, we ride winning streaks with larger size and cut losers with smaller size \u2014 a form of adaptive position sizing. The base signal is a simple VWAP + EMA momentum system; the innovation is in the meta-layer that adjusts sizing based on recent strategy performance. The inefficiency exists because most traders use fixed sizing and don't dynamically adapt to their own recent track record. This exploits the regime-clustering phenomenon: winning trades cluster in favorable regimes, and losing trades cluster in unfavorable ones.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "EMA_9",
+      "formula": "",
+      "lookback": 108,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "EMA_21",
+      "formula": "",
+      "lookback": 252,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP_Distance",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Rolling_Trade_Sharpe",
+      "formula": "",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Size_Multiplier",
+      "formula": "",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "EMA(close, 9) > EMA(close, 21)",
+        "close > vwap",
+        "VWAP_Distance > 5 bps (not just barely above vwap)",
+        "Rolling_Trade_Sharpe > -1.0 (not in deep drawdown \u2014 don't enter when losing badly)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "EMA(close, 9) < EMA(close, 21)",
+        "close < vwap",
+        "VWAP_Distance < -5 bps",
+        "Rolling_Trade_Sharpe > -1.0"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "EMA(close,9) crosses EMA(close,21) against position direction",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25; if VIX > 20, cap Size_Multiplier at 1.0",
+    "volume_filter": "Volume > SMA(volume, 15) on entry bar",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Rolling Sharpe on 20 trades has very high variance \u2014 a single large winner or loser can swing the Sharpe dramatically, causing abrupt position size changes that amplify risk",
+    "The adaptive sizing creates a pro-cyclical dynamic: after a winning streak, size increases, so the next loss (which is statistically inevitable) is disproportionately large \u2014 can give back streak gains in one trade",
+    "Base signal (EMA 9/21 crossover + VWAP) is generic \u2014 the adaptive sizing layer cannot compensate for a fundamentally weak entry signal; it only helps during favorable regime clustering"
+  ],
+  "prior_art": "Kelly criterion for optimal sizing; Tharp's position sizing concepts in 'Trade Your Way to Financial Freedom'; adaptive position sizing discussed in Vince's 'The Leverage Space Trading Model'",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

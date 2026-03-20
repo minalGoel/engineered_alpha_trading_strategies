@@ -1,0 +1,120 @@
+{
+  "name": "spectral_analysis_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "spectral_analysis_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_321.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Intraday price action contains periodic components driven by institutional activity cycles (e.g., portfolio rebalancing every 30-60 minutes, lunch lull at 12:00-13:00, closing auction effects). By computing the FFT (Fast Fourier Transform) of 1-min returns over a 128-bar rolling window and identifying the dominant cycle period, we can time entries to coincide with the expected trough of the dominant cycle (buy at cycle low, sell at cycle high). The spectral power at the dominant frequency must be significantly above the noise floor (> 3x mean spectral power). The inefficiency exists because FFT cycle detection is a signal processing technique that requires understanding of frequency-domain analysis, unfamiliar to most traders.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "FFT_Spectrum",
+      "formula": "",
+      "lookback": 1536,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Dominant_Period",
+      "formula": "",
+      "lookback": 1536,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Spectral_Ratio",
+      "formula": "",
+      "lookback": 1536,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Cycle_Phase",
+      "formula": "",
+      "lookback": 1536,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP_Distance",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "Spectral_Ratio > 3.0 (dominant cycle is statistically significant)",
+        "Cycle_Phase near 0 (within pi/6 of trough \u2014 buy at cycle low)",
+        "Dominant_Period between 8 and 60 bars (tradeable frequency)",
+        "close < vwap (VWAP confirmation of being at a local low)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "Spectral_Ratio > 3.0",
+        "Cycle_Phase near pi (within pi/6 of peak \u2014 sell at cycle high)",
+        "Dominant_Period between 8 and 60 bars",
+        "close > vwap (VWAP confirmation of being at a local high)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "Spectral_Ratio drops below 2.0 (cycle losing significance \u2014 go flat)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 22 (cyclical patterns break down in high-volatility environments)",
+    "volume_filter": "Volume > SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Financial returns are not truly periodic \u2014 any apparent cyclicality is likely transient and regime-dependent; the FFT may find a 'dominant' frequency that is noise rather than signal",
+    "128-bar window is too short for reliable spectral estimation \u2014 the frequency resolution is 1/128 = 0.0078 cycles/bar, meaning the algorithm cannot distinguish between, say, 20-bar and 22-bar cycles",
+    "Late session start (11:20 IST) misses the first 2+ hours of trading; and the cycle phase estimation has inherent uncertainty that can place entries minutes too early or late"
+  ],
+  "prior_art": "Ehlers' 'Rocket Science for Traders' and 'Cybernetic Analysis' extensively cover spectral methods; Granger & Morgenstern (1970) on spectral analysis of economic time series; Fisher Transform discussed in Ehlers' work",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

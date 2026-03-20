@@ -57,8 +57,9 @@ class Strategy(BaseStrategy):
         or_high = np.nan_to_num(or_high, nan=1e10)
         or_low = np.nan_to_num(or_low, nan=-1e10)
 
+        # AUDIT FIX: Added upper bound time_mins <= session_end to prevent entries after 15:15
         # ── Entry: only after opening range is complete (from 09:30 = 570) ──
-        after_or = time_mins >= 570
+        after_or = (time_mins >= 570) & (time_mins <= self.session_end)
         vix_ok = vix < vix_max
 
         long_entry = (close > or_high) & after_or & vix_ok

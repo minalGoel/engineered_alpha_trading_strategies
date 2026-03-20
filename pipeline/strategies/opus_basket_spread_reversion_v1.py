@@ -82,11 +82,15 @@ class Strategy(BaseStrategy):
         spread = stock_ret - index_ret
         zscore = _rolling_zscore(spread, 120)
 
+        # AUDIT FIX: Added time_ok filter — strategy had no session window check,
+        # causing entries to fire outside 09:30–14:45 (including pre-market and post-session)
         vix_ok = vix < vix_max
         atr14 = _compute_atr(high, low, close, 14)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
-        long_entry = (zscore < -zs_entry) & vix_ok
-        short_entry = (zscore > zs_entry) & vix_ok
+        long_entry = (zscore < -zs_entry) & vix_ok & time_ok
+        short_entry = (zscore > zs_entry) & vix_ok & time_ok
 
         # ── Signal exit: zscore crosses zero ──
         sig_exit_long = np.zeros(n, dtype=np.bool_)

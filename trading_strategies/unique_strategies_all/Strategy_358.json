@@ -1,0 +1,124 @@
+{
+  "name": "fibonacci_intraday_retracement",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": [
+    "mean_reversion",
+    "pivots"
+  ],
+  "thesis": "Exploits the 61.8% golden ratio retracement. High-frequency algorithms and retail traders alike use Fibonacci levels for profit taking and entry. When a stock has a strong initial move (first 60 mins), it often retraces to the 61.8% level of the morning's range before continuing or reversing. This is a self-fulfilling prophecy in systematic trading.",
+  "universe": "nifty100",
+  "stock_filter": "stocks with morning range > 2%",
+  "timeframe": "1min",
+  "session": "11:00-15:00",
+  "hold_time": "60-120 bars",
+  "max_hold_bars": 180,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "morning_high",
+      "formula": "highest(high, 60) @ 10:15",
+      "lookback": 60,
+      "purpose": "range"
+    },
+    {
+      "name": "morning_low",
+      "formula": "lowest(low, 60) @ 10:15",
+      "lookback": 60,
+      "purpose": "range"
+    },
+    {
+      "name": "fib_618",
+      "formula": "morning_high - (morning_high - morning_low) * 0.618",
+      "lookback": 0,
+      "purpose": "level"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "low <= fib_618",
+        "close > fib_618",
+        "close > vwap"
+      ],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": [
+        "high >= fib_618",
+        "close < fib_618",
+        "close < vwap"
+      ],
+      "confirmation": "none"
+    },
+    "entry_price": "limit at fib_618"
+  },
+  "exit": {
+    "target": "morning_high (for long) / morning_low (for short)",
+    "stop_loss": "0.4% from entry",
+    "trailing_stop": "move to BE at +0.5%",
+    "time_stop": "none",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "after 11:00",
+    "volume_filter": "none",
+    "trend_filter": "none",
+    "spread_filter": "none",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 34.0,
+    "win_rate_estimate": 0.45,
+    "avg_winner_to_loser": 2.3,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "low \u2014 structural"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Parabolic trends that never retrace",
+    "Level can be ignored in low-volume lunch hours"
+  ],
+  "prior_art": "Classic Fibonacci Retracement",
+  "notes": "Morning range calculation must be anchored to the 09:15-10:15 window.",
+  "_filepath": "all_trading_strategies/gemini/gemini_20_of_20.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/gemini/gemini_20_of_20.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "fibonacci retracement breakout",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_046.json"
+    ],
+    "different_pairs": []
+  }
+}

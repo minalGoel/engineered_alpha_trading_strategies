@@ -1,0 +1,145 @@
+{
+  "name": "demark_sequential_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "advanced_technical",
+    "TD_sequential",
+    "DeMark",
+    "exhaustion",
+    "counter_trend"
+  ],
+  "thesis": "Tom DeMark's TD Sequential identifies trend exhaustion by counting consecutive bars that close higher (or lower) than the close 4 bars earlier. A 'setup' phase counts 1-9; a completed 9-count signals potential exhaustion. This is followed by a 'countdown' phase (13-count) for stronger confirmation. On 1-min Indian intraday charts, the 9-count setup identifies micro-trend exhaustion points where momentum is about to reverse. The inefficiency exists because: (1) TD Sequential is complex to implement correctly (many rules for perfection, recycling, and qualification), (2) most Indian traders use simple RSI overbought/oversold instead of the more precise TD Sequential counting, (3) the 4-bar lookback comparison filters out noise better than 1-bar momentum indicators. The signal is contrarian \u2014 we fade the trend at the 9-count completion.",
+  "universe": "NIFTY 50 constituents + NIFTY 50 index",
+  "stock_filter": "ADV > \u20b950 crore",
+  "timeframe": "1min",
+  "session": "09:25-15:15 IST",
+  "hold_time": "5-15 min",
+  "max_hold_bars": 15,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 10,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "td_buy_setup",
+      "formula": "consecutive count of bars where close < close[4]. Count resets on close >= close[4]. Signal on count == 9.",
+      "params": {
+        "comparison_offset": 4,
+        "completion_count": 9
+      }
+    },
+    {
+      "name": "td_sell_setup",
+      "formula": "consecutive count of bars where close > close[4]. Count resets on close <= close[4]. Signal on count == 9.",
+      "params": {
+        "comparison_offset": 4,
+        "completion_count": 9
+      }
+    },
+    {
+      "name": "td_perfection_buy",
+      "formula": "1 if low of bar 8 or 9 <= low of bar 6 (DeMark perfection rule for buy setup)",
+      "params": {}
+    },
+    {
+      "name": "td_perfection_sell",
+      "formula": "1 if high of bar 8 or 9 >= high of bar 6",
+      "params": {}
+    },
+    {
+      "name": "RSI_14",
+      "formula": "RSI(close, 14)",
+      "params": {
+        "period": 14
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "td_buy_setup == 9 (9 consecutive bars closing below close[4] \u2014 downtrend exhaustion)",
+        "td_perfection_buy == 1 (perfected buy setup)",
+        "RSI_14 < 35 (confirming oversold with traditional indicator)",
+        "close > low of setup bar 9 (first sign of bounce)"
+      ],
+      "confirmation": "close > close[1] on the bar immediately after setup completion"
+    },
+    "short": {
+      "conditions": [
+        "td_sell_setup == 9 (uptrend exhaustion)",
+        "td_perfection_sell == 1",
+        "RSI_14 > 65",
+        "close < high of setup bar 9"
+      ],
+      "confirmation": "close < close[1] on the bar immediately after setup completion"
+    },
+    "entry_price": "market order on confirmation bar close"
+  },
+  "exit": {
+    "target": "close crosses above close[4] (trend reversal confirmed by the same DeMark logic)",
+    "stop_loss": "12 bps from entry (absolute stop) OR new bar extends the setup beyond 9 (count 10 \u2014 extreme exhaustion overshoot)",
+    "trailing_stop": "5 bps trailing after 10 bps profit",
+    "time_stop": "exit after 15 bars (if reversal hasn't materialized, setup failed)",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "close resumes the previous trend (close < close[4] again for a buy setup entry)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.12,
+    "position_sizing": "\u20b91L per trade, increase to \u20b91.5L if both perfection and RSI extremes confirm",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22 (perfected setups are more reliable in moderate vol)",
+    "time_filter": "no trades first 10 min or last 15 min",
+    "volume_filter": "declining volume on the last 3 bars of the setup (confirms exhaustion)",
+    "trend_filter": "contrarian by design \u2014 fade the trend at count 9",
+    "spread_filter": "bid-ask < 5 bps",
+    "event_filter": "skip during strong macro events (trending market can extend setup beyond 13)",
+    "other_filters": [
+      "skip if setup completed in < 9 consecutive minutes (overly fast, likely noise)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Low-Medium \u2014 TD Sequential is complex enough that most traders implement it incorrectly or use simplified versions. The full perfection rules and qualification criteria are rarely coded correctly, preserving edge for proper implementations."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The 4-bar comparison offset on 1-min charts means setups complete in minimum 9 minutes. On strong trend days, the trend continues well beyond the 9-count, hitting stops.",
+    "TD Sequential has many nuanced rules (recycling, qualifier, TDST levels) that are difficult to implement correctly. Partial implementation may degrade signal quality.",
+    "Contrarian signals in strong trends are inherently risky \u2014 'catching falling knives' is the primary failure mode, and on trend days this strategy will underperform badly."
+  ],
+  "prior_art": "DeMark (1994) 'The New Science of Technical Analysis'. DeMark (1997) 'New Market Timing Techniques'. Bloomberg's DeMark indicators (TD Sequential, TD Combo) are available on the Bloomberg terminal. In India, TD Sequential is used by some proprietary trading desks in Mumbai.",
+  "notes": "The 'perfection' rule is critical \u2014 unperfected setups have significantly lower win rates (~45% vs ~55% for perfected). Always check perfection before entering. The countdown phase (13-count after setup) provides stronger signals but completes less frequently on 1-min charts. Consider using countdown for higher-conviction, lower-frequency trades.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_147.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_147.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

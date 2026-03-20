@@ -1,0 +1,138 @@
+{
+  "name": "gap_and_go_with_volume_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "gap",
+    "momentum",
+    "volume"
+  ],
+  "thesis": "Stocks that gap up/down AND show > 3x normal volume in the first 5 minutes are experiencing genuine institutional interest, not just noise. When these stocks pull back to VWAP within the first 30 minutes and bounce, the continuation is highly reliable because the volume signature confirms real demand/supply. Edge persists because combining gap + volume + VWAP pullback is a 3-factor setup that most single-factor gap traders miss.",
+  "universe": "fno",
+  "stock_filter": "any FnO stock that gaps > 0.5% with > 3x volume in first 5 min",
+  "timeframe": "1min",
+  "session": "09:20-11:30",
+  "hold_time": "15-60 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_close"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open_of_day - prev_day_close) / prev_day_close * 100",
+      "lookback": 1,
+      "purpose": "gap direction and size"
+    },
+    {
+      "name": "vol_5min_ratio",
+      "formula": "SUM(volume, 5) from 09:15 / SMA(SUM(volume, 5) from 09:15, 20)",
+      "lookback": 20,
+      "purpose": "is opening volume abnormal"
+    },
+    {
+      "name": "vwap_touch",
+      "formula": "abs(low - vwap) / vwap < 0.001 (for gap up) OR abs(high - vwap) / vwap < 0.001 (for gap down)",
+      "lookback": 1,
+      "purpose": "VWAP pullback detection"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct > 0.5",
+        "vol_5min_ratio > 3.0",
+        "vwap_touch == True (price pulled back to VWAP)",
+        "close > vwap (bounced off VWAP)"
+      ],
+      "confirmation": "bar closes above VWAP after touching it"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct < -0.5",
+        "vol_5min_ratio > 3.0",
+        "vwap_touch == True",
+        "close < vwap"
+      ],
+      "confirmation": "bar closes below VWAP after touching it"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "high_of_day (for longs) or low_of_day (for shorts) \u2014 retest the extreme",
+    "stop_loss": "0.3% below VWAP (for longs) or above VWAP (for shorts)",
+    "trailing_stop": "trail by 0.2% after +0.3%",
+    "time_stop": "exit by 11:30",
+    "eod_rule": "flatten",
+    "signal_exit": "close breaks below VWAP (for longs)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "entry only 09:30-10:30",
+    "volume_filter": "vol_5min_ratio > 3.0 is core filter",
+    "trend_filter": "gap direction aligns with nifty50 direction",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on expiry day",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.59,
+    "edge_decay_risk": "low \u2014 gap + volume + VWAP is a multi-factor setup that's harder to crowd"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "VWAP pullback may not happen if gap momentum is too strong \u2014 missed entries",
+    "Opening 30 min spreads and slippage are elevated (4+ bps)",
+    "The 3x volume threshold is arbitrary \u2014 needs calibration per stock"
+  ],
+  "prior_art": "Gap and Go (Andrew Aziz, Warrior Trading) \u2014 adapted with VWAP pullback confirmation for Indian markets",
+  "notes": "This is one of the higher-conviction setups due to multi-factor confirmation. Prioritize in backtesting.",
+  "_filepath": "all_trading_strategies/opus/Opus_31_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_31_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "gap momentum intraday",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_gpt54/cursor_gpt54_gap_fill_stall_001.json"
+    ]
+  }
+}

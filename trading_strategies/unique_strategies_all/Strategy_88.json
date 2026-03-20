@@ -1,0 +1,144 @@
+{
+  "name": "macd_histogram_divergence_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "mean_reversion",
+    "divergence",
+    "macd"
+  ],
+  "thesis": "MACD histogram divergence (price makes new low but MACD histogram doesn't) signals momentum exhaustion before price reverses. Unlike RSI divergence, MACD histogram captures the rate of change of momentum, making it a leading indicator. The inefficiency exists because MACD divergence requires real-time pivot detection which most retail tools don't automate. Not fully arbitraged because divergence signals are subjective and hard to systematize.",
+  "universe": "fno",
+  "stock_filter": "NIFTY 100, ADV > \u20b940cr",
+  "timeframe": "1min",
+  "session": "09:45-14:30",
+  "hold_time": "15-60 bars",
+  "max_hold_bars": 90,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "macd_line",
+      "formula": "EMA(close, 12) - EMA(close, 26)",
+      "lookback": 26,
+      "purpose": "MACD line"
+    },
+    {
+      "name": "macd_signal",
+      "formula": "EMA(macd_line, 9)",
+      "lookback": 9,
+      "purpose": "signal line"
+    },
+    {
+      "name": "macd_hist",
+      "formula": "macd_line - macd_signal",
+      "lookback": 0,
+      "purpose": "histogram \u2014 rate of change of momentum"
+    },
+    {
+      "name": "price_pivot_low",
+      "formula": "swing low with 5-bar lookback each side",
+      "lookback": 10,
+      "purpose": "identify price pivots"
+    },
+    {
+      "name": "hist_at_pivot",
+      "formula": "macd_hist value at each price_pivot_low",
+      "lookback": 0,
+      "purpose": "histogram value at price pivots for divergence"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "price_pivot_low[t] < price_pivot_low[t-1]",
+        "hist_at_pivot[t] > hist_at_pivot[t-1]",
+        "close < vwap",
+        "vix < 22"
+      ],
+      "confirmation": "macd_hist crosses above 0 after divergence"
+    },
+    "short": {
+      "conditions": [
+        "price_pivot_high[t] > price_pivot_high[t-1]",
+        "hist_at_pivot[t] < hist_at_pivot[t-1]",
+        "close > vwap",
+        "vix < 22"
+      ],
+      "confirmation": "macd_hist crosses below 0 after divergence"
+    },
+    "entry_price": "market on histogram zero-cross bar"
+  },
+  "exit": {
+    "target": "vwap touch OR 0.4% from entry",
+    "stop_loss": "0.3% from entry",
+    "trailing_stop": "move SL to breakeven after +0.2%",
+    "time_stop": "exit after 60 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit on opposite MACD histogram cross"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 10000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "no trades first 30 min or last 30 min",
+    "volume_filter": "volume at divergence pivot > SMA(volume, 20)",
+    "trend_filter": "none \u2014 counter-trend by design",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on expiry",
+    "other_filters": [
+      "pivots must be within 30 bars of each other"
+    ]
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.0,
+    "profit_factor_estimate": 1.08,
+    "edge_decay_risk": "medium \u2014 behavioral, but MACD is widely used"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "MACD on 1-min bars with 12/26/9 parameters is extremely lagging \u2014 by the time divergence confirms and histogram crosses zero, the reversal may be 70%+ done.",
+    "Profit factor of 1.08 is barely above breakeven. Slippage model errors would make this negative.",
+    "Divergence detection is inherently ambiguous \u2014 different pivot definitions produce different signals. Hard to validate out-of-sample."
+  ],
+  "prior_art": "MACD histogram divergence. Alexander Elder's 'Trading for a Living'. Textbook setup.",
+  "notes": "Marginal. Consider shortening MACD parameters to (5, 13, 4) for 1-min bars to reduce lag. Needs parameter sensitivity analysis.",
+  "_filepath": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/claude_project/claude_project_21_of_25.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "macd momentum mean_reversion",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_022.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_071.json"
+    ]
+  }
+}

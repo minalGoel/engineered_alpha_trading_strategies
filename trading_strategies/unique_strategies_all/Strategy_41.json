@@ -1,0 +1,150 @@
+{
+  "name": "vix_regime_switch_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "volatility",
+    "vix",
+    "regime",
+    "tactical"
+  ],
+  "thesis": "India VIX mean-reverts after extreme readings. When VIX spikes above its 20-day Bollinger Band upper (> 2 SD), it signals peak fear, and Nifty50 stocks tend to bounce within 1-2 sessions. Conversely, when VIX drops below its lower band, complacency sets in and a correction follows. Intraday, you can exploit the transition by going long when VIX starts declining from a spike (buy fear) and short when VIX starts rising from a trough (sell complacency). Edge persists because most traders use VIX directionally rather than as a mean-reverting regime indicator.",
+  "universe": "nifty50",
+  "stock_filter": "top 15 by beta to Nifty50 (high-beta stocks move most with VIX shifts)",
+  "timeframe": "1min",
+  "session": "09:30-14:30",
+  "hold_time": "60-180 bars",
+  "max_hold_bars": 240,
+  "trades_per_day": "0-1",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "vix_20day_sma",
+      "vix_20day_std"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "vix_bb_upper",
+      "formula": "SMA(vix, 20_days) + 2 * STDDEV(vix, 20_days)",
+      "lookback": "20 days",
+      "purpose": "VIX fear extreme"
+    },
+    {
+      "name": "vix_bb_lower",
+      "formula": "SMA(vix, 20_days) - 2 * STDDEV(vix, 20_days)",
+      "lookback": "20 days",
+      "purpose": "VIX complacency extreme"
+    },
+    {
+      "name": "vix_change_60",
+      "formula": "vix - vix[60]",
+      "lookback": 60,
+      "purpose": "VIX direction in last 60 bars"
+    },
+    {
+      "name": "nifty_return_60",
+      "formula": "(nifty50_close - nifty50_close[60]) / nifty50_close[60] * 100",
+      "lookback": 60,
+      "purpose": "index momentum"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing for individual stocks"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "vix > vix_bb_upper (VIX is elevated \u2014 fear regime)",
+        "vix_change_60 < 0 (VIX starting to decline from peak)",
+        "nifty_return_60 > -0.5 (index not in freefall)"
+      ],
+      "confirmation": "buy high-beta Nifty50 stocks when VIX turns down from above upper band"
+    },
+    "short": {
+      "conditions": [
+        "vix < vix_bb_lower (VIX is depressed \u2014 complacency regime)",
+        "vix_change_60 > 0 (VIX starting to rise from trough)",
+        "nifty_return_60 < 0.5 (index not in melt-up)"
+      ],
+      "confirmation": "short high-beta Nifty50 stocks when VIX turns up from below lower band"
+    },
+    "entry_price": "market on confirmation"
+  },
+  "exit": {
+    "target": "0.6% from entry (larger target because of multi-hour hold)",
+    "stop_loss": "0.4% from entry",
+    "trailing_stop": "trail by 0.3% after +0.4%",
+    "time_stop": "exit by 14:30",
+    "eod_rule": "flatten",
+    "signal_exit": "VIX reverses direction again (vix_change_60 flips sign)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "vol_adjusted \u2014 smaller size when VIX is high",
+    "max_open_positions": 3,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 2.0
+  },
+  "filters": {
+    "vix_filter": "core to strategy \u2014 trade only when VIX is at extremes",
+    "time_filter": "no entries first 30 min (let VIX stabilize) or last 30 min",
+    "volume_filter": "normal \u2014 no special requirement",
+    "trend_filter": "nifty_return_60 acts as trend filter",
+    "spread_filter": "skip if spread > 0.1% (wider during high VIX)",
+    "event_filter": "skip on budget day, RBI policy (VIX moves are policy-driven, not mean-reverting)",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.5,
+    "edge_decay_risk": "low \u2014 VIX mean reversion is structural; fear/greed cycles are persistent"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very low frequency \u2014 VIX extremes happen maybe 2-3 times per month; long idle periods",
+    "During genuine crises (COVID, geopolitical), VIX can stay elevated for weeks \u2014 mean reversion is delayed",
+    "High-beta stocks during VIX spikes have wide spreads and volatile fills \u2014 slippage is 4+ bps"
+  ],
+  "prior_art": "VIX mean reversion \u2014 well-documented in US markets (VXX trading). India VIX version is less studied.",
+  "notes": "This is more of a tactical overlay than a daily bread-and-butter strategy. Combine with other strategies.",
+  "_filepath": "all_trading_strategies/opus/Opus_23_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_23_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "volatility vix mean_reversion",
+    "num_within_family_comparisons": 8,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_071.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_170.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/claude_project/claude_project_6_of_25.json",
+      "all_trading_strategies/opus/Opus_25_of_50.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_076.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_133.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_126.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_124.json"
+    ]
+  }
+}

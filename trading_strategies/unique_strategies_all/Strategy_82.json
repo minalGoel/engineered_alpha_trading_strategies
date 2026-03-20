@@ -1,0 +1,134 @@
+{
+  "name": "moc_drift_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "momentum",
+    "close_auction",
+    "microstructure"
+  ],
+  "thesis": "In the last 30-45 minutes of the session, institutional MOC (market-on-close) orders create predictable drift. If the stock is above VWAP with strong volume into the close, MOC buy orders dominate and price drifts higher. The inefficiency exists because MOC orders are pre-committed and cannot adapt to price movement \u2014 they must execute. Not fully arbitraged because the drift is small and the window is tight, requiring fast position establishment.",
+  "universe": "nifty50",
+  "stock_filter": "NIFTY 50 with ADV > \u20b9100cr (highest institutional participation)",
+  "timeframe": "1min",
+  "session": "14:30-15:25",
+  "hold_time": "15-55 bars",
+  "max_hold_bars": 55,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "close_vs_vwap",
+      "formula": "(close - vwap) / vwap * 100",
+      "lookback": 0,
+      "purpose": "position relative to VWAP"
+    },
+    {
+      "name": "volume_ratio_pm",
+      "formula": "volume_last_30_bars / avg_volume_last_30_bars_20day",
+      "lookback": 0,
+      "purpose": "relative volume in afternoon"
+    },
+    {
+      "name": "return_since_1400",
+      "formula": "(close - close_at_1400) / close_at_1400 * 100",
+      "lookback": 0,
+      "purpose": "afternoon momentum"
+    },
+    {
+      "name": "nifty_return_since_1400",
+      "formula": "(nifty_close - nifty_close_at_1400) / nifty_close_at_1400 * 100",
+      "lookback": 0,
+      "purpose": "market-wide afternoon direction"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close_vs_vwap > 0.1",
+        "return_since_1400 > 0.1",
+        "volume_ratio_pm > 1.2",
+        "nifty_return_since_1400 > 0"
+      ],
+      "confirmation": "all conditions true at 14:30-14:45 window"
+    },
+    "short": {
+      "conditions": [
+        "close_vs_vwap < -0.1",
+        "return_since_1400 < -0.1",
+        "volume_ratio_pm > 1.2",
+        "nifty_return_since_1400 < 0"
+      ],
+      "confirmation": "all conditions true at 14:30-14:45 window"
+    },
+    "entry_price": "market at 14:45"
+  },
+  "exit": {
+    "target": "15:25 (flatten before close auction)",
+    "stop_loss": "0.3% from entry",
+    "trailing_stop": "none \u2014 hold to close",
+    "time_stop": "exit at 15:25 IST regardless",
+    "eod_rule": "flatten at 15:25",
+    "signal_exit": "exit if direction reverses (return_since_1400 flips sign)"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.3,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 8000,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "vix < 22",
+    "time_filter": "entry only at 14:30-14:45",
+    "volume_filter": "afternoon volume > 1.2x historical average",
+    "trend_filter": "align with afternoon market direction",
+    "spread_filter": "skip if spread > 0.08%",
+    "event_filter": "skip on expiry day (close auction dynamics change)",
+    "other_filters": [
+      "skip on F&O expiry weeks when roll-over distorts close"
+    ]
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 0.9,
+    "profit_factor_estimate": 1.1,
+    "edge_decay_risk": "medium \u2014 microstructure, may decay as close auction liquidity improves"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very thin edge (20 bps, PF 1.10). Any deterioration in fill quality or increase in slippage turns this negative.",
+    "Late-day reversals (last 15 min) can be sharp and stop-driven. The 0.3% stop is hit more often than expected on volatile days.",
+    "MOC order flow composition changes on special days (rebalancing, index changes, expiry). The signal is unreliable on these days."
+  ],
+  "prior_art": "Market-on-close drift / end-of-day momentum. Academic literature: Bogousslavsky (2016) on intraday momentum patterns.",
+  "notes": "Razor-thin edge. Only viable as part of a portfolio. Do not increase size to compensate for low per-trade edge.",
+  "_filepath": "all_trading_strategies/claude_project/claude_project_15_of_25.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/claude_project/claude_project_15_of_25.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

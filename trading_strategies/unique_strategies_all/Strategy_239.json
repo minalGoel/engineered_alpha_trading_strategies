@@ -1,0 +1,146 @@
+{
+  "name": "bid_ask_imbalance_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "microstructure",
+    "order_book",
+    "imbalance",
+    "mean_reversion"
+  ],
+  "thesis": "When the bid-side depth significantly exceeds ask-side depth (or vice versa) at the top 5 levels of the order book, the resulting imbalance predicts short-term price movement in the direction of the heavier side. This inefficiency exists because most retail participants trade market orders and ignore the order book, while institutional algorithms that exploit this signal operate on sub-millisecond timescales not accessible to 1-min bar traders. At the 1-min timescale, the signal persists because aggregated imbalance over 1-min windows captures sustained directional pressure from large participants building positions, not just fleeting spoofing. The edge survives because it requires real-time L2 data processing, which most Indian retail traders lack, and the signal decays within 3-5 bars, making it unattractive to slower systematic funds.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV > \u20b950 crore, bid-ask spread < 5 bps, tick size \u2264 0.05",
+  "timeframe": "1min",
+  "session": "09:20-15:15 IST (skip first 5 min and last 15 min)",
+  "hold_time": "1-5 min",
+  "max_hold_bars": 5,
+  "trades_per_day": "8-15",
+  "max_trades_per_day": 20,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": true,
+    "other": [
+      "L2 order book snapshot every 1 sec aggregated to 1-min"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "bid_ask_imbalance",
+      "formula": "BAI = (sum(bid_qty, levels=5) - sum(ask_qty, levels=5)) / (sum(bid_qty, levels=5) + sum(ask_qty, levels=5))",
+      "params": {
+        "levels": 5,
+        "aggregation": "1min_average"
+      }
+    },
+    {
+      "name": "BAI_EMA",
+      "formula": "EMA(BAI, 3)",
+      "params": {
+        "period": 3
+      }
+    },
+    {
+      "name": "BAI_zscore",
+      "formula": "(BAI_EMA - SMA(BAI_EMA, 20)) / STDEV(BAI_EMA, 20)",
+      "params": {
+        "lookback": 20
+      }
+    },
+    {
+      "name": "volume_ratio",
+      "formula": "volume_1min / SMA(volume_1min, 20)",
+      "params": {
+        "lookback": 20
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "BAI_zscore > 1.5",
+        "volume_ratio > 1.2",
+        "close > vwap",
+        "India_VIX < 22"
+      ],
+      "confirmation": "BAI_zscore sustained > 1.0 for 2 consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "BAI_zscore < -1.5",
+        "volume_ratio > 1.2",
+        "close < vwap",
+        "India_VIX < 22"
+      ],
+      "confirmation": "BAI_zscore sustained < -1.0 for 2 consecutive bars"
+    },
+    "entry_price": "limit order at best bid (long) or best ask (short)"
+  },
+  "exit": {
+    "target": "20 bps from entry",
+    "stop_loss": "10 bps from entry",
+    "trailing_stop": "5 bps trailing after 10 bps profit",
+    "time_stop": "exit if no target hit within 5 bars",
+    "eod_rule": "flatten all positions by 15:15 IST",
+    "signal_exit": "BAI_zscore crosses zero"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.1,
+    "position_sizing": "fixed notional \u20b91L per trade, reduce to \u20b950K when VIX > 18",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; reduce size by 50% when VIX in 18-22",
+    "time_filter": "no trades in first 5 min (09:15-09:20) or last 15 min (15:15-15:30)",
+    "volume_filter": "volume_ratio > 0.8 (skip illiquid bars)",
+    "trend_filter": "none (signal is market-neutral by construction)",
+    "spread_filter": "skip if bid-ask spread > 5 bps",
+    "event_filter": "skip on RBI policy days, budget day, F&O expiry day",
+    "other_filters": [
+      "skip if stock is in upper/lower circuit limit"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.8,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "High \u2014 as more brokers offer L2 data APIs and algo adoption grows in India, this signal will get crowded. Expected half-life of edge: 12-18 months."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "L2 order book data in India is noisy and prone to spoofing/layering, especially in mid-cap names. The signal may be corrupted by phantom orders.",
+    "Zerodha does not provide raw L2 depth via Kite API beyond 5 levels; signal quality degrades without deeper book visibility.",
+    "High-frequency market makers will front-run this signal at sub-second timescales, leaving only residual edge for 1-min bar traders."
+  ],
+  "prior_art": "Cont, Kukanov & Stoikov (2014) 'The Price Impact of Order Book Events' establishes the theoretical foundation. Cartea, Jaimungal & Penalva (2015) extend to optimal execution. In the Indian context, limited academic work exists but NSE's co-location framework suggests institutional participants already exploit this.",
+  "notes": "Requires real-time L2 data subscription. Backtesting is difficult because historical order book snapshots are not widely available for Indian equities. Paper trade for at least 30 days before live deployment. Consider using NSE's TBT (tick-by-tick) data feed if available.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_101.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "microstructure imbalance order-flow",
+    "num_within_family_comparisons": 3,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_017.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_106.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_103.json"
+    ],
+    "different_pairs": []
+  }
+}

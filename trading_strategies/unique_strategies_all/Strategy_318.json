@@ -1,0 +1,145 @@
+{
+  "name": "dynamic_stop_regime_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "dynamic-stop",
+    "regime-dependent",
+    "ATR-scaled",
+    "volatility-adaptive",
+    "risk-management"
+  ],
+  "thesis": "Fixed stop-losses are a primary source of unnecessary losses in intraday trading \u2014 too tight in volatile regimes (stopped out by noise before move materializes), too wide in calm regimes (give back too much profit when wrong). By dynamically setting stop-loss distance based on current volatility regime (ATR percentile), we optimize the probability of being stopped out by noise versus genuine reversal. Low-vol regime (ATR_Pctile < 30): stop = 1.0 * ATR(14). Medium-vol (30-70): stop = 1.5 * ATR(14). High-vol (>70): stop = 2.5 * ATR(14). The base signal is EMA(10)/EMA(25) crossover with VWAP confirmation. The inefficiency is that most traders use fixed bps stops that don't adapt to current conditions.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > \u20b9100 Cr",
+  "timeframe": "1min",
+  "session": "09:25-15:15 IST",
+  "hold_time": "15-60 min",
+  "max_hold_bars": 75,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 7,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ATR_14",
+      "params": "ATR(high, low, close, 14)",
+      "lookback": 14
+    },
+    {
+      "name": "ATR_Pctile",
+      "params": "percentile_rank(ATR_14, 120-bar rolling window)",
+      "lookback": 120
+    },
+    {
+      "name": "Vol_Regime",
+      "params": "LOW if ATR_Pctile < 30; MED if 30-70; HIGH if > 70",
+      "lookback": 120
+    },
+    {
+      "name": "Dynamic_Stop_Mult",
+      "params": "1.0 if Vol_Regime == LOW; 1.5 if MED; 2.5 if HIGH",
+      "lookback": "realtime"
+    },
+    {
+      "name": "Stop_Distance",
+      "params": "Dynamic_Stop_Mult * ATR_14 (in price units)",
+      "lookback": 14
+    },
+    {
+      "name": "EMA_10",
+      "params": "EMA(close, 10)",
+      "lookback": 10
+    },
+    {
+      "name": "EMA_25",
+      "params": "EMA(close, 25)",
+      "lookback": 25
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "EMA(close, 10) crosses above EMA(close, 25)",
+        "close > vwap",
+        "Stop_Distance / close * 10000 < 60 bps (max allowable stop distance)"
+      ],
+      "confirmation": "Volume > SMA(volume, 15) on entry bar"
+    },
+    "short": {
+      "conditions": [
+        "EMA(close, 10) crosses below EMA(close, 25)",
+        "close < vwap",
+        "Stop_Distance / close * 10000 < 60 bps"
+      ],
+      "confirmation": "Volume > SMA(volume, 15) on entry bar"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "1.8 * Stop_Distance from entry (dynamic risk-reward always 1.8:1)",
+    "stop_loss": "Stop_Distance from entry (dynamically sized by regime)",
+    "trailing_stop": "After 1.0 * Stop_Distance profit, trail at 0.6 * Stop_Distance from high-water mark",
+    "time_stop": "75 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "EMA(close,10) crosses EMA(close,25) against position direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.5,
+    "position_sizing": "Risk-normalized: position = capital * max_risk / Stop_Distance. Size automatically shrinks in high-vol (wider stops)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 4000,
+    "max_portfolio_heat_pct": 1.2
+  },
+  "filters": {
+    "vix_filter": "India VIX < 28; if VIX > 24, use Dynamic_Stop_Mult = 3.0 (even wider stops)",
+    "time_filter": "No entries before 09:25 or after 15:15",
+    "volume_filter": "Volume > SMA(volume, 15) on entry bar",
+    "trend_filter": "NIFTY 50 must be trending in same direction (EMA(NIFTY,10) vs EMA(NIFTY,25))",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day; widen stops by 50% on RBI policy day",
+    "other_filters": [
+      "Stop_Distance must be at least 10 bps (avoid degenerate stops in ultra-low-vol periods)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.5,
+    "edge_decay_risk": "Low \u2014 dynamic stop sizing is a risk management innovation that improves any base strategy; the edge is structural, not signal-dependent"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "In HIGH-vol regime, 2.5 * ATR(14) can be very wide (40-60 bps for volatile bank stocks), meaning each loss is large \u2014 even with smaller position size, this can hit daily loss limits quickly",
+    "The 120-bar lookback for ATR percentile means the strategy misses rapid volatility regime changes that occur within the first 2 hours (e.g., sudden news at 10:00 when percentile is still calibrating)",
+    "The 60 bps maximum stop constraint can filter out valid HIGH-vol setups in highly volatile names, reducing the universe during the most volatile (and potentially profitable) sessions"
+  ],
+  "prior_art": "ATR-based stops (Wilder, Van Tharp); Keltner Channel stop placement; volatility-scaled position sizing common in CTAs; regime-dependent stop multipliers less standardized",
+  "notes": "The 1.8:1 reward-to-risk ratio is designed to be profitable at 50% win rate after costs (1.8 * 0.50 - 1.0 * 0.50 = 0.40, minus ~9 bps costs \u2248 31 bps edge). Consider using a continuous function for Stop_Mult instead of discrete regime buckets.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_180.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_180.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

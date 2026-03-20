@@ -1,0 +1,135 @@
+{
+  "name": "ensemble_signal_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "ensemble",
+    "meta-strategy",
+    "sub-strategies",
+    "diversification",
+    "hybrid"
+  ],
+  "thesis": "No single strategy works in all market conditions. By running 4 distinct sub-strategies simultaneously \u2014 VWAP mean-reversion, EMA crossover trend, Bollinger breakout, and RSI reversal \u2014 and entering only when >= 3 of 4 agree on direction, we create a robust ensemble signal. Each sub-strategy captures a different market microstructure (reversion, trend, breakout, exhaustion), and their errors are partially uncorrelated. The inefficiency persists because building and maintaining multiple concurrent sub-strategies requires significant engineering effort. The ensemble's edge comes not from any single signal being novel, but from the diversification benefit of combining them.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > \u20b9100 Cr; stock must have complete data for all 4 sub-strategy indicators",
+  "timeframe": "1min",
+  "session": "09:30-15:10 IST",
+  "hold_time": "15-60 min",
+  "max_hold_bars": 75,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "Sub1_VWAP_Signal",
+      "params": "+1 if close < vwap AND (vwap - close)/close > 0.003 else (-1 if close > vwap AND (close - vwap)/close > 0.003 else 0)",
+      "lookback": "session"
+    },
+    {
+      "name": "Sub2_EMA_Signal",
+      "params": "+1 if EMA(close,9) > EMA(close,21) else -1",
+      "lookback": 21
+    },
+    {
+      "name": "Sub3_BB_Signal",
+      "params": "+1 if close > SMA(close,20) + 2*STDDEV(close,20) else (-1 if close < SMA(close,20) - 2*STDDEV(close,20) else 0)",
+      "lookback": 20
+    },
+    {
+      "name": "Sub4_RSI_Signal",
+      "params": "+1 if RSI(close,14) < 30 else (-1 if RSI(close,14) > 70 else 0)",
+      "lookback": 14
+    },
+    {
+      "name": "Ensemble_Score",
+      "params": "Sub1_VWAP_Signal + Sub2_EMA_Signal + Sub3_BB_Signal + Sub4_RSI_Signal",
+      "lookback": "realtime"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "Ensemble_Score >= 3 (at least 3 of 4 sub-strategies bullish)",
+        "close > VWAP OR Ensemble_Score == 4 (override VWAP filter if full consensus)"
+      ],
+      "confirmation": "Ensemble_Score remains >= 3 for 2 consecutive bars"
+    },
+    "short": {
+      "conditions": [
+        "Ensemble_Score <= -3 (at least 3 of 4 sub-strategies bearish)",
+        "close < VWAP OR Ensemble_Score == -4"
+      ],
+      "confirmation": "Ensemble_Score remains <= -3 for 2 consecutive bars"
+    },
+    "entry_price": "market order after 2-bar confirmation"
+  },
+  "exit": {
+    "target": "40 bps from entry",
+    "stop_loss": "20 bps from entry",
+    "trailing_stop": "After 25 bps profit, trail at 12 bps from high-water mark",
+    "time_stop": "75 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "Ensemble_Score crosses zero (majority flips against position)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "Fixed \u20b91L; scale to \u20b91.25L if Ensemble_Score == 4 or -4 (full consensus)",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; halve size if VIX > 20",
+    "time_filter": "No entries before 09:30 (indicator warm-up) or after 15:10",
+    "volume_filter": "Volume on entry bar > SMA(volume, 15)",
+    "trend_filter": "NIFTY 50 not down > 1.5% from previous close",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "Sub3 and Sub4 cannot both be 0 (at least one non-price signal must be active)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 23,
+    "win_rate_estimate": 0.61,
+    "avg_winner_to_loser": 0.9,
+    "profit_factor_estimate": 1.41,
+    "edge_decay_risk": "Medium \u2014 each sub-strategy is well-known; ensemble benefit comes from combination but all inputs are public indicators"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Sub-strategies are correlated \u2014 VWAP reversion and RSI reversal often agree, while EMA crossover and BB breakout often agree; effective diversification is less than 4 independent signals",
+    "The ensemble can produce conflicting signals between mean-reversion (Sub1, Sub4) and trend-following (Sub2, Sub3), creating a structural tension; 3/4 consensus rarely occurs",
+    "Target/stop ratio of 40/20 = 2.0 with 61% win rate seems optimistic; slippage and the tight 20 bps stop will cause many premature stop-outs in volatile 1-min bars"
+  ],
+  "prior_art": "Ensemble methods in ML (Random Forest voting); Elder's Triple Screen; combining mean-reversion and momentum signals discussed in Chan (2013) 'Algorithmic Trading'",
+  "notes": "Consider weighting sub-strategies by their recent performance (adaptive weighting) rather than equal weighting. A sub-strategy that has been accurate in the last 20 signals should receive higher weight.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_160.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_160.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "ensemble hybrid meta-strategy",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/opus/Opus_50_of_50.json"
+    ],
+    "different_pairs": []
+  }
+}

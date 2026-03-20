@@ -1,0 +1,144 @@
+{
+  "name": "vwap_cross_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "vwap",
+    "crossover",
+    "momentum",
+    "trend-following",
+    "intraday"
+  ],
+  "thesis": "When price crosses above VWAP on elevated volume after being below for 20+ bars, it signals a regime shift: the marginal buyer is now paying above the session's volume-weighted fair value. Institutional VWAP-tracking algorithms that were selling now become buyers, creating a positive feedback loop. The edge exists because the cross event is a Schelling point \u2014 many participants watch VWAP, and their collective response to the cross creates a brief momentum burst that outruns transaction costs. The edge is not arbitraged because it requires very fast reaction (<1 min) and the absolute profit per trade is small.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 30 crore INR AND beta(NIFTY50, 60) between 0.8 and 1.5",
+  "timeframe": "1min",
+  "session": "09:45-14:45 IST",
+  "hold_time": "10-30 minutes",
+  "max_hold_bars": 30,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "bars_since_vwap_cross"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "bars_below_vwap",
+      "params": "consecutive bars where close < VWAP",
+      "lookback": 20
+    },
+    {
+      "name": "bars_above_vwap",
+      "params": "consecutive bars where close > VWAP",
+      "lookback": 20
+    },
+    {
+      "name": "volume_surge",
+      "params": "volume / SMA(volume, 10)",
+      "lookback": 10
+    },
+    {
+      "name": "EMA_fast",
+      "params": "EMA(close, 5)",
+      "lookback": 5
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > VWAP",
+        "close[t-1] < VWAP[t-1]",
+        "bars_below_vwap >= 20",
+        "volume_surge > 2.0",
+        "EMA(close, 5) > EMA(close, 5)[t-1]"
+      ],
+      "confirmation": "cross bar closes in top 30% of its range: (close - low) / (high - low) > 0.7"
+    },
+    "short": {
+      "conditions": [
+        "close < VWAP",
+        "close[t-1] > VWAP[t-1]",
+        "bars_above_vwap >= 20",
+        "volume_surge > 2.0",
+        "EMA(close, 5) < EMA(close, 5)[t-1]"
+      ],
+      "confirmation": "cross bar closes in bottom 30% of its range: (close - low) / (high - low) < 0.3"
+    },
+    "entry_price": "market order at confirmation bar close"
+  },
+  "exit": {
+    "target": "0.4% from entry price",
+    "stop_loss": "VWAP (re-cross back below/above VWAP) OR 0.25% from entry, whichever is hit first",
+    "trailing_stop": "trail at 0.15% once profit exceeds 0.25%",
+    "time_stop": "exit after 30 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if price re-crosses VWAP in opposite direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.25,
+    "position_sizing": "fixed 1L per trade",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "no filter \u2014 momentum works in all VIX regimes",
+    "time_filter": "no entries before 09:45 (let VWAP stabilize) or after 14:45",
+    "volume_filter": "volume surge > 2x 10-bar SMA on cross bar",
+    "trend_filter": "prefer longs when NIFTY 50 is green for the day, shorts when red",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on F&O expiry day (whipsaws increase)",
+    "other_filters": [
+      "skip if stock has crossed VWAP > 5 times already today (choppy)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "moderate \u2014 VWAP cross is widely watched; edge depends on speed of entry"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "In range-bound days, VWAP gets crossed many times \u2014 strategy generates false signals and accumulates losses",
+    "The 20-bar requirement means missing the first (most powerful) VWAP cross of the day",
+    "Volume surge threshold of 2x may be too aggressive, filtering out valid signals in low-vol stocks"
+  ],
+  "prior_art": "VWAP crossover is a staple of retail day trading (Bellafiore, 'One Good Trade'). Academic work by Berkowitz et al. (1988) established VWAP as a benchmark. The cross-with-dwell-time filter (20 bars below) is less common and adds originality.",
+  "notes": "Edge math: 0.48 * 40bps - 0.52 * 25bps = 19.2 - 13.0 = 6.2 bps gross. Costs ~11 bps RT. Gross edge insufficient. Need to either tighten stops to 0.20% or increase target to 0.5% to improve the math. The 20-bar dwell filter should improve win rate above 0.48 \u2014 backtest validation needed.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_003.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "vwap intraday crossover",
+    "num_within_family_comparisons": 2,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_066.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_006.json"
+    ],
+    "different_pairs": []
+  }
+}

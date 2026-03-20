@@ -1,0 +1,138 @@
+{
+  "name": "metal_pairs_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "pairs_trading",
+    "metal",
+    "steel",
+    "aluminium",
+    "global_commodity"
+  ],
+  "thesis": "Indian metal stocks (Tata Steel, JSW Steel, Hindalco, Vedanta, SAIL) are driven by a combination of global commodity prices (LME steel/aluminium, iron ore) and domestic demand. The intraday correlation (0.60-0.75) is among the highest in any Indian sector because: (1) LME prices move in Asian morning creating a common opening signal, (2) China demand/supply data affects all metals simultaneously, (3) government trade policy (import duties, export incentives) applies sector-wide. The pairs opportunity arises from the DOMESTIC vs GLOBAL divide: Tata Steel and JSW Steel have significant global operations (Tata Steel Europe, JSW US) while SAIL is purely domestic. When global metal prices move sharply (LME steel \u00b12%), Tata Steel and JSW react more strongly than SAIL, creating a temporary divergence that partially reverts as the market realizes domestic demand fundamentals are unchanged.",
+  "universe": "Tata Steel, JSW Steel, Hindalco, Vedanta, SAIL, NMDC",
+  "stock_filter": "Tata Steel: ADV > \u20b9200 crore. JSW: ADV > \u20b9100 crore. Others: ADV > \u20b940 crore",
+  "timeframe": "1min",
+  "session": "09:30-15:15 IST",
+  "hold_time": "15-45 min",
+  "max_hold_bars": 45,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50, NIFTY Metal",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "LME steel HRC price",
+      "LME aluminium price",
+      "iron ore futures (SGX)"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "metal_group_return",
+      "formula": "equal_weighted_mean(cum_return of Tata Steel, JSW, Hindalco, Vedanta, SAIL, NMDC)",
+      "params": {
+        "weighting": "equal"
+      }
+    },
+    {
+      "name": "global_metal_signal",
+      "formula": "sign of overnight LME steel HRC and LME aluminium % change",
+      "params": {}
+    },
+    {
+      "name": "domestic_vs_global_spread",
+      "formula": "mean(Tata_Steel_return, JSW_return) - mean(SAIL_return, NMDC_return) (bps)",
+      "params": {}
+    },
+    {
+      "name": "spread_zscore",
+      "formula": "(domestic_vs_global_spread - SMA(domestic_vs_global_spread, 45)) / STDEV(domestic_vs_global_spread, 45)",
+      "params": {
+        "lookback": 45
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "spread_zscore > 2.0 (global-focused stocks overperforming domestic \u2014 expect SAIL/NMDC catch-up or Tata/JSW pullback)",
+        "global_metal_signal != 0 (LME move triggered the divergence)",
+        "NIFTY Metal index trending (sector is active)"
+      ],
+      "confirmation": "spread_zscore starts declining (crosses below 1.7)"
+    },
+    "short": {
+      "conditions": [
+        "spread_zscore < -2.0 (domestic stocks outperforming global \u2014 expect convergence)",
+        "global_metal_signal != 0",
+        "NIFTY Metal index trending"
+      ],
+      "confirmation": "spread_zscore starts rising (crosses above -1.7)"
+    },
+    "entry_price": "market order on both legs: long laggard sub-group + short leader sub-group"
+  },
+  "exit": {
+    "target": "spread_zscore reverts to \u00b10.3",
+    "stop_loss": "spread_zscore extends to \u00b13.0",
+    "trailing_stop": "none (target is spread normalization)",
+    "time_stop": "exit after 45 bars",
+    "eod_rule": "flatten by 15:15 IST",
+    "signal_exit": "LME prices continue moving strongly during Indian trading hours (sustained global pressure)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "\u20b950K per sub-group leg (\u20b925K per stock in each sub-group)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25 (metal stocks are high-beta, volatile in high VIX)",
+    "time_filter": "no trades first 15 min or last 15 min",
+    "volume_filter": "all 6 stocks > 0.7x normal volume",
+    "trend_filter": "trade is contrarian on the spread (fade divergence, not chase it)",
+    "spread_filter": "all stocks bid-ask < 8 bps",
+    "event_filter": "skip on China PMI day, India trade policy announcement day (all metals move directionally)",
+    "other_filters": [
+      "skip if iron ore moved > 3% overnight (NMDC is pure iron ore play, separate dynamics)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Low \u2014 the domestic vs global metal stock divide is structural. Tata Steel Europe and JSW US operations ensure different sensitivities to global prices. SAIL's purely domestic focus is also permanent."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Vedanta is a diversified miner (zinc, aluminium, oil), not a pure metal play. Its inclusion in the group distorts the group return calculation.",
+    "LME prices are not available real-time on Zerodha. Requires separate data subscription for LME live prices, adding cost and complexity.",
+    "Metal stocks are high-beta and volatile \u2014 the 15 bps stop on each leg may be too tight, causing frequent stop-outs in normal intraday volatility."
+  ],
+  "prior_art": "Pairs trading literature (Gatev et al. 2006). In India, NIFTY Metal index has been studied for commodity price pass-through. World Steel Association data on India's domestic vs export steel production. Tata Steel annual report on European operations.",
+  "notes": "LME trading hours overlap with Indian market hours (afternoon in LME Asian session). Real-time LME price changes during 09:00-14:00 IST can trigger fresh divergences. Consider NMDC (iron ore miner) separately from steel producers \u2014 its correlation is with iron ore, not steel prices.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_137.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_137.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

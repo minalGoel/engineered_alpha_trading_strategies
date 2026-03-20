@@ -1,0 +1,138 @@
+{
+  "name": "rsi_extreme_reversion_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "rsi",
+    "extreme",
+    "mean-reversion",
+    "oversold-overbought",
+    "intraday"
+  ],
+  "thesis": "RSI(2) on 1-min bars reaches extreme levels (<5 or >95) relatively frequently and these extremes revert quickly. The very short 2-period RSI captures momentum exhaustion at the micro level \u2014 when RSI(2) < 5, price has closed lower than the previous close for 2 consecutive bars with large magnitude, indicating a short-term selling climax. Larry Connors' research on RSI(2) for daily bars showed mean reversion at extremes; the same logic applies to 1-min bars but with faster reversion. The edge exists because RSI(2) signals at the 1-min level are too fast for manual traders and the profit per trade is too small for institutional attention. Indian markets have higher retail participation, which creates more noisy overshoots.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 40 crore INR AND intraday_volatility(20) > 0.8%",
+  "timeframe": "1min",
+  "session": "09:30-15:00 IST",
+  "hold_time": "3-15 minutes",
+  "max_hold_bars": 15,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 10,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "RSI_2",
+      "params": "RSI(close, 2)",
+      "lookback": 2
+    },
+    {
+      "name": "RSI_14",
+      "params": "RSI(close, 14)",
+      "lookback": 14
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    },
+    {
+      "name": "ATR",
+      "params": "ATR(10)",
+      "lookback": 10
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "RSI(close, 2) < 5",
+        "RSI(close, 14) > 30 AND RSI(close, 14) < 70",
+        "close > VWAP * 0.99",
+        "India_VIX < 25"
+      ],
+      "confirmation": "RSI(close, 2) crosses above 10 (initial bounce from extreme)"
+    },
+    "short": {
+      "conditions": [
+        "RSI(close, 2) > 95",
+        "RSI(close, 14) > 30 AND RSI(close, 14) < 70",
+        "close < VWAP * 1.01",
+        "India_VIX < 25"
+      ],
+      "confirmation": "RSI(close, 2) crosses below 90 (initial pullback from extreme)"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "RSI(close, 2) crosses 60 (longs) or crosses 40 (shorts) \u2014 momentum normalized",
+    "stop_loss": "0.2% from entry (tight stop for short-duration trades)",
+    "trailing_stop": "none \u2014 trades are too short for trailing stops to add value",
+    "time_stop": "15 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if RSI(close, 2) makes new extreme (below 3 for longs, above 97 for shorts)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed 1L; reduce to 50K after 3 consecutive losses",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.5
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25; RSI extremes are less reliable in panic",
+    "time_filter": "no entries before 09:30 or after 14:45 (fast trades ok late in day)",
+    "volume_filter": "volume on extreme bar > 0.8x SMA(volume, 20)",
+    "trend_filter": "RSI(14) between 30-70 ensures we are not fighting a strong trend",
+    "spread_filter": "bid-ask spread < 0.04% (tight spread essential for scalp-like trades)",
+    "event_filter": "skip on earnings day for that stock",
+    "other_filters": [
+      "max 2 trades in same stock in same direction within 30 min (avoid overtrading one name)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.65,
+    "avg_winner_to_loser": 0.8,
+    "profit_factor_estimate": 1.49,
+    "edge_decay_risk": "moderate \u2014 RSI(2) reversion is well-documented but speed barrier exists on 1-min"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very high trade frequency (4-8/day) means costs eat the edge \u2014 need extremely tight execution",
+    "RSI(2) on 1-min bars is essentially a 2-bar momentum oscillator, extremely noisy, prone to whipsaws",
+    "Average winner is smaller than average loser (W:L = 0.8) \u2014 relies heavily on high win rate; a slight win rate drop makes strategy unprofitable"
+  ],
+  "prior_art": "Larry Connors & Cesar Alvarez ('Short-Term Trading Strategies That Work') extensively studied RSI(2) for daily bars. Connors found RSI(2)<5 had ~85% reversion rate on daily S&P 500 stocks. Adaptation to 1-min bars is less documented. Indian market application is novel.",
+  "notes": "Edge math: 0.65 * 18bps - 0.35 * 22.5bps = 11.7 - 7.9 = 3.8 bps gross per trade. Costs ~11 bps per round trip. Net \u2248 -7.2 bps. Significantly negative. This strategy as described is NOT profitable after costs. High trade frequency makes it worse. REQUIRES: (1) reduce costs via direct market access, (2) increase per-trade edge by filtering for only highest-conviction RSI(2) extremes, (3) consider RSI(3) instead for slightly longer holds. Included as research hypothesis \u2014 needs significant optimization to be viable.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_014.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "mean_reversion pullback oversold",
+    "num_within_family_comparisons": 4,
+    "variant_pairs": [
+      "all_trading_strategies/opus/Opus_3_of_50.json",
+      "all_trading_strategies/claude_project/claude_project_12_of_25.json",
+      "all_trading_strategies/gpt/GPT_4_of_10.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_020.json"
+    ]
+  }
+}

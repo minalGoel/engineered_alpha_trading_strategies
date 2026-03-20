@@ -1,0 +1,153 @@
+{
+  "name": "previous_day_hl_breakout_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus",
+  "tags": [
+    "previous-day",
+    "high-low",
+    "breakout",
+    "level-based",
+    "intraday"
+  ],
+  "thesis": "Previous day's high (PDH) and previous day's low (PDL) are key psychological and structural levels. PDH represents the point where all buyers from yesterday are in profit; PDL represents where all buyers are in loss. Breaking above PDH means exceeding yesterday's maximum bullish sentiment \u2014 a new-information event that triggers: (1) short covering by those who shorted at yesterday's high, (2) breakout buying by momentum traders, (3) delta-hedging by options sellers with strikes near PDH. The edge exists because PDH/PDL are universally visible but the timing and volume characteristics of the break matter enormously. Most breaks fail (false breakouts), but breaks with >2x volume AND occurring before 12:00 have a significantly higher success rate (~55%) because they indicate genuine institutional interest rather than retail stop-hunting.",
+  "universe": "NIFTY 200 constituents on NSE",
+  "stock_filter": "ADV(20) > 50 crore INR AND distance from PDH or PDL < 1%",
+  "timeframe": "1min",
+  "session": "09:30-14:00 IST",
+  "hold_time": "30-90 minutes",
+  "max_hold_bars": 90,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "prev_day_high",
+      "prev_day_low"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "PDH",
+      "params": "previous_day_high",
+      "lookback": "prev_day"
+    },
+    {
+      "name": "PDL",
+      "params": "previous_day_low",
+      "lookback": "prev_day"
+    },
+    {
+      "name": "dist_to_PDH",
+      "params": "(PDH - close) / close * 100",
+      "lookback": 1
+    },
+    {
+      "name": "dist_to_PDL",
+      "params": "(close - PDL) / close * 100",
+      "lookback": 1
+    },
+    {
+      "name": "volume_ratio",
+      "params": "volume / SMA(volume, 20)",
+      "lookback": 20
+    },
+    {
+      "name": "VWAP",
+      "params": "cumulative from 09:15 IST",
+      "lookback": "session"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "close > PDH",
+        "close[t-1] <= PDH (just broke above PDH)",
+        "volume_ratio > 2.0",
+        "close > VWAP",
+        "bar_count_from_open < 180 (before 12:15 IST)"
+      ],
+      "confirmation": "close stays above PDH for 3 consecutive bars (confirming the break is genuine)"
+    },
+    "short": {
+      "conditions": [
+        "close < PDL",
+        "close[t-1] >= PDL (just broke below PDL)",
+        "volume_ratio > 2.0",
+        "close < VWAP",
+        "bar_count_from_open < 180"
+      ],
+      "confirmation": "close stays below PDL for 3 consecutive bars"
+    },
+    "entry_price": "market order on 3rd confirmation bar close"
+  },
+  "exit": {
+    "target": "0.7% from entry (PDH/PDL breaks tend to produce larger moves than intraday level breaks)",
+    "stop_loss": "PDH for longs (if price falls back below PDH, break failed) OR 0.3%",
+    "trailing_stop": "trail at 0.25% once profit > 0.4%",
+    "time_stop": "90 bars or 14:30 IST",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if price closes below PDH (longs) or above PDL (shorts) for 2 consecutive bars"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.35,
+    "position_sizing": "fixed 1L per trade; increase to 1.5L if NIFTY also breaking its PDH in same direction",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.6
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 25; PDH/PDL breaks in panic VIX are less reliable",
+    "time_filter": "prefer breaks before 12:00 IST \u2014 afternoon breaks have lower follow-through",
+    "volume_filter": "volume > 2x 20-bar SMA on the break bar",
+    "trend_filter": "prefer PDH breaks when NIFTY is also trending up (macro tailwind)",
+    "spread_filter": "bid-ask spread < 0.05%",
+    "event_filter": "skip on RBI policy day (PDH/PDL may be breached by macro, not stock-specific flow)",
+    "other_filters": [
+      "skip if PDH/PDL is within 0.2% of current price at open (gap through the level = not a valid break)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 38,
+    "win_rate_estimate": 0.5,
+    "avg_winner_to_loser": 1.8,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "moderate \u2014 PDH/PDL levels are universal but volume + time filters add edge"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "PDH/PDL breaks are the most watched levels in intraday trading \u2014 maximum crowding risk",
+    "3-bar confirmation means entering late; the best entry was on the break bar itself but that has high reversal risk",
+    "On inside days (today's range within yesterday's range), both PDH and PDL may be far from current price \u2014 no signals"
+  ],
+  "prior_art": "PDH/PDL as key levels is universal in day trading (every beginner course covers it). Mark Fisher's ACD method uses a variation (A levels derived from opening range relative to PDH/PDL). Al Brooks ('Trading Price Action Reversals') discusses PDH/PDL extensively. The volume + time filter combination is less commonly formalized.",
+  "notes": "Edge math: 0.50 * 70bps - 0.50 * 39bps = 35 - 19.5 = 15.5 bps gross. Costs ~11 bps. Net \u2248 4.5 bps per trade. Positive. PDH/PDL breakout is one of the most consistently positive-expectancy strategies in Indian markets despite being well-known. The key is strict volume + time + 3-bar filters. High crowding risk means edge may degrade over time as more algos target these levels.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_043.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "breakout mean_reversion support_resistance",
+    "num_within_family_comparisons": 4,
+    "variant_pairs": [
+      "all_trading_strategies/claude_project/claude_project_11_of_25.json",
+      "all_trading_strategies/opus/Opus_13_of_50.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/gemini/gemini_18_of_20.json",
+      "all_trading_strategies/cursor_gemini31pro/cursor_gemini31pro_strategy_141.json"
+    ]
+  }
+}

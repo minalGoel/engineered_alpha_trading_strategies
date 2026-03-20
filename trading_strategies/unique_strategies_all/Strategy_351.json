@@ -1,0 +1,116 @@
+{
+  "name": "nifty_bank_lag_arbitrage",
+  "version": "1.0.0",
+  "author": "Gemini Quant",
+  "tags": [
+    "stat_arb",
+    "index_lag"
+  ],
+  "thesis": "Exploits lead-lag relationships. Nifty Bank Index futures often lead major constituents (HDFC Bank, ICICI Bank) by 2-5 minutes during sharp moves. Institutional high-frequency traders focus on the index first, then the components. We capture the catch-up move in the component.",
+  "universe": "custom",
+  "stock_filter": "HDFC BANK, ICICI BANK, KOTAK BANK",
+  "timeframe": "1min",
+  "session": "full_day",
+  "hold_time": "5-15 bars",
+  "max_hold_bars": 30,
+  "trades_per_day": "5-10",
+  "max_trades_per_day": 30,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": false,
+    "vix": false,
+    "index": "banknifty",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "index_ret_5",
+      "formula": "(index_close - index_close[5]) / index_close[5]",
+      "lookback": 5,
+      "purpose": "lead_indicator"
+    },
+    {
+      "name": "stock_ret_5",
+      "formula": "(close - close[5]) / close[5]",
+      "lookback": 5,
+      "purpose": "lag_indicator"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "index_ret_5 > 0.003",
+        "stock_ret_5 < 0.001"
+      ],
+      "confirmation": "none"
+    },
+    "short": {
+      "conditions": [
+        "index_ret_5 < -0.003",
+        "stock_ret_5 > -0.001"
+      ],
+      "confirmation": "none"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "target": "fixed 0.3%",
+    "stop_loss": "0.15% from entry",
+    "trailing_stop": "none",
+    "time_stop": "15 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "none"
+  },
+  "risk": {
+    "capital_per_trade": 500000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "fixed",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 1.0
+  },
+  "filters": {
+    "vix_filter": "vix < 20",
+    "time_filter": "none",
+    "volume_filter": "none",
+    "trend_filter": "none",
+    "spread_filter": "spread < 0.01%",
+    "event_filter": "none",
+    "other_filters": []
+  },
+  "edge": {
+    "expected_bps": 20.5,
+    "win_rate_estimate": 0.62,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 2.1,
+    "edge_decay_risk": "high \u2014 crowded"
+  },
+  "costs": {
+    "slippage_bps_per_side": 1,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Execution speed is critical",
+    "Crowding from HFT firms in these liquid names"
+  ],
+  "prior_art": "Index Arbitrage / Statistical Lead-Lag",
+  "notes": "Requires low-latency API access.",
+  "_filepath": "all_trading_strategies/gemini/gemini_13_of_20.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/gemini/gemini_13_of_20.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "stat_arb lead_lag cross_asset",
+    "num_within_family_comparisons": 1,
+    "variant_pairs": [
+      "all_trading_strategies/claude_project/claude_project_8_of_25.json"
+    ],
+    "different_pairs": []
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "name": "nifty_banknifty_spread_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "relative_value",
+    "index_spread",
+    "NIFTY",
+    "BANKNIFTY",
+    "mean_reversion"
+  ],
+  "thesis": "BANK NIFTY carries ~33% weight in NIFTY 50, creating a tight but imperfect correlation. The intraday return spread between BANK NIFTY and NIFTY 50 exhibits mean-reverting behavior around a slowly drifting mean. When BANK NIFTY outperforms NIFTY 50 by > 30 bps intraday (or vice versa), the spread tends to compress over the next 30-60 minutes. The inefficiency exists because: (1) BANK NIFTY is the most traded F&O instrument and attracts speculative overreaction, (2) passive index funds rebalance toward NIFTY 50 weights, creating a natural reversion mechanism, (3) the spread is only mean-reverting intraday \u2014 overnight the spread can shift permanently based on macro factors. We trade this as a spread trade using NIFTY and BANK NIFTY futures (or their most liquid ETFs).",
+  "universe": "NIFTY 50, BANK NIFTY indices",
+  "stock_filter": "Trade via NIFTY 50 futures + BANK NIFTY futures (or NIFTYBEES + BANKBEES ETFs)",
+  "timeframe": "1min",
+  "session": "09:30-15:20 IST",
+  "hold_time": "20-60 min",
+  "max_hold_bars": 60,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY 50, BANK NIFTY",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "NIFTY 50 futures 1-min data",
+      "BANK NIFTY futures 1-min data"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "nifty_return_cum",
+      "formula": "(NIFTY50_close - NIFTY50_open_day) / NIFTY50_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "banknifty_return_cum",
+      "formula": "(BANKNIFTY_close - BANKNIFTY_open_day) / BANKNIFTY_open_day * 10000",
+      "params": {}
+    },
+    {
+      "name": "nb_spread",
+      "formula": "banknifty_return_cum - nifty_return_cum (in bps)",
+      "params": {}
+    },
+    {
+      "name": "nb_spread_zscore",
+      "formula": "(nb_spread - SMA(nb_spread, 45)) / STDEV(nb_spread, 45)",
+      "params": {
+        "lookback": 45
+      }
+    },
+    {
+      "name": "spread_velocity",
+      "formula": "nb_spread - nb_spread[5]",
+      "params": {
+        "lookback": 5
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "nb_spread_zscore < -1.5 (NIFTY outperforming BANK NIFTY \u2014 expect BANK NIFTY catch-up)",
+        "spread_velocity < -3 (spread still widening \u2014 wait for it to slow)",
+        "India_VIX < 20"
+      ],
+      "confirmation": "spread_velocity crosses above -1 (widening slowing down)"
+    },
+    "short": {
+      "conditions": [
+        "nb_spread_zscore > 1.5 (BANK NIFTY outperforming NIFTY \u2014 expect compression)",
+        "spread_velocity > 3",
+        "India_VIX < 20"
+      ],
+      "confirmation": "spread_velocity crosses below 1 (widening slowing down)"
+    },
+    "entry_price": "market order on both legs: long BANK NIFTY + short NIFTY (or vice versa)"
+  },
+  "exit": {
+    "target": "nb_spread_zscore reverts to 0 (full mean reversion)",
+    "stop_loss": "nb_spread_zscore extends to \u00b12.5 (spread diverging beyond threshold)",
+    "trailing_stop": "none (target is spread normalization)",
+    "time_stop": "exit after 60 bars if target not reached",
+    "eod_rule": "flatten by 15:20 IST",
+    "signal_exit": "India_VIX spikes > 22 during trade (correlation structure may break)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "\u20b950K per leg, beta-adjusted (multiply NIFTY leg by BANK NIFTY beta to NIFTY, ~1.3)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 2500,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 20; in high VIX, BANK NIFTY drops faster (higher beta) and spread may not revert",
+    "time_filter": "no trades in first 15 min or last 10 min",
+    "volume_filter": "both futures trading at > 0.8x normal volume participation",
+    "trend_filter": "skip if NIFTY 50 intraday move > 1.5% (strong trend makes spread directional, not mean-reverting)",
+    "spread_filter": "futures bid-ask spread < 0.05% on both legs",
+    "event_filter": "skip on RBI policy day (banking-specific), budget day, F&O expiry",
+    "other_filters": [
+      "skip if HDFC Bank/ICICI Bank have results today (distorts BANK NIFTY)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.3,
+    "edge_decay_risk": "Low \u2014 NIFTY/BANK NIFTY spread mean reversion is structural due to the weight overlap and passive fund rebalancing. This trade has been viable for years in Indian markets."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "On RBI policy days or banking-specific regulatory events, BANK NIFTY diverges from NIFTY permanently intraday. The stop loss at z-score \u00b12.5 gets hit on such days.",
+    "Trading two index futures requires significant margin (especially BANK NIFTY at ~\u20b910L notional). The \u20b91L capital allocation may be insufficient for proper sizing.",
+    "The beta-adjustment ratio between BANK NIFTY and NIFTY is time-varying (1.2-1.5) and using a stale beta leads to imperfect hedging."
+  ],
+  "prior_art": "Vidyamurthy (2004) 'Pairs Trading: Quantitative Methods and Analysis' \u2014 seminal text on spread trading. Elliot, van der Hoek & Malcolm (2005) 'Pairs Trading' for mean-reverting spread models. In India, the NIFTY/BANK NIFTY spread is widely discussed but typically traded on daily charts, not intraday.",
+  "notes": "Consider using options for the spread trade: buy BANK NIFTY calls + NIFTY puts (or vice versa) to limit downside risk. This converts the trade from a spread trade to a relative volatility trade but caps the loss at premium paid.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "relative_value sector_rotation stat_arb",
+    "num_within_family_comparisons": 3,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json"
+    ]
+  }
+}

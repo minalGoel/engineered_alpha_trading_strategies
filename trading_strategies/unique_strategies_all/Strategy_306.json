@@ -1,0 +1,142 @@
+{
+  "name": "trend_strength_adaptive_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-4",
+  "tags": [
+    "ADX",
+    "trend-strength",
+    "adaptive-parameters",
+    "regime-adaptive",
+    "dynamic"
+  ],
+  "thesis": "ADX (Average Directional Index) measures trend strength on a 0-100 scale but is typically used with static thresholds (>25 = trending). Instead of binary classification, this strategy uses ADX as a continuous scaling parameter for both indicator lookback and position size. When ADX is high (strong trend), use shorter EMA lookbacks (faster signals, ride the trend) and larger positions. When ADX is low (ranging), use longer lookbacks (fewer whipsaws) and smaller positions. The relationship is: EMA_lookback = max(5, 25 - floor(ADX/5)). This creates a continuously adaptive system rather than a discrete regime switch. The inefficiency persists because most implementations use ADX as a filter, not as a parameter modifier.",
+  "universe": "NIFTY 50 constituents",
+  "stock_filter": "ADV(20) > \u20b9100 Cr; stock ADX(14) must have been > 20 at least once in last 5 sessions (has trending tendency)",
+  "timeframe": "1min",
+  "session": "09:30-15:10 IST",
+  "hold_time": "15-60 min (inversely related to ADX)",
+  "max_hold_bars": 90,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": false,
+    "index": "NIFTY 50",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ADX_14",
+      "params": "ADX(high, low, close, 14)",
+      "lookback": 28
+    },
+    {
+      "name": "Plus_DI",
+      "params": "+DI(high, low, close, 14)",
+      "lookback": 14
+    },
+    {
+      "name": "Minus_DI",
+      "params": "-DI(high, low, close, 14)",
+      "lookback": 14
+    },
+    {
+      "name": "Adaptive_EMA_Lookback",
+      "params": "max(5, 25 - floor(ADX_14 / 5))",
+      "lookback": "dynamic"
+    },
+    {
+      "name": "Adaptive_EMA",
+      "params": "EMA(close, Adaptive_EMA_Lookback)",
+      "lookback": "dynamic (5-25)"
+    },
+    {
+      "name": "Adaptive_EMA_Slow",
+      "params": "EMA(close, Adaptive_EMA_Lookback * 2)",
+      "lookback": "dynamic (10-50)"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "+DI(14) > -DI(14) (bullish directional movement)",
+        "ADX_14 > 15 (minimum trend strength)",
+        "Adaptive_EMA > Adaptive_EMA_Slow (adaptive fast EMA above adaptive slow EMA)",
+        "close > vwap"
+      ],
+      "confirmation": "ADX_14 is rising: ADX_14 > ADX_14[3 bars ago]"
+    },
+    "short": {
+      "conditions": [
+        "-DI(14) > +DI(14) (bearish directional movement)",
+        "ADX_14 > 15",
+        "Adaptive_EMA < Adaptive_EMA_Slow",
+        "close < vwap"
+      ],
+      "confirmation": "ADX_14 is rising: ADX_14 > ADX_14[3 bars ago]"
+    },
+    "entry_price": "market order on confirmation"
+  },
+  "exit": {
+    "target": "max(30, ADX_14 * 1.5) bps from entry \u2014 higher ADX = wider target",
+    "stop_loss": "max(20, ADX_14 * 0.8) bps from entry \u2014 higher ADX = wider stop",
+    "trailing_stop": "After target*0.6 profit, trail at target*0.4 from high-water mark",
+    "time_stop": "max(30, 90 - ADX_14) bars \u2014 higher ADX = shorter time stop (trends resolve faster)",
+    "eod_rule": "flatten",
+    "signal_exit": "+DI/-DI cross against position OR ADX drops below 12 (trend exhausted)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.4,
+    "position_sizing": "\u20b9(75000 + ADX_14 * 1000), capped at \u20b91.5L \u2014 higher ADX = larger position",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 3500,
+    "max_portfolio_heat_pct": 1.2
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25",
+    "time_filter": "No entries before 09:30 (ADX warm-up needs ~28 bars) or after 15:10",
+    "volume_filter": "Volume > SMA(volume, 20)",
+    "trend_filter": "ADX must be > 15 (minimum trend strength to trade)",
+    "spread_filter": "Bid-ask spread < 5 bps",
+    "event_filter": "Skip stock on earnings day",
+    "other_filters": [
+      "Adaptive_EMA_Lookback must have been stable (not changed by >2) in last 5 bars to avoid signal instability"
+    ]
+  },
+  "edge": {
+    "expected_bps": 27,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.35,
+    "profit_factor_estimate": 1.46,
+    "edge_decay_risk": "Low \u2014 continuous ADX-parameter scaling is novel; most competitors use binary ADX thresholds; the adaptive system adds complexity that deters replication"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Adaptive EMA lookback changes every bar as ADX fluctuates, causing EMA value discontinuities \u2014 when lookback jumps from 10 to 15, the EMA value can gap, creating false crossover signals",
+    "ADX-proportional position sizing increases exposure during strong trends, which is precisely when trend reversals are most damaging \u2014 the strategy takes its largest loss on the biggest reversal",
+    "The formula ADX_14 * 1.5 for target bps assumes linear relationship between trend strength and expected move magnitude, which is empirically not verified on 1-min NSE data"
+  ],
+  "prior_art": "Wilder's ADX (1978); Kaufman's Adaptive Moving Average (KAMA) uses similar efficiency ratio concept; ADX as a parameter modifier discussed in Ehlers 'Cybernetic Analysis for Stocks and Futures'",
+  "notes": "Consider smoothing the Adaptive_EMA_Lookback by applying an EMA to the lookback value itself: Smoothed_Lookback = EMA(Adaptive_EMA_Lookback, 5). This prevents discontinuous jumps in EMA values when ADX fluctuates.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_168.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_168.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

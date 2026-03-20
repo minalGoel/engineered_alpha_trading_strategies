@@ -1,0 +1,144 @@
+{
+  "name": "three_bar_momentum_v1",
+  "version": "0.1.0",
+  "author": "claude_strategist",
+  "tags": [
+    "momentum",
+    "short_term",
+    "pattern"
+  ],
+  "thesis": "Three consecutive same-direction bars with expanding volume and range indicate a micro-momentum burst that persists for 5-15 more bars. This pattern captures institutional order flow that executes over multiple minutes. The first bar initiates, the second confirms, the third signals that the flow hasn't been fully absorbed yet. Edge persists because the pattern is too fast for most retail traders to act on and too small for most institutional systems to bother with.",
+  "universe": "fno",
+  "stock_filter": "top 30 FnO by avg daily turnover",
+  "timeframe": "1min",
+  "session": "09:25-14:30",
+  "hold_time": "5-15 bars",
+  "max_hold_bars": 20,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 12,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": false,
+    "vix": false,
+    "index": "none",
+    "option_chain": false,
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "bar_return_1",
+      "formula": "(close - open) / open",
+      "lookback": 1,
+      "purpose": "current bar direction"
+    },
+    {
+      "name": "bar_return_2",
+      "formula": "(close[1] - open[1]) / open[1]",
+      "lookback": 2,
+      "purpose": "prior bar direction"
+    },
+    {
+      "name": "bar_return_3",
+      "formula": "(close[2] - open[2]) / open[2]",
+      "lookback": 3,
+      "purpose": "2-bars-ago direction"
+    },
+    {
+      "name": "vol_expanding",
+      "formula": "volume > volume[1] AND volume[1] > volume[2]",
+      "lookback": 3,
+      "purpose": "expanding volume"
+    },
+    {
+      "name": "range_expanding",
+      "formula": "(high-low) > (high[1]-low[1]) AND (high[1]-low[1]) > (high[2]-low[2])",
+      "lookback": 3,
+      "purpose": "expanding range"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 20)",
+      "lookback": 20,
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "bar_return_1 > 0 AND bar_return_2 > 0 AND bar_return_3 > 0",
+        "vol_expanding == True",
+        "range_expanding == True"
+      ],
+      "confirmation": "enter on next bar open"
+    },
+    "short": {
+      "conditions": [
+        "bar_return_1 < 0 AND bar_return_2 < 0 AND bar_return_3 < 0",
+        "vol_expanding == True",
+        "range_expanding == True"
+      ],
+      "confirmation": "enter on next bar open"
+    },
+    "entry_price": "market on next bar open"
+  },
+  "exit": {
+    "target": "0.2% from entry",
+    "stop_loss": "0.15% from entry",
+    "trailing_stop": "none \u2014 too short hold time",
+    "time_stop": "exit after 20 bars",
+    "eod_rule": "flatten",
+    "signal_exit": "first bar that closes opposite to trade direction"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.15,
+    "position_sizing": "fixed",
+    "max_open_positions": 2,
+    "max_daily_loss_inr": 5000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "none",
+    "time_filter": "no trades first 10 min or last 15 min",
+    "volume_filter": "volume on 3rd bar > 1.5 * SMA(volume, 20)",
+    "trend_filter": "none \u2014 pure momentum play",
+    "spread_filter": "skip if spread > 0.06% (tight spreads needed for small edge)",
+    "event_filter": "none",
+    "other_filters": [
+      "minimum 3rd bar range > 0.05% (not a doji pattern)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.1,
+    "profit_factor_estimate": 1.34,
+    "edge_decay_risk": "high \u2014 simple pattern, easily crowded by other systems"
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very tight target (20 bps) and stop (15 bps) means costs are a huge % of gross edge \u2014 slippage kills",
+    "High trade frequency (up to 12/day) amplifies brokerage costs \u2014 \u20b940 * 12 = \u20b9480/day fixed cost",
+    "Three green/red bars with expanding volume is common during the open \u2014 many false signals in noisy periods"
+  ],
+  "prior_art": "Three soldiers / three crows candlestick pattern with quantitative volume/range filters",
+  "notes": "Consider a 5-min timeframe version for cleaner signals and lower cost impact.",
+  "_filepath": "all_trading_strategies/opus/Opus_16_of_50.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/opus/Opus_16_of_50.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": null,
+    "num_within_family_comparisons": 0,
+    "variant_pairs": [],
+    "different_pairs": []
+  }
+}

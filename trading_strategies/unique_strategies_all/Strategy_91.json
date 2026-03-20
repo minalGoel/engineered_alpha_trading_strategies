@@ -1,0 +1,146 @@
+{
+  "name": "gap_continuation_v1",
+  "version": "0.1.0",
+  "author": "quant_system",
+  "tags": [
+    "momentum",
+    "gap",
+    "continuation"
+  ],
+  "thesis": "Large gaps (>1.5%) that DON'T fill in the first 30 minutes signal genuine information (earnings, sector news, upgrade/downgrade). These unfilled gaps tend to continue in the gap direction for the rest of the session because the information hasn't been fully priced in. The inefficiency exists because most traders either fade all gaps (Strategy 3 mindset) or wait too long to confirm continuation. Not fully arbitraged because large gaps are infrequent and require conviction to trade in the gap direction.",
+  "universe": "fno",
+  "stock_filter": "NIFTY 200 with ADV > \u20b930cr",
+  "timeframe": "1min",
+  "session": "09:45-14:30",
+  "hold_time": "60-240 bars",
+  "max_hold_bars": 300,
+  "trades_per_day": "0-1",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "nifty50",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "previous_day_close"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open_today - prev_close) / prev_close * 100",
+      "lookback": 0,
+      "purpose": "gap size"
+    },
+    {
+      "name": "gap_filled_30",
+      "formula": "boolean: did price touch prev_close in first 30 bars?",
+      "lookback": 30,
+      "purpose": "gap fill check"
+    },
+    {
+      "name": "first_30_high",
+      "formula": "max(high[09:15:00 to 09:44:59])",
+      "lookback": 30,
+      "purpose": "first 30-min high"
+    },
+    {
+      "name": "first_30_low",
+      "formula": "min(low[09:15:00 to 09:44:59])",
+      "lookback": 30,
+      "purpose": "first 30-min low"
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "gap_pct > 1.5",
+        "gap_filled_30 == False",
+        "close > first_30_high (breakout above first 30-min range)",
+        "volume > SMA(volume, 20) * 1.3"
+      ],
+      "confirmation": "close above first_30_high after 09:45"
+    },
+    "short": {
+      "conditions": [
+        "gap_pct < -1.5",
+        "gap_filled_30 == False",
+        "close < first_30_low",
+        "volume > SMA(volume, 20) * 1.3"
+      ],
+      "confirmation": "close below first_30_low after 09:45"
+    },
+    "entry_price": "market on confirmation bar close"
+  },
+  "exit": {
+    "target": "1.0 * abs(gap_pct) extension from entry (gap continuation target)",
+    "stop_loss": "midpoint of first 30-min range",
+    "trailing_stop": "move SL to breakeven after 50% of target reached",
+    "time_stop": "exit by 14:30",
+    "eod_rule": "flatten",
+    "signal_exit": "exit if price re-enters first 30-min range for 5 bars"
+  },
+  "risk": {
+    "capital_per_trade": 200000,
+    "max_risk_per_trade_pct": 0.8,
+    "position_sizing": "vol_adjusted",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 12000,
+    "max_portfolio_heat_pct": 1.5
+  },
+  "filters": {
+    "vix_filter": "vix < 28",
+    "time_filter": "entry only between 09:45-11:00",
+    "volume_filter": "opening 30-min volume > 1.3x average",
+    "trend_filter": "gap direction should align with 5-day stock return direction",
+    "spread_filter": "skip if spread > 0.1%",
+    "event_filter": "skip on broad market event days (RBI, budget) \u2014 stock-specific catalysts OK",
+    "other_filters": [
+      "skip if gap < 1.5% (not large enough for continuation thesis)",
+      "skip if gap > 5% (too extreme, likely reversal)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.45,
+    "avg_winner_to_loser": 1.8,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "low \u2014 structural, information gaps persist across all markets"
+  },
+  "costs": {
+    "slippage_bps_per_side": 4,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "Very low frequency: large unfilled gaps that continue are 1-3 per week across 200 stocks. Not enough trades for a standalone strategy.",
+    "Gap continuation can fail spectacularly when the initial catalyst is overreacted to \u2014 the reversal from a failed continuation is fast and large.",
+    "Slippage on gap days is worse than normal. The 4 bps assumption may be optimistic for less liquid NIFTY 200 names."
+  ],
+  "prior_art": "Gap and go / gap continuation. See: trade-ideas.com literature, Andrew Aziz 'How to Day Trade'. The unfilled gap filter is the key addition.",
+  "notes": "Best combined with Strategy 3 (gap fill) \u2014 one fires on small gaps, the other on large unfilled gaps. They're mutually exclusive by construction.",
+  "_filepath": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/claude_project/claude_project_24_of_25.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "gap momentum intraday",
+    "num_within_family_comparisons": 7,
+    "variant_pairs": [
+      "all_trading_strategies/opus/Opus_29_of_50.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_031.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_064.json",
+      "all_trading_strategies/grok/Grok_2_of_10.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/gpt/GPT_9_of_10.json",
+      "all_trading_strategies/claude_project/claude_project_3_of_25.json",
+      "all_trading_strategies/opus/Opus_6_of_50.json"
+    ]
+  }
+}

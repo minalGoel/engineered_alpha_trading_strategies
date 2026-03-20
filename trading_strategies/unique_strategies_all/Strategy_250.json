@@ -1,0 +1,144 @@
+{
+  "name": "banking_vs_it_rotation_v1",
+  "version": "0.1.0",
+  "author": "claude-4.6-opus-agent-3",
+  "tags": [
+    "sector_rotation",
+    "banking",
+    "IT",
+    "relative_value",
+    "macro"
+  ],
+  "thesis": "BANK NIFTY and NIFTY IT are the two largest sector indices by weight in NIFTY 50 and exhibit a well-documented negative intraday correlation driven by opposing macro sensitivities: banking benefits from rate cuts and domestic growth (INR strength), while IT benefits from INR weakness and global tech demand. When one sector significantly outperforms the other intraday (>30 bps spread), mean reversion occurs as institutional portfolio rebalancers adjust exposure. This inefficiency persists because: (1) the correlation regime shifts (sometimes positive, sometimes negative) making static pairs trading unreliable, (2) the reversion time is variable (30 min to 2 hours), and (3) retail traders treat banking and IT as independent, not as a rotation pair.",
+  "universe": "BANK NIFTY constituents + NIFTY IT constituents",
+  "stock_filter": "Top 3 by weight: HDFC Bank, ICICI Bank, SBI (banking) + TCS, Infosys, HCL Tech (IT)",
+  "timeframe": "1min",
+  "session": "10:00-15:20 IST",
+  "hold_time": "30-90 min",
+  "max_hold_bars": 90,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_1min": true,
+    "vwap": true,
+    "vix": true,
+    "index": "NIFTY Bank, NIFTY IT",
+    "option_chain": false,
+    "order_book": false,
+    "other": [
+      "USD/INR spot rate 1-min data",
+      "US 10Y yield (proxy via SGX)"
+    ]
+  },
+  "indicators": [
+    {
+      "name": "bank_it_spread",
+      "formula": "(BANK_NIFTY_return_cumulative - NIFTY_IT_return_cumulative) in bps from 09:15",
+      "params": {}
+    },
+    {
+      "name": "spread_zscore",
+      "formula": "(bank_it_spread - SMA(bank_it_spread, 60)) / STDEV(bank_it_spread, 60)",
+      "params": {
+        "lookback": 60
+      }
+    },
+    {
+      "name": "USDINR_direction",
+      "formula": "sign(USDINR_1min_close - USDINR_1min_close[30])",
+      "params": {
+        "lookback": 30
+      }
+    },
+    {
+      "name": "correlation_regime",
+      "formula": "rolling_corr(BANK_NIFTY_1min_return, NIFTY_IT_1min_return, 60)",
+      "params": {
+        "lookback": 60
+      }
+    }
+  ],
+  "entry": {
+    "long": {
+      "conditions": [
+        "spread_zscore < -2.0 (IT outperforming, banking lagging \u2014 expect banking catch-up)",
+        "correlation_regime < 0 (negative correlation regime active)",
+        "USDINR_direction <= 0 (INR not weakening further \u2014 supports banking recovery)"
+      ],
+      "confirmation": "spread_zscore starts rising (crosses above -1.8 from below -2.0)"
+    },
+    "short": {
+      "conditions": [
+        "spread_zscore > 2.0 (banking outperforming, IT lagging \u2014 expect IT catch-up)",
+        "correlation_regime < 0",
+        "USDINR_direction >= 0 (INR not strengthening further \u2014 supports IT recovery)"
+      ],
+      "confirmation": "spread_zscore starts falling (crosses below 1.8 from above 2.0)"
+    },
+    "entry_price": "market order: long banking proxy + short IT proxy (or vice versa)"
+  },
+  "exit": {
+    "target": "spread_zscore reverts to 0 (spread mean reversion complete)",
+    "stop_loss": "spread_zscore extends to \u00b13.0 (spread widening, stop out)",
+    "trailing_stop": "none (target is full mean reversion)",
+    "time_stop": "exit after 90 bars if spread hasn't reverted",
+    "eod_rule": "flatten by 15:20 IST",
+    "signal_exit": "correlation_regime turns positive (rotation dynamic broken)"
+  },
+  "risk": {
+    "capital_per_trade": 100000,
+    "max_risk_per_trade_pct": 0.2,
+    "position_sizing": "\u20b950K long leg + \u20b950K short leg (market-neutral notional)",
+    "max_open_positions": 1,
+    "max_daily_loss_inr": 3000,
+    "max_portfolio_heat_pct": 0.4
+  },
+  "filters": {
+    "vix_filter": "India_VIX < 22; in high VIX, both sectors sell off together (positive correlation)",
+    "time_filter": "wait until 10:00 for stable intraday spread; stop new entries after 14:00",
+    "volume_filter": "both sector indices trading at > 0.7x normal volume participation",
+    "trend_filter": "skip if NIFTY 50 is moving > 1% intraday (macro dominating, rotation suppressed)",
+    "spread_filter": "individual stock spreads < 5 bps for all 6 proxy stocks",
+    "event_filter": "skip on RBI policy days (banking directional), IT result days (IT directional)",
+    "other_filters": [
+      "skip if correlation_regime > 0.3 (sectors moving together, not rotating)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.8,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "Low \u2014 the opposing macro sensitivities of banking (domestic rates) and IT (FX, global tech) are structural and unlikely to change. Rotation dynamics persist as long as both sectors have significant NIFTY weight."
+  },
+  "costs": {
+    "slippage_bps_per_side": 3,
+    "brokerage": "zerodha_intraday",
+    "stt_bps": 2.5,
+    "exchange_charges_bps": 0.5
+  },
+  "weaknesses": [
+    "The correlation regime between banking and IT is unstable \u2014 in risk-off events, both sectors sell off together and the rotation trade gets stopped out.",
+    "Using individual stocks as sector proxies introduces stock-specific risk (e.g., HDFC Bank result surprise moves the banking leg without sector-wide implication).",
+    "Very low trade frequency (1-2/day) means the strategy cannot stand alone and must be part of a portfolio of strategies."
+  ],
+  "prior_art": "Granger & Morgenstern (1970) early work on spectral analysis of market relationships. Gatev, Goetzmann & Rouwenhorst (2006) pairs trading framework. In India, Srivastava (2019) studies BANK NIFTY-IT NIFTY dynamics. The USDINR linkage is documented in CCIL reports.",
+  "notes": "Alternative implementation: trade BANK NIFTY futures vs NIFTY IT futures directly. This eliminates stock-specific risk but introduces basis risk and requires higher margin. The USDINR filter is critical \u2014 when INR is in a strong one-directional trend, the rotation dynamic breaks down.",
+  "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+  "_dedup_metadata": {
+    "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_112.json",
+    "phase1_survived": true,
+    "phase2_survived": true,
+    "phase3_survived": true,
+    "was_duplicate_kill": false,
+    "family": "relative_value sector_rotation stat_arb",
+    "num_within_family_comparisons": 3,
+    "variant_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_056.json",
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json"
+    ],
+    "different_pairs": [
+      "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_163.json"
+    ]
+  }
+}

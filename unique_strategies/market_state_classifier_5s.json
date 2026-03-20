@@ -1,0 +1,137 @@
+{
+  "name": "market_state_classifier_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "market_state_classifier_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_307.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 12,
+  "thesis": "The market operates in three primary intraday states \u2014 trending, ranging, and volatile-choppy \u2014 each requiring a different strategy. By computing three features (ADX for trend, BB_Width percentile for range, and ATR acceleration for volatility spikes) and classifying the state using a simple rule-based decision tree, we select the optimal sub-strategy. Trending state: trade EMA crossovers. Ranging state: fade BB extremes. Volatile: stay flat. The key insight is that these three states are mutually exclusive and exhaustive \u2014 at any moment, the market is doing exactly one of these. The inefficiency is that static strategies blend these states and underperform in 2 of 3 conditions.",
+  "mechanism": "Market microstructure varies across volatility regimes. In low-vol regimes, mean-reversion dominates as market makers provide tight liquidity. In high-vol regimes, momentum persists as liquidity thins and stop-cascades amplify moves. Adapting the signal to the current regime captures the appropriate edge for prevailing conditions.",
+  "indicators": [
+    {
+      "name": "ADX_14",
+      "formula": "",
+      "lookback": 336,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_Width_Pctile",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "ATR_Acceleration",
+      "formula": "",
+      "lookback": 288,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "State",
+      "formula": "",
+      "lookback": 336,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "EMA_9",
+      "formula": "",
+      "lookback": 108,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "EMA_21",
+      "formula": "",
+      "lookback": 252,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_upper",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_lower",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "TRENDING: State == TRENDING AND EMA(close,9) crosses above EMA(close,21) AND close > vwap",
+        "RANGING: State == RANGING AND close < BB_lower AND close < vwap"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "TRENDING: State == TRENDING AND EMA(close,9) crosses below EMA(close,21) AND close < vwap",
+        "RANGING: State == RANGING AND close > BB_upper AND close > vwap"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "State transitions to VOLATILE or from TRENDING to RANGING (or vice versa) \u2014 exit immediately",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25; if VIX > 22, classify any ambiguous state as VOLATILE (stay flat)",
+    "volume_filter": "Volume on signal bar > SMA(volume, 20) for trending entries",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "The VOLATILE state (ATR_Accel > 0.5) forces the strategy flat during potentially profitable periods \u2014 sharp volatility expansions often coincide with large directional moves",
+    "Hard-coded thresholds (ADX > 25, ADX < 18, ATR_Accel > 0.5) are arbitrary and may not be optimal for all stocks \u2014 bank stocks have structurally different ADX distributions than IT stocks",
+    "State transitions cause immediate exits, which can whipsaw if the classifier oscillates \u2014 a stock at ADX = 25.5 can flip between TRENDING and ambiguous on each bar"
+  ],
+  "prior_art": "Wilder's ADX for trend identification; Bollinger's squeeze for range detection; decision-tree classifiers for market states discussed in Aronson's 'Evidence-Based Technical Analysis'",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

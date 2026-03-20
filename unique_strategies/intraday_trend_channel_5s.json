@@ -1,0 +1,127 @@
+{
+  "name": "intraday_trend_channel_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "intraday_trend_channel_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_170.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "A linear regression channel fitted on the last 60 bars (1 hour) of 1-min data identifies the intraday trend direction and deviations from the trend line. Trading involves buying at the lower channel boundary when the overall regression slope is positive (uptrend with pullback to support), and selling at the upper boundary when slope is negative. The edge exists because linear regression channels dynamically adapt to the intraday trend \u2014 unlike fixed EMAs or Bollinger Bands, the channel tilts with the trend and provides more accurate support/resistance levels. The inefficiency persists because computing rolling linear regression with 2 standard deviation bands in real-time is computationally non-trivial and not available as a default indicator in most Indian broking platforms.",
+  "mechanism": "When multiple timeframe trends align, the probability of continuation increases because institutional flows that established the trend are still active. Trend-following algorithms and discretionary traders pile on, creating a self-reinforcing cycle that lasts until liquidity on the opposing side overwhelms the directional flow.",
+  "indicators": [
+    {
+      "name": "linreg_value",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "linreg_slope",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "linreg_std",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "linreg_upper",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "linreg_lower",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "channel_position",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "linreg_slope > 0 (uptrend channel)",
+        "channel_position < 0.15 (near lower boundary)",
+        "close > linreg_lower (not broken below channel)",
+        "volume > SMA(volume, 20) * 0.8"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "linreg_slope < 0 (downtrend channel)",
+        "channel_position > 0.85 (near upper boundary)",
+        "close < linreg_upper (not broken above channel)",
+        "volume > SMA(volume, 20) * 0.8"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "exit if linreg_slope flips sign (trend reversal)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "no specific filter",
+    "volume_filter": "volume > 0.8x SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "60-bar linear regression is computationally heavy and the channel parameters change every bar \u2014 instability in parameters",
+    "R-squared filter is essential but values on 1-min data are typically low (0.3-0.5), making 0.7 threshold very restrictive",
+    "Channel breaks (when they occur) are violent \u2014 the stop at 0.5 * linreg_std beyond the band may be triggered before the exit order executes"
+  ],
+  "prior_art": "Linear regression channels are discussed by Raff ('Raff Regression Channel'). Standard deviation channels around regression lines are in Gilbert Raff's work. Applied to intraday with R-squared filtering is less common. The concept overlaps with Keltner Channels but uses regression instead of EMA as midline.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,120 @@
+{
+  "name": "keltner_channel_reversion_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "keltner_channel_reversion_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_150.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 12,
+  "thesis": "Keltner Channels use ATR-based bands around an EMA, making them more stable than Bollinger Bands (which use standard deviation and are distorted by extreme bars). When price touches the outer Keltner Channel (EMA(20) \u00b1 2.5 * ATR(10)), it represents a 2.5 ATR deviation \u2014 a volatility-normalized extreme. The ATR-based bands adapt to changing intraday volatility better than fixed-width or std-based bands. The edge exists because Keltner Channels are less popular than Bollinger Bands among Indian retail traders, so the signal is less crowded. The ATR normalization also avoids the 'fat finger' problem where a single outlier bar distorts Bollinger std but barely moves ATR.",
+  "mechanism": "Short-term selling exhausts available demand at a price level, creating a temporary liquidity vacuum. Market makers who absorbed the selling begin marking prices back to reduce inventory risk. Limit buy orders resting below create a floor, and new participants entering the long side accelerate the reversion as the forced selling pressure dissipates.",
+  "indicators": [
+    {
+      "name": "KC_mid",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "KC_ATR",
+      "formula": "",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "KC_upper",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "KC_lower",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "KC_position",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "low <= KC_lower",
+        "close > KC_lower",
+        "KC_position > 0 AND KC_position < 0.15",
+        "volume > SMA(volume, 20)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "high >= KC_upper",
+        "close < KC_upper",
+        "KC_position > 0.85 AND KC_position < 1.0",
+        "volume > SMA(volume, 20)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "exit if KC_position moves below -0.1 (longs) or above 1.1 (shorts) \u2014 channel walk",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 25",
+    "volume_filter": "volume on signal bar > 1x SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "reversion_threshold",
+      "default": 0.0005,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "ATR(10) on 1-min bars is only 10 minutes of data \u2014 may not capture true intraday volatility regime",
+    "In persistent trends, price touches the channel and keeps trending \u2014 'channel walk' is the primary failure mode",
+    "The 2.5 ATR multiplier is arbitrary; optimal multiplier varies by stock volatility profile and needs periodic recalibration"
+  ],
+  "prior_art": "Keltner Channels originated from Chester Keltner (1960) and were modernized by Linda Raschke. ATR-based channels are discussed in Raschke & Connors 'Street Smarts'. Using Keltner for mean reversion vs Bollinger is a known alternative but less popular in India.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

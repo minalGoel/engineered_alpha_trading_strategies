@@ -1,0 +1,113 @@
+{
+  "name": "last_30_min_momentum_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "last_30_min_momentum_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_57.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Stocks that are up/down > 1% for the day with sustained volume tend to accelerate in the last 30 minutes (14:45-15:15) as institutional portfolio managers who have been monitoring all day make final positioning decisions. The 'last call' effect creates a rush to participate. Edge persists because the timing is structural \u2014 fund managers have end-of-day NAV and reporting constraints that create this flow pattern.",
+  "mechanism": "The final 30 minutes see concentrated institutional flow as fund managers rebalance positions and mark-to-market. Options market makers adjust delta hedges ahead of close, creating predictable directional pressure. The increasing urgency to execute before close amplifies any existing directional bias.",
+  "indicators": [
+    {
+      "name": "day_return",
+      "formula": "(close - open_of_day) / open_of_day * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "how much stock has moved today"
+    },
+    {
+      "name": "volume_vs_avg",
+      "formula": "cumulative_volume_today / avg_daily_volume_20day",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "is today a high-volume day"
+    },
+    {
+      "name": "close_vs_vwap",
+      "formula": "(close - vwap) / vwap * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "is price above/below VWAP"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "day_return > 1.0",
+        "close > vwap",
+        "volume_vs_avg > 0.8 (not a dead day)",
+        "time >= 14:45"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "day_return < -1.0",
+        "close < vwap",
+        "volume_vs_avg > 0.8",
+        "time >= 14:45"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 6,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "N/A \u2014 time exit only",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25",
+    "volume_filter": "volume_vs_avg > 0.8",
+    "expiry_filter": "skip on expiry day"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 5
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Short hold time (44 bars max) limits profit potential per trade",
+    "On reversal days, the last 30 min go against the day's trend \u2014 stop loss triggered",
+    "Screening for 1%+ movers at 14:45 biases toward momentum stocks that may be overextended"
+  ],
+  "prior_art": "Last-hour momentum \u2014 well-documented in market microstructure (Bogousslavsky 2016)",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

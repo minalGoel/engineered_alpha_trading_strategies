@@ -1,0 +1,153 @@
+{
+  "name": "intraday_vol_pattern_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-fast",
+  "original_strategy": "intraday_vol_pattern_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_217.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 12,
+  "thesis": "Intraday volatility follows a well-documented U-shape pattern: high at open (09:15-10:00), declining through lunch (11:30-13:30), and rising again toward close (14:30-15:30). This pattern is exploitable because breakout strategies work best during high-vol periods (open, close) while mean-reversion works during low-vol periods (lunch). Additionally, the transition from low-vol to high-vol in the afternoon (13:30-14:00) creates a predictable volatility expansion that can be traded with straddle-like equity positions. The inefficiency exists because most strategies ignore the time-of-day vol structure, applying the same logic at 10:00 AM and 2:00 PM despite vastly different volatility environments.",
+  "mechanism": "VIX measures implied volatility premium. When VIX is elevated, options market makers carry large gamma exposure, causing them to delta-hedge aggressively \u2014 buying into rallies and selling into dips. This amplifies directional moves in spot. Conversely, low VIX environments produce smoother, more predictable mean-reverting behavior in the underlying.",
+  "indicators": [
+    {
+      "name": "current_vol",
+      "formula": "rolling_std(returns, 15)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "expected_vol",
+      "formula": "20d_avg_vol_at_this_minute  # seasonal vol expectation",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "vol_surprise",
+      "formula": "current_vol / expected_vol",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "session_period",
+      "formula": "'open' if time < 10:00 else 'mid_morning' if time < 11:30 else 'lunch' if time < 13:30 else 'afternoon' if time < 14:30 else 'close'",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "BB_mid_20",
+      "formula": "SMA(close, 20)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "BB_upper_20",
+      "formula": "BB_mid_20 + 2.0 * rolling_std(close, 20)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "BB_lower_20",
+      "formula": "BB_mid_20 - 2.0 * rolling_std(close, 20)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "EMA_5",
+      "formula": "EMA(close, 5)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "EMA_13",
+      "formula": "EMA(close, 13)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ATR_10",
+      "formula": "ATR(high, low, close, 10)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "IF session_period == 'lunch': close < BB_lower_20 AND vol_surprise < 0.8 (mean_rev in low vol)",
+        "IF session_period == 'open' OR 'close': close > EMA_5 AND EMA_5 > EMA_13 AND vol_surprise > 1.2 (momentum in high vol)",
+        "IF session_period == 'afternoon': close > BB_mid_20 AND vol_surprise starting to rise from <0.8 to >1.0 (vol expansion entry)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "IF session_period == 'lunch': close > BB_upper_20 AND vol_surprise < 0.8",
+        "IF session_period == 'open' OR 'close': close < EMA_5 AND EMA_5 < EMA_13 AND vol_surprise > 1.2",
+        "IF session_period == 'afternoon': close < BB_mid_20 AND vol_surprise starting to rise"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "if session_period transitions while in trade, re-evaluate using new period's exit rules",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 22 for lunch mean-rev; no VIX filter for open/close momentum",
+    "volume_filter": "volume must be within 50-200% of expected_volume_at_this_minute",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "The strategy effectively runs 3 different sub-strategies (mean-rev, momentum, vol-expansion) which triples the parameter count and overfitting risk compared to a single-regime strategy",
+    "On event days (earnings, macro announcements), the U-shape vol pattern is disrupted and all three sub-strategies can simultaneously fail",
+    "The afternoon vol-expansion entry (13:30-14:00) has the lowest win rate because the vol rise isn't always directional \u2014 sometimes vol rises but price just chops"
+  ],
+  "prior_art": "Wood, McInish & Ord (1985) intraday return volatility patterns; Andersen & Bollerslev (1997) intraday vol seasonality. U-shape in Indian markets confirmed by Sinha (2016).",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,113 @@
+{
+  "name": "moc_drift_5s",
+  "version": "1.0.0",
+  "author": "adapted from quant_system",
+  "original_strategy": "moc_drift_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_82.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "In the last 30-45 minutes of the session, institutional MOC (market-on-close) orders create predictable drift. If the stock is above VWAP with strong volume into the close, MOC buy orders dominate and price drifts higher. The inefficiency exists because MOC orders are pre-committed and cannot adapt to price movement \u2014 they must execute. Not fully arbitraged because the drift is small and the window is tight, requiring fast position establishment.",
+  "mechanism": "Order flow imbalance between aggressive buyers and sellers creates short-term price pressure. When buy-side aggression exceeds sell-side by a threshold, the order book tilts and market makers adjust their quotes upward. This creates a 15-45 second drift before the book rebalances as new limit orders arrive to capture the improved price.",
+  "indicators": [
+    {
+      "name": "close_vs_vwap",
+      "formula": "(close - vwap) / vwap * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "position relative to VWAP"
+    },
+    {
+      "name": "volume_ratio_pm",
+      "formula": "volume_last_30_bars / avg_volume_last_30_bars_20day",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "relative volume in afternoon"
+    },
+    {
+      "name": "return_since_1400",
+      "formula": "(close - close_at_1400) / close_at_1400 * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "afternoon momentum"
+    },
+    {
+      "name": "nifty_return_since_1400",
+      "formula": "(nifty_close - nifty_close_at_1400) / nifty_close_at_1400 * 100",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "market-wide afternoon direction"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close_vs_vwap > 0.1",
+        "return_since_1400 > 0.1",
+        "volume_ratio_pm > 1.2",
+        "nifty_return_since_1400 > 0"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close_vs_vwap < -0.1",
+        "return_since_1400 < -0.1",
+        "volume_ratio_pm > 1.2",
+        "nifty_return_since_1400 < 0"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 6,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if direction reverses (return_since_1400 flips sign)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 22",
+    "volume_filter": "afternoon volume > 1.2x historical average",
+    "expiry_filter": "skip on expiry day (close auction dynamics change)"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 5
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Very thin edge (20 bps, PF 1.10). Any deterioration in fill quality or increase in slippage turns this negative.",
+    "Late-day reversals (last 15 min) can be sharp and stop-driven. The 0.3% stop is hit more often than expected on volatile days.",
+    "MOC order flow composition changes on special days (rebalancing, index changes, expiry). The signal is unreliable on these days."
+  ],
+  "prior_art": "Market-on-close drift / end-of-day momentum. Academic literature: Bogousslavsky (2016) on intraday momentum patterns.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

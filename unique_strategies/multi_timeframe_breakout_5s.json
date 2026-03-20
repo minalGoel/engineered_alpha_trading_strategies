@@ -1,0 +1,127 @@
+{
+  "name": "multi_timeframe_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "multi_timeframe_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_187.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "A breakout that is confirmed on both the 1-min AND 5-min timeframes has significantly higher reliability than a breakout on either timeframe alone. The 5-min chart filters out noise that causes false breakouts on the 1-min chart, while the 1-min chart provides precise entry timing within the broader 5-min signal. Specifically, when a stock breaks above its 30-bar Donchian Channel on the 5-min chart AND simultaneously breaks above its 60-bar Donchian Channel on the 1-min chart, the breakout has multi-resolution confirmation. The edge exists because most traders trade on a single timeframe. Multi-timeframe analysis is well-known conceptually but rarely implemented systematically with real-time dual-feed computation. The inefficiency persists because multi-timeframe strategies are harder to backtest and deploy operationally.",
+  "mechanism": "Consolidation periods accumulate resting orders above resistance and below support. A breakout triggers these resting orders as stop-losses and breakout entries fire simultaneously. The resulting order flow imbalance overwhelms the resting liquidity, and market makers widen spreads in the breakout direction, accelerating the move.",
+  "indicators": [
+    {
+      "name": "DC_upper_1m",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "DC_lower_1m",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "DC_upper_5m",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "DC_lower_5m",
+      "formula": "",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "volume_ratio",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > DC_upper_1m (1-min breakout)",
+        "5min_close > DC_upper_5m (5-min breakout confirmed on current or last completed 5-min bar)",
+        "close > VWAP",
+        "volume_ratio > 1.5"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < DC_lower_1m (1-min breakdown)",
+        "5min_close < DC_lower_5m (5-min breakdown confirmed)",
+        "close < VWAP",
+        "volume_ratio > 1.5"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if 5-min bar closes back inside its Donchian Channel (higher timeframe reversal)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "no specific filter",
+    "volume_filter": "volume > 1.5x 20-bar SMA",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Dual-timeframe confirmation is very strict \u2014 many valid breakouts on one timeframe will not be confirmed on the other",
+    "The 5-min lookback of 30 bars = 150 minutes; intraday session is only 375 minutes, so data is limited early in the day",
+    "Operational complexity: need to maintain 1-min and 5-min bar feeds simultaneously with aligned timestamps"
+  ],
+  "prior_art": "Multi-timeframe analysis: Elder's Triple Screen System ('Trading for a Living') is the classic. Alexander Elder uses weekly + daily + intraday. Brian Shannon uses daily + hourly + 5-min. The specific dual-Donchian across 1-min and 5-min is a quantitative adaptation. Corey Rosenbloom ('The Complete Trading Course') discusses multi-timeframe Donchian channels.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

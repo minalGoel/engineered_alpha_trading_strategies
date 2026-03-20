@@ -1,0 +1,120 @@
+{
+  "name": "momentum_decay_adaptive_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "momentum_decay_adaptive_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_316.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 12,
+  "thesis": "Momentum decays at different rates depending on market conditions. By computing the half-life of momentum (how long it takes for an initial price impulse to lose half its effect, estimated via the AR(1) coefficient on 1-min returns), we adapt the holding period and exit strategy. When half-life is short (< 10 bars), momentum decays quickly \u2014 use tight targets, quick exits. When half-life is long (> 30 bars), momentum persists \u2014 use wide targets, trailing stops. The inefficiency exists because most momentum traders use fixed holding periods regardless of current momentum persistence. The half-life reveals whether to hold the full move or take quick profits.",
+  "mechanism": "Market microstructure varies across volatility regimes. In low-vol regimes, mean-reversion dominates as market makers provide tight liquidity. In high-vol regimes, momentum persists as liquidity thins and stop-cascades amplify moves. Adapting the signal to the current regime captures the appropriate edge for prevailing conditions.",
+  "indicators": [
+    {
+      "name": "AR1_Coeff",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Half_Life",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "HL_Regime",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Momentum_Signal",
+      "formula": "",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP_Distance",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "Momentum_Signal > 15 bps (positive 10-bar momentum)",
+        "close > vwap",
+        "HL_Regime != MEDIUM (must be in a defined half-life regime)",
+        "AR1_Coeff > 0 (positive autocorrelation \u2014 momentum present)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "Momentum_Signal < -15 bps (negative 10-bar momentum)",
+        "close < vwap",
+        "HL_Regime != MEDIUM",
+        "AR1_Coeff > 0"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "AR1_Coeff turns negative (momentum regime shifts to mean-reversion)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25",
+    "volume_filter": "Volume > SMA(volume, 15) on entry bar",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "AR(1) coefficient estimated on 60 1-min returns is statistically noisy \u2014 the standard error of phi at n=60 is approximately 1/sqrt(60) \u2248 0.13, making the half-life estimate imprecise",
+    "Half-life formula assumes AR(1) is a good model for the returns process \u2014 in reality, intraday returns may follow GARCH or higher-order AR processes, making the simple AR(1) half-life misleading",
+    "MEDIUM regime (HL 10-30) is excluded, losing approximately 40% of potential trading opportunities; the boundary between regimes is arbitrary"
+  ],
+  "prior_art": "Momentum half-life concept from Ornstein-Uhlenbeck mean-reversion estimation; AR(1) models in Box & Jenkins; applied to pairs trading by Bertram (2010); intraday momentum decay less studied",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

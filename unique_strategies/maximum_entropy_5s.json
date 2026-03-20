@@ -1,0 +1,132 @@
+{
+  "name": "maximum_entropy_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "maximum_entropy_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_326.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "The maximum entropy distribution consistent with observed mean and variance of 1-min returns provides the least biased estimate of the true return distribution. When the observed return falls in the extreme tails of this maximum entropy distribution (beyond the 5th or 95th percentile), it is genuinely extreme rather than just 'unusual under a normal assumption.' By calibrating the MaxEnt distribution from rolling moments (mean, variance, skewness) on a 60-bar window and entering when the current return exceeds the MaxEnt 95th percentile (fade) or confirms a MaxEnt breakout (follow), we get statistically rigorous extreme-event signals. The inefficiency is that most traders use normal distribution assumptions (z-scores), which underestimate tail probability and overtrade false extremes.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "Return_1min",
+      "formula": "",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Rolling_Mean",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Rolling_Var",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "Rolling_Skew",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "MaxEnt_P5",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "MaxEnt_P95",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "MaxEnt_Tail_Event",
+      "formula": "",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "Return_1min < MaxEnt_P5 (extreme negative return \u2014 genuinely unusual under MaxEnt)",
+        "close < vwap (VWAP confirmation of being oversold)",
+        "Rolling_Skew > -1.0 (distribution not too negatively skewed \u2014 left tail events revert)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "Return_1min > MaxEnt_P95 (extreme positive return \u2014 genuinely unusual under MaxEnt)",
+        "close > vwap",
+        "Rolling_Skew < 1.0 (distribution not too positively skewed)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "Return moves back within MaxEnt_P25 to MaxEnt_P75 range (no longer extreme)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 22 (in high VIX, 'extreme' returns happen frequently, reducing the signal quality)",
+    "volume_filter": "Volume on extreme bar > 1.5 * SMA(volume, 20) (volume confirms the extreme move)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "MaxEnt distribution fitting with 3 constraints (mean, variance, skewness) on 60 data points is numerically sensitive \u2014 the optimization can fail to converge or produce degenerate solutions",
+    "Extreme return events on 1-min bars are often driven by single large orders (block trades) that do not revert \u2014 the mean-reversion assumption fails for information-driven extremes",
+    "The target/stop ratio of 30/20 = 1.5 with 57% win rate gives gross edge of 30*0.57 - 20*0.43 = 8.5 bps per side; after ~9 bps costs, edge is marginal at best"
+  ],
+  "prior_art": "Jaynes (1957) maximum entropy principle; Buchen & Kelly (1996) on maximum entropy distributions in finance; application to trading signals is novel but builds on established statistical theory",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

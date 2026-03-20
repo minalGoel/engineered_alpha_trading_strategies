@@ -1,0 +1,112 @@
+{
+  "name": "vix_filtered_index_trend_v124",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vix_regime", "trend_following", "ema_crossover", "vwap"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_117.json",
+  "original_name": "vix_filtered_index_trend_v124",
+  "mechanism": "When India VIX spikes above 21, NIFTY's intraday order flow shifts from retail-dominated mean-reverting noise to sustained institutional directional flow — FIIs either aggressively de-risking or accumulating in bulk. In this regime, the 60-second EMA crossing above the 5-minute EMA on NIFTY signals the onset of one of these institutional waves, confirmed by price trading above session VWAP (day's dominant direction). At 5-second resolution, we enter at the first crossover bar rather than waiting for a full 1-minute confirmation, capturing 20-40% more of the initial impulse before algorithmic followers pile in. The VIX ceiling at 35 avoids extreme panic conditions where NIFTY gaps erratically and limit-order fills become unreliable.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_fast_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "60-second fast EMA — trade TRIGGER. Not a 12x blind scale of original EMA(9). The original 9-minute EMA was the slow context filter there; here EMA(12) = 60s serves as the FAST trigger because we're catching the START of the institutional wave, not a multi-minute trend. Needs only 1 minute of data before it stabilizes."
+    },
+    {
+      "name": "ema_slow_60",
+      "formula": "EMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute slow EMA — context FILTER. Represents the prevailing short-term trend direction on NIFTY. Crossover of fast above slow signals direction change aligned with fresh institutional interest. 5 minutes is the appropriate slow anchor for a 30-90 second trade — long enough to define trend, short enough to not lag major turns by several minutes."
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP(session)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP — cumulative from 09:15. No scaling needed; VWAP is always session-cumulative. Confirms that the EMA crossover is aligned with the day's dominant institutional direction (buy-side accumulation vs distribution). Filters crossovers that fight the day's flow."
+    },
+    {
+      "name": "india_vix",
+      "formula": "VIX close (join_asof backward)",
+      "lookback": 1,
+      "computed_on": "vix",
+      "purpose": "Regime filter: VIX > 21 selects sessions where FII/institutional directional orders dominate over retail mean-reversion. VIX ceiling at 35 avoids extreme panic where NIFTY gaps erratically and short-term EMA signals whipsaw. The 21 threshold matches the original strategy directly — it represents the transition point where implied volatility pricing reflects genuine institutional positioning rather than routine noise."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vix_close >= vix_threshold (default 21.0)",
+        "vix_close <= vix_max (default 35.0)",
+        "EMA(12) crosses ABOVE EMA(60) — bullish crossover on current bar",
+        "close > session_VWAP — trade in direction of day's dominant flow"
+      ],
+      "confirmation": "All conditions on same 5-second bar; crossover detected as prev bar fast<slow, current bar fast>slow"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vix_close >= vix_threshold (default 21.0)",
+        "vix_close <= vix_max (default 35.0)",
+        "EMA(12) crosses BELOW EMA(60) — bearish crossunder on current bar",
+        "close < session_VWAP — confirming bearish bias for the day"
+      ],
+      "confirmation": "All conditions on same 5-second bar; crossunder detected as prev bar fast>slow, current bar fast<slow"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "In elevated VIX regime (>21), NIFTY's typical noise is 6-10 spot points per minute. A false crossover (regime filter misfire) would retrace 8-12 spot pts quickly — 4 option points (at delta ~0.5) corresponds to ~8 spot pts, stopping us out before the full reversal materializes. This matches the 30-60s hold where a 1-minute NIFTY swing of 8 pts would negate the crossover thesis.",
+    "target_points": 7,
+    "target_rationale": "VIX>21 trend impulses on NIFTY typically extend 15-30 spot points in the first 1-2 minutes after an EMA crossover. 7 option points (~14 spot pts at delta 0.5) captures roughly 50-60% of the expected initial leg at 1:1.75 R:R. Targeting beyond 14 spot pts would require holding 2-3 minutes, exceeding our time stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "21 <= VIX <= 35 — elevated volatility for institutional flow, ceiling avoids extreme panic",
+    "time_filter": "09:30-15:20 IST — skip opening 15 minutes of pre-open noise and price discovery",
+    "volume_filter": "none — NIFTY index volume is always sufficient",
+    "trend_filter": "VWAP alignment — only trade crossovers in VWAP-confirmed direction",
+    "spread_filter": "none — limit orders at close price, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.89,
+    "edge_decay_risk": "medium — VIX threshold of 21 may shift as market structure evolves; institutional behavior in VIX regimes is relatively stable but not permanent"
+  },
+  "adaptation_notes": "Original traded top-50 FnO stocks with EMA(9/21) on 1-minute bars, holding 30-60 minutes. The equity universe was incidental — the signal logic (VIX regime + EMA crossover + VWAP) is purely index-level. Converted: (1) EMA periods compressed from 9-min/21-min to 1-min/5-min because we hold 30-90s not 30-60min — we're catching the ONSET of the institutional wave, not the full trend. (2) VIX thresholds kept identical (21 lower bound) as the regime logic is unchanged. (3) ATR-based stop replaced with fixed 4 option-point stop sized to typical 30-second NIFTY move magnitudes. (4) 90-second time stop replaces original 60-bar (60-min) time stop.",
+  "weaknesses": [
+    "VIX crossings of 21 are relatively infrequent — strategy may have low trade count on many days",
+    "EMA crossovers on 5-second NIFTY bars can produce false signals during choppy VIX>21 sessions",
+    "VIX data is lagged intraday (forward-filled at 5s); VIX can spike suddenly post-event",
+    "High-VIX sessions often have larger gap-opens — VWAP may be anchored far from current price"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_117.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-60 bars (30-60 min)",
+    "original_indicators": ["EMA(9)", "EMA(21)", "VWAP", "India VIX"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "20 * ATR(14) from entry"
+  }
+}

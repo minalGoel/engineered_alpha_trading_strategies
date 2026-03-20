@@ -1,0 +1,112 @@
+{
+  "name": "pdh_pdl_fakeout_v141",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "liquidity_hunt", "support_resistance", "fakeout"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_120.json",
+  "original_name": "pdh_pdl_fakeout_v141",
+  "mechanism": "On NIFTY, Previous Day High and Low are the most-referenced technical levels by retail stop-loss placement, options strike clustering, and institutional VWAP desks. When the index probes above PDH intraday, cascading stop-buy orders and breakout algos create a brief overshooting spike — but large institutional VWAP desks do not chase pokes above PDH, leaving only fast-money longs who entered the spike exposed. Within 30-90 seconds the spike fails, and option market makers who are short gamma near these strike-proximate levels delta-hedge aggressively on reversal, amplifying the return below PDH. The fakeout bar itself (5s bar has high > PDH but closes back below) is the cleanest entry signal available at 5-second resolution.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "pdh",
+      "formula": "previous_day_high(high)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Previous day high — a daily reference level, no frequency scaling needed. This is the exact liquidity pool level NIFTY probes to trigger retail stop-buy orders and breakout algos."
+    },
+    {
+      "name": "pdl",
+      "formula": "previous_day_low(low)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Previous day low — symmetric to PDH. A daily reference level. No frequency scaling. Represents the liquidity pool below where stop-sell orders cluster."
+    },
+    {
+      "name": "breach_up",
+      "formula": "max(high - pdh, 0)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Magnitude of the upward probe above PDH in index points. Used to reject genuine breakouts (breach > 15 pts on NIFTY typically signals real directional flow, not a liquidity hunt spike)."
+    },
+    {
+      "name": "breach_dn",
+      "formula": "max(pdl - low, 0)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Magnitude of the downward probe below PDL in index points. Symmetric filter — same 15pt cutoff for rejecting genuine breakdowns."
+    }
+  ],
+  "entry": {
+    "buy_pe": {
+      "conditions": [
+        "high > pdh (bar probed above PDH — stop hunts triggered)",
+        "close < pdh (bar closed back below PDH — rejection confirmed in this 5s bar)",
+        "breach_up < max_breach_pts (default 15 pts — spike no larger than 15 index pts, else genuine breakout)",
+        "vix < vix_max (default 22 — above 22, panic conditions turn fakeouts into real breakouts)"
+      ],
+      "confirmation": "Close below PDH on the same 5s bar is the signal — no additional bar needed"
+    },
+    "buy_ce": {
+      "conditions": [
+        "low < pdl (bar probed below PDL — stop hunts triggered)",
+        "close > pdl (bar closed back above PDL — rejection confirmed in this 5s bar)",
+        "breach_dn < max_breach_pts (default 15 pts — drop no larger than 15 index pts, else genuine breakdown)",
+        "vix < vix_max (default 22)"
+      ],
+      "confirmation": "Close above PDL on the same 5s bar is the signal"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "If the reversal from PDH fakeout stalls and NIFTY option premium rises 5 pts (~10 spot pts), the short-gamma amplification has flipped and the breakout is resuming. A 5-pt option stop corresponds to ~10 NIFTY spot pts — more than 2× the median fakeout probe size, so this is not hair-trigger.",
+    "target_points": 8,
+    "target_rationale": "PDH/PDL fakeout reversals on NIFTY typically cover 15-25 spot pts in the first 30-60 seconds as trapped longs cover. At ATM delta ~0.5, that is 7.5-12.5 option pts. Target of 8 pts captures roughly the lower half of this range (1:1.6 R:R).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "vix < 22 — above 22 macro panic turns fakeouts into directional breakouts",
+    "time_filter": "09:20-15:20 IST only",
+    "volume_filter": "none",
+    "trend_filter": "none",
+    "spread_filter": "none (limit orders)"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "medium — behavioral edge from retail stop placement, but algos increasingly front-run PDH/PDL levels"
+  },
+  "adaptation_notes": "Original operated on nifty200 individual stocks at 15-min bars with 2.5-7.5 hour holds targeting VWAP reversion after PDH/PDL fakeout. Converted to NIFTY INDEX's own PDH/PDL which are even more watched than any single stock's levels (entire derivatives ecosystem prices around them). Hold compressed from hours to 15-90 seconds — we capture only the initial sharp reversal, not the slow VWAP drift. ATR-based stop replaced with fixed option point stop. Entry logic (high > PDH, close < PDH) maps identically to 5s bars — the fakeout bar is self-contained regardless of timeframe.",
+  "weaknesses": [
+    "Strong macro news (Fed, RBI policy) can convert PDH fakeout into genuine breakout",
+    "PDH/PDL triggers at most once or twice per day per direction — low signal frequency",
+    "On narrow-range days, PDH/PDL may be only a few points from current price, generating noisy signals all session",
+    "First 15 minutes of session: PDH/PDL probes are common noise — session filter starts at 09:20"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_120.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "10-30 bars (2.5-7.5 hours)",
+    "original_indicators": ["pdh", "pdl", "vwap", "atr_14"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "VWAP(close)"
+  }
+}

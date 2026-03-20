@@ -96,6 +96,11 @@
       "source_file": "trading_strategies/unique_strategies_all/Strategy_131.json",
       "reason": "Near-duplicate of orb_momentum_v22. Opening range breakout with institutional continuation — same core thesis.",
       "duplicate_of": "orb_momentum_v22"
+    },
+    {
+      "name": "premarket_range_breakout_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_185.json",
+      "reason": "Requires NSE pre-market call auction data (09:00-09:08 IST) which is stock-specific and does not exist for NIFTY/BANKNIFTY index. Strategy trades NIFTY 100 constituent stocks and depends on equity-only data (per-stock premarket_high/low from call auction, GIFT Nifty direction filter). Any index-adapted version collapses into the standard ORB thesis, already converted as orb_momentum_v22 and killed four more times for the same reason."
     }
   ]
 }

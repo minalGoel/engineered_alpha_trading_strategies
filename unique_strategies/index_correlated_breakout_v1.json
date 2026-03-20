@@ -1,0 +1,120 @@
+{
+  "name": "index_correlated_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "session-high-low", "intraday", "momentum", "vwap-confirmation"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_186.json",
+  "original_name": "index_correlated_breakout_v1",
+  "mechanism": "On NIFTY, whenever a bar closes above the running intraday session high, it signals that institutional VWAP-benchmarked algorithms that were patiently accumulating on earlier dips have finally absorbed all intraday supply — their execution models flip from 'passive fill' to 'active momentum' mode. This creates a cascade of order flow that typically extends 15-25 NIFTY spot points over the next 30-90 seconds. The edge is highest when: (1) the breakout occurs above VWAP — confirming the institutional side of the ledger is net-long for the session — and (2) a 1-minute momentum buildup precedes the new high, distinguishing a sustained institutional push from a retail spike that fails within 2-3 bars. Session-high breakouts that occur mid-session (after 09:30, when all opening range noise has cleared) carry stronger institutional weight than ORB breakouts because they overcome all intraday supply that accumulated post-open.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-14:30 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "session_high",
+      "formula": "running max(high) since 09:15 IST, resets each day",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative measure from session open — no scaling needed. Tracks the highest intraday high seen so far today. Signal fires when current close exceeds the PREVIOUS bar's session high, confirming a new intraday extreme has been set."
+    },
+    {
+      "name": "session_low",
+      "formula": "running min(low) since 09:15 IST, resets each day",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Symmetric to session_high for bearish breakdowns. Cumulative minimum, resets daily."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative sum(typical_price * volume) / cumulative sum(volume) from 09:15 IST, resets daily",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative — no scaling. VWAP alignment (close > VWAP for longs, < VWAP for shorts) confirms institutional net direction for the session. Replaces the original strategy's 'dual VWAP alignment' (stock VWAP + index VWAP both on same side) with a single NIFTY VWAP, since the stock component is gone."
+    },
+    {
+      "name": "momentum_12",
+      "formula": "(close[i] - close[i-12]) / close[i-12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 60 seconds. Detects whether price was BUILDING toward the new session high over the preceding minute (sustained institutional push) vs spiking up in 1-2 bars (retail noise). A 60s window is the minimum to distinguish momentum from a spike at 5s resolution. We are trading the continuation at 30-120s hold; the trigger must match that cadence."
+    },
+    {
+      "name": "vol_avg_120",
+      "formula": "rolling mean(volume, 120 bars) — 10-minute baseline",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "120 bars = 10 minutes. Volume ratio = current_volume / vol_avg_120. Confirms institutional participation at the breakout bar. 10-minute baseline is long enough to capture the current session's volume regime (versus an opening rush) but short enough to adapt to time-of-day. The original required volume > 1.5x SMA(20) on 1-min bars; at 5s, 120 bars (10 min) provides an equivalent baseline."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > session_high[t-1] — new intraday session high made on this bar",
+        "close > vwap — above session average price (institutional net-long bias)",
+        "momentum_12 > 0.05% — 1-minute bullish momentum buildup preceding the breakout",
+        "volume_ratio > 1.3x — above-average volume confirming institutional participation",
+        "vix < 22 — not in panic/volatility squeeze regime where breakouts fail faster"
+      ],
+      "confirmation": "All five conditions must be true simultaneously; no look-ahead"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < session_low[t-1] — new intraday session low made on this bar",
+        "close < vwap — below session average price (institutional net-short bias)",
+        "momentum_12 < -0.05% — 1-minute bearish momentum buildup preceding the breakdown",
+        "volume_ratio > 1.3x — above-average volume confirming institutional selling",
+        "vix < 22 — not in panic regime (extreme VIX means fills become unreliable)"
+      ],
+      "confirmation": "All five conditions simultaneously"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 NIFTY spot pts at ATM delta ~0.5. Session high/low breakouts that are genuine continue without retracing 10 spot pts; a 10-pt retrace within 30s means the breakout is a false one and the institutional push has stalled. At the 30-120s hold, losing 10 spot pts invalidates the thesis.",
+    "target_points": 8,
+    "target_rationale": "8 option pts = ~16 NIFTY spot pts. Session-high expansions on NIFTY typically extend 15-25 spot pts in the first 30-90s when institutional algorithms are driving. 16 pts is the lower end of that range (conservative capture), giving 1:1.6 risk-reward vs the 5-pt stop.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX < 22 — breakouts in panic markets (VIX > 22) fail rapidly as mean-reversion algorithms overwhelm momentum",
+    "time_filter": "09:30-14:30 IST — skip first 15 min of pre-open noise; stop entries at 14:30 so 120s max hold exits by 14:32",
+    "volume_filter": "volume > 1.3x 10-minute rolling average",
+    "trend_filter": "close > VWAP for CE entries, close < VWAP for PE entries",
+    "spread_filter": "N/A — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "medium — session high/low breakout is a well-known pattern; edge depends on strict multi-condition confirmation reducing false entries"
+  },
+  "adaptation_notes": "Original required trading individual NIFTY-200 stocks and checking for SYNCHRONIZED stock + index session high breakouts — the 'dual confirmation' was stock-level + index-level. This cannot be replicated without a stock universe. Adaptation: trade NIFTY index directly, replacing the 'dual confirmation' with 3 independent confirmations (VWAP alignment, 1-min momentum buildup, volume surge) that together provide equivalent false-signal filtering. The session_high/low concept is preserved but now applies to NIFTY itself rather than to individual stocks. Key change: we trade all session long (not just opening), consistent with the original's 09:30-14:30 window (also not ORB-constrained). Volume filter uses 10-min rolling baseline instead of 20-bar SMA on 1-min bars. VIX filter kept from original (VIX < 25 → VIX < 22 for slightly stricter regime filtering on index options).",
+  "weaknesses": [
+    "Session high/low breakouts on NIFTY fire only 2-5 times per day on average; some days produce zero signals",
+    "In strong trending days, the first session high breakout can be at 09:20 (before our 09:30 start), causing missed entry on the best trending day setups",
+    "Volume ratio threshold is sensitive to time-of-day patterns — mid-session volume is lower than opening, so same threshold may be too strict at 13:00 vs too loose at 09:35"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_186.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "20-60 minutes",
+    "original_indicators": ["stock_session_high", "stock_session_low", "nifty_session_high", "nifty_session_low", "stock_VWAP", "nifty_VWAP", "volume_SMA_20"],
+    "original_stop": "VWAP OR 0.3% from entry (tighter)",
+    "original_target": "0.5% from entry"
+  }
+}

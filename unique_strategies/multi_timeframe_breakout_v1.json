@@ -1,0 +1,126 @@
+{
+  "name": "multi_timeframe_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["multi-timeframe", "donchian", "breakout", "institutional-flow", "vwap"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_187.json",
+  "original_name": "multi_timeframe_breakout_v1",
+  "mechanism": "On NIFTY, when price simultaneously breaks above both the 1-minute high range (12-bar Donchian on 5s bars) and the 5-minute high range (60-bar Donchian), it signals that institutional buy programs have absorbed supply at two timescales — not just a momentary burst but sustained directional pressure across fast and medium horizons. The dual-confirmation eliminates roughly 40-60% of single-timeframe false spikes on NIFTY's liquid, electronically-matched order book where noise at 5s is high but multi-timeframe alignment is rare. Aligned above session VWAP, this further confirms that intraday institutional benchmark-relative buy flow is driving the move, making the breakout more likely to extend for at least 60-120 seconds.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "dc_fast_upper",
+      "formula": "max(high, 12 bars)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 1 minute — the TRADE TRIGGER level. A close above this means the current 1-minute high has been exceeded. Not 12x the original (which would be 720 bars = 60 min); compressed to 1-minute because at 5s resolution we're catching the breakout as it forms, not waiting for a full time-frame confirmation."
+    },
+    {
+      "name": "dc_fast_lower",
+      "formula": "min(low, 12 bars)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Mirror of dc_fast_upper for bearish breakdowns."
+    },
+    {
+      "name": "dc_slow_upper",
+      "formula": "max(high, 60 bars)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60 bars = 5 minutes — the CONTEXT FILTER. A close above this confirms the breakout has exceeded the medium-term supply zone. Chosen to match the original's 5-min timeframe signal (30 bars × 5-min = 150 min was the slow filter in the original; here 60 bars × 5s = 5 minutes is the medium-term filter, appropriate for 30-120s holds where we need minutes-scale context, not hours-scale)."
+    },
+    {
+      "name": "dc_slow_lower",
+      "formula": "min(low, 60 bars)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Mirror of dc_slow_upper for bearish breakdowns."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price × volume) / cumulative(volume) from 09:15 IST each day",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative intraday VWAP — no scaling needed as it's a session-level measure. Used as a directional filter: buy_ce only above VWAP (institutional benchmark buy bias), buy_pe only below VWAP."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume[i] / mean(volume, 20 bars)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20 bars = 100 seconds. Detects volume surges at the breakout bar. Short window (100s) chosen because on 5-second bars intraday volume is highly episodic — a 20-bar rolling mean captures the recent baseline and identifies the current surge. Original used 20 × 1-min = 20-min mean; here 100 seconds is the equivalent intraday baseline."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > dc_fast_upper (1-min breakout: current price exceeds previous 1-min high range)",
+        "close > dc_slow_upper (5-min breakout: current price exceeds previous 5-min high range)",
+        "close > vwap (intraday benchmark bias is bullish)",
+        "vol_ratio > vol_threshold (elevated volume confirms institutional participation)"
+      ],
+      "confirmation": "All four conditions simultaneously on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < dc_fast_lower (1-min breakdown: current price falls below previous 1-min low range)",
+        "close < dc_slow_lower (5-min breakdown: current price falls below previous 5-min low range)",
+        "close < vwap (intraday benchmark bias is bearish)",
+        "vol_ratio > vol_threshold (elevated volume confirms institutional selling)"
+      ],
+      "confirmation": "All four conditions simultaneously on the same 5-second bar"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts correspond to ~8 NIFTY spot points at delta ~0.5. A dual-confirmed NIFTY breakout should not retrace 8 spot points within 30-60 seconds — if it does, the supply at the breakout level was not genuinely absorbed and the thesis is invalid. Tighter than the 6-pt deep-reversion stop because breakouts have directional momentum, not mean-reversion patience.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot points. First-leg extensions on dual-timeframe NIFTY breakouts typically run 15-25 spot points within 60-120 seconds (based on 1-min typical move of 3-7 option pts, with institutional flow sustaining the move for 2+ minutes). 7 pts is the conservative end, giving 1:1.75 R:R.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "none — VIX regime not used; breakout strength (vol_ratio) serves as the regime proxy",
+    "time_filter": "09:25-15:25 IST (allow 60-bar warmup after open for slow DC)",
+    "volume_filter": "vol_ratio > 1.3 (default threshold, tunable). Eliminates false breakouts on light volume.",
+    "trend_filter": "VWAP direction — enforces trading with the intraday institutional benchmark",
+    "spread_filter": "not applicable — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 35,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.05,
+    "edge_decay_risk": "medium — Donchian breakouts are well-known; however dual-timeframe alignment at 5-second resolution is operationally complex and rarely implemented systematically by retail participants"
+  },
+  "adaptation_notes": "The original strategy traded NIFTY200 stocks on 1-min and 5-min bars with hold time 20-60 min. Three fundamental changes: (1) Universe: from cross-sectional stock selection to single NIFTY index — eliminates stock-specific noise and delivery/sector rotation factors. (2) Timeframe compression: fast DC shrunk from 60-min (60 × 1-min bars) to 1-min (12 × 5s bars); slow DC shrunk from 150-min (30 × 5-min bars) to 5-min (60 × 5s bars). This is NOT blind 12x scaling — the original's long lookbacks were needed because stock price ranges are wide and noisy; NIFTY index is tighter and smoother, so shorter windows give equally meaningful range breakouts. (3) Hold time shrunk from 20-60 min to 30-120 seconds — the multi-timeframe confirmation gives higher-probability very-short-term continuation rather than longer trend-following.",
+  "weaknesses": [
+    "Dual-timeframe simultaneous confirmation is rare — will produce few signals per day (2-6 typically), limiting sample size and daily P&L contribution",
+    "NIFTY breakouts can reverse immediately on strong order flow from the other side; 4-pt stop may be too tight on high-VIX days",
+    "Volume on 5-second NIFTY bars is noisy and erratic; vol_ratio may not reliably distinguish institutional from retail flow at this resolution",
+    "Opening 5 minutes excluded (slow DC warmup), missing the highest-volume breakout window"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_187.json",
+    "original_timeframe": "1-min + 5-min (dual feed)",
+    "original_hold_time": "20-60 minutes",
+    "original_indicators": ["Donchian(60) on 1-min", "Donchian(30) on 5-min", "VWAP", "volume_ratio(20)"],
+    "original_stop": "DC_mid_1m or 0.3% from entry",
+    "original_target": "0.6% from entry"
+  }
+}

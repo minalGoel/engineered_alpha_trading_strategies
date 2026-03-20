@@ -1,0 +1,8 @@
+{
+  "strategy_name": "futures_basis_v1",
+  "category": "cross_instrument",
+  "thesis": "Futures premium expansion signals buying pressure that hasnt reflected in spot yet.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/futures_basis_v1.py"
+}

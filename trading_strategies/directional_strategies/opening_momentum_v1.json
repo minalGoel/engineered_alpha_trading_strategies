@@ -1,0 +1,8 @@
+{
+  "strategy_name": "opening_momentum_v1",
+  "category": "time_of_day",
+  "thesis": "Opening period (09:18-09:45) has outsized volatility with more directional persistence from overnight info pricing.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/opening_momentum_v1.py"
+}

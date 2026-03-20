@@ -1,0 +1,8 @@
+{
+  "strategy_name": "banknifty_leadlag_v1",
+  "category": "cross_instrument",
+  "thesis": "BANKNIFTY moves first, NIFTY follows in 10-30 seconds. Classic lead-lag effect.",
+  "signal_source": "SPOT_DIRECTION",
+  "underlying": "NIFTY",
+  "implementation": "pipeline/strategies/banknifty_leadlag_v1.py"
+}

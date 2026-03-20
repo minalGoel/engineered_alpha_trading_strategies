@@ -1,0 +1,1806 @@
+{
+  "total": 358,
+  "qualified": 6,
+  "discarded": 352,
+  "errors": 0,
+  "qualified_strategies": [
+    {
+      "name": "implied_vol_dislocation_v1",
+      "file": "Opus_28_of_50.json",
+      "reason": "IV-RV spread; implied volatility; realized volatility; expiry effects; VIX regime signals; order flow",
+      "adaptation_needed": "Adapt from 1-min to 5-sec bars (adjust lookbacks ~12x); Recompute VWAP at 5-sec granularity"
+    },
+    {
+      "name": "implied_vs_realized_vol_v1",
+      "file": "cursor_opus46max_strategy_074.json",
+      "reason": "Uses option chain data; implied volatility; realized volatility; VIX regime signals",
+      "adaptation_needed": "Adapt from 1-min to 5-sec bars (adjust lookbacks ~12x); Recompute VWAP at 5-sec granularity; Map to NIFTY/BANKNIFTY option chain snapshots"
+    },
+    {
+      "name": "intraday_vol_pattern_v1",
+      "file": "cursor_opus46max_strategy_079.json",
+      "reason": "VIX regime signals; straddle dynamics",
+      "adaptation_needed": "Adapt from 1-min to 5-sec bars (adjust lookbacks ~12x); Recompute VWAP at 5-sec granularity"
+    },
+    {
+      "name": "vol_surface_signal_v1",
+      "file": "cursor_opus46max_strategy_085.json",
+      "reason": "Uses option chain data; volatility surface analysis; skew analysis; term structure; expiry effects; VIX regime signals",
+      "adaptation_needed": "Adapt from 1-min to 5-sec bars (adjust lookbacks ~12x); Recompute VWAP at 5-sec granularity; Map to NIFTY/BANKNIFTY option chain snapshots"
+    },
+    {
+      "name": "nifty_banknifty_spread_v1",
+      "file": "cursor_opus46max_strategy_117.json",
+      "reason": "VIX regime signals; bid-ask dynamics; NIFTY-BANKNIFTY spread dynamics",
+      "adaptation_needed": "Adapt from 1-min to 5-sec bars (adjust lookbacks ~12x); Recompute VWAP at 5-sec granularity; Implement as NIFTY vs BANKNIFTY index spread"
+    },
+    {
+      "name": "expiry_day_pattern_v1",
+      "file": "cursor_opus46max_strategy_123.json",
+      "reason": "Uses option chain data; gamma effects; theta decay; expiry effects; open interest analysis",
+      "adaptation_needed": "Adapt from 1-min to 5-sec bars (adjust lookbacks ~12x); Recompute VWAP at 5-sec granularity; Map to NIFTY/BANKNIFTY option chain snapshots"
+    }
+  ],
+  "discarded_strategies": [
+    {
+      "name": "index_momentum_v1",
+      "file": "GPT_10_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sma_crossover_banknifty_v1",
+      "file": "GPT_1_of_10.json",
+      "reason": "Uses slow indicator: sma_100 with lookback 100"
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "file": "GPT_2_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "file": "GPT_3_of_10.json",
+      "reason": "Opening range breakout - requires 15-60 min range formation"
+    },
+    {
+      "name": "rsi_reversal_v1",
+      "file": "GPT_4_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bollinger_band_reversion_v1",
+      "file": "GPT_5_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "atr_breakout_v1",
+      "file": "GPT_6_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "ema_crossover_v1",
+      "file": "GPT_7_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "volume_breakout_v1",
+      "file": "GPT_8_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fade_v1",
+      "file": "GPT_9_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "support_resistance_reversal_v1",
+      "file": "Grok_10_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_breakout_v1",
+      "file": "Grok_1_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_momentum_v1",
+      "file": "Grok_2_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "open_high_low_v1",
+      "file": "Grok_3_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_pivot_rejection_v1",
+      "file": "Grok_4_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bollinger_price_action_v1",
+      "file": "Grok_5_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "ema200_dip_reversal_v1",
+      "file": "Grok_6_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "ma_crossover_momentum_v1",
+      "file": "Grok_7_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pullback_momentum_v1",
+      "file": "Grok_9_of_10.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "momentum_ignition_v1",
+      "file": "Opus_10_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "intraday_trend_following_v1",
+      "file": "Opus_11_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "relative_strength_momentum_v1",
+      "file": "Opus_12_of_50.json",
+      "reason": "Auto-discard tags: sector"
+    },
+    {
+      "name": "previous_day_high_low_breakout_v1",
+      "file": "Opus_13_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "first_pullback_after_trend_v1",
+      "file": "Opus_14_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "narrow_range_breakout_v1",
+      "file": "Opus_15_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "three_bar_momentum_v1",
+      "file": "Opus_16_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_pair_mean_reversion_v1",
+      "file": "Opus_17_of_50.json",
+      "reason": "Auto-discard tags: sector, pairs"
+    },
+    {
+      "name": "index_constituent_spread_v1",
+      "file": "Opus_18_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_rotation_intraday_v1",
+      "file": "Opus_19_of_50.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "file": "Opus_1_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "basket_spread_mean_reversion_v1",
+      "file": "Opus_20_of_50.json",
+      "reason": "Discard keyword: 'cross-sectional'"
+    },
+    {
+      "name": "it_sector_correlation_arb_v1",
+      "file": "Opus_22_of_50.json",
+      "reason": "Auto-discard tags: sector, pairs"
+    },
+    {
+      "name": "vix_regime_switch_v1",
+      "file": "Opus_23_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "intraday_volatility_breakout_v1",
+      "file": "Opus_24_of_50.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "vix_mean_reversion_intraday_v1",
+      "file": "Opus_25_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "low_vol_compression_long_v1",
+      "file": "Opus_26_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "atr_channel_breakout_v1",
+      "file": "Opus_27_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_continuation_momentum_v1",
+      "file": "Opus_29_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bollinger_squeeze_reversion_v1",
+      "file": "Opus_2_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "partial_gap_fill_scalp_v1",
+      "file": "Opus_30_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_and_go_with_volume_v1",
+      "file": "Opus_31_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_gap_constituent_lag_v1",
+      "file": "Opus_32_of_50.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "vwap_crossover_flow_v1",
+      "file": "Opus_33_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "closing_auction_anticipation_v1",
+      "file": "Opus_34_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "file": "Opus_35_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "lunch_hour_range_compression_v1",
+      "file": "Opus_36_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "expiry_day_premium_decay_v1",
+      "file": "Opus_37_of_50.json",
+      "reason": "Mean reversion on stocks without options data"
+    },
+    {
+      "name": "pre_market_auction_edge_v1",
+      "file": "Opus_38_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "last_30_min_momentum_v1",
+      "file": "Opus_39_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_extreme_reversion_v1",
+      "file": "Opus_3_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "monday_reversal_v1",
+      "file": "Opus_40_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_rsi_volume_confluence_v1",
+      "file": "Opus_41_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_vwap_momentum_trifecta_v1",
+      "file": "Opus_43_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pairs_plus_vix_overlay_v1",
+      "file": "Opus_44_of_50.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "multi_timeframe_confirmation_v1",
+      "file": "Opus_45_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_plus_sector_filter_v1",
+      "file": "Opus_46_of_50.json",
+      "reason": "Auto-discard tags: sector"
+    },
+    {
+      "name": "vix_adjusted_mean_reversion_v1",
+      "file": "Opus_47_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "divergence_plus_level_confluence_v1",
+      "file": "Opus_48_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_momentum_stock_selection_v1",
+      "file": "Opus_49_of_50.json",
+      "reason": "Discard keyword: 'stock selection'"
+    },
+    {
+      "name": "vwap_band_reversion_v1",
+      "file": "Opus_4_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "adversarial_ensemble_v1",
+      "file": "Opus_50_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "ema_crossover_reversion_v1",
+      "file": "Opus_5_of_50.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "overnight_gap_reversion_v1",
+      "file": "Opus_6_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "intraday_rsi_divergence_v1",
+      "file": "Opus_7_of_50.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "microstructure_volume_reversion_v1",
+      "file": "Opus_8_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "file": "Opus_9_of_50.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_pair_reversion_v1",
+      "file": "claude_project_10_of_25.json",
+      "reason": "Auto-discard tags: sector, pairs"
+    },
+    {
+      "name": "prev_day_hl_breakout_v1",
+      "file": "claude_project_11_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "connors_rsi_extreme_v1",
+      "file": "claude_project_12_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "first_hour_range_breakout_v1",
+      "file": "claude_project_13_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bb_squeeze_breakout_v1",
+      "file": "claude_project_14_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "moc_drift_v1",
+      "file": "claude_project_15_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "keltner_channel_trend_v1",
+      "file": "claude_project_16_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "round_number_reversal_v1",
+      "file": "claude_project_17_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "nifty_intraday_momentum_factor_v1",
+      "file": "claude_project_18_of_25.json",
+      "reason": "Discard keyword: 'cross-sectional'"
+    },
+    {
+      "name": "atr_expansion_breakout_v1",
+      "file": "claude_project_19_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "file": "claude_project_1_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_slope_momentum_v1",
+      "file": "claude_project_20_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "macd_histogram_divergence_v1",
+      "file": "claude_project_21_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_etf_spread_reversion_v1",
+      "file": "claude_project_22_of_25.json",
+      "reason": "Auto-discard tags: sector"
+    },
+    {
+      "name": "donchian_channel_breakout_v1",
+      "file": "claude_project_23_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_continuation_v1",
+      "file": "claude_project_24_of_25.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "multi_factor_composite_v1",
+      "file": "claude_project_25_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_15min_v1",
+      "file": "claude_project_2_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fill_fade_v1",
+      "file": "claude_project_3_of_25.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "intraday_momentum_ema_cross_v1",
+      "file": "claude_project_4_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "relative_strength_index_divergence_v1",
+      "file": "claude_project_5_of_25.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "vix_regime_breakout_v1",
+      "file": "claude_project_6_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "volume_profile_breakout_v1",
+      "file": "claude_project_7_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "banknifty_lead_lag_v1",
+      "file": "claude_project_8_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_divergence_vwap_v1",
+      "file": "claude_project_9_of_25.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v3",
+      "file": "cursor_gemini31pro_strategy_003.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v5",
+      "file": "cursor_gemini31pro_strategy_005.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v10",
+      "file": "cursor_gemini31pro_strategy_010.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v11",
+      "file": "cursor_gemini31pro_strategy_011.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v12",
+      "file": "cursor_gemini31pro_strategy_012.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v13",
+      "file": "cursor_gemini31pro_strategy_013.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v14",
+      "file": "cursor_gemini31pro_strategy_014.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v18",
+      "file": "cursor_gemini31pro_strategy_018.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_v19",
+      "file": "cursor_gemini31pro_strategy_019.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_momentum_v22",
+      "file": "cursor_gemini31pro_strategy_022.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_momentum_v29",
+      "file": "cursor_gemini31pro_strategy_029.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_momentum_v32",
+      "file": "cursor_gemini31pro_strategy_032.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_connors_pullback_v41",
+      "file": "cursor_gemini31pro_strategy_041.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_connors_pullback_v42",
+      "file": "cursor_gemini31pro_strategy_042.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_connors_pullback_v46",
+      "file": "cursor_gemini31pro_strategy_046.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_connors_pullback_v49",
+      "file": "cursor_gemini31pro_strategy_049.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_connors_pullback_v50",
+      "file": "cursor_gemini31pro_strategy_050.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "rsi_connors_pullback_v54",
+      "file": "cursor_gemini31pro_strategy_054.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "macd_trend_continuation_v71",
+      "file": "cursor_gemini31pro_strategy_071.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bollinger_squeeze_breakout_v82",
+      "file": "cursor_gemini31pro_strategy_082.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fade_reversion_v103",
+      "file": "cursor_gemini31pro_strategy_103.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fade_reversion_v104",
+      "file": "cursor_gemini31pro_strategy_104.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fade_reversion_v106",
+      "file": "cursor_gemini31pro_strategy_106.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fade_reversion_v116",
+      "file": "cursor_gemini31pro_strategy_116.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vix_filtered_index_trend_v124",
+      "file": "cursor_gemini31pro_strategy_124.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vix_filtered_index_trend_v126",
+      "file": "cursor_gemini31pro_strategy_126.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vix_filtered_index_trend_v133",
+      "file": "cursor_gemini31pro_strategy_133.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pdh_pdl_fakeout_v141",
+      "file": "cursor_gemini31pro_strategy_141.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "inside_bar_breakout_v177",
+      "file": "cursor_gemini31pro_strategy_177.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v181",
+      "file": "cursor_gemini31pro_strategy_181.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v182",
+      "file": "cursor_gemini31pro_strategy_182.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v183",
+      "file": "cursor_gemini31pro_strategy_183.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v187",
+      "file": "cursor_gemini31pro_strategy_187.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v189",
+      "file": "cursor_gemini31pro_strategy_189.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v192",
+      "file": "cursor_gemini31pro_strategy_192.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "index_relative_strength_v200",
+      "file": "cursor_gemini31pro_strategy_200.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_fill_stall_001",
+      "file": "cursor_gpt54_gap_fill_stall_001.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_drive_reversal_001",
+      "file": "cursor_gpt54_opening_drive_reversal_001.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_range_breakout_002",
+      "file": "cursor_gpt54_opening_range_breakout_002.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "range_day_band_fade_003",
+      "file": "cursor_gpt54_range_day_band_fade_003.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "relative_strength_breakout_003",
+      "file": "cursor_gpt54_relative_strength_breakout_003.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "squeeze_release_breakout_001",
+      "file": "cursor_gpt54_squeeze_release_breakout_001.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_overshoot_fade_001",
+      "file": "cursor_gpt54_vwap_overshoot_fade_001.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_overshoot_fade_002",
+      "file": "cursor_gpt54_vwap_overshoot_fade_002.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_overshoot_fade_003",
+      "file": "cursor_gpt54_vwap_overshoot_fade_003.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_reclaim_trend_001",
+      "file": "cursor_gpt54_vwap_reclaim_trend_001.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_mean_reversion_basic_v1",
+      "file": "cursor_opus46max_strategy_001.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_zscore_bounce_v1",
+      "file": "cursor_opus46max_strategy_002.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_cross_momentum_v1",
+      "file": "cursor_opus46max_strategy_003.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_band_squeeze_v1",
+      "file": "cursor_opus46max_strategy_004.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_slope_trend_v1",
+      "file": "cursor_opus46max_strategy_005.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_anchored_support_v1",
+      "file": "cursor_opus46max_strategy_006.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "vwap_volume_divergence_v1",
+      "file": "cursor_opus46max_strategy_007.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "vwap_rsi_confluence_v1",
+      "file": "cursor_opus46max_strategy_008.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_gap_fill_v1",
+      "file": "cursor_opus46max_strategy_009.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "vwap_relative_strength_v1",
+      "file": "cursor_opus46max_strategy_010.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "bollinger_mean_reversion_v1",
+      "file": "cursor_opus46max_strategy_011.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "keltner_channel_reversion_v1",
+      "file": "cursor_opus46max_strategy_012.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "zscore_reversion_v1",
+      "file": "cursor_opus46max_strategy_013.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "rsi_extreme_reversion_v1",
+      "file": "cursor_opus46max_strategy_014.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "deviation_from_ema_v1",
+      "file": "cursor_opus46max_strategy_015.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "intraday_range_reversion_v1",
+      "file": "cursor_opus46max_strategy_016.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "microstructure_reversion_v1",
+      "file": "cursor_opus46max_strategy_017.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "relative_reversion_v1",
+      "file": "cursor_opus46max_strategy_018.json",
+      "reason": "Auto-discard tags: sector"
+    },
+    {
+      "name": "stochastic_reversion_v1",
+      "file": "cursor_opus46max_strategy_019.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "williams_r_reversion_v1",
+      "file": "cursor_opus46max_strategy_020.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "ema_crossover_momentum_v1",
+      "file": "cursor_opus46max_strategy_021.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "macd_signal_momentum_v1",
+      "file": "cursor_opus46max_strategy_022.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "adx_trend_strength_v1",
+      "file": "cursor_opus46max_strategy_023.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "roc_momentum_v1",
+      "file": "cursor_opus46max_strategy_024.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "price_channel_breakout_v1",
+      "file": "cursor_opus46max_strategy_025.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "momentum_score_composite_v1",
+      "file": "cursor_opus46max_strategy_026.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "relative_momentum_v1",
+      "file": "cursor_opus46max_strategy_027.json",
+      "reason": "Auto-discard tags: sector-rotation"
+    },
+    {
+      "name": "volume_momentum_v1",
+      "file": "cursor_opus46max_strategy_028.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "acceleration_momentum_v1",
+      "file": "cursor_opus46max_strategy_029.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "institutional_flow_momentum_v1",
+      "file": "cursor_opus46max_strategy_030.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "gap_continuation_momentum_v1",
+      "file": "cursor_opus46max_strategy_031.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "intraday_trend_channel_v1",
+      "file": "cursor_opus46max_strategy_032.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "parabolic_sar_momentum_v1",
+      "file": "cursor_opus46max_strategy_033.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "supertrend_momentum_v1",
+      "file": "cursor_opus46max_strategy_034.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "hull_ma_momentum_v1",
+      "file": "cursor_opus46max_strategy_035.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "file": "cursor_opus46max_strategy_036.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_range_breakout_30_v1",
+      "file": "cursor_opus46max_strategy_037.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "narrow_range_breakout_v1",
+      "file": "cursor_opus46max_strategy_038.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "volatility_contraction_breakout_v1",
+      "file": "cursor_opus46max_strategy_039.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "volume_breakout_v1",
+      "file": "cursor_opus46max_strategy_040.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "range_expansion_breakout_v1",
+      "file": "cursor_opus46max_strategy_041.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pivot_point_breakout_v1",
+      "file": "cursor_opus46max_strategy_042.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "previous_day_hl_breakout_v1",
+      "file": "cursor_opus46max_strategy_043.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "consolidation_breakout_v1",
+      "file": "cursor_opus46max_strategy_044.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_breakout_v1",
+      "file": "cursor_opus46max_strategy_045.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "fibonacci_breakout_v1",
+      "file": "cursor_opus46max_strategy_046.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "premarket_range_breakout_v1",
+      "file": "cursor_opus46max_strategy_047.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "index_correlated_breakout_v1",
+      "file": "cursor_opus46max_strategy_048.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "multi_timeframe_breakout_v1",
+      "file": "cursor_opus46max_strategy_049.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "atr_expansion_breakout_v1",
+      "file": "cursor_opus46max_strategy_050.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pairs_trading_bank_v1",
+      "file": "cursor_opus46max_strategy_051.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "pairs_trading_it_v1",
+      "file": "cursor_opus46max_strategy_052.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "pairs_trading_auto_v1",
+      "file": "cursor_opus46max_strategy_053.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "index_arb_nifty_components_v1",
+      "file": "cursor_opus46max_strategy_054.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "etf_nav_arbitrage_v1",
+      "file": "cursor_opus46max_strategy_055.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_rotation_stat_arb_v1",
+      "file": "cursor_opus46max_strategy_056.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "beta_neutral_stat_arb_v1",
+      "file": "cursor_opus46max_strategy_057.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "cointegration_pairs_v1",
+      "file": "cursor_opus46max_strategy_058.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "correlation_breakdown_arb_v1",
+      "file": "cursor_opus46max_strategy_059.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "cross_listed_arb_v1",
+      "file": "cursor_opus46max_strategy_060.json",
+      "reason": "Discard keyword: 'corporate action'"
+    },
+    {
+      "name": "gap_fill_full_v1",
+      "file": "cursor_opus46max_strategy_061.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "gap_fill_partial_v1",
+      "file": "cursor_opus46max_strategy_062.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "gap_fade_large_v1",
+      "file": "cursor_opus46max_strategy_063.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "gap_continuation_v1",
+      "file": "cursor_opus46max_strategy_064.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "gap_reversal_volume_v1",
+      "file": "cursor_opus46max_strategy_065.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "gap_to_vwap_v1",
+      "file": "cursor_opus46max_strategy_066.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "gap_relative_index_v1",
+      "file": "cursor_opus46max_strategy_067.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "gap_sector_leader_v1",
+      "file": "cursor_opus46max_strategy_068.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "opening_drive_post_gap_v1",
+      "file": "cursor_opus46max_strategy_069.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_exhaustion_v1",
+      "file": "cursor_opus46max_strategy_070.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "vix_regime_switch_v1",
+      "file": "cursor_opus46max_strategy_071.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bollinger_squeeze_v1",
+      "file": "cursor_opus46max_strategy_072.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "atr_breakout_volatility_v1",
+      "file": "cursor_opus46max_strategy_073.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vol_clustering_v1",
+      "file": "cursor_opus46max_strategy_075.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vix_mean_reversion_v1",
+      "file": "cursor_opus46max_strategy_076.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "low_vol_momentum_v1",
+      "file": "cursor_opus46max_strategy_077.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "vol_adjusted_reversion_v1",
+      "file": "cursor_opus46max_strategy_078.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "vol_breakout_squeeze_v1",
+      "file": "cursor_opus46max_strategy_080.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "straddle_proxy_v1",
+      "file": "cursor_opus46max_strategy_081.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "vol_of_vol_signal_v1",
+      "file": "cursor_opus46max_strategy_082.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "regime_detection_vol_v1",
+      "file": "cursor_opus46max_strategy_083.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "overnight_vol_carry_v1",
+      "file": "cursor_opus46max_strategy_084.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_5min_v1",
+      "file": "cursor_opus46max_strategy_086.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_15min_filtered_v1",
+      "file": "cursor_opus46max_strategy_087.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_30min_volume_v1",
+      "file": "cursor_opus46max_strategy_088.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "orb_narrow_range_v1",
+      "file": "cursor_opus46max_strategy_089.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_wide_range_fade_v1",
+      "file": "cursor_opus46max_strategy_090.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_index_aligned_v1",
+      "file": "cursor_opus46max_strategy_091.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_sector_momentum_v1",
+      "file": "cursor_opus46max_strategy_092.json",
+      "reason": "Discard keyword: 'cross-sectional'"
+    },
+    {
+      "name": "orb_vwap_confirmation_v1",
+      "file": "cursor_opus46max_strategy_093.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_failure_trade_v1",
+      "file": "cursor_opus46max_strategy_094.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "orb_gap_combo_v1",
+      "file": "cursor_opus46max_strategy_095.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "orb_atr_scaled_v1",
+      "file": "cursor_opus46max_strategy_096.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_multi_stock_v1",
+      "file": "cursor_opus46max_strategy_097.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_pullback_entry_v1",
+      "file": "cursor_opus46max_strategy_098.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "orb_retest_v1",
+      "file": "cursor_opus46max_strategy_099.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "orb_closing_range_v1",
+      "file": "cursor_opus46max_strategy_100.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bid_ask_imbalance_v1",
+      "file": "cursor_opus46max_strategy_101.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "trade_size_clustering_v1",
+      "file": "cursor_opus46max_strategy_102.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "tick_direction_momentum_v1",
+      "file": "cursor_opus46max_strategy_103.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "volume_clock_signal_v1",
+      "file": "cursor_opus46max_strategy_104.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "price_impact_reversion_v1",
+      "file": "cursor_opus46max_strategy_105.json",
+      "reason": "Discard keyword: 'mid-cap'"
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "file": "cursor_opus46max_strategy_106.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "adverse_selection_filter_v1",
+      "file": "cursor_opus46max_strategy_107.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "liquidity_provision_v1",
+      "file": "cursor_opus46max_strategy_108.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "trade_arrival_rate_v1",
+      "file": "cursor_opus46max_strategy_109.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "spread_dynamics_v1",
+      "file": "cursor_opus46max_strategy_110.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_momentum_rotation_v1",
+      "file": "cursor_opus46max_strategy_111.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "banking_vs_it_rotation_v1",
+      "file": "cursor_opus46max_strategy_112.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "large_vs_mid_cap_v1",
+      "file": "cursor_opus46max_strategy_113.json",
+      "reason": "Discard keyword: 'mid-cap'"
+    },
+    {
+      "name": "fno_vs_cash_rotation_v1",
+      "file": "cursor_opus46max_strategy_114.json",
+      "reason": "Discard keyword: 'delivery'"
+    },
+    {
+      "name": "sector_leader_follower_v1",
+      "file": "cursor_opus46max_strategy_115.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "industry_group_reversion_v1",
+      "file": "cursor_opus46max_strategy_116.json",
+      "reason": "Discard keyword: 'stock-specific'"
+    },
+    {
+      "name": "defensive_cyclical_switch_v1",
+      "file": "cursor_opus46max_strategy_118.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "sector_vwap_divergence_v1",
+      "file": "cursor_opus46max_strategy_119.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "market_breadth_signal_v1",
+      "file": "cursor_opus46max_strategy_120.json",
+      "reason": "Auto-discard tags: sector_rotation"
+    },
+    {
+      "name": "earnings_surprise_momentum_v1",
+      "file": "cursor_opus46max_strategy_121.json",
+      "reason": "Auto-discard tags: earnings"
+    },
+    {
+      "name": "rbi_policy_reaction_v1",
+      "file": "cursor_opus46max_strategy_122.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "global_cue_reaction_v1",
+      "file": "cursor_opus46max_strategy_124.json",
+      "reason": "Gap strategy - inherently about overnight stock behavior"
+    },
+    {
+      "name": "block_deal_momentum_v1",
+      "file": "cursor_opus46max_strategy_125.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "corporate_action_arb_v1",
+      "file": "cursor_opus46max_strategy_126.json",
+      "reason": "Auto-discard tags: corporate_action"
+    },
+    {
+      "name": "index_rebalance_flow_v1",
+      "file": "cursor_opus46max_strategy_127.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "monthly_settlement_v1",
+      "file": "cursor_opus46max_strategy_128.json",
+      "reason": "Discard keyword: 'delivery'"
+    },
+    {
+      "name": "budget_day_strategy_v1",
+      "file": "cursor_opus46max_strategy_129.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "circuit_breaker_proximity_v1",
+      "file": "cursor_opus46max_strategy_130.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "reliance_vs_ril_subsidiaries_v1",
+      "file": "cursor_opus46max_strategy_131.json",
+      "reason": "Auto-discard tags: pairs_trading, reliance, conglomerate, sum_of_parts"
+    },
+    {
+      "name": "hdfc_twins_v1",
+      "file": "cursor_opus46max_strategy_132.json",
+      "reason": "Auto-discard tags: pairs_trading, conglomerate"
+    },
+    {
+      "name": "tata_group_pairs_v1",
+      "file": "cursor_opus46max_strategy_133.json",
+      "reason": "Auto-discard tags: pairs_trading, conglomerate"
+    },
+    {
+      "name": "psu_bank_pairs_v1",
+      "file": "cursor_opus46max_strategy_134.json",
+      "reason": "Auto-discard tags: pairs_trading"
+    },
+    {
+      "name": "pharma_pairs_v1",
+      "file": "cursor_opus46max_strategy_135.json",
+      "reason": "Auto-discard tags: pairs_trading"
+    },
+    {
+      "name": "cement_pairs_v1",
+      "file": "cursor_opus46max_strategy_136.json",
+      "reason": "Auto-discard tags: pairs_trading"
+    },
+    {
+      "name": "metal_pairs_v1",
+      "file": "cursor_opus46max_strategy_137.json",
+      "reason": "Auto-discard tags: steel, pairs_trading, aluminium, metal"
+    },
+    {
+      "name": "fmcg_pairs_v1",
+      "file": "cursor_opus46max_strategy_138.json",
+      "reason": "Auto-discard tags: pairs_trading"
+    },
+    {
+      "name": "telecom_pairs_v1",
+      "file": "cursor_opus46max_strategy_139.json",
+      "reason": "Auto-discard tags: subscriber, pairs_trading, telecom, duopoly"
+    },
+    {
+      "name": "energy_pairs_v1",
+      "file": "cursor_opus46max_strategy_140.json",
+      "reason": "Auto-discard tags: energy, pairs_trading, upstream_downstream, omc, oil_gas"
+    },
+    {
+      "name": "harmonic_pattern_v1",
+      "file": "cursor_opus46max_strategy_141.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "elliott_impulse_v1",
+      "file": "cursor_opus46max_strategy_142.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "market_profile_poc_v1",
+      "file": "cursor_opus46max_strategy_143.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "order_block_entry_v1",
+      "file": "cursor_opus46max_strategy_144.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "ichimoku_cloud_v1",
+      "file": "cursor_opus46max_strategy_145.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "fractal_breakout_v1",
+      "file": "cursor_opus46max_strategy_146.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "demark_sequential_v1",
+      "file": "cursor_opus46max_strategy_147.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pivot_camarilla_v1",
+      "file": "cursor_opus46max_strategy_148.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "heikin_ashi_trend_v1",
+      "file": "cursor_opus46max_strategy_149.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "elder_impulse_v1",
+      "file": "cursor_opus46max_strategy_150.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_rsi_volume_hybrid_v1",
+      "file": "cursor_opus46max_strategy_151.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "momentum_reversion_switch_v1",
+      "file": "cursor_opus46max_strategy_152.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "trend_counter_trend_v1",
+      "file": "cursor_opus46max_strategy_153.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "multi_indicator_consensus_v1",
+      "file": "cursor_opus46max_strategy_154.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "factor_momentum_v1",
+      "file": "cursor_opus46max_strategy_155.json",
+      "reason": "Auto-discard tags: cross-sectional"
+    },
+    {
+      "name": "quality_momentum_v1",
+      "file": "cursor_opus46max_strategy_156.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "smart_beta_intraday_v1",
+      "file": "cursor_opus46max_strategy_157.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "risk_parity_signal_v1",
+      "file": "cursor_opus46max_strategy_158.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "mean_variance_optimal_v1",
+      "file": "cursor_opus46max_strategy_159.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "ensemble_signal_v1",
+      "file": "cursor_opus46max_strategy_160.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "bayesian_update_v1",
+      "file": "cursor_opus46max_strategy_161.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "adaptive_threshold_v1",
+      "file": "cursor_opus46max_strategy_162.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "multi_asset_signal_v1",
+      "file": "cursor_opus46max_strategy_163.json",
+      "reason": "Discard keyword: 'sector rotation'"
+    },
+    {
+      "name": "composite_breadth_v1",
+      "file": "cursor_opus46max_strategy_164.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "weighted_indicator_v1",
+      "file": "cursor_opus46max_strategy_165.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "hmm_regime_v1",
+      "file": "cursor_opus46max_strategy_166.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "vol_regime_adaptive_v1",
+      "file": "cursor_opus46max_strategy_167.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "trend_strength_adaptive_v1",
+      "file": "cursor_opus46max_strategy_168.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "market_state_classifier_v1",
+      "file": "cursor_opus46max_strategy_169.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "vix_bucket_strategy_v1",
+      "file": "cursor_opus46max_strategy_170.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "autocorrelation_regime_v1",
+      "file": "cursor_opus46max_strategy_171.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "hurst_exponent_v1",
+      "file": "cursor_opus46max_strategy_172.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "fractal_dimension_v1",
+      "file": "cursor_opus46max_strategy_173.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "entropy_regime_v1",
+      "file": "cursor_opus46max_strategy_174.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "rolling_sharpe_adaptive_v1",
+      "file": "cursor_opus46max_strategy_175.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "drawdown_adaptive_v1",
+      "file": "cursor_opus46max_strategy_176.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "correlation_regime_v1",
+      "file": "cursor_opus46max_strategy_177.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "momentum_decay_adaptive_v1",
+      "file": "cursor_opus46max_strategy_178.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "mean_reversion_speed_v1",
+      "file": "cursor_opus46max_strategy_179.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "dynamic_stop_regime_v1",
+      "file": "cursor_opus46max_strategy_180.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "kalman_filter_trend_v1",
+      "file": "cursor_opus46max_strategy_181.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "wavelet_decomposition_v1",
+      "file": "cursor_opus46max_strategy_182.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "spectral_analysis_v1",
+      "file": "cursor_opus46max_strategy_183.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "pca_factor_signal_v1",
+      "file": "cursor_opus46max_strategy_184.json",
+      "reason": "Auto-discard tags: cross-sectional"
+    },
+    {
+      "name": "cointegration_residual_v1",
+      "file": "cursor_opus46max_strategy_185.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "granger_causality_v1",
+      "file": "cursor_opus46max_strategy_186.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "information_ratio_v1",
+      "file": "cursor_opus46max_strategy_187.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "maximum_entropy_v1",
+      "file": "cursor_opus46max_strategy_188.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "copula_dependence_v1",
+      "file": "cursor_opus46max_strategy_189.json",
+      "reason": "Auto-discard tags: pairs"
+    },
+    {
+      "name": "robust_regression_v1",
+      "file": "cursor_opus46max_strategy_190.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "quantile_regression_v1",
+      "file": "cursor_opus46max_strategy_191.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "changepoint_detection_v1",
+      "file": "cursor_opus46max_strategy_192.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "kernel_density_v1",
+      "file": "cursor_opus46max_strategy_193.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "bootstrap_confidence_v1",
+      "file": "cursor_opus46max_strategy_194.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "lasso_feature_select_v1",
+      "file": "cursor_opus46max_strategy_195.json",
+      "reason": "Discard keyword: 'earnings'"
+    },
+    {
+      "name": "post_halt_momentum_v1",
+      "file": "cursor_opus46max_strategy_196.json",
+      "reason": "Auto-discard tags: special-situation"
+    },
+    {
+      "name": "rights_issue_arb_v1",
+      "file": "cursor_opus46max_strategy_197.json",
+      "reason": "Auto-discard tags: rights-issue, special-situation"
+    },
+    {
+      "name": "bonus_record_date_v1",
+      "file": "cursor_opus46max_strategy_198.json",
+      "reason": "Auto-discard tags: bonus-issue, special-situation"
+    },
+    {
+      "name": "fii_dii_flow_signal_v1",
+      "file": "cursor_opus46max_strategy_199.json",
+      "reason": "Auto-discard tags: special-situation"
+    },
+    {
+      "name": "new_listing_momentum_v1",
+      "file": "cursor_opus46max_strategy_200.json",
+      "reason": "Auto-discard tags: ipo, special-situation, new-listing"
+    },
+    {
+      "name": "afternoon_profit_fade",
+      "file": "gemini_10_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "gap_momentum_continuation",
+      "file": "gemini_11_of_20.json",
+      "reason": "Discard keyword: 'fundamental'"
+    },
+    {
+      "name": "adx_strong_trend_pullback",
+      "file": "gemini_12_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "nifty_bank_lag_arbitrage",
+      "file": "gemini_13_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "narrow_range_7_breakout",
+      "file": "gemini_14_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "mean_reversion_hull_ma",
+      "file": "gemini_15_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "multi_ema_ribbon_squeeze",
+      "file": "gemini_16_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vix_spike_mean_reversion",
+      "file": "gemini_17_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "prev_day_hl_reversal",
+      "file": "gemini_18_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "volume_spike_exhaustion_fade",
+      "file": "gemini_19_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_zscore_mean_reversion",
+      "file": "gemini_1_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "fibonacci_intraday_retracement",
+      "file": "gemini_20_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "opening_range_breakout_15",
+      "file": "gemini_2_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "sector_relative_strength_momentum",
+      "file": "gemini_3_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "momentum_exhaustion_vix_reversal",
+      "file": "gemini_4_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "vwap_pinch_breakout",
+      "file": "gemini_5_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "european_open_momentum_continuation",
+      "file": "gemini_6_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "bollinger_squeeze_breakout",
+      "file": "gemini_7_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "pullback_to_vwap_trend_ride",
+      "file": "gemini_8_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    },
+    {
+      "name": "psychological_level_mean_reversion",
+      "file": "gemini_9_of_20.json",
+      "reason": "Requires individual stocks or stock universe"
+    }
+  ]
+}

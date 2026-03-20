@@ -1,33 +1,33 @@
 {
   "name": "nifty_banknifty_spread_v1",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "claude-4.6-opus-agent-3",
   "tags": [
     "relative_value",
     "index_spread",
     "NIFTY",
     "BANKNIFTY",
-    "mean_reversion"
+    "mean_reversion",
+    "index_options",
+    "5s"
   ],
-  "thesis": "BANK NIFTY carries ~33% weight in NIFTY 50, creating a tight but imperfect correlation. The intraday return spread between BANK NIFTY and NIFTY 50 exhibits mean-reverting behavior around a slowly drifting mean. When BANK NIFTY outperforms NIFTY 50 by > 30 bps intraday (or vice versa), the spread tends to compress over the next 30-60 minutes. The inefficiency exists because: (1) BANK NIFTY is the most traded F&O instrument and attracts speculative overreaction, (2) passive index funds rebalance toward NIFTY 50 weights, creating a natural reversion mechanism, (3) the spread is only mean-reverting intraday \u2014 overnight the spread can shift permanently based on macro factors. We trade this as a spread trade using NIFTY and BANK NIFTY futures (or their most liquid ETFs).",
-  "universe": "NIFTY 50, BANK NIFTY indices",
-  "stock_filter": "Trade via NIFTY 50 futures + BANK NIFTY futures (or NIFTYBEES + BANKBEES ETFs)",
-  "timeframe": "1min",
-  "session": "09:30-15:20 IST",
-  "hold_time": "20-60 min",
-  "max_hold_bars": 60,
-  "trades_per_day": "1-3",
-  "max_trades_per_day": 4,
+  "thesis": "BANK NIFTY carries ~33% weight in NIFTY 50, creating a tight but imperfect correlation. The intraday return spread between BANK NIFTY and NIFTY 50 exhibits mean-reverting behavior around a slowly drifting mean. When BANK NIFTY outperforms NIFTY 50 by > 30 bps intraday (or vice versa), the spread tends to compress over the next few minutes. We trade the spread via index options: if BANKNIFTY is lagging and expected to catch up, BUY_CE on BANKNIFTY; if BANKNIFTY has overshot, BUY_PE on BANKNIFTY. The inefficiency exists because: (1) BANK NIFTY is the most traded F&O instrument and attracts speculative overreaction, (2) passive index funds rebalance toward NIFTY 50 weights, creating a natural reversion mechanism, (3) the spread is only mean-reverting intraday -- overnight the spread can shift permanently based on macro factors.",
+  "universe": "BOTH",
+  "timeframe": "5s",
+  "hold_time": "5-120 seconds",
+  "max_hold_bars": 24,
+  "session": "09:20-15:25 IST",
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 5,
   "data": {
-    "ohlcv_1min": true,
-    "vwap": true,
+    "ohlcv_5s": true,
+    "option_chain": true,
     "vix": true,
-    "index": "NIFTY 50, BANK NIFTY",
-    "option_chain": false,
+    "index": "NIFTY50, BANKNIFTY",
     "order_book": false,
     "other": [
-      "NIFTY 50 futures 1-min data",
-      "BANK NIFTY futures 1-min data"
+      "NIFTY50 5s data",
+      "BANKNIFTY 5s data"
     ]
   },
   "indicators": [
@@ -48,60 +48,70 @@
     },
     {
       "name": "nb_spread_zscore",
-      "formula": "(nb_spread - SMA(nb_spread, 45)) / STDEV(nb_spread, 45)",
+      "formula": "(nb_spread - SMA(nb_spread, 540)) / STDEV(nb_spread, 540)",
       "params": {
-        "lookback": 45
+        "lookback": 540,
+        "note": "540 bars = 45 min at 5s"
       }
     },
     {
       "name": "spread_velocity",
-      "formula": "nb_spread - nb_spread[5]",
+      "formula": "nb_spread - nb_spread[60]",
       "params": {
-        "lookback": 5
+        "lookback": 60,
+        "note": "60 bars = 5 min at 5s"
       }
     }
   ],
   "entry": {
     "long": {
+      "signal": "BUY_CE on BANKNIFTY",
       "conditions": [
-        "nb_spread_zscore < -1.5 (NIFTY outperforming BANK NIFTY \u2014 expect BANK NIFTY catch-up)",
-        "spread_velocity < -3 (spread still widening \u2014 wait for it to slow)",
+        "nb_spread_zscore < -1.5 (NIFTY outperforming BANK NIFTY -- expect BANK NIFTY catch-up)",
+        "spread_velocity < -3 (spread still widening -- wait for it to slow)",
         "India_VIX < 20"
       ],
       "confirmation": "spread_velocity crosses above -1 (widening slowing down)"
     },
     "short": {
+      "signal": "BUY_PE on BANKNIFTY",
       "conditions": [
-        "nb_spread_zscore > 1.5 (BANK NIFTY outperforming NIFTY \u2014 expect compression)",
+        "nb_spread_zscore > 1.5 (BANK NIFTY outperforming NIFTY -- expect compression)",
         "spread_velocity > 3",
         "India_VIX < 20"
       ],
       "confirmation": "spread_velocity crosses below 1 (widening slowing down)"
     },
-    "entry_price": "market order on both legs: long BANK NIFTY + short NIFTY (or vice versa)"
+    "entry_price": "market order on BANKNIFTY ATM CE/PE"
   },
   "exit": {
     "target": "nb_spread_zscore reverts to 0 (full mean reversion)",
-    "stop_loss": "nb_spread_zscore extends to \u00b12.5 (spread diverging beyond threshold)",
+    "stop_loss": "nb_spread_zscore extends to +/-2.5 (spread diverging beyond threshold)",
     "trailing_stop": "none (target is spread normalization)",
-    "time_stop": "exit after 60 bars if target not reached",
-    "eod_rule": "flatten by 15:20 IST",
+    "time_stop": "exit after 24 bars (120 seconds) if target not reached",
+    "eod_rule": "flatten by 15:25 IST",
     "signal_exit": "India_VIX spikes > 22 during trade (correlation structure may break)"
   },
   "risk": {
     "capital_per_trade": 100000,
     "max_risk_per_trade_pct": 0.15,
-    "position_sizing": "\u20b950K per leg, beta-adjusted (multiply NIFTY leg by BANK NIFTY beta to NIFTY, ~1.3)",
+    "position_sizing": "fixed 1 lot BANKNIFTY options per signal",
     "max_open_positions": 1,
     "max_daily_loss_inr": 2500,
     "max_portfolio_heat_pct": 0.4
   },
+  "cost_model": {
+    "spread_points": 1.5,
+    "stt_rate": 0.000625,
+    "brokerage_per_order": 20,
+    "exchange_per_lot": 5
+  },
   "filters": {
     "vix_filter": "India_VIX < 20; in high VIX, BANK NIFTY drops faster (higher beta) and spread may not revert",
-    "time_filter": "no trades in first 15 min or last 10 min",
-    "volume_filter": "both futures trading at > 0.8x normal volume participation",
+    "time_filter": "no trades in first 60 bars (5 min) or last 120 bars (10 min)",
+    "volume_filter": "both index option chains trading at > 0.8x normal volume",
     "trend_filter": "skip if NIFTY 50 intraday move > 1.5% (strong trend makes spread directional, not mean-reverting)",
-    "spread_filter": "futures bid-ask spread < 0.05% on both legs",
+    "spread_filter": "option bid-ask spread < 1.5 points",
     "event_filter": "skip on RBI policy day (banking-specific), budget day, F&O expiry",
     "other_filters": [
       "skip if HDFC Bank/ICICI Bank have results today (distorts BANK NIFTY)"
@@ -112,21 +122,18 @@
     "win_rate_estimate": 0.58,
     "avg_winner_to_loser": 1.3,
     "profit_factor_estimate": 1.3,
-    "edge_decay_risk": "Low \u2014 NIFTY/BANK NIFTY spread mean reversion is structural due to the weight overlap and passive fund rebalancing. This trade has been viable for years in Indian markets."
+    "edge_decay_risk": "Low -- NIFTY/BANK NIFTY spread mean reversion is structural due to the weight overlap and passive fund rebalancing. This trade has been viable for years in Indian markets."
   },
-  "costs": {
-    "slippage_bps_per_side": 3,
-    "brokerage": "zerodha_intraday",
-    "stt_bps": 2.5,
-    "exchange_charges_bps": 0.5
-  },
+  "mechanism": "At 5-second frequency, the NIFTY-BANKNIFTY spread exhibits micro mean-reversion that is invisible on 1-minute charts. When BANKNIFTY drops relative to NIFTY by >30 bps, the spread_velocity (measured over 60 five-second bars = 5 min) detects the moment when the divergence is decelerating. Buying BANKNIFTY CE at this inflection captures the initial spread compression. The 5s resolution provides ~20-40 seconds of lead time versus 1-minute detection, which is significant because BANKNIFTY ATM options have high gamma and delta, so the first 20 seconds of spread compression translate to measurable premium gains. Single-leg option execution (vs. dual-leg futures) also reduces execution risk and margin requirements.",
+  "adaptation_notes": "Adapted from 1-min dual-leg index futures spread to 5-sec single-leg index option strategy. Key changes: (1) Universe remains NIFTY/BANKNIFTY but execution changed from dual-leg futures to single-leg BANKNIFTY options (BUY_CE for spread catch-up, BUY_PE for spread compression), (2) Spread z-score lookback adjusted from 45 bars to 540 bars (equivalent 45 min at 5s), (3) Spread velocity adjusted from 5 bars to 60 bars (equivalent 5 min at 5s), (4) Time filter adjusted from 15 min / 10 min to 60 bars / 120 bars, (5) Hold time compressed from 20-60 min to 5-120 seconds, (6) Removed need for two-leg futures execution -- using BANKNIFTY options as the directional expression of the spread view, (7) Entry/exit now reference option premium (BUY_CE/BUY_PE) instead of paired futures positions.",
   "weaknesses": [
-    "On RBI policy days or banking-specific regulatory events, BANK NIFTY diverges from NIFTY permanently intraday. The stop loss at z-score \u00b12.5 gets hit on such days.",
-    "Trading two index futures requires significant margin (especially BANK NIFTY at ~\u20b910L notional). The \u20b91L capital allocation may be insufficient for proper sizing.",
-    "The beta-adjustment ratio between BANK NIFTY and NIFTY is time-varying (1.2-1.5) and using a stale beta leads to imperfect hedging."
+    "On RBI policy days or banking-specific regulatory events, BANK NIFTY diverges from NIFTY permanently intraday. The stop loss at z-score +/-2.5 gets hit on such days.",
+    "Single-leg option execution captures spread compression imperfectly -- if NIFTY drops while BANKNIFTY is flat, the spread compresses but BUY_CE on BANKNIFTY doesn't profit.",
+    "The beta-adjustment ratio between BANK NIFTY and NIFTY is time-varying (1.2-1.5) and the z-score thresholds may need dynamic adjustment.",
+    "Only 12 trading days of data"
   ],
-  "prior_art": "Vidyamurthy (2004) 'Pairs Trading: Quantitative Methods and Analysis' \u2014 seminal text on spread trading. Elliot, van der Hoek & Malcolm (2005) 'Pairs Trading' for mean-reverting spread models. In India, the NIFTY/BANK NIFTY spread is widely discussed but typically traded on daily charts, not intraday.",
-  "notes": "Consider using options for the spread trade: buy BANK NIFTY calls + NIFTY puts (or vice versa) to limit downside risk. This converts the trade from a spread trade to a relative volatility trade but caps the loss at premium paid.",
+  "prior_art": "Vidyamurthy (2004) 'Pairs Trading: Quantitative Methods and Analysis'. Elliot, van der Hoek & Malcolm (2005) 'Pairs Trading'. In India, the NIFTY/BANK NIFTY spread is widely discussed but typically traded on daily charts, not intraday at 5-second frequency.",
+  "notes": "Adapted for 5-second BANKNIFTY index option trading. Consider monitoring both legs but executing only on BANKNIFTY options for simplicity and lower execution risk.",
   "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",
   "_dedup_metadata": {
     "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_117.json",

@@ -1,9 +1,11 @@
-"""Performance metrics computation.
+"""Performance metrics computation for option trading.
 
 All metrics follow Ernest Chan's methodology:
 - Sharpe ratio is primary (annualized, daily returns, zero-fill days without trades)
 - Minimum trade count enforced
-- No transaction costs
+- Transaction costs included (cost model ON)
+
+PnL is in INR: (exit_premium - entry_premium) × lot_size - costs.
 """
 from __future__ import annotations
 import numpy as np
@@ -11,37 +13,53 @@ import polars as pl
 import math
 from typing import Optional
 
-from pipeline.config import DEFAULT_CAPITAL_PER_TRADE
+from pipeline.config import TOTAL_TRADING_DAYS
+from pipeline.cost_model import net_pnl_quick, SPREAD_POINTS
 
 
 def compute_metrics(
     trades_df: pl.DataFrame,
-    capital_per_trade: float = DEFAULT_CAPITAL_PER_TRADE,
+    lot_size: int = 75,
     total_trading_days: Optional[int] = None,
 ) -> dict:
     """Compute aggregate performance metrics from a trades DataFrame.
 
     Args:
-        trades_df: DataFrame with columns: pnl, pnl_pct, entry_time, exit_time,
-                   holding_bars, exit_reason, side
-        capital_per_trade: Capital per trade for return calculations.
-        total_trading_days: Total calendar trading days in the period (for Sharpe).
-                           If None, inferred from data.
+        trades_df: DataFrame with columns: pnl, entry_premium, exit_premium,
+                   entry_time, exit_time, holding_bars, exit_reason, side
+        lot_size: Contract lot size (75 for NIFTY, 15 for BANKNIFTY).
+        total_trading_days: Total calendar trading days (for Sharpe).
 
     Returns:
-        Metrics dict matching the schema in the spec.
+        Metrics dict.
     """
     if trades_df is None or trades_df.is_empty():
         return _empty_metrics()
 
+    if total_trading_days is None:
+        total_trading_days = TOTAL_TRADING_DAYS
+
     n_trades = len(trades_df)
     pnls = trades_df["pnl"].to_numpy().astype(np.float64)
-    pnl_pcts = trades_df["pnl_pct"].to_numpy().astype(np.float64)
 
-    # ── Basic PnL metrics ───────────────────────────────────────────────
-    total_pnl = float(np.nansum(pnls))
-    winners = pnls[pnls > 0]
-    losers = pnls[pnls < 0]
+    # ── Apply costs if not already applied ──
+    if "net_pnl" in trades_df.columns:
+        net_pnls = trades_df["net_pnl"].to_numpy().astype(np.float64)
+    else:
+        # Compute net PnL with costs
+        if "entry_premium" in trades_df.columns and "exit_premium" in trades_df.columns:
+            entry_prems = trades_df["entry_premium"].to_numpy()
+            exit_prems = trades_df["exit_premium"].to_numpy()
+            net_pnls = np.array([
+                net_pnl_quick(ep, xp, lot_size) for ep, xp in zip(entry_prems, exit_prems)
+            ])
+        else:
+            net_pnls = pnls  # fallback
+
+    # ── Basic PnL metrics ──
+    total_pnl = float(np.nansum(net_pnls))
+    winners = net_pnls[net_pnls > 0]
+    losers = net_pnls[net_pnls < 0]
     win_rate = len(winners) / n_trades if n_trades > 0 else 0.0
 
     avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
@@ -52,28 +70,30 @@ def compute_metrics(
         float("inf") if gross_profit > 0 else 0.0
     )
 
-    avg_trade_pnl = float(np.mean(pnls))
-    best_trade = float(np.max(pnls)) if n_trades > 0 else 0.0
-    worst_trade = float(np.min(pnls)) if n_trades > 0 else 0.0
+    avg_trade_pnl = float(np.mean(net_pnls))
+    best_trade = float(np.max(net_pnls)) if n_trades > 0 else 0.0
+    worst_trade = float(np.min(net_pnls)) if n_trades > 0 else 0.0
 
-    # ── Holding time ────────────────────────────────────────────────────
-    holding_bars = trades_df["holding_bars"].to_numpy().astype(np.float64)
-    avg_holding = float(np.mean(holding_bars)) if n_trades > 0 else 0.0
+    # ── Holding time ──
+    if "holding_bars" in trades_df.columns:
+        holding_bars = trades_df["holding_bars"].to_numpy().astype(np.float64)
+        avg_holding = float(np.mean(holding_bars))
+        avg_holding_seconds = avg_holding * 5  # 1 bar = 5 seconds
+    else:
+        avg_holding = 0.0
+        avg_holding_seconds = 0.0
 
-    # ── Drawdown ────────────────────────────────────────────────────────
-    # Sort trades by exit time to compute drawdown on a proper time-ordered
-    # equity curve, not in arbitrary iteration order.
+    # ── Drawdown ──
     if "exit_time" in trades_df.columns:
         sorted_pnls = trades_df.sort("exit_time")["pnl"].to_numpy().astype(np.float64)
     else:
-        sorted_pnls = pnls
+        sorted_pnls = net_pnls
     cumulative_pnl = np.cumsum(sorted_pnls)
     running_max = np.maximum.accumulate(cumulative_pnl)
     drawdowns = running_max - cumulative_pnl
     max_drawdown = float(np.max(drawdowns)) if len(drawdowns) > 0 else 0.0
 
-    # ── Daily returns for Sharpe ratio ──────────────────────────────────
-    # Sum PnL by day, fill missing days with zero
+    # ── Daily returns for Sharpe ratio ──
     if "exit_time" in trades_df.columns:
         trades_with_date = trades_df.with_columns(
             pl.col("exit_time").cast(pl.Date).alias("trade_date")
@@ -83,22 +103,9 @@ def compute_metrics(
         ).sort("trade_date")
 
         days_with_trades = len(daily_pnl)
-
-        if total_trading_days is None:
-            # Infer from date range
-            if "entry_time" in trades_df.columns:
-                min_date = trades_df["entry_time"].min()
-                max_date = trades_df["exit_time"].max()
-                if min_date is not None and max_date is not None:
-                    date_range = (max_date - min_date).days
-                    total_trading_days = max(int(date_range * 252 / 365), days_with_trades)
-                else:
-                    total_trading_days = days_with_trades
-            else:
-                total_trading_days = days_with_trades
-
-        # Compute daily return as daily_pnl / capital_per_trade
-        daily_returns_arr = daily_pnl["daily_pnl"].to_numpy() / capital_per_trade
+        # Use lot_size as a proxy for capital deployed
+        capital_proxy = lot_size * 200  # approx premium × lot_size
+        daily_returns_arr = daily_pnl["daily_pnl"].to_numpy() / max(capital_proxy, 1)
 
         # Zero-fill non-trading days
         total_days = max(total_trading_days, days_with_trades)
@@ -110,13 +117,12 @@ def compute_metrics(
             ])
         else:
             daily_returns_full = daily_returns_arr
-
     else:
-        daily_returns_full = np.array([total_pnl / capital_per_trade])
-        total_trading_days = 1
+        capital_proxy = lot_size * 200
+        daily_returns_full = np.array([total_pnl / max(capital_proxy, 1)])
         days_with_trades = 1
 
-    # ── Sharpe ratio ────────────────────────────────────────────────────
+    # ── Sharpe ratio ──
     mean_daily = float(np.mean(daily_returns_full))
     std_daily = float(np.std(daily_returns_full, ddof=1)) if len(daily_returns_full) > 1 else 0.0
     if std_daily > 0:
@@ -124,12 +130,17 @@ def compute_metrics(
     else:
         sharpe = 0.0
 
-    # ── Streaks ─────────────────────────────────────────────────────────
-    longest_win = _longest_streak(pnls > 0)
-    longest_loss = _longest_streak(pnls < 0)
+    # ── Streaks ──
+    longest_win = _longest_streak(net_pnls > 0)
+    longest_loss = _longest_streak(net_pnls < 0)
 
-    # ── Monthly PnL ─────────────────────────────────────────────────────
-    monthly_pnl = _compute_monthly_pnl(trades_df)
+    # ── Avg premium points per trade ──
+    if "entry_premium" in trades_df.columns and "exit_premium" in trades_df.columns:
+        avg_points = float(np.mean(
+            trades_df["exit_premium"].to_numpy() - trades_df["entry_premium"].to_numpy()
+        ))
+    else:
+        avg_points = avg_trade_pnl / max(lot_size, 1)
 
     return {
         "total_trades": n_trades,
@@ -142,46 +153,20 @@ def compute_metrics(
         "avg_winner": round(avg_winner, 2),
         "avg_loser": round(avg_loser, 2),
         "avg_holding_bars": round(avg_holding, 1),
+        "avg_holding_seconds": round(avg_holding_seconds, 1),
+        "avg_points_per_trade": round(avg_points, 2),
         "total_trading_days": total_trading_days,
         "days_with_trades": days_with_trades,
         "best_trade_pnl": round(best_trade, 2),
         "worst_trade_pnl": round(worst_trade, 2),
         "longest_win_streak": longest_win,
         "longest_loss_streak": longest_loss,
-        "monthly_pnl": monthly_pnl,
-    }
-
-
-def compute_per_stock_metrics(
-    trades_df: pl.DataFrame,
-    symbol: str,
-    capital_per_trade: float = DEFAULT_CAPITAL_PER_TRADE,
-    total_trading_days: Optional[int] = None,
-) -> dict:
-    """Compute per-stock metrics matching the spec schema."""
-    m = compute_metrics(trades_df, capital_per_trade, total_trading_days)
-    return {
-        "symbol": symbol,
-        "total_trades": m["total_trades"],
-        "win_rate": m["win_rate"],
-        "profit_factor": m["profit_factor"],
-        "sharpe": m["sharpe_annualized"],
-        "total_pnl": m["total_pnl"],
-        "max_drawdown": m["max_drawdown"],
-        "avg_trade_pnl": m["avg_trade_pnl"],
-        "avg_winner": m["avg_winner"],
-        "avg_loser": m["avg_loser"],
-        "avg_holding_bars": m["avg_holding_bars"],
-        "best_trade_pnl": m["best_trade_pnl"],
-        "worst_trade_pnl": m["worst_trade_pnl"],
-        "passed_filter": False,   # Set later by stock_filter
-        "filter_failures": [],
     }
 
 
 def compute_sharpe_from_trades(
     trades_df: pl.DataFrame,
-    capital_per_trade: float,
+    lot_size: int,
     total_trading_days: int,
 ) -> float:
     """Quick Sharpe computation for Optuna objective."""
@@ -195,7 +180,8 @@ def compute_sharpe_from_trades(
         pl.col("pnl").sum().alias("daily_pnl")
     )
 
-    daily_returns = daily_pnl["daily_pnl"].to_numpy() / capital_per_trade
+    capital_proxy = lot_size * 200
+    daily_returns = daily_pnl["daily_pnl"].to_numpy() / max(capital_proxy, 1)
     days_with_trades = len(daily_returns)
 
     # Zero fill
@@ -225,26 +211,6 @@ def _longest_streak(mask: np.ndarray) -> int:
     return max_streak
 
 
-def _compute_monthly_pnl(trades_df: pl.DataFrame) -> dict[str, float]:
-    """Compute monthly PnL from trades."""
-    if trades_df is None or trades_df.is_empty():
-        return {}
-    if "exit_time" not in trades_df.columns:
-        return {}
-
-    try:
-        monthly = trades_df.with_columns(
-            pl.col("exit_time").dt.strftime("%Y-%m").alias("month")
-        ).group_by("month").agg(
-            pl.col("pnl").sum().alias("monthly_pnl")
-        ).sort("month")
-
-        return {row["month"]: round(row["monthly_pnl"], 2)
-                for row in monthly.iter_rows(named=True)}
-    except Exception:
-        return {}
-
-
 def _empty_metrics() -> dict:
     return {
         "total_trades": 0,
@@ -257,11 +223,12 @@ def _empty_metrics() -> dict:
         "avg_winner": 0.0,
         "avg_loser": 0.0,
         "avg_holding_bars": 0.0,
+        "avg_holding_seconds": 0.0,
+        "avg_points_per_trade": 0.0,
         "total_trading_days": 0,
         "days_with_trades": 0,
         "best_trade_pnl": 0.0,
         "worst_trade_pnl": 0.0,
         "longest_win_streak": 0,
         "longest_loss_streak": 0,
-        "monthly_pnl": {},
     }

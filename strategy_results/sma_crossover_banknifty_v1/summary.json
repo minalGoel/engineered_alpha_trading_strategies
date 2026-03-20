@@ -1,0 +1,17 @@
+{
+  "name": "sma_crossover_banknifty_v1",
+  "status": "CONVERTED",
+  "total_trades": 96,
+  "gross_pnl_inr": -3144.0,
+  "net_pnl_inr": -17083.43,
+  "avg_gross_per_trade": -32.75,
+  "avg_net_per_trade": -177.95,
+  "win_rate_gross": 0.375,
+  "win_rate_net": 0.3333,
+  "signals_buy_ce": 2946,
+  "signals_buy_pe": 3894,
+  "strike_lock_verified": true,
+  "condition_alignment_verified": true,
+  "first_bar_hour_ist": 9,
+  "mechanism_first_20_words": "On BANKNIFTY, large institutional TWAP/VWAP algorithms working directional orders create persistent micro-trends visible as SMA alignment across 3-min, 15-min, and"
+}

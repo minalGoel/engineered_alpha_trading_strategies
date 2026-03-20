@@ -1,0 +1,15 @@
+RESULT: sma_crossover_banknifty_v1 STATUS=CONVERTED TRADES=96 GROSS=-3144.0 NET=-17083.43 VERIFIED=YES
+
+**Summary:**
+- **Strategy:** Triple SMA crossover (SMA 36/180/720) on BANKNIFTY 5s bars, pullback-touch entry
+- **Backtest (12 days):** 96 trades, gross PnL = -3,144 INR, net PnL = -17,083 INR, win rate = 37.5%
+- **Verification:** Strike lock YES, condition alignment YES, first bar IST hour = 9
+
+**First 3 trades:**
+| Entry (IST) | Action | Strike | Entry prem | Exit prem | Same strike? | Hold bars | Gross PnL | Exit reason |
+|---|---|---|---|---|---|---|---|---|
+| 2026-03-04 10:23:50 | BUY_CE | 58700 | 1335.95 | 1344.25 | YES | 3 | +249.00 | TARGET |
+| 2026-03-04 10:24:10 | BUY_CE | 58700 | 1343.55 | 1335.60 | YES | 3 | -238.50 | STOP |
+| 2026-03-04 10:24:25 | BUY_CE | 58700 | 1335.60 | 1328.25 | YES | 1 | -220.50 | STOP |
+
+**Note:** The strategy is technically valid but unprofitable in this window. The 0.03% pullback threshold is generating entries too close to the SMA where micro-noise dominates — the pullback threshold tunable param could be widened to reduce frequency and improve signal quality.

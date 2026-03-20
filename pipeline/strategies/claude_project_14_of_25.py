@@ -1,3 +1,4 @@
+# AUDIT FIX: short_entry was missing vol_ok filter, causing 3x more short signals than long signals (1915 vs 597). Added vol_ok to match long_entry logic.
 """Bollinger Band Squeeze Breakout — claude_project_14_of_25
 
 Thesis: When Bollinger Band width contracts to the lowest percentile (squeeze),
@@ -95,7 +96,7 @@ class Strategy(BaseStrategy):
 
         # ── Entry ──
         long_entry = squeeze & (close > bb_upper) & vol_ok & vix_ok
-        short_entry = squeeze & (close < bb_lower) & vix_ok
+        short_entry = squeeze & (close < bb_lower) & vol_ok & vix_ok
 
         # ── Signal exit: close crosses SMA(20) ──
         signal_exit_long = close < sma20

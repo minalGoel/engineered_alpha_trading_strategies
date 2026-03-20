@@ -1,0 +1,102 @@
+{
+  "name": "vwap_overshoot_fade_001",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "exhaustion", "early_session", "range_bound"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_135.json",
+  "original_name": "vwap_overshoot_fade_001",
+  "mechanism": "On NIFTY, when the index drifts 0.3%+ below (or above) session VWAP in a low-ADX tape, the move is driven by algorithmic momentum triggers and retail chase flow — not institutional directional conviction. RSI(24) (a 2-minute exhaustion read at 5s bars) hitting below 15 or above 85 signals that micro-momentum is fully spent and no new sellers/buyers are stepping in. VWAP-benchmarked institutional desks then begin rebalancing aggressively — fills at 0.3% from VWAP give them significant benchmark outperformance, creating strong buy/sell pressure back toward VWAP. The low ADX(36) filter (3-minute trend strength < 22) ensures no large TWAP/VWAP execution is underway, which would override the reversion tendency.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-11:15 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-5",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap_session",
+      "formula": "VWAP(close, volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative VWAP resets each session — no scaling needed. This is the fair value anchor. NIFTY's institutional VWAP-benchmarked algos create strong magnetic pull at deviations > 0.3% because every fill closer to VWAP improves their benchmark performance."
+    },
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "RSI(24) = 24 × 5s = 2 minutes — preserves the EXACT same time window as RSI(2) on 1-minute bars in the original (2 × 1-min = 2 min). We are not scaling by 12x; we are mapping the same 2-minute exhaustion window. RSI(2) in the original fires when just 2 consecutive 1-min candles are strongly directional; RSI(24) over 2 minutes detects the same sustained micro-trend at 5s resolution."
+    },
+    {
+      "name": "adx_36",
+      "formula": "ADX(high, low, close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "ADX(36) = 36 × 5s = 3 minutes. The original used ADX(14) on 1-min = 14 minutes. We COMPRESS to 3 minutes because our hold time is 15-90s — we need the CURRENT 3-minute regime, not what the market was doing 14 minutes ago. ADX < 22 at 3-minute resolution indicates no active institutional directional program running, which is the necessary condition for VWAP reversion to dominate."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_dev < -0.003 (NIFTY >= 0.3% below session VWAP, ~67 pts at 22500)",
+        "rsi_24 < 15.0 (2-minute RSI exhausted to oversold extreme)",
+        "adx_36 < 22 (3-minute tape is range-bound, no active directional flow)"
+      ],
+      "confirmation": "All three conditions simultaneously in early session"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_dev > 0.003 (NIFTY >= 0.3% above session VWAP, ~67 pts at 22500)",
+        "rsi_24 > 85.0 (2-minute RSI exhausted to overbought extreme)",
+        "adx_36 < 22 (3-minute tape is range-bound, no active directional flow)"
+      ],
+      "confirmation": "All three conditions simultaneously in early session"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "If NIFTY moves another 8 spot points FURTHER from VWAP after entry (4 option pts at delta ~0.5), the overshoot is news-driven or has broken the range-bound thesis — at a 30-second horizon, 8 additional spot points signals the RSI exhaustion read was wrong. NIFTY 15-30s moves are typically 1-3 pts in range-bound conditions; a 4pt adverse move is a clear thesis invalidation.",
+    "target_points": 7,
+    "target_rationale": "A 0.3% NIFTY deviation (~67 pts) in range-bound conditions reverts 30-50% toward VWAP within 60-90 seconds. Capturing 14 spot points (7 option pts at delta ~0.5) is ~20% of the total deviation, which is conservative and reliably achievable — the first leg of VWAP reversion. At 1-minute horizon, typical NIFTY options move 3-7 pts; 7 pts targets the upper end of this range.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 11:15 IST (session_end for this strategy)"
+  },
+  "filters": {
+    "vix_filter": "none — VIX regime does not differentiate early-session VWAP exhaustion setups",
+    "time_filter": "09:20-11:15 IST only — opening inventory correction window; VWAP reversion thesis weakens after 11:15 as price has had time to establish directional trends",
+    "volume_filter": "implicit via VWAP computation — low-volume bars produce noisy VWAP deviations but the RSI filter handles this",
+    "trend_filter": "adx_36 < 22 — no active 3-minute directional trend",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.55,
+    "profit_factor_estimate": 1.95,
+    "edge_decay_risk": "medium — works best in choppy open; deteriorates on gap-and-go days when VWAP never gets tested from below"
+  },
+  "adaptation_notes": "Three major changes from the original equity strategy: (1) RSI(2) on 1-min → RSI(24) on 5s: exact same 2-minute window, not a 12x scale. The key is preserving the 'very short-term exhaustion' reading, not the bar count. (2) ADX(14) on 1-min → ADX(36) on 5s: COMPRESSED from 14-min to 3-min because we hold 15-90s. The original's 14-minute ADX was context for a 5-10 min hold; our 3-minute ADX is context for a 15-90s hold — proportionally matched. (3) Relative volume, Bollinger bands, and index-return filter removed: index volume is noisy and incomparable bar-to-bar; Bollinger bands are redundant with VWAP deviation + low ADX; the 'index must be flat' filter from the original cannot apply since we ARE the index — ADX serves the same purpose of ensuring no macro directional flow. VWAP deviation threshold tightened from 0.5% to 0.3% because NIFTY as an index oscillates with smaller per-bar deviations than individual FnO stocks, and 0.3% on NIFTY already represents 67+ spot points — a meaningful overshoot generating 3-5 trades/day in early session.",
+  "weaknesses": [
+    "On gap-and-go days NIFTY may gap away from VWAP and never return in the early session window, generating zero trades",
+    "RSI(24) at 5s resolution is sensitive to 2-minute micro-trends; a single large 5s candle can spike RSI above 85 without a genuine exhaustion condition",
+    "ADX(36) = 3 minutes may lag actual regime shifts; a breakout can be underway for 30-60s before ADX crosses 22"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_135.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-10 bars (5-10 min)",
+    "original_indicators": ["vwap", "rsi_2", "adx_14", "bollinger_bands_20", "rel_volume_20", "index_return_15"],
+    "original_stop": "0.45% from entry",
+    "original_target": "session VWAP"
+  }
+}

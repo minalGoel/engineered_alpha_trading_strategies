@@ -1,0 +1,162 @@
+{
+  "name": "squeeze_release_breakout_001",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "volatility", "squeeze", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_134.json",
+  "original_name": "squeeze_release_breakout_001",
+  "mechanism": "On NIFTY, when Bollinger Bands (2-minute window) compress inside Keltner Channels, institutional algorithms have temporarily suspended directional activity and resting limit orders are stacked symmetrically around a tight range. This equilibrium accumulates directional pressure. When price breaks above the 24-bar rolling high with 90-second and 3-minute EMAs both aligned bullishly and above-average volume participation, algorithmic TWAP/VWAP flow initiates a new directional wave, typically carrying NIFTY 15-25 spot points in the first 60-90 seconds before the next equilibrium forms. The volume surge confirms that institutional orders are actively absorbing supply (or demand) rather than a random spike through the compression range.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "bb_upper_24",
+      "formula": "SMA(close, 24) + 2 * STDDEV(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24-bar (2-min) Bollinger Band upper envelope. NOT 12x blind (which would give 240 bars = same 20-min window as original). Compressed to 2 min because we hold 15-90s: we need to detect micro-compressions at the same timescale as our hold, not session-level consolidations."
+    },
+    {
+      "name": "bb_lower_24",
+      "formula": "SMA(close, 24) - 2 * STDDEV(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Lower Bollinger Band envelope, same 2-min window."
+    },
+    {
+      "name": "kc_upper_24",
+      "formula": "EMA(close, 24) + 1.5 * ATR(24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Keltner Channel upper. ATR(24) captures 2-min volatility regime. BB inside KC = squeeze state."
+    },
+    {
+      "name": "kc_lower_24",
+      "formula": "EMA(close, 24) - 1.5 * ATR(24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Keltner Channel lower. BB inside KC defines the compression equilibrium."
+    },
+    {
+      "name": "squeeze_on",
+      "formula": "bb_upper_24 < kc_upper_24 AND bb_lower_24 > kc_lower_24",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Compression state flag. True when BB entirely inside KC. We require this to have been True in at least 3 of the 6 bars immediately preceding entry — allowing the release to begin without requiring the squeeze to still be active at the exact entry bar."
+    },
+    {
+      "name": "squeeze_high_24",
+      "formula": "MAX(high, 24) over [i-24, i) — excludes current bar",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-min breakout ceiling. Break of this level by the current close confirms the release is directional, not a wick. Excludes current bar to prevent current-bar high from trivially equaling squeeze_high."
+    },
+    {
+      "name": "squeeze_low_24",
+      "formula": "MIN(low, 24) over [i-24, i) — excludes current bar",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-min breakout floor for bearish releases."
+    },
+    {
+      "name": "ema_short_18",
+      "formula": "EMA(close, 18)",
+      "lookback": 18,
+      "computed_on": "spot",
+      "purpose": "90-second fast EMA. Matches maximum hold time (18 bars × 5s = 90s), ensuring the short-term directional signal aligns with the trade duration. Original EMA(9) was 9 min — far too slow for a 15-90s hold."
+    },
+    {
+      "name": "ema_long_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute slow EMA. 2× the short EMA period, sufficient context to define the micro-trend direction. Original EMA(21) was 21 min; at 5s resolution the 3-min slow EMA captures the same 'recently established direction' concept at the trade's timescale."
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP() cumulative from 09:15, resets each session",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Intraday fair value anchor. No scaling — VWAP is a cumulative measure that resets each session. Squeeze breakouts above VWAP are more likely to be institutional buy flow; below VWAP more likely to be institutional sell flow."
+    },
+    {
+      "name": "rel_volume_24",
+      "formula": "volume / SMA(volume, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Volume participation filter relative to the 2-min compression window baseline. A breakout with rel_volume >= 1.3 confirms institutional order flow is entering, not a thin-market wick through the range."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "squeeze_on was True in >= 3 of last 6 bars (recent compression present)",
+        "close > squeeze_high_24 (break above 2-min range ceiling)",
+        "ema_short_18 > ema_long_36 (micro-trend bullish)",
+        "close > vwap (above session fair value)",
+        "rel_volume_24 >= 1.3 (volume expansion confirming institutional participation)"
+      ],
+      "confirmation": "all conditions met simultaneously on 5s close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "squeeze_on was True in >= 3 of last 6 bars (recent compression present)",
+        "close < squeeze_low_24 (break below 2-min range floor)",
+        "ema_short_18 < ema_long_36 (micro-trend bearish)",
+        "close < vwap (below session fair value)",
+        "rel_volume_24 >= 1.3 (volume expansion confirming institutional participation)"
+      ],
+      "confirmation": "all conditions met simultaneously on 5s close"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "NIFTY squeeze breakouts retrace 8-12 spot points on false breaks. At delta 0.5, that's 4-6 option points. Stopping at 4 points means we exit if NIFTY retraces 8 spot points — the full compression range width — which signals the release thesis has failed. Calibrated to 30-second typical NIFTY moves (2-5 option pts per CONVENTIONS reference table).",
+    "target_points": 7,
+    "target_rationale": "First-leg NIFTY squeeze releases carry 15-25 spot points within 60-90 seconds (7-12 option pts at delta 0.5). Targeting 7 points captures the 50th percentile expected move, giving 1:1.75 R:R. Consistent with 1-minute typical NIFTY moves of 3-7 option pts from the CONVENTIONS calibration table.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — squeeze pattern is self-filtering; low-vol regimes produce fewer valid squeezes",
+    "time_filter": "10:00-15:20 IST only — avoids 09:15-10:00 opening noise where BB/KC are unstable with few bars",
+    "volume_filter": "rel_volume_24 >= 1.3 — mandatory participation filter",
+    "trend_filter": "ema_short_18 > ema_long_36 aligns trade with micro-trend; vwap alignment provides session context",
+    "spread_filter": "none — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.61,
+    "edge_decay_risk": "medium — squeeze patterns are well-known; crowded setups may fail; NIFTY regime shifts (trending vs choppy) affect frequency"
+  },
+  "adaptation_notes": "Original is a stock universe strategy (nifty500 top 200) at 1-min bars, hold 8-30 min. Converted to single-index NIFTY at 5s bars, hold 15-90s. Three key changes: (1) Squeeze window compressed from 20 bars (20 min) to 24 bars (2 min) — same time concept but calibrated for 5s resolution and 90s hold; (2) EMA periods compressed from 9/21 min to 90s/3 min to match the trade duration; (3) Relative volume uses 24-bar window (matching squeeze period) instead of 20-bar. VWAP and squeeze structure are identical — both are valid at any frequency. The squeeze pattern works on NIFTY because the index absorbs institutional resting orders in the same way individual stocks do, but with higher liquidity and smoother execution.",
+  "weaknesses": [
+    "Squeeze patterns on NIFTY 5s bars are frequent but many are micro-noise; false release signals in choppy sessions will generate losing trades",
+    "Volume on NIFTY index is a proxy (futures volume drives the index) — rel_volume filter may be noisy",
+    "EMA crossover at 90s/3 min is susceptible to whipsaws in fast-moving sessions"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_134.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "8-30 bars (8-30 min)",
+    "original_indicators": ["VWAP", "ATR(14)", "rel_volume(20)", "BB(20)", "KC(20)", "squeeze_on", "EMA(9)", "EMA(21)", "HIGHEST(high,10)", "LOWEST(low,10)"],
+    "original_stop": "opposite side of squeeze box",
+    "original_target": "2R fixed with measured-move runner"
+  }
+}

@@ -1,3 +1,3 @@
 # Engineered Alpha Trading Strategies Pipeline
-"""Complete backtesting pipeline for 358 trading strategies across 206 NSE stocks."""
-__version__ = "1.0.0"
+"""5-second index option trading pipeline for NIFTY/BANKNIFTY."""
+__version__ = "2.0.0"

@@ -1,396 +1,278 @@
-"""Data loading — read Parquet files, merge VIX/index, assign day_id."""
+"""Data loading for 5-second index option trading.
+
+Loads spot_candles.parquet and option_candles.parquet from 5second_data/.
+Converts UTC timestamps to IST using convert_time_zone (NOT replace_time_zone).
+"""
 from __future__ import annotations
 import polars as pl
+import numpy as np
 from pathlib import Path
 from typing import Optional
 import logging
-import orjson
 
 from pipeline.config import (
-    DATA_DIR, TIMEFRAME_FILES, VIX_FILES, INDEX_FILES, STOCKS_LIST_FILE,
-    MARKET_OPEN_H, MARKET_OPEN_M, TRAIN_END, TEST_START,
+    FIVE_SEC_DIR, SPOT_FILE, OPTION_FILE,
+    NIFTY_SYMBOL, BANKNIFTY_SYMBOL, VIX_SYMBOL,
 )
 
 log = logging.getLogger(__name__)
 
 
-def load_stocks_list() -> list[str]:
-    """Return sorted list of available stock symbols."""
-    path = STOCKS_LIST_FILE
-    if not path.exists():
-        log.warning("stocks_list.parquet not found; will infer from data")
-        return []
-    df = pl.read_parquet(path)
-    # Try common column names
-    for col in ("symbol", "Symbol", "SYMBOL", "ticker", "Ticker"):
-        if col in df.columns:
-            return sorted(df[col].drop_nulls().unique().to_list())
-    # Fallback: first string column
-    for col in df.columns:
-        if df[col].dtype == pl.Utf8:
-            return sorted(df[col].drop_nulls().unique().to_list())
-    return []
+def _utc_to_ist(df: pl.DataFrame, ts_col: str = "ts") -> pl.DataFrame:
+    """Convert UTC timestamps to IST (naive) and rename to 'datetime'.
 
-
-def _normalise_datetime_col(df: pl.DataFrame) -> pl.DataFrame:
-    """Ensure a 'datetime' column exists as pl.Datetime."""
-    # Try common column names
-    dt_candidates = ["datetime", "Datetime", "date", "Date", "timestamp", "Timestamp"]
-    found = None
-    for c in dt_candidates:
-        if c in df.columns:
-            found = c
-            break
-    if found is None:
-        raise ValueError(f"No datetime column found in columns: {df.columns}")
-
-    if found != "datetime":
-        df = df.rename({found: "datetime"})
-
-    # Cast to datetime if needed
-    if df["datetime"].dtype == pl.Utf8:
-        df = df.with_columns(pl.col("datetime").str.to_datetime().alias("datetime"))
-    elif df["datetime"].dtype == pl.Date:
-        df = df.with_columns(pl.col("datetime").cast(pl.Datetime).alias("datetime"))
-    return df
-
-
-def _normalise_symbol_col(df: pl.DataFrame) -> pl.DataFrame:
-    """Ensure a 'symbol' column exists."""
-    for c in ("symbol", "Symbol", "SYMBOL", "ticker", "Ticker"):
-        if c in df.columns:
-            if c != "symbol":
-                df = df.rename({c: "symbol"})
-            return df
-    return df  # No symbol column (e.g., VIX/index data)
-
-
-def _normalise_ohlcv_cols(df: pl.DataFrame) -> pl.DataFrame:
-    """Ensure lowercase ohlcv column names."""
-    rename_map = {}
-    for expected in ("open", "high", "low", "close", "volume"):
-        for c in df.columns:
-            if c.lower() == expected and c != expected:
-                rename_map[c] = expected
-                break
-    if rename_map:
-        df = df.rename(rename_map)
-    return df
-
-
-def _strip_timezone(df: pl.DataFrame) -> pl.DataFrame:
-    """Convert timezone-aware datetime to naive IST, for safe comparisons.
-
-    The parquet data stores timestamps in UTC. We must convert to IST
-    *before* stripping the timezone label so that hour/minute extraction
-    (used for session window, EOD flatten) reflects IST market hours.
+    CRITICAL: Uses convert_time_zone then strips timezone.
+    NEVER use replace_time_zone alone — that was a prior bug.
     """
-    if "datetime" in df.columns:
-        dt_dtype = df["datetime"].dtype
-        if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
-            df = df.with_columns(
-                pl.col("datetime")
-                .dt.convert_time_zone("Asia/Kolkata")
-                .dt.replace_time_zone(None)
-                .alias("datetime")
-            )
-    return df
+    dt_dtype = df[ts_col].dtype
 
-
-def assign_day_id(df: pl.DataFrame) -> pl.DataFrame:
-    """Assign integer day_id based on calendar date of each bar."""
-    df = df.with_columns(
-        pl.col("datetime").dt.date().alias("_date")
-    )
-    # Map each unique date to an integer
-    dates = df["_date"].unique().sort()
-    date_map = {d: i for i, d in enumerate(dates.to_list())}
-    df = df.with_columns(
-        pl.col("_date").replace_strict(date_map, default=-1).cast(pl.Int32).alias("day_id")
-    )
-    df = df.drop("_date")
-    return df
-
-
-def _time_in_minutes(dt_col: pl.Expr) -> pl.Expr:
-    """Convert datetime to minutes since midnight."""
-    return dt_col.dt.hour() * 60 + dt_col.dt.minute()
-
-
-def load_stock_data(
-    timeframe: str,
-    symbol: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> Optional[pl.DataFrame]:
-    """Load OHLCV data for one stock at the given timeframe.
-
-    Returns DataFrame with columns: datetime, open, high, low, close, volume, day_id
-    or None if data unavailable.
-    """
-    path = TIMEFRAME_FILES.get(timeframe)
-    if path is None or not path.exists():
-        log.warning("No data file for timeframe %s", timeframe)
-        return None
-
-    try:
-        # Use scan for lazy filtering
-        lf = pl.scan_parquet(path)
-
-        # Normalise column names
-        cols = lf.collect_schema().names()
-        rename = {}
-        for c in cols:
-            low = c.lower()
-            if low in ("symbol", "open", "high", "low", "close", "volume"):
-                if c != low:
-                    rename[c] = low
-            elif low in ("datetime", "date", "timestamp"):
-                if c != "datetime":
-                    rename[c] = "datetime"
-        if rename:
-            lf = lf.rename(rename)
-
-        # Filter by symbol
-        schema_names = lf.collect_schema().names()
-        if "symbol" in schema_names:
-            lf = lf.filter(pl.col("symbol") == symbol)
-
-        # Filter by date range (timezone-safe: convert UTC→IST then strip)
-        if start_date or end_date:
-            dt_dtype = lf.collect_schema()["datetime"]
-            # If the column is tz-aware, convert to IST then strip timezone
-            if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
-                lf = lf.with_columns(
-                    pl.col("datetime")
-                    .dt.convert_time_zone("Asia/Kolkata")
-                    .dt.replace_time_zone(None)
-                    .alias("datetime")
-                )
-        if start_date:
-            lf = lf.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())
-        if end_date:
-            lf = lf.filter(pl.col("datetime") <= pl.lit(end_date + " 23:59:59").str.to_datetime())
-
-        df = lf.collect()
-        if df.is_empty():
-            return None
-
-        df = _normalise_ohlcv_cols(df)
-        df = df.sort("datetime")
-        # Drop duplicate timestamps — keep last (most recent correction)
-        df = df.unique(subset=["datetime"], keep="last", maintain_order=True)
-        df = assign_day_id(df)
-        return df
-
-    except Exception as e:
-        log.error("Failed to load %s/%s: %s", timeframe, symbol, e)
-        return None
-
-
-def load_vix_data(
-    timeframe: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> Optional[pl.DataFrame]:
-    """Load India VIX data. Returns DataFrame with datetime, close (as vix)."""
-    path = VIX_FILES.get(timeframe)
-    if path is None or not path.exists():
-        # Fallback: try closest available timeframe
-        for tf in ("1min", "5min", "15min", "30min", "1h"):
-            if VIX_FILES.get(tf, Path()).exists():
-                path = VIX_FILES[tf]
-                break
-        if path is None or not path.exists():
-            log.warning("No VIX data found")
-            return None
-
-    try:
-        df = pl.read_parquet(path)
-        df = _normalise_datetime_col(df)
-        df = _normalise_ohlcv_cols(df)
-        df = _strip_timezone(df)
-
-        if start_date:
-            df = df.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())
-        if end_date:
-            df = df.filter(pl.col("datetime") <= pl.lit(end_date + " 23:59:59").str.to_datetime())
-
-        # Keep only datetime and close, rename close to vix
-        if "close" in df.columns:
-            df = df.select(["datetime", "close"]).rename({"close": "vix"})
-        elif "Close" in df.columns:
-            df = df.select(["datetime", "Close"]).rename({"Close": "vix"})
-        else:
-            # Use first numeric column
-            for c in df.columns:
-                if c != "datetime" and df[c].dtype in (pl.Float64, pl.Float32, pl.Int64):
-                    df = df.select(["datetime", c]).rename({c: "vix"})
-                    break
-
-        df = df.sort("datetime")
-        return df
-    except Exception as e:
-        log.error("Failed to load VIX: %s", e)
-        return None
-
-
-def load_index_data(
-    timeframe: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> Optional[pl.DataFrame]:
-    """Load NIFTY 50 index data."""
-    path = INDEX_FILES.get(timeframe)
-    if path is None or not path.exists():
-        for tf in ("1min", "5min", "15min", "30min", "1h"):
-            if INDEX_FILES.get(tf, Path()).exists():
-                path = INDEX_FILES[tf]
-                break
-        if path is None or not path.exists():
-            log.warning("No index data found")
-            return None
-
-    try:
-        df = pl.read_parquet(path)
-        df = _normalise_datetime_col(df)
-        df = _normalise_ohlcv_cols(df)
-        df = _strip_timezone(df)
-
-        if start_date:
-            df = df.filter(pl.col("datetime") >= pl.lit(start_date).str.to_datetime())
-        if end_date:
-            df = df.filter(pl.col("datetime") <= pl.lit(end_date + " 23:59:59").str.to_datetime())
-
-        # Prefix columns to avoid clash
-        rename_map = {}
-        for c in ("open", "high", "low", "close", "volume"):
-            if c in df.columns:
-                rename_map[c] = f"index_{c}"
-        if rename_map:
-            df = df.rename(rename_map)
-
-        df = df.sort("datetime")
-        return df
-    except Exception as e:
-        log.error("Failed to load index: %s", e)
-        return None
-
-
-def merge_vix_index(
-    stock_df: pl.DataFrame,
-    vix_df: Optional[pl.DataFrame],
-    index_df: Optional[pl.DataFrame],
-) -> pl.DataFrame:
-    """Join VIX and index data onto stock data using asof join (nearest prior bar)."""
-    if vix_df is not None and not vix_df.is_empty():
-        stock_df = stock_df.join_asof(
-            vix_df.sort("datetime"),
-            on="datetime",
-            strategy="backward",
+    if hasattr(dt_dtype, "time_zone") and dt_dtype.time_zone is not None:
+        # Already tz-aware: convert to IST then strip
+        df = df.with_columns(
+            pl.col(ts_col)
+            .dt.convert_time_zone("Asia/Kolkata")
+            .dt.replace_time_zone(None)
+            .alias("datetime")
         )
     else:
-        stock_df = stock_df.with_columns(pl.lit(None).cast(pl.Float64).alias("vix"))
+        # Naive timestamps assumed UTC — attach UTC then convert
+        df = df.with_columns(
+            pl.col(ts_col)
+            .dt.replace_time_zone("UTC")
+            .dt.convert_time_zone("Asia/Kolkata")
+            .dt.replace_time_zone(None)
+            .alias("datetime")
+        )
 
-    if index_df is not None and not index_df.is_empty():
-        stock_df = stock_df.join_asof(
-            index_df.sort("datetime"),
-            on="datetime",
-            strategy="backward",
+    if ts_col != "datetime":
+        df = df.drop(ts_col)
+    return df
+
+
+def _add_time_columns(df: pl.DataFrame) -> pl.DataFrame:
+    """Add day_id and time_minutes columns."""
+    # day_id from session_date if available, else from datetime
+    if "session_date" in df.columns:
+        dates = df["session_date"].unique().sort()
+        date_map = {d: i for i, d in enumerate(dates.to_list())}
+        df = df.with_columns(
+            pl.col("session_date")
+            .replace_strict(date_map, default=-1)
+            .cast(pl.Int32)
+            .alias("day_id")
         )
     else:
-        for c in ("index_open", "index_high", "index_low", "index_close", "index_volume"):
-            if c not in stock_df.columns:
-                stock_df = stock_df.with_columns(pl.lit(None).cast(pl.Float64).alias(c))
+        df = df.with_columns(
+            pl.col("datetime").dt.date().alias("_date")
+        )
+        dates = df["_date"].unique().sort()
+        date_map = {d: i for i, d in enumerate(dates.to_list())}
+        df = df.with_columns(
+            pl.col("_date")
+            .replace_strict(date_map, default=-1)
+            .cast(pl.Int32)
+            .alias("day_id")
+        )
+        df = df.drop("_date")
 
-    return stock_df
+    # time_minutes = minutes from midnight IST
+    df = df.with_columns(
+        (pl.col("datetime").dt.hour() * 60 + pl.col("datetime").dt.minute())
+        .cast(pl.Int32)
+        .alias("time_minutes")
+    )
+    return df
 
 
-def split_train_test(df: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
-    """Split into training (<=2024-12-31) and test (>=2025-01-01)."""
-    df = _strip_timezone(df)
-    train = df.filter(pl.col("datetime") <= pl.lit(TRAIN_END + " 23:59:59").str.to_datetime())
-    test = df.filter(pl.col("datetime") >= pl.lit(TEST_START).str.to_datetime())
-    return train, test
+def load_spot_data(symbol: str) -> Optional[pl.DataFrame]:
+    """Load 5-second spot candles for one symbol (NIFTY/BANKNIFTY/VIX).
+
+    Returns DataFrame with columns:
+        datetime (IST naive), open, high, low, close, volume,
+        session_date, day_id, time_minutes
+    """
+    if not SPOT_FILE.exists():
+        log.error("Spot data file not found: %s", SPOT_FILE)
+        return None
+
+    df = pl.read_parquet(SPOT_FILE)
+    df = df.filter(pl.col("symbol") == symbol)
+
+    if df.is_empty():
+        log.warning("No spot data for symbol: %s", symbol)
+        return None
+
+    df = _utc_to_ist(df)
+    df = _add_time_columns(df)
+    df = df.sort("datetime")
+
+    # Drop epoch and symbol columns (no longer needed)
+    drop_cols = [c for c in ("epoch", "symbol") if c in df.columns]
+    if drop_cols:
+        df = df.drop(drop_cols)
+
+    return df
 
 
-def get_available_symbols(timeframe: str) -> list[str]:
-    """Get list of symbols available in the given timeframe data file."""
-    path = TIMEFRAME_FILES.get(timeframe)
-    if path is None or not path.exists():
-        return []
-    try:
-        lf = pl.scan_parquet(path)
-        cols = lf.collect_schema().names()
-        sym_col = None
-        for c in ("symbol", "Symbol", "SYMBOL", "ticker"):
-            if c in cols:
-                sym_col = c
-                break
-        if sym_col is None:
-            return []
-        syms = lf.select(pl.col(sym_col).unique()).collect()[sym_col].to_list()
-        return sorted(syms)
-    except Exception as e:
-        log.error("Failed to get symbols for %s: %s", timeframe, e)
-        return []
+def load_option_data(
+    underlying: str,
+    expiry: Optional[str] = None,
+) -> Optional[pl.DataFrame]:
+    """Load 5-second option candles for one underlying.
+
+    Args:
+        underlying: "NSE:NIFTY50-INDEX" or "NSE:NIFTYBANK-INDEX"
+        expiry: Optional expiry date filter (str YYYY-MM-DD)
+
+    Returns DataFrame with columns:
+        symbol, underlying, session_date, expiry, strike, option_type,
+        datetime (IST naive), open, high, low, close, volume, open_interest,
+        day_id, time_minutes
+    """
+    if not OPTION_FILE.exists():
+        log.error("Option data file not found: %s", OPTION_FILE)
+        return None
+
+    lf = pl.scan_parquet(OPTION_FILE)
+    lf = lf.filter(pl.col("underlying") == underlying)
+
+    if expiry is not None:
+        lf = lf.filter(pl.col("expiry") == pl.lit(expiry).str.to_date())
+
+    df = lf.collect()
+    if df.is_empty():
+        log.warning("No option data for underlying: %s", underlying)
+        return None
+
+    df = _utc_to_ist(df)
+    df = _add_time_columns(df)
+    df = df.sort(["strike", "option_type", "expiry", "datetime"])
+
+    # Drop epoch
+    if "epoch" in df.columns:
+        df = df.drop("epoch")
+
+    return df
+
+
+def load_all_data() -> dict:
+    """Load all 5-second data, split by symbol.
+
+    Returns dict with keys:
+        nifty_spot, banknifty_spot, vix,
+        nifty_options, banknifty_options,
+        trading_days (int)
+    """
+    nifty_spot = load_spot_data(NIFTY_SYMBOL)
+    banknifty_spot = load_spot_data(BANKNIFTY_SYMBOL)
+    vix = load_spot_data(VIX_SYMBOL)
+    nifty_options = load_option_data(NIFTY_SYMBOL)
+    banknifty_options = load_option_data(BANKNIFTY_SYMBOL)
+
+    # Count trading days
+    trading_days = 0
+    if nifty_spot is not None:
+        trading_days = nifty_spot["day_id"].n_unique()
+    elif banknifty_spot is not None:
+        trading_days = banknifty_spot["day_id"].n_unique()
+
+    return {
+        "nifty_spot": nifty_spot,
+        "banknifty_spot": banknifty_spot,
+        "vix": vix,
+        "nifty_options": nifty_options,
+        "banknifty_options": banknifty_options,
+        "trading_days": trading_days,
+    }
+
+
+def add_atm_strike(spot_df: pl.DataFrame, step: int) -> pl.DataFrame:
+    """Add ATM strike column to spot data."""
+    return spot_df.with_columns(
+        (pl.col("close") / step).round(0).cast(pl.Float64).mul(step).alias("atm_strike")
+    )
+
+
+def get_nearest_expiry_option(
+    option_df: pl.DataFrame,
+    session_date,
+    strike: float,
+    option_type: str,
+) -> Optional[pl.DataFrame]:
+    """Get option chain for nearest expiry on a given date, strike, and type."""
+    day_opts = option_df.filter(
+        (pl.col("session_date") == session_date) &
+        (pl.col("strike") == strike) &
+        (pl.col("option_type") == option_type)
+    )
+    if day_opts.is_empty():
+        return None
+
+    # Pick nearest expiry
+    nearest_expiry = day_opts["expiry"].min()
+    return day_opts.filter(pl.col("expiry") == nearest_expiry)
+
+
+def split_leave_one_out(
+    spot_df: pl.DataFrame,
+) -> list[tuple[pl.DataFrame, pl.DataFrame]]:
+    """Leave-one-day-out cross-validation splits.
+
+    Returns list of (train_df, test_df) tuples — one per trading day.
+    """
+    day_ids = sorted(spot_df["day_id"].unique().to_list())
+    splits = []
+    for test_day in day_ids:
+        train = spot_df.filter(pl.col("day_id") != test_day)
+        test = spot_df.filter(pl.col("day_id") == test_day)
+        splits.append((train, test))
+    return splits
 
 
 def build_data_inventory() -> dict:
-    """Phase 1: Discover and document all available data."""
+    """Discover and document available 5-second data."""
     inventory = {
-        "timeframes": {},
-        "vix_available": {},
-        "index_available": {},
-        "symbols": [],
+        "spot_file": str(SPOT_FILE),
+        "option_file": str(OPTION_FILE),
+        "spot_exists": SPOT_FILE.exists(),
+        "option_exists": OPTION_FILE.exists(),
     }
 
-    for tf, path in TIMEFRAME_FILES.items():
-        if path.exists():
-            try:
-                lf = pl.scan_parquet(path)
-                schema = {name: str(dtype) for name, dtype in lf.collect_schema().items()}
-                # Find datetime column
-                dt_col = None
-                for c in lf.collect_schema().names():
-                    if c.lower() in ("datetime", "date", "timestamp"):
-                        dt_col = c
-                        break
-                # Get row count and date range
-                if dt_col is not None:
-                    stats = lf.select(
-                        pl.count().alias("rows"),
-                        pl.col(dt_col).min().alias("min_dt"),
-                        pl.col(dt_col).max().alias("max_dt"),
-                    ).collect()
-                else:
-                    stats = lf.select(pl.count().alias("rows")).collect()
-                    stats = stats.with_columns(
-                        pl.lit(None).alias("min_dt"),
-                        pl.lit(None).alias("max_dt"),
-                    )
-                symbols = get_available_symbols(tf)
-                inventory["timeframes"][tf] = {
-                    "file": str(path),
-                    "columns": schema,
-                    "rows": stats["rows"][0],
-                    "date_range": [str(stats["min_dt"][0]), str(stats["max_dt"][0])],
-                    "symbols_count": len(symbols),
-                }
-                if tf == "1min":  # Use 1min as primary symbol list
-                    inventory["symbols"] = symbols
-            except Exception as e:
-                inventory["timeframes"][tf] = {"file": str(path), "error": str(e)}
-        else:
-            inventory["timeframes"][tf] = {"file": str(path), "exists": False}
+    if SPOT_FILE.exists():
+        spot = pl.read_parquet(SPOT_FILE)
+        inventory["spot_rows"] = len(spot)
+        inventory["spot_symbols"] = spot["symbol"].unique().to_list()
+        inventory["spot_date_range"] = [
+            str(spot["session_date"].min()),
+            str(spot["session_date"].max()),
+        ]
 
-    for tf, path in VIX_FILES.items():
-        inventory["vix_available"][tf] = path.exists()
-
-    for tf, path in INDEX_FILES.items():
-        inventory["index_available"][tf] = path.exists()
-
-    if not inventory["symbols"]:
-        inventory["symbols"] = load_stocks_list()
+    if OPTION_FILE.exists():
+        opt = pl.read_parquet(OPTION_FILE)
+        inventory["option_rows"] = len(opt)
+        inventory["option_underlyings"] = opt["underlying"].unique().to_list()
+        inventory["option_expiries"] = [str(d) for d in sorted(opt["expiry"].unique().to_list())]
+        inventory["option_types"] = opt["option_type"].unique().to_list()
 
     return inventory
+
+
+def integration_test():
+    """Quick sanity check: first bar hour in IST should be 9."""
+    spot = load_spot_data(NIFTY_SYMBOL)
+    if spot is None:
+        raise RuntimeError("Cannot load NIFTY spot data for integration test")
+
+    first_hour = spot["datetime"].head(1).dt.hour().to_list()[0]
+    assert first_hour == 9, (
+        f"CRITICAL: First bar hour is {first_hour}, expected 9 (IST). "
+        f"UTC→IST conversion is broken!"
+    )
+    log.info("Integration test passed: first bar hour = %d (IST)", first_hour)
+
+    # Check time_minutes
+    first_tm = spot["time_minutes"].head(1).to_list()[0]
+    assert 555 <= first_tm <= 570, (
+        f"First bar time_minutes={first_tm}, expected ~555-570 (09:15-09:30 IST)"
+    )
+    log.info("Integration test passed: first bar time_minutes = %d", first_tm)

@@ -1,29 +1,28 @@
 {
   "name": "vol_surface_signal_v1",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "claude-4.6-opus-fast",
   "tags": [
     "volatility",
     "vol_surface",
     "skew",
     "cross_strike",
-    "intraday"
+    "index_options",
+    "5s"
   ],
-  "thesis": "The NIFTY option volatility surface (IV across strikes and expiries) contains predictive information for intraday equity direction. Specifically, the put-call IV skew \u2014 the difference between OTM put IV and OTM call IV at the same delta \u2014 signals institutional hedging demand. When 25-delta put IV is >5 vol points above 25-delta call IV (steep skew), institutions are paying up for downside protection, suggesting elevated tail risk. Paradoxically, extremely steep skew (>8 vol points) tends to precede intraday rallies as the feared event doesn't materialize and the skew premium unwinds. The strategy fades extreme skew levels, buying NIFTY components when put skew is extreme and selling when it normalizes.",
-  "universe": "NIFTY 50 top-5 weighted stocks or NIFTYBEES on NSE",
-  "stock_filter": "use NIFTYBEES for simplicity; requires NIFTY weekly option chain data",
-  "timeframe": "1min",
-  "session": "09:30-15:15 IST",
-  "hold_time": "60-240 mins (skew normalization is slow)",
-  "max_hold_bars": 300,
-  "trades_per_day": "0-1",
-  "max_trades_per_day": 1,
+  "thesis": "The NIFTY option volatility surface (IV across strikes and expiries) contains predictive information for intraday index direction. Specifically, the put-call IV skew -- the difference between OTM put IV and OTM call IV at the same delta -- signals institutional hedging demand. When 25-delta put IV is >5 vol points above 25-delta call IV (steep skew), institutions are paying up for downside protection, suggesting elevated tail risk. Paradoxically, extremely steep skew (>8 vol points) tends to precede intraday rallies as the feared event doesn't materialize and the skew premium unwinds. The strategy fades extreme skew levels by buying NIFTY50 CE when put skew is extreme and buying PE when skew compresses to complacency.",
+  "universe": "NIFTY50",
+  "timeframe": "5s",
+  "hold_time": "5-60 seconds",
+  "max_hold_bars": 12,
+  "session": "09:20-15:25 IST",
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 2,
   "data": {
-    "ohlcv_1min": true,
-    "vwap": true,
-    "vix": true,
-    "index": "NIFTY_50",
+    "ohlcv_5s": true,
     "option_chain": true,
+    "vix": true,
+    "index": "NIFTY50",
     "order_book": false,
     "other": [
       "NIFTY_option_IV_surface_by_strike",
@@ -35,58 +34,66 @@
     "put_IV_25d = implied_vol(NIFTY_25_delta_put)",
     "call_IV_25d = implied_vol(NIFTY_25_delta_call)",
     "skew = put_IV_25d - call_IV_25d  # in vol points",
-    "skew_z = (skew - SMA(skew, 20*375)) / rolling_std(skew, 20*375)",
-    "skew_rate = (skew - skew[30]) / 30  # skew change per minute",
+    "skew_z = (skew - SMA(skew, 20_days)) / rolling_std(skew, 20_days)",
+    "skew_rate_360 = (skew - skew[360]) / 360  # skew change per 5s bar over 30 min (360 bars)",
     "ATM_IV = implied_vol(NIFTY_ATM_option)",
     "term_structure = IV_next_week_ATM - IV_this_week_ATM  # term structure slope",
-    "NIFTY_RSI_30 = RSI(NIFTY_close, 30)"
+    "NIFTY_RSI_360 = RSI(NIFTY_close, 360)  # 360 bars = 30 min at 5s"
   ],
   "entry": {
     "long": {
+      "signal": "BUY_CE",
       "conditions": [
-        "skew_z > 2.0 (extreme put skew \u2014 institutions over-hedging)",
+        "skew_z > 2.0 (extreme put skew -- institutions over-hedging)",
         "skew > 8 vol_points (absolute skew threshold)",
-        "NIFTY_RSI_30 < 40 (NIFTY has pulled back, confirming fear)",
-        "term_structure > 0 (contango \u2014 not a crisis term structure)"
+        "NIFTY_RSI_360 < 40 (NIFTY has pulled back, confirming fear)",
+        "term_structure > 0 (contango -- not a crisis term structure)"
       ],
-      "confirmation": "skew starts declining (skew_rate < 0 for 5 consecutive bars) \u2014 fear premium unwinding"
+      "confirmation": "skew starts declining (skew_rate_360 < 0 for 60 consecutive 5s bars = 5 min) -- fear premium unwinding"
     },
     "short": {
+      "signal": "BUY_PE",
       "conditions": [
-        "skew_z < -1.5 (skew compressed \u2014 complacency, calls bid up)",
+        "skew_z < -1.5 (skew compressed -- complacency, calls bid up)",
         "skew < 2 vol_points (low absolute skew)",
-        "NIFTY_RSI_30 > 65 (NIFTY extended up)",
-        "term_structure < 0 (backwardation \u2014 unusual, risk signal)"
+        "NIFTY_RSI_360 > 65 (NIFTY extended up)",
+        "term_structure < 0 (backwardation -- unusual, risk signal)"
       ],
-      "confirmation": "skew starts rising (skew_rate > 0 for 5 consecutive bars) \u2014 complacency reversing"
+      "confirmation": "skew starts rising (skew_rate_360 > 0 for 60 consecutive 5s bars = 5 min) -- complacency reversing"
     },
-    "entry_price": "market order on NIFTYBEES at skew reversal confirmation"
+    "entry_price": "market order on NIFTY50 ATM CE/PE at skew reversal confirmation"
   },
   "exit": {
-    "target": "skew_z normalizes to 0.5 (long) or -0.5 (short); OR NIFTY moves 0.5% in trade direction",
-    "stop_loss": "skew_z exceeds 3.5 (long) suggesting genuine crisis OR NIFTY drops 0.5% from entry",
-    "trailing_stop": "after 0.3% gain, trail at 0.15% below best",
-    "time_stop": "hold for full session if skew still normalizing; exit if >240 mins without progress",
-    "eod_rule": "flatten by 15:15 IST",
-    "signal_exit": "if ATM_IV spikes > 3 vol points in 30 mins while in long position, exit (genuine risk event)"
+    "target": "skew_z normalizes to 0.5 (long) or -0.5 (short); OR option premium moves 0.5% in trade direction",
+    "stop_loss": "skew_z exceeds 3.5 (long) suggesting genuine crisis OR option premium drops 0.5% from entry",
+    "trailing_stop": "after 0.3% gain on premium, trail at 0.15% below best premium",
+    "time_stop": "exit after 12 bars (60 seconds) if no progress",
+    "eod_rule": "flatten by 15:25 IST",
+    "signal_exit": "if ATM_IV spikes > 3 vol points in 360 bars (30 min) while in BUY_CE position, exit (genuine risk event)"
   },
   "risk": {
     "capital_per_trade": 100000,
     "max_risk_per_trade_pct": 0.5,
-    "position_sizing": "skew-adjusted: base_size * (1 - 0.05 * (skew - 5)) \u2014 smaller when skew is extreme",
+    "position_sizing": "skew-adjusted: base_size * (1 - 0.05 * (skew - 5)) -- smaller when skew is extreme",
     "max_open_positions": 1,
     "max_daily_loss_inr": 3000,
     "max_portfolio_heat_pct": 2.0
   },
+  "cost_model": {
+    "spread_points": 1.5,
+    "stt_rate": 0.000625,
+    "brokerage_per_order": 20,
+    "exchange_per_lot": 5
+  },
   "filters": {
     "vix_filter": "India_VIX between 14 and 25 (need options to be liquid for accurate IV)",
-    "time_filter": "enter 09:30-13:00; skew signals need session time to play out",
+    "time_filter": "enter 09:20-14:00; skew signals need session time to play out",
     "volume_filter": "NIFTY option volume at 25-delta strikes > 1000 contracts (ensuring IV is reliable)",
     "trend_filter": "NIFTY not limit-down or in circuit-breaker mode",
-    "spread_filter": "NIFTYBEES bid-ask < 0.08%",
+    "spread_filter": "option bid-ask < 1.5 points",
     "event_filter": "skip on F&O expiry day (skew is mechanically distorted by rollover); skip budget, RBI",
     "other_filters": [
-      "option IV data must be real-time (not delayed >5 min); stale IV creates false skew signals"
+      "option IV data must be real-time (not delayed >5 sec); stale IV creates false skew signals"
     ]
   },
   "edge": {
@@ -94,21 +101,18 @@
     "win_rate_estimate": 0.62,
     "avg_winner_to_loser": 1.1,
     "profit_factor_estimate": 1.79,
-    "edge_decay_risk": "moderate \u2014 as more traders access real-time option analytics, the skew signal may weaken"
+    "edge_decay_risk": "moderate -- as more traders access real-time option analytics, the skew signal may weaken"
   },
-  "costs": {
-    "slippage_bps_per_side": 3,
-    "brokerage": "zerodha_intraday",
-    "stt_bps": 2.5,
-    "exchange_charges_bps": 0.5
-  },
+  "mechanism": "At 5-second frequency, the vol surface signal benefits from detecting skew micro-reversals with precision. The skew (put_IV - call_IV) updates as option chain snapshots refresh every few seconds. At 5s resolution, we detect the moment when a previously steepening skew begins to flatten -- this inflection point is when the CE premium is about to rise (as put IV compresses, the overall fear premium unwinds, lifting the index). Entering at the 5s-detected skew reversal gives a 15-30 second head start over 1-min detection, which translates to meaningful premium capture on ATM options where delta is ~0.5 and gamma is highest.",
+  "adaptation_notes": "Adapted from 1-min equity/ETF strategy to 5-sec index option strategy. Key changes: (1) Universe changed from NIFTYBEES/top-5 stocks to NIFTY50 index options (BUY_CE/BUY_PE), (2) RSI lookback adjusted from 30 bars to 360 bars (equivalent 30 min at 5s), (3) Skew rate changed from 30-bar to 360-bar window (same 30-min window at 5s), (4) Skew confirmation changed from 5 consecutive 1-min bars to 60 consecutive 5s bars (same 5 min), (5) Hold time compressed from 60-240 minutes to 5-60 seconds -- scalping the initial premium adjustment as skew normalizes, (6) Entry/exit now reference option premium (BUY_CE/BUY_PE) instead of equity BUY/SHORT on NIFTYBEES, (7) IV staleness tolerance tightened from 5 min to 5 seconds given 5s bar frequency.",
   "weaknesses": [
-    "Requires real-time option chain data with accurate IV computation; Zerodha's API provides delayed option quotes which can make the skew signal stale",
+    "Requires real-time option chain data with accurate IV computation; stale option quotes can make the skew signal misleading at 5s frequency",
     "Extremely low frequency: skew_z > 2.0 signals fire only 2-4 times per month, making this a supplementary strategy only",
-    "When the skew is extreme for a genuine reason (geopolitical crisis, systemic risk), fading it produces large losses \u2014 the event filter cannot catch all such scenarios"
+    "When the skew is extreme for a genuine reason (geopolitical crisis, systemic risk), fading it produces large losses -- the event filter cannot catch all such scenarios",
+    "Only 12 trading days of data"
   ],
   "prior_art": "Bali & Hovakimian (2009) option implied volatility and equity returns; Xing et al. (2010) on skew and stock returns. Indian vol surface analysis by Jain & Jain (2019).",
-  "notes": "Edge math: 0.62 * 50bps - 0.38 * 35bps = 31 - 13.3 = 17.7bps gross. Costs ~9bps RT. Net ~8.7bps/trade. At 0.15 trades/day avg, daily edge ~1.3bps. The 30bps estimate is per signal day. This is a high-conviction, low-frequency strategy best combined with others.",
+  "notes": "Adapted for 5-second NIFTY50 index option trading. Edge math: 0.62 * 50bps - 0.38 * 35bps = 31 - 13.3 = 17.7bps gross. This is a high-conviction, low-frequency strategy best combined with others.",
   "_filepath": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_085.json",
   "_dedup_metadata": {
     "original_path": "all_trading_strategies/cursor_opus46max/cursor_opus46max_strategy_085.json",

@@ -1,0 +1,14 @@
+All 10 strategies passed the full audit with no bugs found:
+
+AUDIT_RESULT: cursor_opus46max_013 STATUS=PASS SIGNALS=40,53 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_014 STATUS=PASS SIGNALS=180,187 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_015 STATUS=PASS SIGNALS=315,386 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_016 STATUS=PASS SIGNALS=16,13 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_017 STATUS=PASS SIGNALS=93,96 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_018 STATUS=PASS SIGNALS=828,965 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_019 STATUS=PASS SIGNALS=65,62 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_020 STATUS=PASS SIGNALS=4,6 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_021 STATUS=PASS SIGNALS=28,33 ISSUES=0
+AUDIT_RESULT: cursor_opus46max_022 STATUS=PASS SIGNALS=569,525 ISSUES=0
+
+All verified on 22,195 bars of real data. No issues found across imports, compute(), array lengths, dtypes, NaN checks, signal sanity, session windows, or long-only constraints.

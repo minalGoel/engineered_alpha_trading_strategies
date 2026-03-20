@@ -1,0 +1,1 @@
+The output file is essentially empty (1 line, no content) — the "Find Python with polars" search returned nothing at `/usr/local/bin`. The correct Python with Polars installed is in the project's own virtualenv: `.venv/bin/python` at `/Users/minalgoel/Coding_Projects/engineered_alpha_trading_strategies/.venv/`.

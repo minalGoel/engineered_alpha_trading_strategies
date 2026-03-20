@@ -1,0 +1,32 @@
+## Audit Complete
+
+All 10 strategies audited against real RELIANCE 1-min data (388,880 rows).
+
+| Strategy | Status | Long | Short | Issues |
+|---|---|---|---|---|
+| atr_breakout_v1 | PASS | 11,988 | 11,626 | 0 |
+| bollinger_band_reversion_v1 | PASS | 9,389 | 9,860 | 0 |
+| bollinger_price_action_v1 | PASS | 114 | 109 | 0 |
+| claude_project_1_of_25 | PASS | 8,307 | 8,851 | 0 |
+| claude_project_10_of_25 | PASS | 23,757 | 22,940 | 0 |
+| claude_project_11_of_25 | PASS | 11,608 | 11,705 | 0 |
+| claude_project_12_of_25 | PASS | 10,955 | 11,241 | 0 |
+| claude_project_13_of_25 | PASS | 12,491 | 13,379 | 0 |
+| **claude_project_14_of_25** | **FIXED** | 597 | 646 | 1 |
+| claude_project_15_of_25 | PASS | 1,026 | 1,362 | 0 |
+
+**One bug fixed** in `claude_project_14_of_25.py`:
+- `short_entry` was missing the `vol_ok` volume filter that `long_entry` had, causing 3.2x asymmetry (1,915 short vs 597 long). Fixed by adding `vol_ok` to the short entry condition.
+
+```
+AUDIT_RESULT: atr_breakout_v1 STATUS=PASS SIGNALS=11988,11626 ISSUES=0
+AUDIT_RESULT: bollinger_band_reversion_v1 STATUS=PASS SIGNALS=9389,9860 ISSUES=0
+AUDIT_RESULT: bollinger_price_action_v1 STATUS=PASS SIGNALS=114,109 ISSUES=0
+AUDIT_RESULT: claude_project_1_of_25 STATUS=PASS SIGNALS=8307,8851 ISSUES=0
+AUDIT_RESULT: claude_project_10_of_25 STATUS=PASS SIGNALS=23757,22940 ISSUES=0
+AUDIT_RESULT: claude_project_11_of_25 STATUS=PASS SIGNALS=11608,11705 ISSUES=0
+AUDIT_RESULT: claude_project_12_of_25 STATUS=PASS SIGNALS=10955,11241 ISSUES=0
+AUDIT_RESULT: claude_project_13_of_25 STATUS=PASS SIGNALS=12491,13379 ISSUES=0
+AUDIT_RESULT: claude_project_14_of_25 STATUS=FIXED SIGNALS=597,646 ISSUES=1
+AUDIT_RESULT: claude_project_15_of_25 STATUS=PASS SIGNALS=1026,1362 ISSUES=0
+```

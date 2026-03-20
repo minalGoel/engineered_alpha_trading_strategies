@@ -1,0 +1,20 @@
+2026-03-20 09:55:00 ═══ PREFLIGHT ═══
+Sample stock: india_vix_1h.parquet
+Total strategies:   358
+Already audited:    70
+Remaining:          288
+Batches:            29
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 1 — strategies 1-10 of 288
+  2026-03-20 09:55:03
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch1_a1_095503.log
+  Results: 10 pass, 0 fixed, 0 unfixable, 0 unknown
+  Progress: 10/288 | 4m elapsed | ~132m left
+
+════════════════════════════════════════════════════════════
+  AUDIT BATCH 2 — strategies 11-20 of 288
+  2026-03-20 09:59:51
+════════════════════════════════════════════════════════════
+  Attempt 1/2 → audit_batch2_a1_095951.log

@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """Fibonacci Intraday Retracement — gemini_20_of_20
 
 Thesis: After the morning move establishes a range, the 61.8% Fibonacci
@@ -110,11 +111,15 @@ class Strategy(BaseStrategy):
         fib_short_level = np.nan_to_num(fib_short_level, nan=high[0] if n > 0 else 0.0)
         target_level = np.nan_to_num(target_level, nan=close[0] if n > 0 else 0.0)
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: low touches fib support level + close above it + close > VWAP
         long_entry = (
             (low <= fib_long_level)
             & (close > fib_long_level)
             & (close > vwap)
+            & in_session
         )
 
         # Short: high touches fib resistance level + close below it + close < VWAP
@@ -122,6 +127,7 @@ class Strategy(BaseStrategy):
             (high >= fib_short_level)
             & (close < fib_short_level)
             & (close < vwap)
+            & in_session
         )
 
         # Target indicator: morning high for longs, morning low for shorts

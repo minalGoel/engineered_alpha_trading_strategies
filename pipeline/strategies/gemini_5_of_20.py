@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """VWAP Pinch Breakout — gemini_5_of_20
 
 Thesis: When EMA(20) and VWAP converge tightly (pinch), a breakout with volume
@@ -78,9 +79,12 @@ class Strategy(BaseStrategy):
         # ATR(20)
         atr20 = _compute_atr(high, low, close, 20)
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
-        long_entry = pinch & (close > ema20) & (ema20 > vwap) & vol_rising
-        short_entry = pinch & (close < ema20) & (ema20 < vwap) & vol_rising
+        long_entry = pinch & (close > ema20) & (ema20 > vwap) & vol_rising & in_session
+        short_entry = pinch & (close < ema20) & (ema20 < vwap) & vol_rising & in_session
 
         return StrategySignals(
             long_entry=long_entry,

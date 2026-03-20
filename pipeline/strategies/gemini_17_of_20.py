@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """VIX Spike Mean Reversion — gemini_17_of_20
 
 Thesis: When VIX spikes sharply (fear), oversold stocks near VWAP support
@@ -100,11 +101,14 @@ class Strategy(BaseStrategy):
 
         vix_ok = vix > vix_min
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: VIX spike + RSI < 30 + close < VWAP
-        long_entry = vix_spike & (rsi14 < rsi_long) & (close < vwap) & vix_ok
+        long_entry = vix_spike & (rsi14 < rsi_long) & (close < vwap) & vix_ok & in_session
 
         # Short: VIX spike + RSI > 70 + close > VWAP
-        short_entry = vix_spike & (rsi14 > rsi_short) & (close > vwap) & vix_ok
+        short_entry = vix_spike & (rsi14 > rsi_short) & (close > vwap) & vix_ok & in_session
 
         return StrategySignals(
             long_entry=long_entry,

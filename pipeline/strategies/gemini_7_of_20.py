@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """Bollinger Squeeze Breakout — gemini_7_of_20
 
 Thesis: When Bollinger Band width compresses below 0.002 (squeeze), a breakout
@@ -74,9 +75,12 @@ class Strategy(BaseStrategy):
         # ATR(20)
         atr20 = _compute_atr(high, low, close, 20)
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
-        long_entry = squeeze & (close > upper_bb) & vol_ok
-        short_entry = squeeze & (close < lower_bb) & vol_ok
+        long_entry = squeeze & (close > upper_bb) & vol_ok & in_session
+        short_entry = squeeze & (close < lower_bb) & vol_ok & in_session
 
         # Signal exit: close crosses SMA(20) against direction
         signal_exit_long = close < sma20

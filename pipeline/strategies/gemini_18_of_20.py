@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """Previous Day High/Low Reversal — gemini_18_of_20
 
 Thesis: When price pierces the previous day's high or low but fails to hold,
@@ -103,11 +104,14 @@ class Strategy(BaseStrategy):
             prev_day_high[mask] = prev_h
             prev_day_low[mask] = prev_l
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: low pierces prev day low but close recovers above it + RSI < thresh
-        long_entry = (low < prev_day_low) & (close > prev_day_low) & (rsi14 < rsi_long)
+        long_entry = (low < prev_day_low) & (close > prev_day_low) & (rsi14 < rsi_long) & in_session
 
         # Short: high pierces prev day high but close falls back below + RSI > thresh
-        short_entry = (high > prev_day_high) & (close < prev_day_high) & (rsi14 > rsi_short)
+        short_entry = (high > prev_day_high) & (close < prev_day_high) & (rsi14 > rsi_short) & in_session
 
         return StrategySignals(
             long_entry=long_entry,

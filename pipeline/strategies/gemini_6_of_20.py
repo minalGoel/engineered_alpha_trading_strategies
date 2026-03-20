@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """European Open Momentum — gemini_6_of_20
 
 Thesis: European market close at ~13:30 local time can inject fresh momentum
@@ -80,11 +81,13 @@ class Strategy(BaseStrategy):
 
         atr14 = _compute_atr(high, low, close, 14)
 
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
         long_entry = (after_start & (close > vwap) &
-                       (momentum > mom_long) & idx_bullish)
+                       (momentum > mom_long) & idx_bullish & in_session)
         short_entry = (after_start & (close < vwap) &
-                        (momentum < mom_short) & idx_bearish)
+                        (momentum < mom_short) & idx_bearish & in_session)
 
         return StrategySignals(
             long_entry=long_entry,

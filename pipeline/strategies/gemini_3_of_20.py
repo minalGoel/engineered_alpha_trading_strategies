@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """Sector Relative Strength Momentum — gemini_3_of_20
 
 Thesis: When a stock outperforms its index (relative strength ratio > 1.02 over
@@ -81,13 +82,16 @@ class Strategy(BaseStrategy):
         for i in range(1, n):
             ema20_idx[i] = alpha * index_close[i] + (1 - alpha) * ema20_idx[i - 1]
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
         long_entry = ((rel_strength > ratio_long) &
                        (index_close > ema20_idx) &
-                       (close > vwap))
+                       (close > vwap) & in_session)
         short_entry = ((rel_strength < ratio_short) &
                         (index_close < ema20_idx) &
-                        (close < vwap))
+                        (close < vwap) & in_session)
 
         # Signal exit: VWAP cross
         signal_exit_long = close < vwap

@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """Opening Range Breakout 15 — gemini_2_of_20
 
 Thesis: The first 15 bars define the opening range. Breakout beyond that range
@@ -90,9 +91,12 @@ class Strategy(BaseStrategy):
         vol_sma = np.where(vol_sma > 1e-10, vol_sma, 1.0)
         vol_ok = volume > vol_mult * vol_sma
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Entries
-        long_entry = or_ready & (close > or_high) & vol_ok
-        short_entry = or_ready & (close < or_low) & vol_ok
+        long_entry = or_ready & (close > or_high) & vol_ok & in_session
+        short_entry = or_ready & (close < or_low) & vol_ok & in_session
 
         # Target: 2x range from breakout level
         # Use target_pct based on 2x range / close approximation

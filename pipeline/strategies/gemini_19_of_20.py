@@ -1,3 +1,4 @@
+# AUDIT FIX: Added session window filter to long_entry and short_entry
 """Volume Spike Exhaustion Fade — gemini_19_of_20
 
 Thesis: Extremely high volume bars with small bodies (doji-like) signal
@@ -78,11 +79,14 @@ class Strategy(BaseStrategy):
         prev_close = np.roll(close, 1)
         prev_close[0] = close[0]
 
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Long: down exhaustion (close < prev close) — fade the sell
-        long_entry = exhaustion & (close < prev_close)
+        long_entry = exhaustion & (close < prev_close) & in_session
 
         # Short: up exhaustion (close > prev close) — fade the buy
-        short_entry = exhaustion & (close > prev_close)
+        short_entry = exhaustion & (close > prev_close) & in_session
 
         return StrategySignals(
             long_entry=long_entry,

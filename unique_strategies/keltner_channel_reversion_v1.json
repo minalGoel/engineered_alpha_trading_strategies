@@ -1,0 +1,128 @@
+{
+  "name": "keltner_channel_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["keltner", "mean-reversion", "atr-based", "ema", "intraday", "band-touch"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_150.json",
+  "original_name": "keltner_channel_reversion_v1",
+  "mechanism": "On NIFTY, when the index price touches the outer Keltner Channel (EMA(24) ± 2.0 × ATR(24) = ±2 ATR from the 2-minute EMA), intraday momentum algorithms that drove the move have exhausted near-term order flow and the ATR-based band marks a micro-volatility-normalized extreme. Unlike Bollinger Bands that inflate on single outlier bars, ATR bands reflect the true recent micro-volatility — so a Keltner touch is a cleaner signal that the LAST bar was genuinely outsized relative to the prior 2 minutes of movement. At this point, delta-hedging dealers (long gamma from options they sold) and short-term mean-reversion desks that use EMA-anchored bands start fading aggressively with limit orders. The 5-second close BACK inside the band — with a bullish/bearish body showing that the current bar itself absorbed the excess — is the entry signal, targeting reversion to the 2-minute EMA within 30-90 seconds.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "kc_mid",
+      "formula": "EMA(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute EMA (24 bars × 5s). NOT 12x-scaled from original's EMA(20) on 1-min — that would give EMA(240) = 20 min, which is too slow for our 30-90s hold. We use 2 minutes because it represents ~2-3x the hold time, giving a stable but fast-adapting anchor. EMA (not SMA) because the original specifically uses EMA for its volatility-adaptive center — it tracks faster trend shifts than SMA and is more consistent with ATR's own exponential smoothing."
+    },
+    {
+      "name": "kc_atr",
+      "formula": "ATR(24) = EMA of TrueRange(24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute ATR (24 bars). Original used ATR(10) on 1-min = 10-minute ATR. At 5-second bars for a 30-90s hold, we need ATR that reflects the CURRENT micro-volatility regime, not the 10-minute average. 24 bars = 2 minutes: long enough to smooth single-spike TrueRange outliers, short enough to adapt to intraday volatility shifts (e.g., pre/post news). This is what makes Keltner different from Bollinger — ATR is not distorted by a single outlier bar."
+    },
+    {
+      "name": "kc_upper",
+      "formula": "kc_mid + kc_multiplier * kc_atr",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Upper band at 2.0 ATRs. Original used 2.5 ATR on equity stocks with higher idiosyncratic noise — NIFTY index is smoother and more liquid, so 2.0 ATR provides meaningful extremes without being too tight. This is equivalent to a ~2σ Bollinger but more stable because ATR doesn't spike on single outlier bars."
+    },
+    {
+      "name": "kc_lower",
+      "formula": "kc_mid - kc_multiplier * kc_atr",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Lower band at 2.0 ATRs. Symmetric to kc_upper. Band touches at this level represent genuine micro-volatility-normalized extremes on NIFTY."
+    },
+    {
+      "name": "kc_position",
+      "formula": "(close - kc_lower) / (kc_upper - kc_lower)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Position within the channel [0,1]. Confirms close is still near the touched band (< 0.15 for lower touch, > 0.85 for upper touch), ensuring entry is right at the reversal bar rather than mid-channel."
+    },
+    {
+      "name": "kc_mid_slope",
+      "formula": "(kc_mid[i] - kc_mid[i-6]) / kc_mid[i-6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "30-second normalized EMA slope. If the EMA is steeply trending (slope > 0.03%), the index is in a directional phase where band touches are likely to be channel walks (momentum) not reversions. This filter is the key differentiator from Bollinger reversion: Keltner's EMA center is more trend-responsive, so explicit slope filtering is needed to select ranging periods when mean reversion is reliable."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "low <= kc_lower (wick touched or pierced lower Keltner band)",
+        "close > kc_lower (candle closed back inside band — exhaustion confirmed)",
+        "close > open (bullish body — buyers absorbed the excess selling this bar)",
+        "kc_position < 0.15 (close still near lower band, reversion just beginning)",
+        "abs(kc_mid_slope) < slope_threshold (EMA is flat: ranging, not trending)"
+      ],
+      "confirmation": "ATR-normalized overshoot absorbed in same bar with bullish body near lower Keltner band"
+    },
+    "buy_pe": {
+      "conditions": [
+        "high >= kc_upper (wick touched or pierced upper Keltner band)",
+        "close < kc_upper (candle closed back inside band — buying exhaustion confirmed)",
+        "close < open (bearish body — sellers rejected the upper band push)",
+        "kc_position > 0.85 (close still near upper band, reversion just beginning)",
+        "abs(kc_mid_slope) < slope_threshold (EMA is flat: ranging, not trending)"
+      ],
+      "confirmation": "ATR-normalized overshoot rejected in same bar with bearish body near upper Keltner band"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option points (~6 spot points at delta 0.5). If NIFTY extends BEYOND the 2.0 ATR Keltner band by another 6 spot points, it is in channel-walk mode — momentum is overwhelming the mean-reversion pressure and the thesis is wrong. At 2-minute ATR (typical NIFTY intraday ATR ≈ 5-8 spot points per 2-min), the 2.0 ATR bands are ~10-16 pts from EMA; a further 6 pts is a 50-60% extension beyond the band = confirmed trend not reversion. 3 option pts < 4 pts BB stop, reflecting Keltner's tighter, ATR-adaptive bands.",
+    "target_points": 5,
+    "target_rationale": "5 option points (~10 spot points). Keltner reversion target is the KC_mid (2-minute EMA). From a 2.0 ATR band touch, the EMA is ~10-16 spot pts away; at delta ~0.5, capturing 10 spot pts = 5 option pts. We target 50-60% of the full reversion (to KC_mid) in the first 30-90 seconds, which is consistent with NIFTY's typical 30-second mean-reversion speed in flat-market regimes. R:R = 1:1.67.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX < 25 (original's threshold preserved) — above 25, NIFTY intraday ATR expands dramatically and the 2.0 multiplier no longer represents a meaningful extreme; channel walks dominate in panic conditions",
+    "time_filter": "09:20-15:25 IST — include 09:20 (5 min after open) since Keltner's EMA adapts faster than SMA, earlier signal quality than Bollinger",
+    "volume_filter": "none — 5-second NIFTY index volume too noisy; ATR-normalized band touch + bar body direction is the signal",
+    "trend_filter": "abs(kc_mid_slope) < slope_threshold over 30-second window — Keltner's EMA center trends more readily than SMA, making slope filtering more critical here than for Bollinger",
+    "spread_filter": "limit orders at candle close — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 16,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.38,
+    "edge_decay_risk": "low — Keltner is less crowded than Bollinger in Indian markets; ATR-based bands are less commonly coded by retail algo traders, reducing signal crowding"
+  },
+  "adaptation_notes": "Original used Keltner EMA(20)/ATR(10) on 1-min bars for NIFTY 200 stocks (hold 10-30 min). Key changes: (1) Lookback compressed from 20-min EMA to 2-min EMA (24 bars) — NOT 12x blind scaling which would give EMA(240)=20min; we hold 30-90s so we need the anchor period to be 2-3x hold time, not 15x. (2) ATR period similarly 24 bars (2 min) instead of original 10 min — micro-volatility normalisation needs to reflect the current 2-minute regime, not the last 10 minutes. (3) Multiplier reduced from 2.5 to 2.0 ATR — NIFTY index is smoother than individual stocks; the 2.5 ATR threshold on stocks was calibrated for higher idiosyncratic noise. (4) Added EMA slope filter (30-second window) — critical for Keltner vs Bollinger because EMA tracks trends faster; need explicit ranging filter to select flat-EMA conditions. (5) Removed stock-specific filters (ADV, earnings, spread, sector events). (6) Universe changed from NIFTY200 stocks to NIFTY index. (7) Volume filter removed — 5s index volume noisy.",
+  "weaknesses": [
+    "Channel-walk is the primary failure mode: in strong trending sessions (budget day, RBI surprise), every upper-band touch leads to further extension rather than reversion",
+    "ATR(24) adapts quickly — after a large-spike bar, ATR jumps and bands widen, potentially masking the next genuine extreme touch for several minutes",
+    "Low signal frequency in trending markets (EMA slope filter rejects many setups) — may produce only 2-4 trades on trend days, reducing daily sample size",
+    "EMA lags mean in fast selloffs — KC_mid may still be elevated when price is already reverting, making the channel appear wider than the effective mean"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_150.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 minutes",
+    "original_indicators": ["EMA(close,20)", "ATR(10)", "KC_upper=EMA+2.5*ATR", "KC_lower=EMA-2.5*ATR", "KC_position"],
+    "original_stop": "1.0 ATR(10) beyond the channel",
+    "original_target": "KC_mid (EMA(20) reversion)"
+  }
+}

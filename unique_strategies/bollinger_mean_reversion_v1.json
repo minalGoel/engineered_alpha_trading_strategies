@@ -1,0 +1,120 @@
+{
+  "name": "bollinger_mean_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["bollinger", "mean-reversion", "volatility", "intraday", "band-touch"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_149.json",
+  "original_name": "bollinger_mean_reversion_v1",
+  "mechanism": "On NIFTY, every intraday selloff that pushes the index beyond its 5-minute Bollinger lower band (2.5σ) represents statistical exhaustion of the selling program — stop-loss cascades and TWAP sell algos running out of residual order. At this exact bar, VWAP-benchmarked institutional buyers (sitting on positive tracking error vs. session VWAP) begin absorbing with limit bids, and the 5-second candle closes back above the lower band with a bullish body (close > open). At 5-second resolution we enter immediately on this reversal candle rather than waiting for a full 1-minute bar, capturing the first 10-20 spot point bounce (4-6 option points) before mean-reversion algos drive price back toward the 5-minute SMA. The symmetric logic applies for upper band rejections: high-momentum buying programs exhaust residual buyers, delta-hedging from options market-makers accelerates the fade.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "bb_mid",
+      "formula": "SMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling mean (60 bars × 5s). Original used 20-min window on 1-min bars; compressed to 5 min because at 5s resolution we trade the FAST reversion to the near-term mean, not the slow drift to the 20-min average. A 5-min SMA captures the micro-trend that TWAP algos are anchoring to within our 15-90s hold window."
+    },
+    {
+      "name": "bb_upper",
+      "formula": "SMA(close, 60) + sigma_mult * STDEV(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Upper band at 2.5σ (default). Same sigma as original — 2.5σ filters out ~70% of minor fluctuations and selects only statistically extreme touches that coincide with genuine order imbalances rather than routine noise."
+    },
+    {
+      "name": "bb_lower",
+      "formula": "SMA(close, 60) - sigma_mult * STDEV(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Lower band at 2.5σ. Same rationale as bb_upper — symmetric."
+    },
+    {
+      "name": "bb_width_pct",
+      "formula": "(bb_upper - bb_lower) / bb_mid * 100",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Band width as % of mid-price. Filters out squeeze conditions (BB_width < 0.15%) where NIFTY is ranging within a tight channel and band touches have no statistical meaning. Original required BB_width > 0.3% on 1-min bars; scaled to 0.15% because 5-second bars have naturally tighter intra-band variance."
+    },
+    {
+      "name": "pct_b",
+      "formula": "(close - bb_lower) / (bb_upper - bb_lower)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Position within the band [0,1]. Used to confirm close is near the touched band (pct_b < 0.08 for lower touch, pct_b > 0.92 for upper touch), ensuring we enter right at the reversion point rather than halfway back to the mean."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "low <= bb_lower (wick touched or pierced lower band)",
+        "close > bb_lower (candle closed back inside — exhaustion confirmed)",
+        "close > open (bullish body — buyers absorbed the selling pressure this bar)",
+        "pct_b < 0.08 (close still near lower band, not already half-way to mean)",
+        "bb_width_pct > 0.15 (band has meaningful width — not a squeeze)"
+      ],
+      "confirmation": "Bullish candle reclaiming lower band with close near band edge — enter ATM CE at bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "high >= bb_upper (wick touched or pierced upper band)",
+        "close < bb_upper (candle closed back inside — buying exhaustion confirmed)",
+        "close < open (bearish body — sellers rejected the upper band push)",
+        "pct_b > 0.92 (close still near upper band, not already half-way to mean)",
+        "bb_width_pct > 0.15 (band has meaningful width)"
+      ],
+      "confirmation": "Bearish candle rejecting upper band with close near band edge — enter ATM PE at bar close"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 spot points at delta 0.5). If NIFTY extends BEYOND the Bollinger Band by another 8 spot points after our entry, the band-walk scenario is confirmed — the selling/buying program is not exhausted. 4 pts is the threshold where the mean-reversion thesis is falsified within 15-90s holds.",
+    "target_points": 6,
+    "target_rationale": "6 option points (~12 spot points). NIFTY Bollinger reversals from a 2.5σ touch typically cover 50% of the band width in the first 30-60 seconds. With a 5-min BB at typical NIFTY intraday volatility (~15-20 sigma), the lower band is ~15-25 spot pts below mid — reversion to 50% captures 8-12 spot pts = 4-6 option pts. Target 6 pts corresponds to 1:1.5 R:R.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX < 20 — when VIX exceeds 20, NIFTY bands widen dramatically and the band-walk risk increases; mean reversion is less reliable above 20 as sustained directional flows dominate",
+    "time_filter": "09:25-15:20 IST — skip first 10 min (opening auction noise, wide spreads) and final 10 min (position squaring distorts bands)",
+    "volume_filter": "none — index volume on 5s bars is inherently noisy; band touch + candle direction is the signal",
+    "trend_filter": "bb_width_pct > 0.15 to exclude squeeze regimes",
+    "spread_filter": "limit orders at candle close — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.35,
+    "profit_factor_estimate": 1.42,
+    "edge_decay_risk": "moderate — Bollinger reversion is widely known, but the 5-second entry timing (vs original 1-min) is a speed barrier that limits competition from slower systems"
+  },
+  "adaptation_notes": "Original used 20-period BB on 1-min bars (20-min window) on NIFTY 200 stocks. Key changes: (1) Lookback compressed from 20 min to 5 min (60 bars) because at 5s resolution we target the FAST initial bounce, not the full mean-reversion cycle — a 20-min SMA is too slow to be the relevant anchor for 15-90s trades. (2) Removed stock-specific filters (ADV filter, earnings day filter, spread filter) as these are irrelevant for an index. (3) VIX threshold changed from 25 (original) to 20 because index Bollinger Bands become less reliable as mean-reversion signals above VIX 20 — unlike individual stocks, NIFTY sees persistent institutional directional flows in high-VIX environments. (4) Volume filter removed — 5-second index volume is too noisy. (5) bb_width threshold reduced from 0.3% to 0.15% — 5s bars have tighter intrabar variance, requiring a proportionally smaller minimum width to have statistical meaning.",
+  "weaknesses": [
+    "NIFTY can 'band-walk' during strong trend days (e.g., post-budget, RBI surprise) — repeated lower-band touches all lose as price drifts lower",
+    "5-minute SMA resets slowly to new price levels; after a gap-down open, the SMA takes several minutes to reflect the new regime, causing false lower-band signals early in session",
+    "At 2.5σ, band touches are infrequent (2-4 per session) — sample size per day is low, magnifying streak risk"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_149.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-20 minutes",
+    "original_indicators": ["SMA(close,20)", "STDEV(close,20)", "BB_upper(2.5σ)", "BB_lower(2.5σ)", "BB_pct_b", "BB_width", "VWAP"],
+    "original_stop": "0.3% beyond the band",
+    "original_target": "BB_mid (SMA reversion)"
+  }
+}

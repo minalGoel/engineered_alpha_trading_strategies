@@ -1,3 +1,5 @@
+# AUDIT FIX: entry logic missing session time filter — entries fired outside session window
+# AUDIT FIX: signal_exit_long = diff_bps < 0 was always True (stock price always < index) — replaced with z-score crossing
 """Cross Listed Arb v1 — cursor_opus46max_060
 
 Thesis: NSE/BSE cross-listed stocks have transient price divergences.
@@ -48,6 +50,7 @@ class Strategy(BaseStrategy):
         close = df["close"].to_numpy().astype(np.float64)
         index_close = df["index_close"].to_numpy().astype(np.float64)
         index_close = np.nan_to_num(index_close, nan=0.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
 
         # Price diff in bps (stock vs index-normalized price)
         diff_bps = np.zeros(n, dtype=np.float64)
@@ -64,12 +67,16 @@ class Strategy(BaseStrategy):
             if std > 1e-10:
                 diff_z[i] = (diff_bps[i] - mu) / std
 
-        # Entry: buy low, sell high on diff
-        long_entry = (diff_bps > diff_thresh) & (diff_z > diff_z_thresh)
-        short_entry = (diff_bps < -diff_thresh) & (diff_z < -diff_z_thresh)
+        # AUDIT FIX: added session time filter to restrict entries to session window
+        time_ok = (time_mins >= 560) & (time_mins <= 925)
 
-        signal_exit_long = diff_bps < 0
-        signal_exit_short = diff_bps > 0
+        # Entry: buy low, sell high on diff
+        long_entry = (diff_bps > diff_thresh) & (diff_z > diff_z_thresh) & time_ok
+        short_entry = (diff_bps < -diff_thresh) & (diff_z < -diff_z_thresh) & time_ok
+
+        # AUDIT FIX: diff_bps < 0 was always True for stock vs large-cap index; use z-score reversion instead
+        signal_exit_long = diff_z < 0
+        signal_exit_short = diff_z > 0
 
         return StrategySignals(
             long_entry=long_entry,

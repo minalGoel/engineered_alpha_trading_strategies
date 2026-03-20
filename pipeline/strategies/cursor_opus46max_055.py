@@ -1,3 +1,5 @@
+# AUDIT FIX: time_ok missing lower bound (session_start=560) — entries fired before session start
+# AUDIT FIX: signal_exit_short = pd_bps < 0 was always True (stock price always < index) — replaced with z-score crossing
 """ETF NAV Arbitrage v1 — cursor_opus46max_055
 
 Thesis: ETF premium/discount to indicative NAV mean-reverts as APs step in.
@@ -73,7 +75,7 @@ class Strategy(BaseStrategy):
         vol_sma = np.clip(vol_sma, 1.0, None)
         vol_ratio = volume / vol_sma
 
-        time_ok = time_mins <= 900
+        time_ok = (time_mins >= 560) & (time_mins <= 900)  # AUDIT FIX: added lower bound >= 560 (session_start)
 
         # Entry: discount (buy) or premium (sell) with narrowing confirmation
         long_entry = np.zeros(n, dtype=np.bool_)
@@ -88,9 +90,10 @@ class Strategy(BaseStrategy):
                     and time_ok[i]):
                 short_entry[i] = True
 
-        # Exit: premium/discount crosses zero
-        signal_exit_long = pd_bps > 0
-        signal_exit_short = pd_bps < 0
+        # Exit: use z-score crossing zero (avoids always-true condition when stock << index)
+        # AUDIT FIX: pd_bps < 0 was always True for stocks vs large-cap index; use z-score reversion instead
+        signal_exit_long = pd_z > 0
+        signal_exit_short = pd_z < 0
 
         return StrategySignals(
             long_entry=long_entry,

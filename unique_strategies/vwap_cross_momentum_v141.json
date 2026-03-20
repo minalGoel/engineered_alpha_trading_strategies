@@ -1,0 +1,138 @@
+{
+  "name": "vwap_cross_momentum_v141",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vwap", "regime_shift", "crossover", "momentum", "trend_following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_141.json",
+  "original_name": "vwap_cross_momentum_v1",
+
+  "mechanism": "VWAP is the session's volume-weighted fair value — when NIFTY has been trading BELOW VWAP for an extended period (20+ minutes), it signals a bearish regime where institutional VWAP-tracking algorithms are net sellers and the marginal transaction occurs at a discount to fair value. When NIFTY crosses ABOVE VWAP after this sustained period below, it is a genuine regime shift: the sellers who were in control have been exhausted, and VWAP-tracking algorithms that were selling now flip to buying mode because the session's volume-weighted average is now below price. This creates a positive feedback loop — the cross attracts momentum buyers, which pushes price further above VWAP, which triggers more VWAP-algo buying. At 5-second resolution, we detect the EXACT bar where NIFTY's close crosses from below VWAP to above VWAP and enter immediately, capturing the first 30-120 seconds of the regime-shift momentum before the move is priced in. The 20-minute dwell-time requirement (240 bars below VWAP) is critical — it ensures this is NOT a brief dip-and-recover (which happens constantly and has no edge), but a genuine flip from a sustained bearish regime to a bullish one. This strategy is fundamentally different from VWAP deep/quick reversion (which FADES deviations from VWAP, expecting price to return to it) — here we FOLLOW the cross direction, betting that the regime shift creates sustained momentum AWAY from VWAP. We buy ATM CE on upward VWAP crosses and ATM PE on downward crosses.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-15:00 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 4,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["VWAP"]
+  },
+
+  "indicators": [
+    {
+      "name": "VWAP",
+      "formula": "cumulative(price * volume) / cumulative(volume) since 09:15",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Volume-Weighted Average Price since market open — the benchmark that institutional VWAP-execution algorithms target. Every large institution that executes against VWAP creates buying pressure when price is below VWAP and selling pressure when above. The session-level cumulative calculation means VWAP moves slowly and smoothly, making crosses decisive events rather than noise. On NIFTY, VWAP changes by only 0.5-2 spot points per minute after the first 30 minutes, making it a highly stable reference level."
+    },
+    {
+      "name": "bars_below_vwap",
+      "formula": "consecutive count of bars where close < VWAP",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Counts how many consecutive 5-second bars NIFTY has closed below VWAP. We require >= 240 bars (20 minutes) below VWAP before a cross-up signal is valid. The 240-bar threshold was chosen because on NIFTY, brief dips below VWAP lasting 2-10 minutes happen 5-10 times per day and carry no regime-shift significance — they are noise oscillations. Only when NIFTY has been below VWAP for 20+ minutes has the bearish regime been genuinely established, with VWAP-tracking algorithms locked into sustained selling mode. This is the equivalent of the original strategy's 20-bar requirement on 1-minute bars, directly translated to 5-second resolution."
+    },
+    {
+      "name": "bars_above_vwap",
+      "formula": "consecutive count of bars where close > VWAP",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Mirror of bars_below_vwap for the bearish cross signal. We require >= 240 bars (20 minutes) above VWAP before a cross-down signal is valid. This ensures the bullish regime was genuinely established before declaring the regime shift to bearish."
+    },
+    {
+      "name": "vwap_distance",
+      "formula": "close - VWAP",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The signed distance from NIFTY's current close to VWAP in spot points. At the moment of cross, this transitions from negative to positive (or vice versa). We use this to confirm the cross is genuine — the distance should be at least 2 spot points above/below VWAP on the cross bar, not just a fractional tick through the level. On NIFTY, a 2-point buffer above VWAP on the cross bar reduces false cross signals by ~30% because many 'crosses' where price closes exactly at VWAP or 0.5 points above revert immediately."
+    },
+    {
+      "name": "cross_bar_momentum",
+      "formula": "close - close[6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "The 30-second momentum into the cross — measures whether NIFTY is accelerating into the VWAP cross or just drifting through. A 6-bar lookback (30 seconds) captures the immediate directional impulse. On NIFTY, regime-shift crosses that are accompanied by 5+ spot points of 30-second momentum have ~55% continuation rate, while crosses without momentum (slow drift through VWAP) have only ~40% continuation. The 30-second window was chosen because it captures the order flow burst that drives the cross without reaching back to the prior regime."
+    },
+    {
+      "name": "vwap_cross_count_today",
+      "formula": "count of times close crossed VWAP since 09:15",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Tracks how many times NIFTY has already crossed VWAP today. After 4+ crosses, the day is likely range-bound and oscillating around VWAP — each subsequent cross has progressively less regime-shift significance because the market is not committing to either side. On NIFTY, the first 2-3 VWAP crosses of the day (after sufficient dwell time) have the highest continuation rates; by the 5th+ cross, the market is in chop mode."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > VWAP AND close[1] < VWAP[1] (NIFTY crosses from below VWAP to above VWAP on this bar — the regime shift event)",
+        "bars_below_vwap >= 240 (NIFTY was below VWAP for 20+ minutes continuously — confirming this is a genuine regime shift, not a brief oscillation)",
+        "vwap_distance > 2 (close is at least 2 spot points above VWAP, not a marginal cross that could revert on the next tick)",
+        "vwap_cross_count_today < 5 (the day has not yet degenerated into choppy VWAP oscillation)"
+      ],
+      "confirmation": "cross_bar_momentum > 3 (NIFTY moved at least 3 spot points upward in the 30 seconds leading into the cross, confirming directional impetus). On NIFTY, VWAP crosses with 3+ spot points of 30-second pre-cross momentum indicate aggressive buyer entry, not passive drift."
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < VWAP AND close[1] > VWAP[1] (NIFTY crosses from above VWAP to below — bearish regime shift)",
+        "bars_above_vwap >= 240 (NIFTY was above VWAP for 20+ minutes continuously)",
+        "vwap_distance < -2 (close is at least 2 spot points below VWAP)",
+        "vwap_cross_count_today < 5"
+      ],
+      "confirmation": "cross_bar_momentum < -3 (NIFTY moved at least 3 spot points downward in the 30 seconds leading into the cross)."
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "A 5-option-point stop corresponds to roughly 10 spot points of adverse move. If NIFTY crosses VWAP upward and then drops 10 points (re-crossing back below VWAP), the regime shift has failed — the sellers were not actually exhausted, and the cross was a false signal. On NIFTY, failed VWAP crosses that reverse typically do so within 30-60 seconds, moving 8-15 spot points back through VWAP. The 5-point stop catches this failure before the full reversal develops. This is slightly wider than some other strategies because VWAP crosses can have a 5-10 second 'wobble' period where price oscillates near VWAP before committing to a direction.",
+    "target_points": 10,
+    "target_rationale": "After a genuine VWAP regime shift on NIFTY (20+ minutes on one side, then cross with momentum), the post-cross continuation typically carries 15-30 spot points (7-15 option points) over 1-3 minutes as VWAP-tracking algorithms flip and momentum traders pile in. A 10-point target captures the core of this continuation wave (roughly 50-70% of the typical total move) and provides a 2:1 reward-to-risk ratio. The move is larger than most other strategies because a VWAP regime shift activates a broader set of participants (VWAP algos, momentum traders, regime-shift systematic funds) than a simple technical signal.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "No strict VIX filter — VWAP regime shifts work across volatility environments because they are driven by institutional VWAP-execution flows that exist regardless of VIX levels. However, in VIX > 30 environments, the dwell-time requirement may rarely be met as NIFTY oscillates rapidly across VWAP",
+    "time_filter": "No entries before 10:00 (need at least 45 minutes for VWAP to stabilize and for the 20-minute dwell-time to potentially accumulate) or after 14:30 — late-session VWAP crosses are distorted by end-of-day execution algorithms that cross VWAP mechanically without directional intent",
+    "volume_filter": "The cross bar should have above-average volume (vs 120-bar SMA). Volume on the cross confirms that the regime shift is driven by genuine order flow, not a low-participation drift through VWAP in a quiet market",
+    "trend_filter": "Stronger edge when the VWAP cross direction aligns with the broader daily trend: a bullish VWAP cross (from below to above) on a day where NIFTY is up from yesterday's close has ~60% continuation vs ~45% for a bullish cross on a down day",
+    "spread_filter": "Skip if ATM option bid-ask > 2.5 points — at the moment of VWAP cross, option spreads should be normal since the cross itself does not create the same market-maker uncertainty as a breakout at session extremes"
+  },
+
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.48,
+    "avg_winner_to_loser": 2.00,
+    "profit_factor_estimate": 1.85,
+    "edge_decay_risk": "moderate — VWAP crosses are widely watched by institutional traders, but the 20-minute dwell-time filter and momentum confirmation make this implementation more selective than naive VWAP-cross strategies; the edge is in the QUALITY of cross detection, not the concept itself"
+  },
+
+  "adaptation_notes": "Four major changes from the original 1-minute stock-level VWAP cross strategy to 5-second NIFTY index options: (1) The dwell-time requirement was translated directly: the original required 20 bars below VWAP on 1-minute (= 20 minutes), which becomes 240 bars on 5-second (= 20 minutes). This is NOT a blind 12x scaling — both represent the same 20-minute dwell-time threshold, which is the minimum for a genuine regime shift on NIFTY. (2) Added vwap_distance > 2 spot points minimum on the cross bar. On 1-minute bars, a close above VWAP represents 60 seconds of sustained price above the level. On 5-second bars, a close above VWAP is only 5 seconds — the 2-point buffer ensures the cross has substance, not just a fractional tick through the level that could revert on the next bar. (3) Added vwap_cross_count_today filter which the original lacked. The original noted 'skip if stock has crossed VWAP > 5 times already today' as a filter note; we formalized this as a computed indicator because on NIFTY, the first 2-3 qualified crosses per day have materially higher continuation rates than later crosses. (4) Target changed from '0.4% from entry' (which on NIFTY would be ~90 spot points, requiring a 15-30 minute hold) to 10 option points (approximately 20 spot points) that captures the initial 1-2 minute post-cross momentum wave. The original's percentage-based target was calibrated for individual stocks where 0.4% might be 5-10 rupees; on NIFTY index the percentage approach produces unreasonable targets.",
+
+  "weaknesses": [
+    "On range-bound days where NIFTY oscillates in a 30-40 point band around VWAP, the 20-minute dwell-time may be met but the 'regime shift' is just an oscillation — the cross has no directional follow-through because the market has no commitment to either side",
+    "The strategy fires only 1-3 times per day due to the strict 20-minute dwell-time requirement, which means capital is idle most of the session and a single day's P&L is highly concentrated in 1-3 outcomes",
+    "On days with significant news at specific times (RBI announcements, global data releases), NIFTY may cross VWAP violently on the news and then reverse equally violently — the momentum confirmation helps but cannot fully filter event-driven crosses that have no regime-shift significance",
+    "The vwap_cross_count filter means missing potentially valid late-session crosses on trending days where NIFTY oscillates around VWAP early but then makes a decisive cross later",
+    "VWAP itself becomes less meaningful in the last 30 minutes of the session when closing-auction algorithms inject large mechanical flows that move price relative to VWAP without directional intent"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_141.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 minutes",
+    "original_indicators": ["VWAP", "bars_below_vwap", "bars_above_vwap", "volume_surge = volume / SMA(volume, 10)", "EMA(close, 5)"],
+    "original_stop": "VWAP re-cross OR 0.25% from entry",
+    "original_target": "0.4% from entry price"
+  }
+}

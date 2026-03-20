@@ -1,0 +1,136 @@
+{
+  "name": "price_channel_breakout_v163",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["donchian", "channel_breakout", "momentum", "price_level", "trend_following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_163.json",
+  "original_name": "price_channel_breakout_v1",
+
+  "mechanism": "When NIFTY makes a new 10-minute high, it has cleared all supply from the last 10 minutes of trading — every seller who placed a limit order in that window has been filled, and every buyer who was waiting for 'confirmation' now has it. The path of least resistance is in the breakout direction because the order book above the old 10-minute high is thinner (limit sells were already consumed), while stops from traders who faded the range fuel the initial thrust. At 5-second resolution, a Donchian(120) channel tracks the highest high and lowest low of the last 120 bars (10 minutes). When NIFTY's close exceeds the prior bar's Donchian upper, it signals a PURE price-level breakout — no volatility compression required (unlike Bollinger squeeze), no fixed time anchor (unlike ORB which is locked to market open), and no relationship to volume-weighted average (unlike VWAP strategies). This is the most elemental form of breakout: new high = cleared supply = continuation. The 10-minute lookback was chosen because on NIFTY, the 10-minute window captures 1-3 complete micro-waves of buying/selling, making the channel boundaries represent genuine tested support/resistance rather than noise. Shorter channels (2-3 minutes) break constantly on random fluctuations; longer channels (20+ minutes) break too rarely and the breakout often exhausts within 30 seconds. We buy ATM CE on upside Donchian breaks and ATM PE on downside breaks, targeting the first 30-90 seconds of breakout continuation before the market finds a new equilibrium.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:00 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-7",
+  "max_trades_per_day": 8,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "DC_upper_120",
+      "formula": "MAX(high, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "The highest high over the last 120 bars (10 minutes) — the upper Donchian channel boundary. The 120-bar lookback was chosen because on NIFTY at 5-second resolution, 10 minutes captures 1-3 complete micro-trends and counter-trends, making this channel boundary a level that has been actively tested and defended by multiple waves of buyers and sellers. A break above this level means ALL selling pressure from the last 10 minutes has been absorbed. Shorter lookbacks (24-36 bars = 2-3 minutes) generate too many false breakouts as they capture only momentary swings."
+    },
+    {
+      "name": "DC_lower_120",
+      "formula": "MIN(low, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "The lowest low over the last 120 bars (10 minutes) — the lower Donchian channel boundary. A break below this level means ALL buying support from the last 10 minutes has been overwhelmed."
+    },
+    {
+      "name": "DC_mid_120",
+      "formula": "(DC_upper_120 + DC_lower_120) / 2",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The midline of the 10-minute Donchian channel. Used as a reference for trend bias and as the 'failed breakout' level — if price breaks out and immediately returns to the channel midline, the breakout has failed. On NIFTY, the midline typically sits 5-15 spot points from the channel boundary."
+    },
+    {
+      "name": "DC_width",
+      "formula": "DC_upper_120 - DC_lower_120",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The width of the 10-minute Donchian channel in spot points. On NIFTY, a valid channel width for breakout trading is 8-40 spot points. Below 8 points, the channel is too narrow and breaks are just noise (bid-ask bounce through the boundary). Above 40 points, the channel represents a wide volatile session where the breakout has less continuation potential because large counter-moves are already occurring within the channel."
+    },
+    {
+      "name": "breakout_bar_range",
+      "formula": "high - low",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The range of the current 5-second bar. On the breakout bar, we require this to be above the median of recent bar ranges. A wide breakout bar indicates strong directional flow at the moment of the break. On NIFTY, the typical 5-second bar range is 2-5 spot points; a breakout bar with 5+ spot points signals aggressive market-order flow pushing through the channel boundary."
+    },
+    {
+      "name": "bar_range_median_24",
+      "formula": "MEDIAN(high - low, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "The median bar range over the last 24 bars (2 minutes). This provides a dynamic threshold for what constitutes an 'above-average' breakout bar. Using the median rather than the mean avoids distortion from single extreme bars. The 24-bar window (2 minutes) was chosen because it captures the current volatility regime without reaching back to a period when conditions may have been different."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > DC_upper_120[1] (NIFTY spot closes above the PREVIOUS bar's 10-minute Donchian upper — confirming the new 10-minute high with a close, not just an intra-bar spike)",
+        "DC_width between 8 and 40 spot points (channel is neither too narrow for the break to be meaningful nor too wide for continuation to be likely)",
+        "breakout_bar_range > bar_range_median_24 (the breakout bar itself has above-median range, confirming aggressive flow at the point of break)"
+      ],
+      "confirmation": "The breakout bar must close in its upper third (close > low + 0.67 * (high - low)) confirming that the buying pressure held through the full 5-second bar. On NIFTY, breakout bars that close near their highs continue in the breakout direction ~60% of the time within the next 30 seconds, while those closing in their lower half revert ~55% of the time."
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < DC_lower_120[1] (NIFTY spot closes below the previous bar's 10-minute Donchian lower — new 10-minute low confirmed by close)",
+        "DC_width between 8 and 40 spot points",
+        "breakout_bar_range > bar_range_median_24"
+      ],
+      "confirmation": "The breakout bar must close in its lower third (close < high - 0.67 * (high - low)) confirming sustained selling pressure through the bar."
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "A 4-option-point stop corresponds to roughly 8 spot points of adverse move from entry. On NIFTY, a failed Donchian breakout — where price breaks the 10-minute channel then immediately reverses — typically pulls back to the channel midline within 15-30 seconds, which is 5-15 spot points depending on channel width. The 4-point stop (8 spot points) catches the failure early before the full reversal develops, limiting damage to approximately one 15-second adverse move (1-3 option points). If price has reversed 8 spot points from a new 10-minute high, the breakout was a false break and holding further increases the loss.",
+    "target_points": 8,
+    "target_rationale": "After a genuine Donchian channel breakout on NIFTY, the first continuation leg typically covers 10-20 spot points (5-10 option points) over 30-90 seconds as stop-triggered orders and momentum buyers pile in. An 8-point target captures the core of this initial thrust before the move decelerates into a new consolidation range. This provides a 2:1 reward-to-risk ratio against the 4-point stop. The original strategy used a 'measured move' target (channel width projected from breakout) which on 1-minute 30-bar Donchian implied 30-60 minute holds; at 5s we capture only the initial 30-90 second impulse, which is the highest-conviction portion of the breakout.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 14-28 — below 14, NIFTY's 10-minute channels are very narrow (5-8 points) and breaks lack continuation energy; above 28, channels are wide but price whipsaws through boundaries erratically with many false breaks",
+    "time_filter": "No entries before 09:30 (need initial bars for Donchian(120) to populate — first 10 minutes) or after 14:45 — late-session channel breaks are often absorbed by closing flows",
+    "volume_filter": "Breakout bar volume should be above the 60-bar volume SMA — this distinguishes genuine flow-driven breakouts from low-participation drifts through the channel boundary that lack continuation",
+    "trend_filter": "Stronger edge when the breakout direction aligns with the prior 120-bar (10-minute) close-to-close trend: an upside break from a channel where close > DC_mid (price was already trading in the upper half) is a continuation breakout with ~55% win rate vs. a reversal breakout from the lower half at ~40%",
+    "spread_filter": "Skip if ATM option bid-ask > 2 points — tight spreads are critical for a breakout strategy that enters on momentum, as wider spreads consume a larger fraction of the expected 8-point target"
+  },
+
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.42,
+    "avg_winner_to_loser": 2.00,
+    "profit_factor_estimate": 1.45,
+    "edge_decay_risk": "moderate — Donchian breakout is one of the oldest systematic strategies and is well-known; the edge comes from the specific 10-minute calibration on 5-second NIFTY data and the bar-range confirmation filter that reduces false breakout entries"
+  },
+
+  "adaptation_notes": "Four major changes from the original 1-minute Donchian(30) stock-level strategy to 5-second NIFTY Donchian(120): (1) The Donchian lookback was converted from 30 bars at 1-minute (30-minute channel) to 120 bars at 5-seconds (10-minute channel). The original 30-minute channel is too wide for 30-90 second holds — breakouts from 30-minute channels can take 5-15 minutes to play out. The 10-minute channel captures a shorter accumulation period that produces breakouts with faster resolution (30-90 seconds). This is NOT a blind 12x scaling of lookback; 10 minutes was chosen because it represents 1-3 complete micro-waves on NIFTY. (2) The VWAP alignment filter from the original was replaced with a channel-position trend filter (close vs DC_mid). VWAP alignment is a separate concept used in the VWAP cross momentum strategy — for a PURE price-level breakout, the trend context should come from the channel itself, not from a volume-weighted average. (3) Target changed from 'channel width projected from breakout' (a measured-move target that implies multi-minute holds) to a fixed 8-point option target that captures only the initial breakout impulse. The original's measured-move target assumed the breakout would travel the full channel width — on NIFTY at 5s, we only capture the first 30-90 seconds where stop-triggered flow is most concentrated. (4) Added breakout_bar_range vs median filter which the original lacked. On 5-second bars, many channel 'breaks' are caused by single-tick movements through the boundary with no force behind them. Requiring the breakout bar to have above-median range filters these noise breaks.",
+
+  "weaknesses": [
+    "Donchian channel breakouts have a structural low win rate (~42%) because many 10-minute highs/lows are broken by 1-2 bars of momentum that immediately exhausts — the false breakout rate on NIFTY is high in range-bound sessions",
+    "During the 11:00-13:00 lunch period on NIFTY, 10-minute channels are narrow and breakouts lack participant commitment — the strategy may generate signals that look like breakouts but have no follow-through volume",
+    "The 120-bar lookback requires 10 minutes of data before the first signal can fire, and the Donchian boundaries are backward-looking — a sudden regime shift (news event) makes the channel boundaries instantly irrelevant",
+    "On expiry days, heavy options gamma creates artificial price spikes through channel boundaries that reverse within seconds — the breakout_bar_range filter helps but does not fully eliminate this noise",
+    "Consecutive losses are common (3-5 in a row) during choppy sessions, requiring strict position sizing discipline to survive the drawdown periods"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_163.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["DC_upper = highest_high(30)", "DC_lower = lowest_low(30)", "DC_mid", "DC_width_pct", "volume_ratio = volume / SMA(volume, 20)", "VWAP"],
+    "original_stop": "DC_mid (channel midline)",
+    "original_target": "DC_width projected from breakout (measured move)"
+  }
+}

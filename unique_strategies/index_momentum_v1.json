@@ -1,0 +1,94 @@
+{
+  "name": "index_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "index", "continuation", "5s"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_10.json",
+  "original_name": "index_momentum_v1",
+  "mechanism": "NIFTY experiences sharp 1-minute directional bursts when macro news hits or algorithmic momentum strategies trigger cascading entries via TWAP/VWAP algorithms working large directional orders. These bursts exhibit autocorrelation at the 30-60 second scale because institutional orders are typically only 40-60% filled in the first 12-bar (1-min) window, leaving residual order flow that sustains the move. When both the 5-minute trend (ret_60) and the 1-minute acceleration (ret_12) confirm the same direction, we are entering during active institutional order completion rather than at the exhaustion of a move.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "5-10",
+  "max_trades_per_day": 10,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ret_60",
+      "formula": "(close - close[60]) / close[60]",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute return — SAME time window as original (5 × 1-min bars = 60 × 5s bars). This is the CONTEXT FILTER: confirms a sustained directional move is underway, not a random spike. Using the same 5-minute horizon as the original is correct because the underlying thesis is about 5-minute institutional flow patterns — that time window is fundamental to when TWAP algorithms complete meaningful order slices."
+    },
+    {
+      "name": "ret_12",
+      "formula": "(close - close[12]) / close[12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute return — NEW layer not in original. At 1-min bars the original could not distinguish slow drift from fast burst within a 5-min trend. At 5s resolution we can detect the 1-minute acceleration that confirms the 5-min trend is actively continuing (not fading). Entry requires BOTH layers aligned: 5-min trend active AND 1-min momentum confirming in the same direction."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ret_60 > momentum_threshold (0.2% default)",
+        "ret_12 > 0 (1-min acceleration confirming bullish)"
+      ],
+      "confirmation": "Both conditions must hold on the same bar — trend context plus immediate acceleration"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ret_60 < -momentum_threshold (-0.2% default)",
+        "ret_12 < 0 (1-min deceleration confirming bearish)"
+      ],
+      "confirmation": "Both conditions must hold on the same bar — trend context plus immediate deceleration"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 points because momentum continuation is a high-conviction trade: if NIFTY does not continue moving within 30s, the thesis (residual institutional order flow) is already wrong. A 3-pt option stop corresponds to ~6 spot points — momentum that stalls or reverses 6 pts within 30s is not institutional continuation but a fade. Tightest stop of any strategy class because time is the real stop.",
+    "target_points": 5,
+    "target_rationale": "5 points captures ~40% of the expected 1-min continuation (1-min NIFTY moves average 12-15 spot pts = 6-8 option pts at delta 0.5). Targeting 5 of ~7 expected points gives 1:1.67 R:R while keeping time-in-trade short. Taking 100% of the move would require holding through noise.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "none — momentum trades work across volatility regimes; high VIX amplifies both signal and noise equally",
+    "time_filter": "09:20-15:25 IST; skip first 5 minutes (09:15-09:20) to avoid pre-open noise",
+    "volume_filter": "none — NIFTY index volume is always sufficient for ATM options",
+    "trend_filter": "ret_60 threshold acts as implicit trend filter",
+    "spread_filter": "none — limit order execution at candle close, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.5,
+    "edge_decay_risk": "medium — momentum strategies are crowded at 1-min+ horizons; at 5s the crowding is lower but the signal window is narrow"
+  },
+  "adaptation_notes": "Original used 1-min bars with a single 5-min return. At 5s resolution the single-layer signal is insufficient — slow 5-min drift and fast 1-min burst look identical on 1-min bars but are different at 5s. Added ret_12 (1-min layer) as a confirmation gate. This filters out entries during 5-min trends that are decelerating (often the last 2-3 minutes before reversal). Original hold was 1-10 min; compressed to 15-120s to target only the fast continuation leg, reducing exposure to mean-reversion risk. Stop/target converted from 0.3% of spot (~75pts NIFTY) to option premium points: 0.3% spot ≈ 37pts option move at delta 0.5, but we target the first 5 pts of a continuing burst, not the full 37-pt equity move.",
+  "weaknesses": [
+    "In choppy low-volatility sessions (NIFTY range < 50pts), 5-min returns rarely exceed 0.2% — few signals generated",
+    "Back-to-back momentum bursts in the same direction can trigger multiple entries; time_stop_bars limits exposure but not signal frequency",
+    "ret_60 is a lagging measure — if 5-min trend stalls exactly at entry, the 1-min confirmation may arrive at the worst moment",
+    "No VIX filter means entries can fire during extreme volatility when ATM options gap by 20+ pts between bars"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_10.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "1-10 min",
+    "original_indicators": ["nifty5m_return = (close - close[5]) / close[5] * 100"],
+    "original_stop": "0.3%",
+    "original_target": "0.3%"
+  }
+}

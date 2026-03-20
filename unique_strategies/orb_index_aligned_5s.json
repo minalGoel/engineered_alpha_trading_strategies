@@ -1,0 +1,162 @@
+{
+  "name": "orb_index_aligned_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-fast",
+  "original_strategy": "orb_index_aligned_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_229.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "ORB breakouts that are aligned with the NIFTY 50 index direction have 15-20% higher follow-through rate than counter-index breakouts. When a stock breaks above its 15-min ORB high AND NIFTY 50 also breaks above its 15-min ORB high, the macro tailwind provides institutional flow support. Counter-index breakouts (stock breaks up but NIFTY breaks down) fail more often because the macro headwind drags the stock back. The index alignment filter is the single most impactful improvement to basic ORB strategy \u2014 it converts a ~50% win rate strategy into a ~60% win rate strategy. The inefficiency exists because retail traders analyze stocks in isolation without checking index context.",
+  "mechanism": "The opening range concentrates pending orders and stop-losses on both sides. When price breaches the range boundary, stop-loss orders from wrong-side participants cascade, amplifying the move. Breakout-following algorithms detect the breach and add momentum, creating a self-reinforcing move that typically persists for 60-180 seconds before the order book absorbs the flow.",
+  "indicators": [
+    {
+      "name": "stock_ORB_high",
+      "formula": "highest(stock_high, bars 09:15 to 09:30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "stock_ORB_low",
+      "formula": "lowest(stock_low, bars 09:15 to 09:30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "stock_ORB_range",
+      "formula": "stock_ORB_high - stock_ORB_low",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "NIFTY_ORB_high",
+      "formula": "highest(NIFTY_high, bars 09:15 to 09:30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "NIFTY_ORB_low",
+      "formula": "lowest(NIFTY_low, bars 09:15 to 09:30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "stock_breakout_up",
+      "formula": "close > stock_ORB_high",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "NIFTY_breakout_up",
+      "formula": "NIFTY_close > NIFTY_ORB_high",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "aligned_long",
+      "formula": "stock_breakout_up AND NIFTY_breakout_up",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "aligned_short",
+      "formula": "(close < stock_ORB_low) AND (NIFTY_close < NIFTY_ORB_low)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ATR_14",
+      "formula": "ATR(high, low, close, 14)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "stock_beta",
+      "formula": "rolling_beta(stock_returns, NIFTY_returns, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "aligned_long == True (stock AND NIFTY both break above 15-min ORB)",
+        "volume at breakout > 1.3x SMA(volume, 20)",
+        "close > vwap",
+        "stock_beta > 0.5 (stock responsive to index)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "aligned_short == True (stock AND NIFTY both break below 15-min ORB)",
+        "volume at breakdown > 1.3x SMA(volume, 20)",
+        "close < vwap",
+        "stock_beta > 0.5"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "if NIFTY reverses back inside its ORB range while in trade, exit (macro reversal)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX between 13 and 22",
+    "volume_filter": "stock breakout bar volume > 1.3x 20-bar SMA",
+    "expiry_filter": "skip F&O expiry; skip stocks with specific earnings today"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Requiring both stock AND index to break ORB simultaneously reduces signal frequency significantly; aligned breakouts occur on only ~30-40% of trading days",
+    "The 3-bar NIFTY confirmation delays entry by ~3 minutes, during which the stock may move 10-20 bps past the breakout level, reducing reward",
+    "On days where NIFTY breaks out but then reverses (false index breakout), the aligned stock trade also fails, and the dual stop (stock ORB mid + NIFTY re-entry) can whipsaw"
+  ],
+  "prior_art": "Elder (1993) triple-screen system (multi-timeframe confirmation); adapted for multi-instrument (stock + index) ORB confirmation. Crabel (1990) ORB foundation.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

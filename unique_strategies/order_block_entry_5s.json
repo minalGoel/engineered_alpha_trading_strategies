@@ -1,0 +1,120 @@
+{
+  "name": "order_block_entry_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-3",
+  "original_strategy": "order_block_entry_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_282.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 16,
+  "thesis": "Order Blocks (OBs) are the last opposite-direction candle before a strong impulse move \u2014 theoretically marking where institutional orders were placed. Fair Value Gaps (FVGs) are three-candle patterns where the wick of candle 1 doesn't overlap with the wick of candle 3, creating an 'unfilled' price gap that price tends to revisit. In Indian 1-min intraday charts, OBs and FVGs identify zones where institutional algorithmic orders created supply/demand imbalances. When price returns to these zones, the remaining unfilled orders provide support (bullish OB) or resistance (bearish OB). The inefficiency exists because: (1) OB/FVG analysis (ICT methodology) is popular among forex retail traders but barely adopted in Indian equity markets, (2) identifying OBs requires tracking every candle's relationship to subsequent impulses, which is computationally intensive, (3) the zones are specific enough to provide precise entry levels with tight stops.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "bullish_OB",
+      "formula": "last bearish candle (close < open) before a bullish impulse of > 10 bps within next 3 bars. OB zone = [low, high] of that bearish candle.",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "bearish_OB",
+      "formula": "last bullish candle (close > open) before a bearish impulse of > 10 bps within next 3 bars. OB zone = [low, high] of that bullish candle.",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "bullish_FVG",
+      "formula": "gap where candle[0].high < candle[2].low (3-bar pattern with upward gap). FVG zone = [candle[0].high, candle[2].low]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "bearish_FVG",
+      "formula": "gap where candle[0].low > candle[2].high (3-bar pattern with downward gap). FVG zone = [candle[2].high, candle[0].low]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "zone_revisit",
+      "formula": "1 if current close enters a previously identified OB or FVG zone for the first time",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "zone_revisit == 1 for a bullish OB or bullish FVG",
+        "close enters the OB/FVG zone from above (pullback into demand zone)",
+        "overall intraday trend is bullish (close > VWAP)",
+        "zone is less than 60 bars old (fresh zone)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "zone_revisit == 1 for a bearish OB or bearish FVG",
+        "close enters the OB/FVG zone from below (rally into supply zone)",
+        "overall intraday trend is bearish (close < VWAP)",
+        "zone is less than 60 bars old"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "close breaks through the OB/FVG zone entirely (zone failed to hold)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 22 (zones are more reliable in moderate volatility)",
+    "volume_filter": "impulse move that created the OB/FVG had volume > 1.3x SMA(volume, 20)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Order Block theory assumes institutional orders create identifiable candle patterns, but in reality, institutional algorithms distribute orders across many candles, not concentrated in one.",
+    "FVGs on 1-min bars are common (hundreds per session) \u2014 without strict filtering, the signal-to-noise ratio is very low. The age limit (60 bars) and volume filter help but don't fully solve this.",
+    "The 'first touch only' rule means zones can only be traded once. If the first touch results in a loss, the zone is removed, even if the second touch would have worked."
+  ],
+  "prior_art": "Inner Circle Trader (ICT) methodology (Michael Huddleston) \u2014 popularized OB/FVG concepts in forex. Wyckoff (1931) 'The Richard D. Wyckoff Method of Trading and Investing in Stocks' for supply/demand zone theory. In India, ICT methodology is taught by several YouTube channels but formal academic validation is lacking.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

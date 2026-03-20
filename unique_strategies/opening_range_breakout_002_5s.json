@@ -1,0 +1,143 @@
+{
+  "name": "opening_range_breakout_002_5s",
+  "version": "1.0.0",
+  "author": "adapted from gpt-5.4",
+  "original_strategy": "opening_range_breakout_002",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_131.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "This strategy exploits delayed institutional continuation after the opening range resolves with participation and trend alignment. The inefficiency exists because price discovery is fragmented between the auction, cash open, and slower institutional execution schedules, and it persists because false breaks, slippage, and crowding make the setup difficult to monetize without disciplined filters.",
+  "mechanism": "The opening range concentrates pending orders and stop-losses on both sides. When price breaches the range boundary, stop-loss orders from wrong-side participants cascade, amplifying the move. Breakout-following algorithms detect the breach and add momentum, creating a self-reinforcing move that typically persists for 60-180 seconds before the order book absorbs the flow.",
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "VWAP()",
+      "lookback": 4680,
+      "computed_on": "spot",
+      "purpose": "intraday fair value anchor"
+    },
+    {
+      "name": "atr_14",
+      "formula": "ATR(168)",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": "volatility normalization"
+    },
+    {
+      "name": "rel_volume_20",
+      "formula": "volume / SMA(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "participation filter"
+    },
+    {
+      "name": "or_high",
+      "formula": "HIGHEST(high, first 60 market minutes)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "opening breakout level"
+    },
+    {
+      "name": "or_low",
+      "formula": "LOWEST(low, first 60 market minutes)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "opening breakout level"
+    },
+    {
+      "name": "ema_short",
+      "formula": "EMA(close, 96)",
+      "lookback": 96,
+      "computed_on": "spot",
+      "purpose": "trigger trend"
+    },
+    {
+      "name": "ema_long",
+      "formula": "EMA(close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "trend filter"
+    },
+    {
+      "name": "index_vwap_dev",
+      "formula": "(NIFTY50_close - NIFTY50_VWAP) / NIFTY50_VWAP",
+      "lookback": 4680,
+      "computed_on": "spot",
+      "purpose": "market regime confirmation"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > or_high",
+        "close > vwap",
+        "ema_short > ema_long",
+        "rel_volume_20 >= 1.2",
+        "index_vwap_dev >= 0"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < or_low",
+        "close < vwap",
+        "ema_short < ema_long",
+        "rel_volume_20 >= 1.2",
+        "index_vwap_dev <= 0"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit when close crosses back through ema_long",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 24",
+    "volume_filter": "require rel_volume_20 >= 1.2",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Performance is regime-dependent and weakens materially when session structure changes mid-trade.",
+    "Fast moves can create worse-than-assumed slippage and reduce realized edge versus paper assumptions.",
+    "Crowding risk can compress payoff and make execution quality unstable in the most obvious setups."
+  ],
+  "prior_art": "Classic ORB with VWAP and EMA trend filter",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,127 @@
+{
+  "name": "opening_range_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "opening_range_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_174.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "The classic 15-minute Opening Range Breakout (ORB) captures the directional resolution of early-session uncertainty. The first 15 minutes (09:15-09:30 IST) establish a range as institutional pre-market orders, overnight gap adjustments, and global cue reactions settle. A breakout above/below this range with volume signals the session's directional bias. The edge exists because the opening range concentrates information discovery into a narrow time window \u2014 once resolved, the chosen direction tends to persist for 1-3 hours. The Indian market opens 15 min later than pre-market (09:00), so the 09:15-09:30 range absorbs the most intense order flow. The inefficiency persists because while ORB is well-known, proper execution with volume confirmation and tight risk management is the differentiator.",
+  "mechanism": "The opening range concentrates pending orders and stop-losses on both sides. When price breaches the range boundary, stop-loss orders from wrong-side participants cascade, amplifying the move. Breakout-following algorithms detect the breach and add momentum, creating a self-reinforcing move that typically persists for 60-180 seconds before the order book absorbs the flow.",
+  "indicators": [
+    {
+      "name": "OR_high",
+      "formula": "",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "OR_low",
+      "formula": "",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "OR_range",
+      "formula": "",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "OR_mid",
+      "formula": "",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "volume_or",
+      "formula": "",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "ATR_14d",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > OR_high",
+        "OR_range > 0.3 AND OR_range < 2.0",
+        "volume on breakout bar > SUM(volume, 15) / 15 * 2.0 (2x avg first-15-min bar volume)",
+        "India_VIX < 25"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < OR_low",
+        "OR_range > 0.3 AND OR_range < 2.0",
+        "volume on breakout bar > SUM(volume, 15) / 15 * 2.0",
+        "India_VIX < 25"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if price closes back inside OR for 3 consecutive bars (false breakout confirmed)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 25; ORB works best in moderate vol environments (14-22)",
+    "volume_filter": "breakout bar volume > 2x average first-15-min bar volume",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "False breakouts are the primary failure mode \u2014 price breaks OR, triggers entry, then reverses into the range",
+    "ORB works best in trending markets; in range-bound, choppy days, both sides of the OR get hit (double loss)",
+    "The first breakout after OR is often the most crowded trade \u2014 many traders use ORB, reducing edge from crowding"
+  ],
+  "prior_art": "Opening Range Breakout is one of the oldest day trading strategies (Toby Crabel, 1990 'Day Trading with Short-Term Price Patterns'). Mark Fisher's ACD method is a variation. Extremely well-documented. Indian adaptation by Zerodha Varsity and multiple trading educators. The 15-min variant is the most common in India due to the 09:15 market open.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

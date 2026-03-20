@@ -1,0 +1,150 @@
+{
+  "name": "opening_drive_post_gap_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-fast",
+  "original_strategy": "opening_drive_post_gap_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_207.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "The first 5-10 minutes after a gap open often exhibit a 'drive' \u2014 a strong directional move that either extends or reverses the gap \u2014 driven by the collision of pre-market orders, stop-loss triggers, and institutional VWAP algorithms starting their execution. When the opening drive direction is the SAME as the gap direction with heavy volume, it signals genuine institutional conviction and the move tends to continue for 20-40 more minutes. This strategy buys the opening drive momentum after confirming the first 5-minute bar closes in gap direction with 2x+ volume. The inefficiency exists because the opening drive window is extremely short and most traders are still assessing the market, missing the initial momentum burst.",
+  "mechanism": "Large opening gaps that hold above the prior range indicate a genuine overnight revaluation. Participants who missed the gap chase the move, while short-sellers who are wrong-footed cover into the trend. The resulting buy pressure sustains the gap direction for the first 30-60 minutes until the new equilibrium is established.",
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(open - prev_close) / prev_close * 100",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "first_5min_close",
+      "formula": "close at bar 5",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "first_5min_range",
+      "formula": "high_5 - low_5",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "drive_direction",
+      "formula": "1 if first_5min_close > open else -1",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "drive_alignment",
+      "formula": "drive_direction * sign(gap_pct)  # +1 if aligned, -1 if counter",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "volume_surge",
+      "formula": "volume_first_5min / avg_volume_first_5min_20d",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "bar_body_ratio",
+      "formula": "abs(close - open) / (high - low + 0.01)  # candle body vs range",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ATR_10",
+      "formula": "ATR(high, low, close, 10)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "EMA_5",
+      "formula": "EMA(close, 5)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct > 0.3 (gap up)",
+        "drive_alignment > 0 (drive in same direction as gap)",
+        "volume_surge > 2.0",
+        "bar_body_ratio > 0.6 (strong close, not doji/spinning top)",
+        "time == 09:20 IST (enter at close of 5th 1-min bar)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct < -0.3 (gap down)",
+        "drive_alignment > 0 (drive aligned with gap down)",
+        "volume_surge > 2.0",
+        "bar_body_ratio > 0.6",
+        "time == 09:20 IST"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 8,
+    "stop_points": 4,
+    "time_stop_bars": 24,
+    "signal_exit": "if price crosses below EMA_5 against position direction, exit (momentum lost)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX > 12 AND VIX < 25 (need volatility for drive, but not chaos)",
+    "volume_filter": "opening 5-min volume > 2x 20-day avg first-5-min volume",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 7
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "The 5-minute wait means entering after the initial burst; on strong drive days the best 0.3-0.5% move may already be done, leaving little follow-through",
+    "Opening 5-minute volume can be inflated by matching of pre-open orders, making the 2x volume filter less meaningful than it appears",
+    "When multiple stocks qualify simultaneously (broad market gap), selecting the best candidate requires ranking logic not specified here, reducing edge per trade"
+  ],
+  "prior_art": "Crabel (1990) 'Opening Range Breakout'; Schulmeister (2009) on opening price dynamics. Opening drive concept from Fisher (2002) 'The Logical Trader'.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

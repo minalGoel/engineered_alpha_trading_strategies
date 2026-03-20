@@ -1,0 +1,141 @@
+{
+  "name": "orb_15min_filtered_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-fast",
+  "original_strategy": "orb_15min_filtered_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_225.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "The 15-minute opening range (09:15-09:30) provides a more reliable breakout level than 5-min ORB because it incorporates the full pre-open order matching and initial price discovery. Adding a VIX filter \u2014 only trading ORB breakouts when India VIX is between 13-20 \u2014 dramatically improves signal quality. Below VIX 13, ranges are too tight and breakouts fail. Above VIX 20, breakouts are genuine but the risk-reward deteriorates due to wider stops. The VIX filter screens for the 'Goldilocks' vol zone where breakouts have the highest follow-through rate. The inefficiency exists because standard ORB implementations don't condition on VIX, leading to inconsistent results.",
+  "mechanism": "The opening range concentrates pending orders and stop-losses on both sides. When price breaches the range boundary, stop-loss orders from wrong-side participants cascade, amplifying the move. Breakout-following algorithms detect the breach and add momentum, creating a self-reinforcing move that typically persists for 60-180 seconds before the order book absorbs the flow.",
+  "indicators": [
+    {
+      "name": "ORB_high_15",
+      "formula": "highest(high, bars 09:15 to 09:30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ORB_low_15",
+      "formula": "lowest(low, bars 09:15 to 09:30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ORB_range_15",
+      "formula": "ORB_high_15 - ORB_low_15",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ORB_mid",
+      "formula": "(ORB_high_15 + ORB_low_15) / 2",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "VIX_at_open",
+      "formula": "India_VIX at 09:30",
+      "lookback": 120,
+      "computed_on": "vix",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "volume_ratio",
+      "formula": "volume / SMA(volume, 20)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "RSI_14",
+      "formula": "RSI(close, 14)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "ATR_14",
+      "formula": "ATR(high, low, close, 14)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > ORB_high_15 (breakout above 15-min range)",
+        "VIX_at_open >= 13 AND VIX_at_open <= 20 (VIX filter)",
+        "volume_ratio > 1.3 at breakout",
+        "close > vwap"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < ORB_low_15",
+        "VIX_at_open >= 13 AND VIX_at_open <= 20",
+        "volume_ratio > 1.3 at breakdown",
+        "close < vwap"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "if India_VIX jumps > 5% during trade (vol regime changing), exit",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "CORE FILTER: India_VIX must be 13-20 at 09:30 IST; outside this range, no trades",
+    "volume_filter": "breakout bar volume > 1.3x 20-bar SMA",
+    "expiry_filter": "skip F&O expiry day; skip if stock has earnings/corporate action"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "The VIX filter (13-20) eliminates ~35% of trading days, reducing signal frequency and capital utilization",
+    "The 2-bar confirmation delay means entering after the initial breakout bar; this can cause entry 5-15 bps above the breakout level, reducing the reward portion of risk-reward",
+    "On days where VIX is near the boundary (e.g., 12.8 or 20.3), the binary filter creates cliff effects \u2014 marginally excluded days may have good setups"
+  ],
+  "prior_art": "Crabel (1990) opening range breakout; Toby (1994) ORB with volatility filter. VIX conditioning inspired by Simon & Campasano (2014).",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,138 @@
+{
+  "name": "opening_range_breakout_5s_2",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "opening_range_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_28.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "The first 15-minute range captures the initial price discovery as overnight information gets priced in. A breakout above/below this range with volume confirmation signals directional intent for the session. The inefficiency exists because the opening range aggregates heterogeneous information (global cues, pre-market orders, institutional positioning) and the breakout direction often persists due to momentum cascades. Hasn't been arbitraged away because the optimal parameters (range window, confirmation method) vary by stock and regime, requiring continuous calibration.",
+  "mechanism": "The opening range concentrates pending orders and stop-losses on both sides. When price breaches the range boundary, stop-loss orders from wrong-side participants cascade, amplifying the move. Breakout-following algorithms detect the breach and add momentum, creating a self-reinforcing move that typically persists for 60-180 seconds before the order book absorbs the flow.",
+  "indicators": [
+    {
+      "name": "orb_high",
+      "formula": "MAX(high, 09:180 to 09:30)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "upper bound of opening range"
+    },
+    {
+      "name": "orb_low",
+      "formula": "MIN(low, 09:180 to 09:30)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "lower bound of opening range"
+    },
+    {
+      "name": "orb_range",
+      "formula": "orb_high - orb_low",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "range magnitude"
+    },
+    {
+      "name": "orb_midpoint",
+      "formula": "(orb_high + orb_low) / 2",
+      "lookback": 180,
+      "computed_on": "option",
+      "purpose": "target reference"
+    },
+    {
+      "name": "vol_15min",
+      "formula": "SUM(volume, 180) from 09:15",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "opening volume context"
+    },
+    {
+      "name": "rel_vol_open",
+      "formula": "vol_15min / SMA(vol_15min, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "is opening volume above normal"
+    },
+    {
+      "name": "atr_20_daily",
+      "formula": "ATR(daily_high, daily_low, daily_close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "context for range size"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > orb_high",
+        "close > vwap",
+        "orb_range > 0.003 * orb_midpoint (range is at least 30 bps \u2014 not too tight)",
+        "orb_range < 0.5 * atr_20_daily (range is not too wide \u2014 room to run)",
+        "rel_vol_open > 1.0",
+        "vix < 22"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < orb_low",
+        "close < vwap",
+        "orb_range > 0.003 * orb_midpoint",
+        "orb_range < 0.5 * atr_20_daily",
+        "rel_vol_open > 1.0",
+        "vix < 22"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "close crosses back inside ORB range",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 22",
+    "volume_filter": "rel_vol_open > 1.0",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "momentum_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "False breakouts are the #1 failure mode \u2014 price pokes above ORB high then reverses",
+    "Low win rate (48%) requires discipline; 5-6 consecutive losers are normal",
+    "On flat/range-bound days, ORB breakouts fail repeatedly \u2014 need regime filter"
+  ],
+  "prior_art": "Opening Range Breakout (Toby Crabel). One of the most studied intraday strategies.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

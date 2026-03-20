@@ -19,12 +19,14 @@ from pipeline.config import (
     OOS_SHARPE_DECAY_LIMIT, OOS_MIN_STOCKS_PROFITABLE_PCT,
 )
 from pipeline.strategy_parser import ParsedStrategy, parse_strategy
+from pipeline.strategies.base import BaseStrategy
+from pipeline.strategies.loader import load_strategy as load_strategy_class
 from pipeline.data_loader import (
     load_stock_data, load_vix_data, load_index_data,
     merge_vix_index,
 )
 from pipeline.indicators import compute_all_indicators
-from pipeline.backtester import backtest_single, build_signals_from_trades
+from pipeline.backtester import backtest_single, backtest_with_strategy_class, build_signals_from_trades
 from pipeline.optimizer import run_default_backtest, run_cv_validation, run_optimization
 from pipeline.metrics import compute_metrics, compute_per_stock_metrics
 from pipeline.stock_filter import filter_all_stocks
@@ -184,40 +186,65 @@ def run_strategy_pipeline(
     try:
         # ── Phase 2: Parse strategy ─────────────────────────────────────
         log.info("%s — Phase 2 — parsing strategy", log_prefix)
-        ps = parse_strategy(raw_json)
 
-        if not ps.is_parseable:
-            verdict = _make_verdict("FAILED_PARSE_ERROR",
-                                    f"Errors: {ps.parse_errors}; Unparsed: {ps.unparsed_conditions}")
-            _save_json(strat_dir / "verdict.json", verdict)
-            result["verdict"] = "FAILED_PARSE_ERROR"
-            _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_PARSE_ERROR", verdict["reason"])
-            return result
+        # Try loading a hand-implemented strategy class first
+        strategy_cls = load_strategy_class(name)
+        use_strategy_class = strategy_cls is not None
+
+        if use_strategy_class:
+            log.info("%s — using hand-implemented strategy class", log_prefix)
+            # Still parse for metadata (report generation, tags, thesis)
+            # but don't fail on parse errors — the class handles signals
+            ps = parse_strategy(raw_json)
+            # Override parse status — class handles everything
+            ps._strategy_class = strategy_cls
+        else:
+            ps = parse_strategy(raw_json)
+            if not ps.is_parseable:
+                verdict = _make_verdict("FAILED_PARSE_ERROR",
+                                        f"Errors: {ps.parse_errors}; Unparsed: {ps.unparsed_conditions}")
+                _save_json(strat_dir / "verdict.json", verdict)
+                result["verdict"] = "FAILED_PARSE_ERROR"
+                _generate_fail_report(strat_dir, name, raw_json, ps, "FAILED_PARSE_ERROR", verdict["reason"])
+                return result
 
         # ── Load data for this strategy's timeframe ─────────────────────
-        log.info("%s — Phase 2 — loading data (timeframe=%s)", log_prefix, ps.timeframe)
+        timeframe = strategy_cls.timeframe if use_strategy_class else ps.timeframe
+        log.info("%s — Phase 2 — loading data (timeframe=%s)", log_prefix, timeframe)
 
-        vix_df = load_vix_data(ps.timeframe, end_date=TRAIN_END)
-        index_df = load_index_data(ps.timeframe, end_date=TRAIN_END) if ps.needs_index else None
+        vix_df = load_vix_data(timeframe, end_date=TRAIN_END)
+        needs_index = strategy_cls.needs_index if use_strategy_class else ps.needs_index
+        index_df = load_index_data(timeframe, end_date=TRAIN_END) if needs_index else None
 
-        # Load all stocks for training period, compute indicators
+        max_lookback = strategy_cls.max_lookback if use_strategy_class else ps.max_lookback
+
+        # Load all stocks for training period
         train_stock_data = {}
         for sym in available_symbols:
-            df = load_stock_data(ps.timeframe, sym, end_date=TRAIN_END)
+            df = load_stock_data(timeframe, sym, end_date=TRAIN_END)
             if df is not None and not df.is_empty():
                 df = merge_vix_index(df, vix_df, index_df)
-                # Compute indicators once — reused across all Optuna trials
-                df, computed, failed = compute_all_indicators(
-                    df, ps.indicator_defs,
-                    needs_vwap=ps.needs_vwap,
-                    needs_pdh_pdl=ps.needs_pdh_pdl,
-                    needs_prev_close=ps.needs_prev_close,
-                    needs_opening_range=ps.needs_opening_range,
-                    needs_gap=ps.needs_gap,
-                    needs_obv=ps.needs_obv,
-                    needs_bar_count=ps.needs_bar_count,
-                )
-                if len(df) > ps.max_lookback:
+                if use_strategy_class:
+                    # Strategy class computes its own indicators — just ensure
+                    # time_minutes and day_id columns exist
+                    if "time_minutes" not in df.columns and "datetime" in df.columns:
+                        df = df.with_columns(
+                            (pl.col("datetime").dt.hour() * 60 + pl.col("datetime").dt.minute())
+                            .alias("time_minutes")
+                        )
+                else:
+                    # Old path: compute indicators via indicator_defs
+                    df, computed, failed = compute_all_indicators(
+                        df, ps.indicator_defs,
+                        needs_vwap=ps.needs_vwap,
+                        needs_pdh_pdl=ps.needs_pdh_pdl,
+                        needs_prev_close=ps.needs_prev_close,
+                        needs_opening_range=ps.needs_opening_range,
+                        needs_gap=ps.needs_gap,
+                        needs_obv=ps.needs_obv,
+                        needs_bar_count=ps.needs_bar_count,
+                    )
+                if len(df) > max_lookback:
                     train_stock_data[sym] = df
 
         watchdog.check()  # Check timeout after data loading
@@ -235,7 +262,8 @@ def run_strategy_pipeline(
         if start_phase <= 3:
             log.info("%s — Phase 3a — default backtest on full training set", log_prefix)
 
-            default_trades, trading_days = run_default_backtest(ps, train_stock_data, n_jobs=n_cores)
+            bt_strategy = strategy_cls if use_strategy_class else ps
+            default_trades, trading_days = run_default_backtest(bt_strategy, train_stock_data, n_jobs=n_cores)
 
             if default_trades is None or len(default_trades) < MIN_TRADES_FULL:
                 n_trades = len(default_trades) if default_trades is not None else 0
@@ -253,7 +281,7 @@ def run_strategy_pipeline(
 
             # Cross-validation
             log.info("%s — Phase 3a — 5-fold CV with default params", log_prefix)
-            cv_results, cv_passed = run_cv_validation(ps, train_stock_data, n_jobs=n_cores)
+            cv_results, cv_passed = run_cv_validation(bt_strategy, train_stock_data, n_jobs=n_cores)
             watchdog.check()
 
             if not cv_passed:
@@ -263,8 +291,12 @@ def run_strategy_pipeline(
                 _save_json(strat_dir / "verdict.json", verdict)
                 result["verdict"] = "FAILED_OVERFIT"
 
+                if use_strategy_class:
+                    _default_params = {tp.name: tp.default for tp in strategy_cls.tunable_params()}
+                else:
+                    _default_params = {k: v[0] for k, v in ps.tunable_params.items()}
                 opt_json = {
-                    "default_params": {k: v[0] for k, v in ps.tunable_params.items()},
+                    "default_params": _default_params,
                     "optimized_params": {},
                     "param_bounds": {},
                     "default_sharpe": round(default_sharpe, 4),
@@ -291,7 +323,7 @@ def run_strategy_pipeline(
                              log_prefix, trial_num + 1, sharpe)
 
             opt_result = run_optimization(
-                ps, train_stock_data, default_sharpe, trading_days,
+                bt_strategy, train_stock_data, default_sharpe, trading_days,
                 n_jobs=n_cores, progress_callback=progress_cb,
             )
             opt_result["cv_fold_results"] = cv_results
@@ -341,8 +373,12 @@ def run_strategy_pipeline(
             per_stock_metrics = {}
 
             for sym, df in train_stock_data.items():
-                trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
-                                         skip_indicators=True)
+                if use_strategy_class:
+                    trades = backtest_with_strategy_class(df, strategy_cls, sym,
+                                                          param_overrides=optimized_params)
+                else:
+                    trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
+                                             skip_indicators=True)
                 if trades is not None and not trades.is_empty():
                     all_train_trades.append(trades)
                     m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade, trading_days)
@@ -415,33 +451,44 @@ def run_strategy_pipeline(
         # ── Phase 6: Out-of-sample validation ───────────────────────────
         log.info("%s — Phase 6 — out-of-sample validation (2025)", log_prefix)
 
-        vix_test = load_vix_data(ps.timeframe, start_date=TEST_START)
-        index_test = load_index_data(ps.timeframe, start_date=TEST_START) if ps.needs_index else None
+        vix_test = load_vix_data(timeframe, start_date=TEST_START)
+        index_test = load_index_data(timeframe, start_date=TEST_START) if needs_index else None
 
         all_test_trades = []
         test_per_stock = {}
 
         test_trading_days = 0
         for sym in passing_syms:
-            df = load_stock_data(ps.timeframe, sym, start_date=TEST_START)
+            df = load_stock_data(timeframe, sym, start_date=TEST_START)
             if df is None or df.is_empty():
                 continue
             df = merge_vix_index(df, vix_test, index_test)
-            df, _, _ = compute_all_indicators(
-                df, ps.indicator_defs,
-                needs_vwap=ps.needs_vwap,
-                needs_pdh_pdl=ps.needs_pdh_pdl,
-                needs_prev_close=ps.needs_prev_close,
-                needs_opening_range=ps.needs_opening_range,
-                needs_gap=ps.needs_gap,
-                needs_obv=ps.needs_obv,
-                needs_bar_count=ps.needs_bar_count,
-            )
+            if use_strategy_class:
+                if "time_minutes" not in df.columns and "datetime" in df.columns:
+                    df = df.with_columns(
+                        (pl.col("datetime").dt.hour() * 60 + pl.col("datetime").dt.minute())
+                        .alias("time_minutes")
+                    )
+            else:
+                df, _, _ = compute_all_indicators(
+                    df, ps.indicator_defs,
+                    needs_vwap=ps.needs_vwap,
+                    needs_pdh_pdl=ps.needs_pdh_pdl,
+                    needs_prev_close=ps.needs_prev_close,
+                    needs_opening_range=ps.needs_opening_range,
+                    needs_gap=ps.needs_gap,
+                    needs_obv=ps.needs_obv,
+                    needs_bar_count=ps.needs_bar_count,
+                )
             # Track test period trading days from the first stock we see
             if test_trading_days == 0 and "day_id" in df.columns:
                 test_trading_days = df["day_id"].n_unique()
-            trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
-                                     skip_indicators=True)
+            if use_strategy_class:
+                trades = backtest_with_strategy_class(df, strategy_cls, sym,
+                                                      param_overrides=optimized_params)
+            else:
+                trades = backtest_single(df, ps, sym, param_overrides=optimized_params,
+                                         skip_indicators=True)
             if trades is not None and not trades.is_empty():
                 all_test_trades.append(trades)
                 m = compute_per_stock_metrics(trades, sym, ps.capital_per_trade,
@@ -531,7 +578,7 @@ def run_strategy_pipeline(
             cv_fold_results=cv_results,
             per_stock_results=per_stock_metrics,
             test_trades_df=test_combined if not test_combined.is_empty() else None,
-            assumptions=ps.parse_warnings,
+            assumptions=(strategy_cls.assumptions if use_strategy_class else ps.parse_warnings),
         )
         _save_text(strat_dir / "report.md", report_md)
 

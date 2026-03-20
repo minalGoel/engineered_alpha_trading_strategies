@@ -270,6 +270,11 @@ def parse_strategy(raw: dict) -> ParsedStrategy:
                      "orb_high", "orb_low", "or_high_15", "or_low_15",
                      "opening_range_high", "opening_range_low",
                      "nifty50_close", "nifty_close", "index_return",
+                     # Session / intraday structural
+                     "session_high", "session_low", "open_today", "day_open",
+                     "morning_return", "stock_return", "intraday_return",
+                     "rel_volume", "volume_ratio", "rel_volume_20", "vol_spike",
+                     "india_vix",
                      }
     # Also add indicator names as "assumed available" — they reference each other
     for ind in ps.indicator_defs:

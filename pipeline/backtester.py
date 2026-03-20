@@ -401,3 +401,193 @@ def build_signals_from_trades(
         })
 
     return pl.DataFrame(rows)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# NEW: Strategy-class-based backtester (replaces condition_parser flow)
+# ═══════════════════════════════════════════════════════════════════════
+
+def backtest_with_strategy_class(
+    df: pl.DataFrame,
+    strategy: "BaseStrategy",
+    symbol: str,
+    param_overrides: Optional[dict[str, float]] = None,
+) -> Optional[pl.DataFrame]:
+    """Run backtest using a hand-implemented BaseStrategy class.
+
+    This replaces the condition_parser flow entirely. The strategy's
+    compute() method produces all entry/exit masks and exit parameters.
+
+    Args:
+        df: OHLCV DataFrame with day_id, vix, index_close, time_minutes.
+        strategy: A BaseStrategy subclass instance.
+        symbol: Stock symbol name.
+        param_overrides: Optional dict of parameter overrides from Optuna.
+
+    Returns:
+        trades DataFrame or None if no trades / error.
+    """
+    from pipeline.strategies.base import BaseStrategy as _BS
+
+    if df is None or df.is_empty():
+        return None
+
+    param_overrides = param_overrides or {}
+
+    try:
+        # Forward-fill NaN in OHLC columns
+        ohlc_cols = [c for c in ("open", "high", "low", "close") if c in df.columns]
+        if ohlc_cols:
+            df = df.with_columns([pl.col(c).forward_fill() for c in ohlc_cols])
+
+        # Ensure time_minutes column exists
+        if "time_minutes" not in df.columns:
+            df = df.with_columns(
+                (pl.col("datetime").dt.hour() * 60 + pl.col("datetime").dt.minute())
+                .alias("time_minutes")
+            )
+
+        n = len(df)
+
+        # ── Build params dict: defaults merged with overrides ──
+        params = {}
+        for tp in strategy.tunable_params():
+            params[tp.name] = param_overrides.get(tp.name, tp.default)
+        # Also pass through any extra overrides (e.g., stop_loss_pct, target_pct)
+        for k, v in param_overrides.items():
+            if k not in params:
+                params[k] = v
+
+        # ── Compute strategy signals ──
+        signals = strategy.compute(df, params)
+
+        # ── Apply session time filter ──
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        session_mask = (time_mins >= strategy.session_start) & (time_mins < strategy.session_end)
+        long_mask = signals.long_entry & session_mask
+        short_mask = signals.short_entry & session_mask
+
+        # ── NaN-safe arrays ──
+        atr_arr = np.nan_to_num(signals.atr_arr, nan=0.0)
+        target_indicator = np.nan_to_num(signals.target_indicator, nan=0.0)
+
+        # ── Resolve exit parameters (allow Optuna overrides) ──
+        sl_pct = params.get("stop_loss_pct", signals.stop_loss_pct)
+        sl_atr = params.get("stop_loss_atr_mult", signals.stop_loss_atr_mult)
+        tgt_pct = params.get("target_pct", signals.target_pct)
+        tgt_atr = params.get("target_atr_mult", signals.target_atr_mult)
+        trail_pct = params.get("trailing_stop_pct", signals.trailing_stop_pct)
+        trail_activate = signals.trailing_activate_pct
+        be_pct = signals.breakeven_pct
+        time_stop = int(params.get("time_stop_bars",
+                                    signals.time_stop_bars or DEFAULT_MAX_HOLD_BARS))
+
+        # ── Run state machine ──
+        eod_flatten_minutes = EOD_FLATTEN_H * 60 + EOD_FLATTEN_M
+        capped_session_end = min(strategy.session_end, eod_flatten_minutes)
+
+        result = run_state_machine(
+            open_arr=df["open"].to_numpy().astype(np.float64),
+            high_arr=df["high"].to_numpy().astype(np.float64),
+            low_arr=df["low"].to_numpy().astype(np.float64),
+            close_arr=df["close"].to_numpy().astype(np.float64),
+            day_id=df["day_id"].to_numpy().astype(np.int32),
+            time_minutes=time_mins.astype(np.int32),
+            long_entry=long_mask,
+            short_entry=short_mask,
+            signal_exit_long=signals.signal_exit_long,
+            signal_exit_short=signals.signal_exit_short,
+            atr_arr=atr_arr,
+            target_indicator=target_indicator,
+            stop_loss_pct=sl_pct,
+            stop_loss_atr_mult=sl_atr,
+            target_pct=tgt_pct,
+            target_atr_mult=tgt_atr,
+            use_target_indicator=signals.use_target_indicator,
+            trailing_stop_pct=trail_pct,
+            trailing_activate_pct=trail_activate,
+            breakeven_pct=be_pct,
+            time_stop_bars=time_stop,
+            eod_flatten_minutes=eod_flatten_minutes,
+            session_start_minutes=strategy.session_start,
+            session_end_minutes=capped_session_end,
+            max_trades_per_day=strategy.max_trades_per_day,
+            max_daily_loss=0.0,  # handled at portfolio level
+            capital_per_trade=100000.0,
+            warmup_bars=200,  # safe default for most indicators
+        )
+
+        entry_bars, exit_bars, sides, entry_prices, exit_prices, exit_reasons, trade_count = result
+
+        if trade_count == 0:
+            return None
+
+        # ── Build trades DataFrame ──
+        datetimes = df["datetime"].to_list()
+        capital = 100000.0
+
+        trade_ids = []
+        symbols = []
+        side_labels = []
+        entry_times = []
+        exit_times = []
+        entry_px = []
+        exit_px = []
+        pnls = []
+        pnl_pcts = []
+        holding_bars_list = []
+        exit_reason_labels = []
+        entry_indicators_list = []
+
+        close_np = df["close"].to_numpy()
+
+        for t in range(trade_count):
+            entry_bar = int(entry_bars[t])
+            exit_bar = int(exit_bars[t])
+            side = int(sides[t])
+            ep = float(entry_prices[t])
+            xp = float(exit_prices[t])
+
+            if side == STATE_LONG:
+                pnl = (xp - ep) * (capital / ep)
+                pnl_pct = (xp - ep) / ep
+                side_label = "LONG"
+            else:
+                pnl = (ep - xp) * (capital / ep)
+                pnl_pct = (ep - xp) / ep
+                side_label = "SHORT"
+
+            trade_ids.append(f"{symbol}_{strategy.name}_{t}")
+            symbols.append(symbol)
+            side_labels.append(side_label)
+            entry_times.append(datetimes[entry_bar])
+            exit_times.append(datetimes[exit_bar])
+            entry_px.append(ep)
+            exit_px.append(xp)
+            pnls.append(pnl)
+            pnl_pcts.append(pnl_pct)
+            holding_bars_list.append(exit_bar - entry_bar)
+            exit_reason_labels.append(EXIT_REASON_MAP.get(int(exit_reasons[t]), "UNKNOWN"))
+            entry_indicators_list.append("{}")  # No indicator dict for strategy-class flow
+
+        trades_df = pl.DataFrame({
+            "trade_id": trade_ids,
+            "symbol": symbols,
+            "side": side_labels,
+            "entry_time": entry_times,
+            "exit_time": exit_times,
+            "entry_price": entry_px,
+            "exit_price": exit_px,
+            "pnl": pnls,
+            "pnl_pct": pnl_pcts,
+            "holding_bars": holding_bars_list,
+            "exit_reason": exit_reason_labels,
+            "entry_indicators": entry_indicators_list,
+        })
+
+        return trades_df
+
+    except Exception as e:
+        log.error("Strategy-class backtest failed for %s/%s: %s",
+                  strategy.name, symbol, e, exc_info=True)
+        return None

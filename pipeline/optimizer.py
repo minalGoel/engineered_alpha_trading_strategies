@@ -17,13 +17,27 @@ from pipeline.config import (
     OVERFIT_SHARPE_RATIO, CV_FOLDS, MIN_CV_FOLDS_PROFITABLE,
 )
 from pipeline.strategy_parser import ParsedStrategy
-from pipeline.backtester import backtest_single
+from pipeline.backtester import backtest_single, backtest_with_strategy_class
+from pipeline.strategies.base import BaseStrategy
 from pipeline.metrics import compute_sharpe_from_trades, compute_metrics
 
 log = logging.getLogger(__name__)
 
 # Suppress Optuna's verbose logging
 optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+
+def _is_strategy_class(strategy) -> bool:
+    """Check if strategy is a BaseStrategy instance (vs ParsedStrategy)."""
+    return isinstance(strategy, BaseStrategy)
+
+
+def _run_backtest(df, strategy, symbol, param_overrides=None, skip_indicators=True):
+    """Dispatch to the correct backtest function based on strategy type."""
+    if _is_strategy_class(strategy):
+        return backtest_with_strategy_class(df, strategy, symbol, param_overrides=param_overrides)
+    return backtest_single(df, strategy, symbol, param_overrides=param_overrides,
+                           skip_indicators=skip_indicators)
 
 
 def _estimate_trading_days(df: pl.DataFrame) -> int:
@@ -48,7 +62,7 @@ def run_default_backtest(
     max_trading_days = 0
 
     def _run_one(symbol: str, df: pl.DataFrame):
-        return backtest_single(df, strategy, symbol, skip_indicators=True)
+        return _run_backtest(df, strategy, symbol)
 
     results = Parallel(n_jobs=n_jobs, prefer="threads")(
         delayed(_run_one)(sym, df)
@@ -96,7 +110,7 @@ def run_cv_validation(
             if fold_df.is_empty() or len(fold_df) < strategy.max_lookback:
                 continue
 
-            trades = backtest_single(fold_df, strategy, sym, skip_indicators=True)
+            trades = _run_backtest(fold_df, strategy, sym)
             if trades is not None and not trades.is_empty():
                 fold_trades.append(trades)
 
@@ -136,7 +150,14 @@ def run_optimization(
 
     Returns optimization results dict.
     """
-    tunable = strategy.tunable_params
+    # Normalise tunable params: BaseStrategy returns list[TunableParam],
+    # ParsedStrategy stores dict {name: (default, lo, hi)}.
+    if _is_strategy_class(strategy):
+        tp_list = strategy.tunable_params()
+        tunable = {tp.name: (tp.default, tp.low, tp.high) for tp in tp_list}
+    else:
+        tunable = strategy.tunable_params
+
     if not tunable:
         log.info("No tunable parameters for %s, using defaults", strategy.name)
         return {
@@ -165,8 +186,7 @@ def run_optimization(
         # Run backtest across all stocks with these params
         all_trades = []
         for sym, df in stock_data.items():
-            trades = backtest_single(df, strategy, sym, param_overrides=overrides,
-                                     skip_indicators=True)
+            trades = _run_backtest(df, strategy, sym, param_overrides=overrides)
             if trades is not None and not trades.is_empty():
                 all_trades.append(trades)
 

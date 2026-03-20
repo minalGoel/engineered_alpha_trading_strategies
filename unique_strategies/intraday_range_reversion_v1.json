@@ -1,0 +1,121 @@
+{
+  "name": "intraday_range_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["range", "high-low", "mean-reversion", "intraday-extremes", "pin-bar"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_154.json",
+  "original_name": "intraday_range_reversion_v1",
+  "mechanism": "On NIFTY, the session high and low become self-reinforcing order magnets: systematic TWAP/VWAP algorithms, stop-limit clusters, and delta-hedging desks concentrate resting orders at these levels throughout the day. When NIFTY touches its session extreme and the 5-second bar forms a rejection candle (close in the upper 65% of bar range at session low, lower 65% at session high), it signals that the algorithmic buy or sell wall has absorbed the directional flow. Within 30-90 seconds, VWAP-benchmarked institutional algorithms aggressively fade the extreme because their fill price relative to benchmark has become highly attractive, driving a 12-25 spot point reversion toward the session midpoint.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-14:45 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "session_high",
+      "formula": "cummax(high) per day_id from 09:15",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative session high — no scaling needed, it is a running extreme since market open. The session extreme is the same concept regardless of bar size; what matters is where the institutional order wall sits, not how many bars have passed."
+    },
+    {
+      "name": "session_low",
+      "formula": "cummin(low) per day_id from 09:15",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative session low — same rationale as session_high. Cumulative measures do not require period scaling."
+    },
+    {
+      "name": "range_pct",
+      "formula": "(session_high - session_low) / session_low * 100",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Quality filter ensuring a meaningful intraday range exists before trading the reversion. Threshold 0.5% chosen because NIFTY needs at least ~100 spot points of range to generate a tradeable 12+ point reversion target. In the original equity strategy this was 0.8% on individual stocks; for the NIFTY index which moves in tighter % terms, 0.5% is more appropriate."
+    },
+    {
+      "name": "pin_bar_long_score",
+      "formula": "(close - low) / max(high - low, 0.1)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Single-bar hammer score: measures what fraction of the bar's range the close is above the low. Score > 0.65 means close is in the upper 35% of the bar — sellers tried to push lower but buyers absorbed it within this 5-second bar. Threshold slightly relaxed from original 0.7 because 5-second bars have noisier wicks."
+    },
+    {
+      "name": "pin_bar_short_score",
+      "formula": "(high - close) / max(high - low, 0.1)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Single-bar shooting-star score: measures what fraction of the bar's range the close is below the high. Score > 0.65 means close is in the lower 35% of the bar — buyers tried to push higher but sellers absorbed it. Same 5-second bar noise adjustment as long score."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "low <= session_low * (1 + proximity_pct) — bar touched within 0.2% of session low",
+        "close > session_low — bar closed above the extreme (rejection confirmed within 5s)",
+        "pin_bar_long_score > 0.65 — hammer pattern: close in upper 35% of bar range",
+        "range_pct > 0.5 — meaningful intraday range exists",
+        "VIX between 13 and 23 — not too calm (no range) or too chaotic (breakout regime)"
+      ],
+      "confirmation": "Signal fires on the rejection bar itself. Unlike original 1-min strategy, no next-bar confirmation is needed — at 5-second resolution the bar already represents real-time pattern completion and the reversion begins immediately."
+    },
+    "buy_pe": {
+      "conditions": [
+        "high >= session_high * (1 - proximity_pct) — bar touched within 0.2% of session high",
+        "close < session_high — bar closed below the extreme (rejection confirmed within 5s)",
+        "pin_bar_short_score > 0.65 — shooting star: close in lower 35% of bar range",
+        "range_pct > 0.5 — meaningful intraday range exists",
+        "VIX between 13 and 23"
+      ],
+      "confirmation": "Signal fires on the rejection bar itself."
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY continues past the session extreme by 8+ spot points, the algorithmic support wall has failed — a genuine breakout is underway and the reversion thesis is invalid. Tight stop is appropriate since we enter precisely at the extreme with clearly defined failure condition.",
+    "target_points": 6,
+    "target_rationale": "6 option points (~12 NIFTY spot points at delta 0.5). NIFTY session extremes typically produce 20-40 spot point first-leg reversions; capturing 12 points is conservative (30-60% of median move) and achievable within 90 seconds as VWAP benchmarked buy-side algorithms adjust positions. This gives 1:1.5 risk:reward.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 14:45 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX 13-23: below 13 means NIFTY intraday range is too narrow (<80 pts) for meaningful reversion; above 23 means breakouts dominate over reversions and session extremes are routinely breached",
+    "time_filter": "entries only 10:00-14:45 IST (600-885 min from midnight) — allows 45 minutes for a meaningful range to establish from 09:15 open before accepting signals",
+    "volume_filter": "none — NIFTY index volume is noisy at 5-second resolution and unreliable as a filter",
+    "trend_filter": "none — mean-reversion at range extremes does not benefit from trend filter; the extreme itself is the structural signal",
+    "spread_filter": "none — limit order execution at candle close prices, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.83,
+    "edge_decay_risk": "moderate — session high/low reversion is a well-known pattern; HFT likely front-runs the rejection by milliseconds; edge depends on NIFTY maintaining a ranging (not trending) intraday character"
+  },
+  "adaptation_notes": "Original trades individual NIFTY200 stocks using 1-min bars. Converted to NIFTY index because: (1) session high/low are equally valid on the index — institutions actively reference these levels for TWAP execution and delta hedging; (2) pin bar pattern is cleaner on NIFTY at 5s because the index smooths individual stock idiosyncratic noise; (3) hold time compressed from 10-40 min to 30-90 seconds — we capture the first institutional response wave, not the full reversion. Key changes: (a) no next-bar confirmation required — at 5s the rejection bar is already real-time; (b) proximity threshold relaxed from 0.1% to 0.2% because NIFTY moves in larger absolute terms; (c) range_pct threshold reduced from 0.8% to 0.5% as index has tighter % ranges than individual stocks; (d) ATR_14 indicator dropped — not needed at 5s where we use fixed option point stops calibrated to typical NIFTY moves.",
+  "weaknesses": [
+    "Pin bar quality degrades at 5-second resolution — many bars near session extremes will have wicks without genuine absorption; signal frequency may be too high with false patterns",
+    "On directional days (gap-and-go regime), session extremes are launching pads not reversal points — strategy will consistently lose when VIX > 20 and early momentum is strong",
+    "Only 1-3 signals per day; statistical significance requires months of data to assess edge",
+    "90-second hold captures only the first 30-40% of a typical session extreme reversion — larger moves are left on the table"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_154.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-40 minutes",
+    "original_indicators": ["session_high", "session_low", "range_pct", "range_position", "ATR_14"],
+    "original_stop": "0.15% beyond session extreme",
+    "original_target": "50% of intraday range toward midpoint"
+  }
+}

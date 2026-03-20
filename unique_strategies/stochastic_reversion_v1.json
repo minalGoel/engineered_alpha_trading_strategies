@@ -1,0 +1,108 @@
+{
+  "name": "stochastic_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["stochastic", "mean-reversion", "oversold", "overbought", "cross-confirmation", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_157.json",
+  "original_name": "stochastic_reversion_v1",
+  "mechanism": "On NIFTY, when the index sells off sharply enough within a 70-second window to push the stochastic below 20, it reflects that aggressive order flow has briefly overwhelmed the available bid-side liquidity at that depth. The moment %K crosses above %D from the oversold zone, it marks the first measurable slowdown in the rate of decline — resting limit buy orders and institutional delta hedges begin absorbing the selling pressure. This creates a micro-reversion of 10-20 NIFTY spot points over the subsequent 30-90 seconds, captured by entering ATM calls on the cross bar. The inverse holds symmetrically for overbought crosses: supply absorbs demand at the short-term range top and the index fades 10-20 spot pts.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "stoch_k_14",
+      "formula": "SMA(((close - lowest_low(14)) / (highest_high(14) - lowest_low(14))) * 100, 3)",
+      "lookback": 16,
+      "computed_on": "spot",
+      "purpose": "14 bars at 5s = 70-second range position, smoothed with 3-bar SMA. NOT 12x the original (which would be 168 bars = 14 min). We are trading the FAST reversion from a 70-second extreme, not a 14-minute one. At our 15-90 second hold, the trigger window must be shorter than the hold time — 70s detects the exhaustion of the immediate selling pressure while 14-min detects multi-hour regime shifts that are not actionable at 5s."
+    },
+    {
+      "name": "stoch_d_14_3",
+      "formula": "SMA(stoch_k_14, 3)",
+      "lookback": 18,
+      "computed_on": "spot",
+      "purpose": "3-period SMA of %K adds 15 seconds of lag. The cross (%K above %D) is the entry trigger: it confirms that the immediate rate of decline has reversed, not just that price hit an extreme. Same smoothing as original because the signal logic (cross confirmation) is unchanged — only the timescale is compressed."
+    },
+    {
+      "name": "vwap_session",
+      "formula": "Cumulative TPVOL / Cumulative VOL from 09:15 IST each day",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "No scaling needed — VWAP is cumulative from session open. Used as a proximity filter: only trade when NIFTY is within 0.5% of VWAP. Ensures we are trading micro-reversions around fair value, not chasing moves that are part of a larger directional trend away from VWAP."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "stoch_k < oversold_threshold (default 20) — NIFTY near bottom of 70-second range",
+        "stoch_d < oversold_threshold — smoothed %K also in oversold zone (no false cross)",
+        "stoch_k[t] > stoch_d[t] AND stoch_k[t-1] <= stoch_d[t-1] — bullish cross just occurred",
+        "close > vwap * (1 - vwap_proximity) — within 0.5% below VWAP (near fair value)",
+        "close > open — bullish bar at the cross (confirming buying pressure on this bar)",
+        "bars_consecutive_in_oversold < 30 — oversold for < 2.5 min (not trending down)"
+      ],
+      "confirmation": "Bullish close bar on the stochastic cross bar itself"
+    },
+    "buy_pe": {
+      "conditions": [
+        "stoch_k > overbought_threshold (default 80) — NIFTY near top of 70-second range",
+        "stoch_d > overbought_threshold — smoothed %K also in overbought zone",
+        "stoch_k[t] < stoch_d[t] AND stoch_k[t-1] >= stoch_d[t-1] — bearish cross just occurred",
+        "close < vwap * (1 + vwap_proximity) — within 0.5% above VWAP (near fair value)",
+        "close < open — bearish bar at the cross",
+        "bars_consecutive_in_overbought < 30 — overbought for < 2.5 min (not trending up)"
+      ],
+      "confirmation": "Bearish close bar on the stochastic cross bar itself"
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. A 70-second range overshoot on NIFTY reverts within 30-90s when the thesis holds; if the index moves more than 8 spot pts against the position (continuing past the range extreme), the selling/buying is structural not exhausted and the thesis is invalid. Calibrated to NIFTY's 30-second typical move of 2-5 option pts — stop is just above the 1-sigma adverse move.",
+    "target_points": 6,
+    "target_rationale": "6 option points = ~12 NIFTY spot points at delta 0.5. A successful stochastic reversion from a 70-second extreme typically bounces 15-25 spot points as the stochastic reverts toward the midline (50). Targeting 12 spot pts captures approximately 50-60% of the typical bounce while maintaining 1:1.5 risk-reward. Consistent with NIFTY's 1-minute move range of 3-7 option pts.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25 — above 25, NIFTY exhibits trending/gapping behavior where stochastic extremes persist rather than reverting",
+    "time_filter": "09:30-15:20 IST — skip first 15 minutes of noise; avoid EOD illiquidity",
+    "volume_filter": "none explicit — index volume is noisy at 5s; VWAP proximity serves as a more reliable filter",
+    "trend_filter": "bars_consecutive_in_extreme < 30 — if stochastic has been extreme for 2.5+ minutes, the index is trending and reversion trades will fail",
+    "spread_filter": "limit order execution at candle close — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "high — stochastic crossovers are well-known TA signals; but at 5s on NIFTY the signal is far less crowded than at 1-min on equities because retail traders don't operate at this speed"
+  },
+  "adaptation_notes": "Three key changes from original: (1) Lookback compressed from 14-min (14 × 1min) to 70-second (14 × 5s) because we are trading the fast intraday reversion, not the slow multi-minute one. (2) VWAP proximity threshold set to 0.5% instead of original 0.5% — same logic, same NIFTY levels since VWAP is an absolute price level. (3) Extended-extreme filter kept at 30 bars (2.5 min) vs original's 10 bars (10 min) — same ratio, catching the same 'trending stochastic' failure mode. The original was noted as unprofitable on stocks due to noise; on NIFTY index at 5s, the signal is cleaner because the index aggregates away single-stock noise, but the edge remains thin and filter discipline is critical.",
+  "weaknesses": [
+    "Thin edge — stochastic cross is well-known and this exact setup fires infrequently (the VWAP + cross + bar confirmation stack is tight)",
+    "NIFTY trending sessions (RBI announcements, budget day) will generate repeated failed cross signals before the extreme resolves",
+    "At 5-second resolution, a single aggressive order in the futures market can create a 70-second 'false extreme' that immediately reverses the stochastic cross signal"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_157.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-25 minutes",
+    "original_indicators": ["Stochastic %K(14,3)", "Stochastic %D(3)", "VWAP", "ATR(14)"],
+    "original_stop": "0.2% from entry",
+    "original_target": "stoch_K crosses 50 OR 0.25% profit"
+  }
+}

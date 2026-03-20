@@ -1,0 +1,107 @@
+{
+  "name": "rsi_extreme_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["rsi", "mean-reversion", "momentum-exhaustion", "micro-scalp"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_152.json",
+  "original_name": "rsi_extreme_reversion_v1",
+  "mechanism": "When NIFTY's 2-bar RSI drops below 5 on 5-second bars, two consecutive 5-second bars have closed aggressively lower — a micro-exhaustion signal driven by retail stop-loss cascades and short-duration momentum algos overshooting into thin intraday order book depth. NIFTY delta-neutral market makers immediately begin buying to rebalance short-gamma hedges, and VWAP-anchored institutional algorithms see sub-benchmark fills worth accumulating when the index is near VWAP. The combined buying pressure creates a snap-back that typically completes within 30-90 seconds. The RSI(36) filter (3-minute trend context) ensures the entry is not against a sustained institutional directional flow where the exhaustion signal would be overridden by continuous repricing.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_2",
+      "formula": "RSI(close, 2) using Wilder smoothing",
+      "lookback": 2,
+      "computed_on": "spot",
+      "purpose": "2-bar RSI at 5s resolution captures micro-exhaustion: both of the last two 5-second bars closed hard in the same direction. Period stays at 2 (not scaled to 24) because the strategy trades the FASTEST exhaustion signal — the moment directional pressure stops, not 10 minutes later. Original used RSI(2) on 1-min for the same reason: minimum look-back to detect immediate current exhaustion. At <5 or >95, the signal is strong enough that even 5-second noise is filtered out."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36) using Wilder smoothing",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "36-bar (3-minute) RSI as intraday trend filter. Original used RSI(14) on 1-min bars (14 minutes of context) to avoid fighting strong trends. For a 15-90 second hold, we need trend context but compressed: 3 minutes is enough to identify whether NIFTY is in a strong unidirectional flow (RSI outside 35-65) vs choppy mean-reverting regime. Using 14 minutes (168 bars) would over-anchor to older data when we're trading the next 30-90 seconds."
+    },
+    {
+      "name": "vwap",
+      "formula": "Cumulative VWAP from 09:15 IST, reset each session: sum(close * volume) / sum(volume)",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP anchors institutional benchmark price. RSI(2) extremes occurring within 1% of VWAP (near institutional fair value) have higher reversion probability: VWAP-buying algorithms and market makers are incentivized to defend this level. Extremes more than 1% below VWAP (for longs) may signal a structural downmove, not a micro-exhaustion. No scaling needed — VWAP is cumulative, not a rolling window."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "RSI(close, 2) < 5 (two consecutive 5s bars closed aggressively lower — micro-selling climax)",
+        "RSI(close, 36) between 35-65 (3-minute trend is neutral/choppy, not in strong downtrend)",
+        "close > VWAP * 0.99 (within 1% below VWAP — micro-flush near fair value, not structural breakdown)",
+        "India VIX < 25 (RSI extremes are unreliable signals in panic; index dislocations persist)",
+        "time_minutes >= 570 AND time_minutes < 920 (09:30-15:20 IST)"
+      ],
+      "confirmation": "Signal fires on the bar where RSI(2) drops below threshold — enter at bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "RSI(close, 2) > 95 (two consecutive 5s bars closed aggressively higher — micro-buying climax)",
+        "RSI(close, 36) between 35-65 (3-minute trend is neutral/choppy, not in strong uptrend)",
+        "close < VWAP * 1.01 (within 1% above VWAP — micro-spike near fair value, not structural breakout)",
+        "India VIX < 25",
+        "time_minutes >= 570 AND time_minutes < 920 (09:30-15:20 IST)"
+      ],
+      "confirmation": "Signal fires on the bar where RSI(2) crosses above threshold — enter at bar close"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option pts = ~6 NIFTY spot points. If the index continues directionally after an RSI(2) extreme — meaning selling/buying pressure is sustained past 6 spot points from entry — the micro-exhaustion thesis is wrong and a macro impulse is in play. NIFTY 30-second moves average 2-5 option pts; a 3-pt stop sits just outside normal noise while cutting losing trades before they double.",
+    "target_points": 5.0,
+    "target_rationale": "5 option pts = ~10 NIFTY spot points. Micro-exhaustion snap-backs on NIFTY typically deliver 8-15 spot points within 60-90 seconds as accumulated buying by market makers and VWAP algos unwinds the overshoot. 5 pts captures the lower half of this expected range for a 1:1.67 R:R, requiring directional accuracy ~55% for profitability.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; in high-VIX regimes RSI(2) extremes occur continuously as NIFTY gaps between 5s bars, making limit execution unreliable and the reversion thesis invalid",
+    "time_filter": "09:30-15:20 IST; first 15 minutes (09:15-09:30) excluded due to opening auction noise and structurally extreme RSI readings from overnight gap opens that don't represent intraday exhaustion",
+    "volume_filter": "none — NIFTY index volume is aggregate across all constituents and less meaningful at 5s than individual stock volume",
+    "trend_filter": "RSI(36) between 35-65 excludes strong trend bars where exhaustion would fight sustained institutional directional flow",
+    "spread_filter": "none — limit order execution at 5s candle close, no bid-ask spread cost in this pipeline"
+  },
+  "edge": {
+    "expected_bps": 12,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.45,
+    "edge_decay_risk": "moderate — RSI(2) extremes at 5s are frequent; signal quality depends heavily on the RSI(36) and VWAP filters. Edge may compress if more algos implement micro-reversion logic on the index."
+  },
+  "adaptation_notes": "Original used RSI(2) on 1-min bars across NIFTY 200 stocks with RSI(14) trend filter, VWAP proximity, and VIX<25 gate. Converted to NIFTY index only at 5s with these specific changes: (1) RSI(14) trend filter compressed from 14-min context to 3-min context (RSI(36)) — because we hold 15-90s not 3-15 min, older trend context is irrelevant; (2) VWAP proximity filter preserved at same 1% band — institutional fair value anchoring is equally valid on the index; (3) Stock-specific filters (ADV, same-stock overtrading, earnings events) dropped — not applicable to index; (4) Confirmation signal (RSI crossing above 10 after being below 5) dropped — at 5s resolution the reversion may complete within 1-2 bars, so we enter on the extreme bar itself rather than waiting for confirmation and missing the snap; (5) Stock volume filter dropped — index aggregate volume not meaningful at 5s; (6) RSI(2) period unchanged — the 2-period minimum lookback is correct for detecting immediate exhaustion regardless of bar frequency.",
+  "weaknesses": [
+    "RSI(2) at 5-second resolution produces very frequent signals — RSI(36) and VWAP proximity filters are critical to avoid overtrading noise",
+    "NIFTY index is smoother than individual stocks; RSI(2) extremes below 5 / above 95 may be rarer than in the original equity universe, reducing trade frequency",
+    "The 3-minute RSI(36) trend filter can lag on sharp news-driven trend days, allowing entries against a nascent sustained move before RSI(36) reflects the new regime",
+    "Near-VWAP filter may underperform in opening-drive sessions where price diverges from VWAP for extended periods — the 1% band is relatively tight"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_152.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "3-15 minutes",
+    "original_indicators": ["RSI(close, 2)", "RSI(close, 14)", "VWAP (session cumulative)", "ATR(10)"],
+    "original_stop": "0.2% from entry",
+    "original_target": "RSI(2) crosses 60 (longs) or 40 (shorts)"
+  }
+}

@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """Sector VWAP Divergence v1 — cursor_opus46max_119
 
 Thesis: When a stock trades below its VWAP while the index (sector proxy)
@@ -53,6 +54,8 @@ class Strategy(BaseStrategy):
         volume = np.nan_to_num(df["volume"].to_numpy().astype(np.float64), nan=1.0)
         volume = np.clip(volume, 1.0, None)
         index_close = np.nan_to_num(df["index_close"].to_numpy().astype(np.float64), nan=0.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # Stock VWAP
         df_v = df.with_columns([
@@ -107,11 +110,13 @@ class Strategy(BaseStrategy):
         for i in range(1, n):
             if (index_vwap_pos[i] > vwap_dev_thresh and stock_vwap_pos[i-1] < -vwap_dev_thresh and
                     divergence_duration[i-1] >= div_bars and
-                    close[i] >= stock_vwap[i] and close[i-1] < stock_vwap[i-1] and vol_ok[i]):
+                    close[i] >= stock_vwap[i] and close[i-1] < stock_vwap[i-1] and vol_ok[i] and
+                    in_session[i]):
                 long_entry[i] = True
             if (index_vwap_pos[i] < -vwap_dev_thresh and stock_vwap_pos[i-1] > vwap_dev_thresh and
                     divergence_duration[i-1] >= div_bars and
-                    close[i] <= stock_vwap[i] and close[i-1] > stock_vwap[i-1] and vol_ok[i]):
+                    close[i] <= stock_vwap[i] and close[i-1] > stock_vwap[i-1] and vol_ok[i] and
+                    in_session[i]):
                 short_entry[i] = True
 
         # Signal exit: sector VWAP position changes sign

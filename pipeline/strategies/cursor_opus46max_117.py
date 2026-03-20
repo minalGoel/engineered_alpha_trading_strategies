@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """NIFTY-BANKNIFTY Spread v1 — cursor_opus46max_117
 
 Thesis: BANK NIFTY carries ~33% weight in NIFTY 50.  The intraday return
@@ -53,6 +54,8 @@ class Strategy(BaseStrategy):
         index_close = np.nan_to_num(df["index_close"].to_numpy().astype(np.float64), nan=0.0)
         vix = np.nan_to_num(df["vix"].to_numpy().astype(np.float64), nan=99.0)
         day_id = df["day_id"].to_numpy()
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # Cumulative returns
         stock_ret = np.zeros(n, dtype=np.float64)
@@ -94,10 +97,10 @@ class Strategy(BaseStrategy):
         short_entry = np.zeros(n, dtype=np.bool_)
         for i in range(1, n):
             if (nb_zs[i] < -zs_thresh and velocity[i] > -1 and velocity[i-1] <= -1 and
-                    vix_ok[i]):
+                    vix_ok[i] and in_session[i]):
                 long_entry[i] = True
             if (nb_zs[i] > zs_thresh and velocity[i] < 1 and velocity[i-1] >= 1 and
-                    vix_ok[i]):
+                    vix_ok[i] and in_session[i]):
                 short_entry[i] = True
 
         # Signal exit: z-score reverts to 0 or VIX spikes

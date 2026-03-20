@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """F&O vs Cash Rotation v1 — cursor_opus46max_114
 
 Thesis: F&O segment stocks attract leveraged speculative flow that tends
@@ -55,6 +56,8 @@ class Strategy(BaseStrategy):
         volume = np.nan_to_num(df["volume"].to_numpy().astype(np.float64), nan=1.0)
         volume = np.clip(volume, 1.0, None)
         vix = np.nan_to_num(df["vix"].to_numpy().astype(np.float64), nan=99.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # VWAP
         df_v = df.with_columns([
@@ -81,9 +84,9 @@ class Strategy(BaseStrategy):
 
         # Fade speculative spikes: short when big up on volume, long when big down
         long_entry = ((vol_ratio > vol_surge) & (ret_30 < -ret_thresh) &
-                      (close < vwap) & vix_ok)
+                      (close < vwap) & vix_ok & in_session)
         short_entry = ((vol_ratio > vol_surge) & (ret_30 > ret_thresh) &
-                       (close > vwap) & vix_ok)
+                       (close > vwap) & vix_ok & in_session)
 
         # Signal exit: volume normalizes
         sig_exit_long = np.zeros(n, dtype=np.bool_)

@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """Defensive-Cyclical Switch v1 — cursor_opus46max_118
 
 Thesis: Intraday rotation between defensive and cyclical sectors is predicted
@@ -49,6 +50,8 @@ class Strategy(BaseStrategy):
         high = df["high"].to_numpy().astype(np.float64)
         low = df["low"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(df["vix"].to_numpy().astype(np.float64), nan=99.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # VWAP
         df_v = df.with_columns([
@@ -81,11 +84,11 @@ class Strategy(BaseStrategy):
         for i in range(1, n):
             # Risk-on: VIX falling, stock below VWAP = buy cyclical bounce
             if (vix_falling[i] and close[i] < vwap[i] and
-                    close[i] > close[i-1] and vix_active[i]):
+                    close[i] > close[i-1] and vix_active[i] and in_session[i]):
                 long_entry[i] = True
             # Risk-off: VIX rising, stock above VWAP = short cyclical
             if (vix_rising[i] and close[i] > vwap[i] and
-                    close[i] < close[i-1] and vix_active[i]):
+                    close[i] < close[i-1] and vix_active[i] and in_session[i]):
                 short_entry[i] = True
 
         # Signal exit: VIX regime changes

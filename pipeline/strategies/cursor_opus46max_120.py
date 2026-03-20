@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """Market Breadth Signal v1 — cursor_opus46max_120
 
 Thesis: When NIFTY hits new intraday high but breadth (proxied by stock
@@ -67,6 +68,8 @@ class Strategy(BaseStrategy):
         index_close = np.nan_to_num(df["index_close"].to_numpy().astype(np.float64), nan=0.0)
         vix = np.nan_to_num(df["vix"].to_numpy().astype(np.float64), nan=99.0)
         day_id = df["day_id"].to_numpy()
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # Breadth proxy: advance/decline ratio using stock vs index 5-bar returns
         # If stock advancing while index advancing, breadth=1; else breadth check
@@ -112,10 +115,10 @@ class Strategy(BaseStrategy):
         short_entry = np.zeros(n, dtype=np.bool_)
         for i in range(1, n):
             if (is_new_low[i] and breadth_ema[i] > breadth_long and
-                    close[i] > close[i-1] and vix_ok[i]):
+                    close[i] > close[i-1] and vix_ok[i] and in_session[i]):
                 long_entry[i] = True
             if (is_new_high[i] and breadth_ema[i] < breadth_short and
-                    close[i] < close[i-1] and vix_ok[i]):
+                    close[i] < close[i-1] and vix_ok[i] and in_session[i]):
                 short_entry[i] = True
 
         # Signal exit: breadth realigns with index direction

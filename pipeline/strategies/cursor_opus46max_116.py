@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """Industry Group Reversion v1 — cursor_opus46max_116
 
 Thesis: Within tightly correlated industry sub-groups, individual stock
@@ -52,6 +53,8 @@ class Strategy(BaseStrategy):
         volume = np.nan_to_num(df["volume"].to_numpy().astype(np.float64), nan=1.0)
         volume = np.clip(volume, 1.0, None)
         day_id = df["day_id"].to_numpy()
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # Cumulative returns from day start
         stock_ret = np.zeros(n, dtype=np.float64)
@@ -92,10 +95,10 @@ class Strategy(BaseStrategy):
         short_entry = np.zeros(n, dtype=np.bool_)
         for i in range(1, n):
             if (dev_zs[i-1] <= -zs_thresh and dev_zs[i] > -zs_thresh + 0.3 and
-                    deviation[i] < -bps_thresh and vol_ok[i]):
+                    deviation[i] < -bps_thresh and vol_ok[i] and in_session[i]):
                 long_entry[i] = True
             if (dev_zs[i-1] >= zs_thresh and dev_zs[i] < zs_thresh - 0.3 and
-                    deviation[i] > bps_thresh and vol_ok[i]):
+                    deviation[i] > bps_thresh and vol_ok[i] and in_session[i]):
                 short_entry[i] = True
 
         # Signal exit: deviation reverts to 0

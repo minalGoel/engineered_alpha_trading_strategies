@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filtering to prevent entries outside session_start/session_end
 """Sector Leader-Follower v1 — cursor_opus46max_115
 
 Thesis: Within each sector, information diffuses from the largest stock
@@ -56,6 +57,8 @@ class Strategy(BaseStrategy):
         volume = np.clip(volume, 1.0, None)
         vix = np.nan_to_num(df["vix"].to_numpy().astype(np.float64), nan=99.0)
         index_close = np.nan_to_num(df["index_close"].to_numpy().astype(np.float64), nan=0.0)
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        in_session = (time_mins >= self.session_start) & (time_mins <= self.session_end)
 
         # VWAP
         df_v = df.with_columns([
@@ -107,9 +110,9 @@ class Strategy(BaseStrategy):
             catching_up_short[i] = close[i] < close[i-1]
 
         long_entry = ((leader_zs_arr > leader_zs) & (rel_ret < -lag_bps) &
-                      (close > vwap * 0.998) & catching_up_long & vol_ok & vix_ok)
+                      (close > vwap * 0.998) & catching_up_long & vol_ok & vix_ok & in_session)
         short_entry = ((leader_zs_arr < -leader_zs) & (rel_ret > lag_bps) &
-                       (close < vwap * 1.002) & catching_up_short & vol_ok & vix_ok)
+                       (close < vwap * 1.002) & catching_up_short & vol_ok & vix_ok & in_session)
 
         # Signal exit: relative return crosses zero (caught up) or leader fades
         sig_exit_long = np.zeros(n, dtype=np.bool_)

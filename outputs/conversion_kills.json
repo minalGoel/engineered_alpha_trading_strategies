@@ -1,0 +1,101 @@
+{
+  "description": "Strategies from the retriage that were NOT converted because they are near-duplicates of already-converted strategies or don't make sense at 5s resolution",
+  "kills": [
+    {
+      "name": "orb_momentum_v29",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_103.json",
+      "reason": "Near-duplicate of orb_momentum_v22 (already converted). Same thesis, same indicators (ORB high/low + VWAP), different timeframe parameter (15-min vs 1-min bars). Only one ORB breakout conversion needed.",
+      "duplicate_of": "orb_momentum_v22"
+    },
+    {
+      "name": "orb_momentum_v32",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_104.json",
+      "reason": "Near-duplicate of orb_momentum_v22. Same ORB thesis with minor parameter variations.",
+      "duplicate_of": "orb_momentum_v22"
+    },
+    {
+      "name": "rsi_connors_pullback_v42",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_106.json",
+      "reason": "Near-duplicate of rsi_connors_pullback_v41. Identical thesis, same RSI(2) + SMA(200) indicators, slightly different thresholds.",
+      "duplicate_of": "rsi_connors_pullback_v41"
+    },
+    {
+      "name": "rsi_connors_pullback_v46",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_107.json",
+      "reason": "Near-duplicate of rsi_connors_pullback_v41. Same Connors RSI pullback thesis.",
+      "duplicate_of": "rsi_connors_pullback_v41"
+    },
+    {
+      "name": "rsi_connors_pullback_v49",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_108.json",
+      "reason": "Near-duplicate of rsi_connors_pullback_v41. Same Connors RSI pullback thesis.",
+      "duplicate_of": "rsi_connors_pullback_v41"
+    },
+    {
+      "name": "rsi_connors_pullback_v50",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_109.json",
+      "reason": "Near-duplicate of rsi_connors_pullback_v41. Same Connors RSI pullback thesis.",
+      "duplicate_of": "rsi_connors_pullback_v41"
+    },
+    {
+      "name": "orb_breakout_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_11.json",
+      "reason": "Near-duplicate of orb_momentum_v22. Same ORB breakout thesis, uses 15-min range instead of 20-min but fundamentally identical strategy.",
+      "duplicate_of": "orb_momentum_v22"
+    },
+    {
+      "name": "rsi_connors_pullback_v54",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_110.json",
+      "reason": "Near-duplicate of rsi_connors_pullback_v41. Same Connors RSI pullback thesis.",
+      "duplicate_of": "rsi_connors_pullback_v41"
+    },
+    {
+      "name": "gap_fade_reversion_v104",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_114.json",
+      "reason": "Near-duplicate of gap_fade_reversion_v103. Identical thesis about overnight gap fading.",
+      "duplicate_of": "gap_fade_reversion_v103"
+    },
+    {
+      "name": "gap_fade_reversion_v106",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_115.json",
+      "reason": "Near-duplicate of gap_fade_reversion_v103. Identical thesis.",
+      "duplicate_of": "gap_fade_reversion_v103"
+    },
+    {
+      "name": "gap_fade_reversion_v116",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_116.json",
+      "reason": "Near-duplicate of gap_fade_reversion_v103. Identical thesis.",
+      "duplicate_of": "gap_fade_reversion_v103"
+    },
+    {
+      "name": "vix_filtered_index_trend_v126",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_118.json",
+      "reason": "Near-duplicate of vix_filtered_index_trend_v124. Same VIX regime trend thesis.",
+      "duplicate_of": "vix_filtered_index_trend_v124"
+    },
+    {
+      "name": "vix_filtered_index_trend_v133",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_119.json",
+      "reason": "Near-duplicate of vix_filtered_index_trend_v124. Same VIX regime trend thesis.",
+      "duplicate_of": "vix_filtered_index_trend_v124"
+    },
+    {
+      "name": "vwap_overshoot_fade_002",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_136.json",
+      "reason": "Near-duplicate of vwap_mean_reversion_v18/v19. Same VWAP dislocation thesis — already have two VWAP reversion variants converted.",
+      "duplicate_of": "vwap_mean_reversion_v18"
+    },
+    {
+      "name": "vwap_overshoot_fade_001",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_135.json",
+      "reason": "Near-duplicate of vwap_mean_reversion_v18/v19. Same VWAP dislocation thesis.",
+      "duplicate_of": "vwap_mean_reversion_v18"
+    },
+    {
+      "name": "opening_range_breakout_002",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_131.json",
+      "reason": "Near-duplicate of orb_momentum_v22. Opening range breakout with institutional continuation — same core thesis.",
+      "duplicate_of": "orb_momentum_v22"
+    }
+  ]
+}

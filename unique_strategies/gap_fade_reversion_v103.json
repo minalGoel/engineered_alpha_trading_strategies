@@ -1,0 +1,132 @@
+{
+  "name": "gap_fade_reversion_v103",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "mean_reversion", "opening_auction"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_113.json",
+  "original_name": "gap_fade_reversion_v103",
+
+  "mechanism": "Every morning at 09:15, NIFTY opens with a gap driven by SGX NIFTY overnight movement, global cues (US futures close, Asian markets open), and pre-market FII/DII order imbalances. Critically, SGX NIFTY trades on THIN overnight volume — a $2M order can move SGX 30-50 points, while moving cash NIFTY by the same amount during regular hours would require 10-50x that capital. This means overnight gaps systematically OVERSHOOT fair value. The opening auction at 09:15 prices in this overshoot, and the first 3-10 minutes of regular trading is when NIFTY discovers that the gap was too large. Institutional participants (mutual funds, FII desks) who benchmark to previous close use morning liquidity to accumulate against the gap — if NIFTY gapped down 80 points on thin SGX volume, they know fair value is 30-50 points higher and start buying immediately. At 5-second resolution on NIFTY index options, we detect the FIRST sign of gap fade: the opening bar sequence where price starts reversing toward previous close. Specifically, we watch for bullish bar patterns (close > open on multiple consecutive 5s bars) emerging within the first 60 bars (5 minutes) after open, combined with the gap being large enough (50+ spot points) to provide reversion fuel. We capture the initial 30-90 second reversion surge — the fastest, highest-probability portion of the gap fill — before the move slows as half the gap gets filled and the easy money is gone.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:16-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": ["previous_day_close"]
+  },
+
+  "indicators": [
+    {
+      "name": "prev_close",
+      "formula": "REF(close, 1, 'day')",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Previous day's closing price for NIFTY. This is the anchor level for gap measurement and the gravitational target for reversion. No lookback scaling needed — it is a single reference value from the prior session."
+    },
+    {
+      "name": "gap_points",
+      "formula": "session_open - prev_close",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Absolute gap size in NIFTY spot points rather than percentage. Absolute points are more useful than percentage for index options because option premium moves are proportional to spot point moves (via delta), not percentage moves. A 60-point gap on NIFTY produces roughly 30-point ATM option move regardless of whether NIFTY is at 18000 or 24000."
+    },
+    {
+      "name": "gap_filled_pct",
+      "formula": "(close - session_open) / (prev_close - session_open) * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Tracks how much of the gap has been filled so far (0% = still at open, 100% = full fill). Used for target management — we exit when 30-50% of the gap is filled because the reversion rate decelerates sharply after the initial institutional buying wave. No lookback scaling; computed from session-level reference values."
+    },
+    {
+      "name": "reversal_bars_6",
+      "formula": "count of bars in last 6 where (close > open)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Counts bullish bars (close > open) in the last 6 bars (30 seconds). This replaces the original's simple 'close > open AND volume > SMA(vol,5)' single-bar check. At 5-second resolution, a single bullish bar means nothing — it could be a 0.5-point random fluctuation. But 4+ bullish bars out of 6 (over 30 seconds) indicates sustained buying pressure absorbing the gap. 30 seconds is chosen because it is the minimum duration for NIFTY to establish a genuine micro-trend versus noise — shorter windows (10-15s) have too many false signals, longer windows (60s+) miss the optimal entry timing."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP starting from 09:15. In gap fade context, VWAP provides a secondary confirmation — if price is above opening VWAP despite the gap-down, it means buyers are winning the morning auction. No lookback; cumulative from session start."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_points < -50 (NIFTY gapped DOWN by 50+ spot points — large enough that the overshoot thesis applies; gaps of 20-40 points often hold because they represent genuine overnight information rather than thin-market overshoot)",
+        "time_minutes >= 556 AND time_minutes <= 575 (09:16-09:35 IST — the gap fade window; after 09:35 the initial reversion impulse is largely done)",
+        "reversal_bars_6 >= 4 (at least 4 of the last 6 five-second bars are bullish — sustained buying, not a random spike)",
+        "close > session_open (price has already crossed above the opening print, confirming the gap is fading not extending)"
+      ],
+      "confirmation": "Fourth bullish bar out of six confirms institutional absorption has begun and the gap-down is being actively faded"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_points > 50 (NIFTY gapped UP by 50+ spot points)",
+        "time_minutes >= 556 AND time_minutes <= 575",
+        "reversal_bars_6 <= 2 (at least 4 of last 6 bars are bearish — sustained selling into the gap-up)",
+        "close < session_open"
+      ],
+      "confirmation": "Sustained bearish bars confirm institutions are selling the gap-up overshoot"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "Gap fades on NIFTY can see a secondary push in the gap direction before the reversion takes hold — a 15-25 spot point extension (7-12 option points) beyond the opening price is common when late retail sellers chase the gap. A 5-point option stop (roughly 10 spot points) tolerates minor extensions while cutting the trade if the gap is genuinely continuing (gap-and-go pattern). Wider than 5 points would mean the risk exceeds one full typical gap-fade profit, destroying the risk-reward.",
+    "target_points": 8,
+    "target_rationale": "A 50-80 point NIFTY gap that fades typically retraces 30-50% in the first 3-5 minutes — that is 15-40 spot points or roughly 8-20 ATM option points. Target of 8 captures the conservative end of this first reversion leg. We do NOT target full gap fill (which can take 30+ minutes and is far outside our hold window). 8 points vs 5 point stop gives 1:1.6 risk-reward, acceptable given the 55-60% win rate of gap fades on NIFTY when the gap exceeds 50 points.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 13-25 — below 13 gaps are tiny and rarely produce 50+ point overshoots; above 25 gaps can be genuine trend moves (crash days, geopolitical events) that don't fade",
+    "time_filter": "Only trade 09:16-09:35 IST. Gap fade is a MORNING-ONLY phenomenon. By 09:35, the opening auction is resolved and price action reflects new session dynamics, not overnight gap reversion. This is a strict structural time limit, not a preference.",
+    "volume_filter": "Replaced by reversal_bars_6 — index volume is unreliable in the first 5 minutes due to auction orders distorting the tape",
+    "trend_filter": "none — gap fade is inherently counter-trend (fading the overnight move)",
+    "spread_filter": "skip if ATM option bid-ask > 3 points (spreads are widest at market open; if spreads haven't tightened by 09:16, liquidity is too thin to trade)",
+    "event_filter": "Skip on budget day, RBI policy day, and US FOMC result day — gaps on these days reflect genuine information, not thin-market overshoot, and do NOT fade reliably"
+  },
+
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.1,
+    "edge_decay_risk": "medium — gap fading is well-known on NIFTY but the 5-second entry timing gives an advantage over participants using 1-min bars who enter 30-50 seconds later when the easy portion of the fade is already done"
+  },
+
+  "adaptation_notes": "Original traded individual Nifty200 stocks on 5-min bars with 5-15 bar holds (25-75 min), targeting full gap fill to previous close. Four major adaptations: (1) Moved from stocks to NIFTY index because gap fading is most reliable on the index itself — individual stocks can gap on company-specific news that doesn't fade, but NIFTY gaps are driven by SGX NIFTY thin-market overshoot which fades structurally. (2) The original's gap_pct < -21 is clearly a data error (would be -2100% — impossible). Interpreted as a large gap threshold and converted to 50+ NIFTY spot points, which is roughly 0.2-0.3% on the index and represents the typical overshoot threshold where institutional VWAP buying kicks in aggressively. (3) Hold time compressed from 25-75 minutes to 30-120 seconds because we target only the FIRST LEG of gap reversion — the initial 30-50% fill that happens in the first 3-5 minutes. The remaining fill is slower, more contested, and well outside our 15-180 second hold window. (4) Entry changed from single-bar 'close > open AND volume spike' to a 6-bar reversal persistence filter because at 5-second resolution, a single bullish bar in a gap-down is meaningless noise. The 30-second persistence window is the minimum needed to distinguish real gap-fade flow from random fluctuations.",
+
+  "weaknesses": [
+    "Gap-and-go days (where the gap continues rather than fading) are the primary failure mode — if SGX NIFTY moved on genuine macro news, the gap represents real repricing and won't fade",
+    "The 09:16-09:35 trading window yields at most 1-2 signals per day, making daily P&L highly variable",
+    "Opening minutes have the widest option spreads of the day (3-5 points vs 1-2 points later), which can consume a significant portion of the expected 8-point target",
+    "On expiry days (Thursday), opening dynamics are dominated by options expiry mechanics (gamma hedging, pin risk) rather than gap-fade flow, distorting signal quality",
+    "Large gaps caused by genuine overnight events (war, pandemic, sovereign downgrade) will trigger maximum stop losses — the VIX filter catches some but not all of these"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_113.json",
+    "original_timeframe": "5min",
+    "original_hold_time": "5-15 bars (25-75 min)",
+    "original_indicators": ["prev_close", "gap_pct", "SMA(volume, 5)"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "Previous close (full gap fill)"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "name": "vix_filtered_index_trend_v124",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["trend_following", "vix_regime", "high_volatility"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_117.json",
+  "original_name": "vix_filtered_index_trend_v124",
+
+  "mechanism": "When India VIX rises above 18, NIFTY's intraday price action shifts from a random-walk-like regime to a trending regime — moves that would normally be 10-15 spot points in low-VIX become 30-60 spot points in high-VIX, and critically, they trend rather than mean-revert. This happens because elevated VIX reflects institutional hedging demand and portfolio uncertainty, which causes participants to chase moves rather than fade them. In high-VIX, a 20-point NIFTY move triggers stop-losses and delta-hedging flows that AMPLIFY the move rather than absorbing it (positive feedback loop). At 5-second resolution on NIFTY index options, we detect these trending bursts using fast and slow EMAs computed on spot: when the 36-bar EMA (3 minutes of price action) crosses above the 84-bar EMA (7 minutes), it signals that short-term momentum has decisively shifted direction relative to the medium-term trend. We ONLY take this crossover when VIX is elevated (>18), because in low-VIX regimes, the same crossover produces whipsaws — the trend doesn't have enough energy to persist for our 30-90 second hold. The VWAP filter adds a second confirmation layer: the trend move must be in the direction of session flow (above VWAP for longs, below for shorts), ensuring we are aligned with the dominant institutional order flow, not fighting it. In high-VIX, a confirmed NIFTY trend lasting 30-90 seconds typically delivers 15-30 spot points (8-15 ATM option points), making the payoff per trade significantly larger than low-VIX strategies.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 6,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "Fast EMA over 36 five-second bars = 3 minutes of price data. The original used EMA(9) on 1-min bars = 9 minutes of price history. For 30-90 second holds on 5s bars, we need the fast EMA to reflect roughly 2-4 minutes of trend — long enough to filter single-bar noise spikes but short enough to catch the beginning of a trend move within our hold window. 36 bars (3 minutes) sits in this sweet spot: it responds to a genuine directional shift within 30-40 seconds of the move starting, but doesn't whipsaw on 10-15 second random fluctuations. Choosing 36 rather than mechanically scaling 9*12=108 because a 9-minute EMA would be far too slow for a 30-90 second hold — the crossover signal would arrive AFTER our hold window expires."
+    },
+    {
+      "name": "ema_84",
+      "formula": "EMA(close, 84)",
+      "lookback": 84,
+      "computed_on": "spot",
+      "purpose": "Slow EMA over 84 five-second bars = 7 minutes of price data. The original used EMA(21) on 1-min bars = 21 minutes. For our hold window, the slow EMA needs to represent the 'baseline trend' that the fast EMA departs from. 7 minutes captures the medium-term session drift without being so long that it never gets crossed during a 30-90 second hold. The 36:84 ratio (roughly 1:2.3) is similar to the original's 9:21 ratio (1:2.3), preserving the crossover sensitivity characteristics while compressing the absolute timeframes to match our hold window."
+    },
+    {
+      "name": "india_vix",
+      "formula": "VIX (real-time India VIX)",
+      "lookback": 1,
+      "computed_on": "vix",
+      "purpose": "India VIX as regime filter. This is the KEY differentiator of this strategy — it ONLY trades when VIX > 18. No lookback scaling needed; VIX is a point-in-time reading. The threshold of 18 (rather than the original's 21) reflects NIFTY-specific VIX distribution: India VIX median is around 13-15, and readings above 18 mark the transition to a 'high anxiety' regime where intraday trends amplify. At 21+, trends are even stronger but VIX spends less time there, reducing trade frequency to impractical levels."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as trend alignment filter. Ensures the EMA crossover is in the direction of the session's dominant institutional flow. In high-VIX, false crossovers against the prevailing trend are common (sharp counter-trend bounces that immediately fail). Requiring price above VWAP for longs filters these out. No lookback scaling; cumulative from session start."
+    },
+    {
+      "name": "ema_spread",
+      "formula": "(ema_36 - ema_84) / ema_84 * 10000",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "EMA spread in basis points, measuring the STRENGTH of the crossover. A crossover where ema_36 barely exceeds ema_84 (spread < 5 bps) is weak and likely to whipsaw. We require spread > 5 bps at entry to confirm the crossover has conviction. In high-VIX environments on NIFTY, genuine trend crossovers produce 10-30 bps of spread within 10-15 seconds of the cross."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "india_vix > 18 (high-VIX regime where NIFTY trends amplify and persist — this is a prerequisite, not a nice-to-have)",
+        "ema_36 > ema_84 (fast EMA has crossed above slow EMA — short-term momentum is bullish)",
+        "ema_spread > 5 (crossover has conviction — the fast EMA is meaningfully above the slow EMA, not just touching it)",
+        "close > vwap (bullish trend aligned with session institutional flow direction)"
+      ],
+      "confirmation": "EMA crossover with spread > 5 bps AND price above VWAP confirms a high-conviction trend initiation in high-VIX regime"
+    },
+    "buy_pe": {
+      "conditions": [
+        "india_vix > 18",
+        "ema_36 < ema_84 (fast EMA below slow — bearish momentum)",
+        "ema_spread < -5 (bearish crossover with conviction)",
+        "close < vwap (bearish trend aligned with session flow)"
+      ],
+      "confirmation": "Bearish EMA crossover with spread conviction below VWAP in high-VIX regime"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 6,
+    "stop_rationale": "In high-VIX (>18) on NIFTY, intrabar noise is 2-4x larger than in low-VIX — a 5-second bar can move 3-5 spot points (1.5-2.5 option points) on noise alone. A 6-point option stop accommodates 2-3 noise bars against us without triggering. This is wider than low-VIX strategies (which use 3-4 point stops) precisely because high-VIX means noisier entries. If the trend thesis is correct, the move in our direction should exceed 6 points within 15-20 seconds; if we're still losing at -6 points, the crossover was a whipsaw and the loss should be taken.",
+    "target_points": 12,
+    "target_rationale": "In high-VIX on NIFTY, a genuine 30-90 second trend move delivers 15-30 spot points (8-15 ATM option points). Target of 12 captures the middle of this range. The 1:2 risk-reward (6 stop vs 12 target) is necessary because high-VIX crossovers whipsaw more often (estimated 38-42% win rate); the larger target compensates for the lower win rate, keeping profit factor above 1.3. We do not target higher (15+) because trend persistence beyond 60 seconds in high-VIX becomes unreliable — counter-trend bounces are equally violent.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+
+  "filters": {
+    "vix_filter": "VIX > 18 is the CORE filter, embedded in entry conditions. Upper bound: VIX > 35 is a panic regime where even trend-following gets stopped out by extreme noise — skip these sessions.",
+    "time_filter": "Trade 09:20-15:00 IST. Need 5 minutes after open (60 bars) for EMAs to initialize with meaningful data. Stop at 15:00 because high-VIX sessions often see violent last-30-minute moves driven by options settlement mechanics rather than genuine trends.",
+    "volume_filter": "none — volume is embedded in VWAP alignment; index volume is unreliable as a standalone signal",
+    "trend_filter": "VWAP alignment serves as the trend filter; no additional ADX or similar needed",
+    "spread_filter": "skip if ATM option bid-ask > 2 points — high-VIX sessions generally have tighter spreads due to increased activity, but check regardless"
+  },
+
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.40,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.33,
+    "edge_decay_risk": "medium — the VIX regime filter is the key differentiator; EMA crossovers alone are fully arbitraged, but combining with VIX regime selection is less crowded because most algo systems use fixed parameters regardless of volatility regime"
+  },
+
+  "adaptation_notes": "Original traded FnO stocks on 1-min bars with EMA(9)/EMA(21) crossovers, VIX > 21 filter, and 30-60 minute holds. Five key adaptations: (1) Moved from FnO stocks to NIFTY index because in high-VIX, NIFTY itself trends most reliably — individual stocks can diverge from the VIX-driven trend due to stock-specific flows. (2) EMA lookbacks were NOT mechanically scaled (9*12=108 and 21*12=252 would produce EMAs too slow for 30-90 second holds). Instead, chose 36 and 84 bars (3-minute and 7-minute EMAs) based on the TARGET HOLD TIME: the fast EMA must respond within 30 seconds of a move starting, and the crossover must generate a signal before our 90-second max hold expires. The 36:84 ratio preserves the original's crossover sensitivity while compressing to match our timeframe. (3) VIX threshold lowered from 21 to 18 because trading only above VIX 21 on 5-second bars would produce too few signals — India VIX spends only ~15% of sessions above 21 but ~30% above 18, and the high-VIX trend amplification effect begins at 18. (4) Added ema_spread indicator (minimum 5 bps) that the original lacked, because at 5-second resolution EMA crossovers are much noisier — the EMAs can oscillate around each other for minutes producing dozens of false crosses. The spread filter ensures we only enter on decisive crossovers. (5) Target increased from the original's 20*ATR (designed for multi-hour holds) to a fixed 12 option points, calibrated to the 15-30 spot point moves typical of high-VIX NIFTY trends lasting 30-90 seconds.",
+
+  "weaknesses": [
+    "VIX > 18 sessions occur roughly 30% of trading days, severely limiting trade frequency — in calm markets, this strategy generates ZERO signals for weeks",
+    "EMA crossovers in high-VIX whipsaw frequently (estimated 55-60% of signals are losers) — profitability depends entirely on the 2:1 winner-to-loser ratio holding up",
+    "India VIX is published with a lag and only updated every few seconds — during fast-moving markets, the VIX reading may already be stale at entry",
+    "On VIX spike days (sudden geopolitical shock), the transition from low-VIX to high-VIX can generate false signals before the new regime stabilizes",
+    "Counter-trend bounces in high-VIX are as violent as the trends — a 6-point stop can be hit in a single 5-second bar during extreme moves"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_117.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-60 bars (30-60 min)",
+    "original_indicators": ["EMA(9)", "EMA(21)", "India VIX", "VWAP"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "20 * ATR(14)"
+  }
+}

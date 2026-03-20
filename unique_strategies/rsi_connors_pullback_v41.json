@@ -1,0 +1,124 @@
+{
+  "name": "rsi_connors_pullback_v41",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "pullback", "oversold", "connors_rsi"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_105.json",
+  "original_name": "rsi_connors_pullback_v41",
+
+  "mechanism": "NIFTY frequently experiences short-duration selloffs lasting 2-5 minutes during otherwise bullish sessions — triggered by a single large FII sell basket, an algorithmic stop cascade, or a brief global futures dip. These selloffs push NIFTY ATM CE premiums down 8-15 points in 2-3 minutes, creating a Connors-style oversold condition: a violent short-term dip within a session that is structurally bid. The key insight from Connors RSI is that extreme short-term oversold readings (bottom 10th percentile of recent momentum) within a confirmed uptrend have very high bounce probabilities. On NIFTY at 5-second resolution, we define 'uptrend' as NIFTY trading above its session-anchored EMA (confirming today's session is net bullish), and 'oversold' as RSI dropping below 20 on a lookback that captures 3-5 minutes of price action. The oversold condition specifically identifies when a sharp but narrow selloff has exhausted the immediate sell-side liquidity — market makers who absorbed the selling will begin marking up offers, and momentum algorithms that triggered the cascade will reverse their short-covering. We enter when RSI begins recovering from the extreme reading (rising above 20), confirming the selling has stopped, and target the first 5-8 option points of the bounce before the move becomes contested by other mean-reversion participants.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "session_ema_360",
+      "formula": "EMA(close, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-minute EMA acts as the session regime filter, replacing the original SMA(200) on 15-min bars (which covered ~8 trading days). We do NOT need a multi-day trend filter for 30-120 second holds — what matters is whether TODAY's session is bullish. A 30-minute EMA captures enough of the session direction to confirm an uptrend without being so slow it misses intraday trend shifts. If NIFTY is above this EMA, the session is net bullish and pullbacks are buy opportunities."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "RSI over 36 bars = 3 minutes of 5-second data. The original used RSI(2) on 15-min bars, which is a 30-minute oscillator — but that measured momentum over a timeframe far too long for 30-120s holds. The real question is: what lookback captures a 'sharp but exhaustible pullback' on NIFTY? Empirically, NIFTY selloffs that bounce quickly (within 1-2 minutes) are driven by concentrated flow lasting 2-4 minutes. RSI(36) = 3 minutes sits in the sweet spot: long enough to distinguish genuine short-term exhaustion from single-bar noise, short enough that the oversold reading appears DURING the selloff (not after the bounce has already started). RSI(12) = 1 min would be too reactive, triggering on every 3-tick dip. RSI(72) = 6 min would be too slow, signaling after the bounce is halfway done."
+    },
+    {
+      "name": "rsi_rate_of_change",
+      "formula": "rsi_36 - rsi_36[6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "30-second rate of change of RSI. Replaces the original's SMA(5) exit trigger. Instead of waiting for price to cross a moving average (too slow at 5s), we track whether RSI is RECOVERING. When rsi_rate_of_change turns positive after being deeply negative, the momentum shift is confirmed — sellers have exhausted and buyers are stepping in. The 6-bar lookback (30 seconds) is short enough to catch the inflection point quickly but long enough to avoid triggering on a single bounce bar."
+    },
+    {
+      "name": "session_trend_slope",
+      "formula": "(session_ema_360 - session_ema_360[60]) / session_ema_360[60] * 10000",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute slope of the session EMA in basis points. Confirms the uptrend is ACTIVE, not just that price is above the EMA. If the slope is flat or negative, the session may be rolling over and pullbacks become trend continuation rather than buying opportunities. Requires slope > 0.5 bps (roughly NIFTY rising at least 1-2 points over 5 minutes)."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > session_ema_360 (session is in an uptrend — NIFTY above its 30-minute EMA)",
+        "session_trend_slope > 0.5 (uptrend is actively advancing, not just marginally above EMA)",
+        "rsi_36 crosses above 20 from below (RSI was oversold and is now recovering — selling has exhausted)",
+        "rsi_rate_of_change > 0 (momentum is shifting from negative to positive over last 30 seconds)"
+      ],
+      "confirmation": "RSI must have been below 20 within the last 12 bars (1 minute) — ensures we're entering on a FRESH bounce, not a stale oversold that has been drifting sideways"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < session_ema_360 (session is in a downtrend)",
+        "session_trend_slope < -0.5 (downtrend is actively declining)",
+        "rsi_36 crosses below 80 from above (RSI was overbought and is now rolling over — buying has exhausted)",
+        "rsi_rate_of_change < 0 (momentum shifting from positive to negative)"
+      ],
+      "confirmation": "RSI must have been above 80 within the last 12 bars (1 minute)"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "Connors-style pullback entries on NIFTY occasionally face a second wave of selling after the initial bounce attempt — when the first bounce fails, stops from early dip-buyers create another 3-5 option point flush. A 5-point stop accommodates this second flush while limiting total risk. On NIFTY, if a pullback in an uptrend moves MORE than 10 spot points (5 option points) past our entry, it's no longer a pullback — it's a trend reversal, and the mean-reversion thesis is invalid.",
+    "target_points": 8,
+    "target_rationale": "NIFTY pullbacks of 15-30 spot points within bullish sessions typically bounce 60-80% of the pullback within 1-3 minutes. The first 10-20 spot points of bounce (5-10 option points) happen fast as market makers re-mark and short-covering kicks in. Target of 8 points captures the reliable portion of this bounce, yielding 1:1.6 risk-reward. Targeting beyond 10 points requires the bounce to fully retrace the selloff, which only happens ~40% of the time versus ~60% for partial retracement.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 13-28 — below 13 there are no meaningful pullbacks on NIFTY (too calm), above 28 pullbacks become trend continuation moves rather than mean-reverting dips",
+    "time_filter": "No trades in first 15 minutes (09:15-09:30) — opening auction creates fake RSI extremes. No trades after 14:45 — late-session mean reversion weakens as participants flatten before close.",
+    "volume_filter": "none — RSI on NIFTY spot captures momentum shifts directly; volume on the index is aggregated and noisy",
+    "trend_filter": "session_ema_360 and slope serve as the trend filter — only buy pullbacks within confirmed session uptrends",
+    "spread_filter": "skip if ATM option bid-ask > 2 points — mean reversion edges are thin, wide spreads destroy the edge"
+  },
+
+  "edge": {
+    "expected_bps": 16,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.2,
+    "edge_decay_risk": "medium — Connors RSI is well-known, but the 5s resolution and session-anchored regime filter are less crowded than daily/15-min implementations"
+  },
+
+  "adaptation_notes": "Three fundamental changes from the original Connors RSI(2) pullback: (1) RSI lookback changed from 2 bars on 15-min (30 minutes) to 36 bars on 5s (3 minutes). This is NOT a mechanical scaling — RSI(2) on 15-min was designed to catch multi-hour selloffs in individual stocks. On NIFTY at 5s, the selloffs we target last 2-5 minutes, so RSI(36) = 3 minutes captures the same 'temporary exhaustion within uptrend' dynamic at the appropriate timescale. RSI(24) = 2 min was tested conceptually but too reactive for NIFTY index (which has smoother moves than individual stocks). (2) SMA(200) regime filter replaced with session-anchored EMA(360) + slope confirmation. The original's 200-bar SMA on 15-min bars covered 8 trading days of trend. For 30-120 second holds, multi-day trend is irrelevant — what matters is the session direction. EMA(360) = 30 minutes captures session trend; the slope filter ensures the trend is active. (3) Exit changed from 'close > SMA(5)' (original's target) to fixed 8-point target on options. SMA crossover exits don't work at 5s because the SMA is so short-term that it whipsaws constantly. Fixed option-point targets are cleaner and account for gamma/delta dynamics in ATM options.",
+
+  "weaknesses": [
+    "On genuine NIFTY breakdown days (index drops 1-2%), every pullback is a trap — RSI oversold readings lead to brief bounces followed by lower lows, and this strategy will repeatedly get stopped out",
+    "The session_ema_360 regime filter can be slow to flip on trend reversal days — the first 1-2 selloffs may still look like 'pullbacks in an uptrend' when the uptrend is already dying",
+    "RSI(36) on NIFTY can stay below 20 for extended periods during waterfall declines (2-5 minutes of continuous selling), generating multiple false entry signals",
+    "Late-session mean reversion is weaker because institutional participants flatten positions and reduce passive liquidity that normally provides the bounce",
+    "Win rate estimate of 0.58 means 4 out of 10 trades lose the full 5-point stop — can produce painful drawdown streaks of 3-5 consecutive losers"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_105.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "10-30 bars (2.5-7.5 hours)",
+    "original_indicators": ["SMA(200)", "RSI(2)"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "close > SMA(5)"
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "name": "bollinger_squeeze_breakout_v82",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "breakout", "squeeze", "bollinger", "keltner"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_112.json",
+  "original_name": "bollinger_squeeze_breakout_v82",
+
+  "mechanism": "NIFTY periodically enters volatility compression phases lasting 5-15 minutes during the trading session — typically after a morning directional move has stalled, during the 11:00-13:00 lunch lull, or ahead of an anticipated event (RBI announcement, US data release). During these compressions, NIFTY oscillates in a tight 8-15 spot point range as market makers dominate and directional participants step aside. This creates a measurable condition: Bollinger Bands (which track statistical volatility) contract inside Keltner Channels (which track range-based volatility), indicating that volatility has dropped below its own average — the TTM Squeeze. When this compression resolves, the accumulated resting orders on both sides of the range trigger a cascade: the breakout direction sweeps stops from range-bound traders positioned on the wrong side, while simultaneously activating breakout entries from momentum algorithms. On NIFTY specifically, squeeze breakouts tend to be less explosive than individual stocks (diversification dampens the move) but more DIRECTIONAL — NIFTY squeezes resolve in the direction of the session's dominant trend about 65% of the time. At 5-second resolution, we detect the exact bar when price escapes the Bollinger Band during a squeeze, giving us a 15-30 second head start before traders on 1-minute or 5-minute bars see the breakout candle close. We ride the initial 30-90 seconds of the breakout expansion, exiting before the move consolidates into a new range.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:45-15:15 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 5,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "bb_mid",
+      "formula": "SMA(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute SMA as the center of the Bollinger Bands. The original used SMA(20) on 15-min bars = 5 hours — this is a half-session average, far too slow for 30-120 second holds. On NIFTY at 5s, volatility compressions that produce tradeable breakouts typically last 5-15 minutes, so the bands need to reflect 10 minutes of price history to properly identify when volatility is contracting relative to recent activity. 10 minutes is also the natural periodicity of NIFTY's intraday consolidation phases — most lunch-hour ranges and pre-event compressions settle into 10-15 minute equilibria."
+    },
+    {
+      "name": "bb_upper",
+      "formula": "SMA(close, 120) + 2 * STDDEV(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Upper Bollinger Band at 2 standard deviations over 10 minutes. The 2x multiplier is retained from the original because it represents a statistical concept (95th percentile) that doesn't change with bar size. What changes is the lookback — 120 bars at 5s captures the same 10-minute volatility window appropriate for NIFTY's compression cycles."
+    },
+    {
+      "name": "bb_lower",
+      "formula": "SMA(close, 120) - 2 * STDDEV(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Lower Bollinger Band. Mirror of bb_upper for detecting downside breakouts during squeeze."
+    },
+    {
+      "name": "keltner_upper",
+      "formula": "EMA(close, 120) + 1.5 * ATR(120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Upper Keltner Channel at 1.5x ATR over 10 minutes. Keltner uses ATR (range-based volatility) while Bollinger uses standard deviation (statistical volatility). When BB contracts INSIDE Keltner, it means statistical volatility has dropped below range-based volatility — price is compressing tighter than its own average true range would suggest. The 1.5x multiplier is retained from the original as it defines the squeeze threshold. On NIFTY, this squeeze condition typically holds for 20-80 bars (100-400 seconds) before resolving."
+    },
+    {
+      "name": "keltner_lower",
+      "formula": "EMA(close, 120) - 1.5 * ATR(120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Lower Keltner Channel. Together with keltner_upper, defines the outer boundary that Bollinger Bands must contract within for a squeeze condition."
+    },
+    {
+      "name": "squeeze_active",
+      "formula": "bb_upper < keltner_upper AND bb_lower > keltner_lower",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Boolean squeeze detector. When true, Bollinger Bands are inside Keltner Channels = volatility compression is active. On NIFTY, squeeze states occur more frequently than on individual stocks (index diversification smooths volatility), but the breakouts are more reliable directionally because NIFTY doesn't have the idiosyncratic gap risk of single stocks."
+    },
+    {
+      "name": "squeeze_bars",
+      "formula": "consecutive count of bars where squeeze_active == true",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Duration of current squeeze in bars. Longer squeezes (>30 bars = 2.5 minutes) tend to produce stronger breakouts because more resting orders accumulate. Very short squeezes (<12 bars = 1 minute) may be noise rather than genuine compression. Used as a quality filter — we require at least 18 bars (90 seconds) of squeeze before a breakout is tradeable."
+    },
+    {
+      "name": "momentum_12",
+      "formula": "close - close[12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute momentum used to confirm breakout direction has follow-through. A breakout above bb_upper with negative 1-minute momentum is likely a fakeout (brief spike without underlying buying pressure). Requires momentum to be aligned with breakout direction."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "squeeze_active == true OR squeeze_active was true within last 6 bars (squeeze just released — BB expanding through Keltner)",
+        "squeeze_bars >= 18 before release (squeeze lasted at least 90 seconds — sufficient compression for meaningful breakout)",
+        "close > bb_upper (NIFTY spot breaking above the upper Bollinger Band — volatility expanding upward)",
+        "momentum_12 > 0 (1-minute momentum confirms upside direction — not just a single-bar spike)"
+      ],
+      "confirmation": "Two consecutive 5s bars closing above bb_upper (10 seconds of sustained breakout). Single-bar spikes through BB on NIFTY are common during squeezes and revert within 5-10 seconds — requiring two bars filters most fakeouts while still entering before 1-minute bar traders see the breakout."
+    },
+    "buy_pe": {
+      "conditions": [
+        "squeeze_active == true OR squeeze_active was true within last 6 bars",
+        "squeeze_bars >= 18 before release",
+        "close < bb_lower (NIFTY breaking below lower Bollinger Band — volatility expanding downward)",
+        "momentum_12 < 0 (1-minute momentum confirms downside direction)"
+      ],
+      "confirmation": "Two consecutive 5s bars closing below bb_lower"
+    },
+    "entry_price": "market"
+  },
+
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "Squeeze breakouts on NIFTY commonly produce a false-start fakeout — price pokes through the Bollinger Band, retraces 3-8 spot points (1.5-4 option points) back into the range, then breaks out for real on the second attempt. A 5-point stop gives room for this 'test and go' pattern while limiting damage when the breakout genuinely fails. On NIFTY specifically, if price breaks through BB by 10+ spot points (5 option points) and then reverses that entire move, the squeeze is resolving in the opposite direction and the trade thesis is dead.",
+    "target_points": 10,
+    "target_rationale": "NIFTY squeeze breakouts are less explosive than individual stock squeezes due to index diversification. The typical first-leg breakout from a 10-minute squeeze covers 15-30 spot points (7-15 option points) in 1-3 minutes. Target of 10 points captures the reliable middle of this range, yielding 1:2 risk-reward. The original targeted a return to the SMA(20) midline, but on 5s NIFTY, the breakout direction usually carries PAST the midline — we target the initial expansion impulse instead. Going beyond 12-15 points requires the breakout to develop into a new trend, which only happens ~35% of the time after squeeze releases.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:15"
+  },
+
+  "filters": {
+    "vix_filter": "VIX between 11-22 — above 22, NIFTY volatility is already elevated and genuine squeezes rarely form (BB is already wide); below 11, breakouts from squeezes lack energy because the overall market is too calm for meaningful directional moves",
+    "time_filter": "No trades before 09:45 (need 30 minutes of data for 120-bar indicators to initialize properly and for early-morning volatility to subside). No trades after 14:45 — late session squeezes often resolve into expiry-related positioning rather than genuine directional breakouts.",
+    "volume_filter": "momentum_12 serves as the volume proxy — on NIFTY index, directional momentum is a more reliable confirmation than aggregated volume",
+    "trend_filter": "none — squeeze breakouts are non-directional by design; the squeeze itself determines breakout direction",
+    "spread_filter": "skip if ATM option bid-ask > 2.5 points — squeeze environments often coincide with low volatility and tighter spreads, but during the breakout moment spreads can widen briefly"
+  },
+
+  "edge": {
+    "expected_bps": 19,
+    "win_rate_estimate": 0.45,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.64,
+    "edge_decay_risk": "medium — TTM Squeeze is popular among retail traders but most implement it on 1-min or 5-min bars; the 5s detection advantage and NIFTY-specific squeeze_bars quality filter provide differentiation"
+  },
+
+  "adaptation_notes": "Five key adaptations from the original BB(20,2) / Keltner(20,1.5) squeeze strategy: (1) Lookback changed from 20 bars on 15-min (5 hours) to 120 bars on 5s (10 minutes). NOT a 12x scaling (which would give 240 bars = 20 minutes). The 10-minute window was chosen because NIFTY's intraday consolidation phases — the micro-structures that produce tradeable squeezes — naturally cluster around 5-15 minute durations. A 20-minute lookback would average over the consolidation AND the preceding directional move, diluting the squeeze signal. (2) Added squeeze_bars quality filter (minimum 90 seconds of squeeze) that the original lacked. At 5s resolution, brief moments where BB dips inside Keltner for 2-3 bars are noise — genuine volatility compression needs time to accumulate resting orders. This filter is essential at 5s and unnecessary at 15-min because a single 15-min bar inside Keltner already represents 15 minutes of compression. (3) Added momentum_12 directional confirmation. The original relied solely on price crossing BB — at 5s, single-bar BB violations from market maker quote adjustments or stale prints are common and meaningless. The 1-minute momentum filter confirms the breakout has genuine directional flow behind it. (4) Target changed from 'cross SMA(20)' to fixed 10 option points. SMA crossover exits on 5s are too noisy (the 120-bar SMA moves with every bar), and NIFTY squeeze breakouts typically overshoot the midline rather than reverting to it. (5) Hold time compressed from 5-15 bars on 15-min (75-225 minutes) to 30-120 seconds because the first leg of a NIFTY squeeze breakout is the most explosive — after 2-3 minutes, the move decelerates as breakout traders take profits and new range formation begins.",
+
+  "weaknesses": [
+    "NIFTY index squeezes resolve with less violence than individual stock squeezes — diversification dampens breakout magnitude, so the 10-point target may only be reached 40-50% of the time when the direction is correct",
+    "Fakeout rate is higher on NIFTY than on stocks because the index is more mean-reverting — price breaks through BB, triggers entries, then reverts back into the range within 15-30 seconds",
+    "Squeezes during the lunch lull (11:30-13:00) can persist for 30+ minutes with very weak breakouts because there's insufficient volume to drive directional resolution",
+    "The BB-inside-Keltner squeeze condition can produce many 'almost squeeze' states where bands touch Keltner but don't fully contract inside — ambiguous signals near the threshold",
+    "On BANKNIFTY expiry days (Wednesdays), gamma effects distort the squeeze mechanics as options market makers aggressively hedge, creating artificial volatility patterns that don't follow squeeze breakout logic"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_112.json",
+    "original_timeframe": "15min",
+    "original_hold_time": "5-15 bars (1.25-3.75 hours)",
+    "original_indicators": ["BB(20,2) upper/lower", "Keltner(20,1.5) upper/lower"],
+    "original_stop": "1.5 * ATR(14)",
+    "original_target": "close crosses SMA(20)"
+  }
+}

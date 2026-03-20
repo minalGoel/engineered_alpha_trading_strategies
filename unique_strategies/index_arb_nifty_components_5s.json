@@ -1,0 +1,132 @@
+{
+  "name": "index_arb_nifty_components_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-fast",
+  "original_strategy": "index_arb_nifty_components_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_192.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 16,
+  "thesis": "The NIFTY 50 index value computed from real-time component prices occasionally diverges from the NIFTY 50 futures fair value due to asynchronous component price updates, large single-stock block trades, and ETF creation/redemption lags. When the synthetic index (sum of weighted components) deviates from the futures-implied level by more than transaction costs, a mean-reversion trade exists. The inefficiency persists because full 50-stock replication is capital-intensive and execution across 50 legs is complex, but a basket of the top-10 weighted stocks (capturing ~55% of index weight) provides sufficient exposure. Retail cannot easily execute this; institutional desks do it but leave residual mispricing in the smaller components.",
+  "mechanism": "Institutional order flow arrives in bursts via algorithmic execution (TWAP/VWAP slicing), creating persistent directional pressure over 30-120 seconds. Retail and smaller participants follow the initial move, extending momentum before liquidity absorbs the flow and the order book rebalances.",
+  "indicators": [
+    {
+      "name": "synthetic_index",
+      "formula": "sum(component_close[i] * weight[i] for i in top10) * scaling_factor",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "nifty_fair",
+      "formula": "NIFTY_FUT - (NIFTY_FUT * days_to_expiry * risk_free_rate / 365)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "basis",
+      "formula": "synthetic_index - nifty_fair",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "basis_mean",
+      "formula": "SMA(basis, 60)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "basis_std",
+      "formula": "rolling_std(basis, 60)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "basis_z",
+      "formula": "(basis - basis_mean) / basis_std",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    },
+    {
+      "name": "tracking_error",
+      "formula": "rolling_std(synthetic_index_returns - nifty_returns, 30)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "converted from original formula"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "basis_z < -2.0",
+        "tracking_error < 0.002 (basket tracks index well today)",
+        "time > 09:25 IST"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "basis_z > 2.0",
+        "tracking_error < 0.002",
+        "time > 09:25 IST"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "if tracking_error spikes > 0.005 during trade, exit (basket no longer tracking)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "none (trade in all VIX regimes, but increase z threshold to 2.5 if VIX > 20)",
+    "volume_filter": "all 10 components must have traded > 5000 shares in current 1-min bar",
+    "expiry_filter": "skip on NIFTY rebalancing days and F&O expiry days"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "10-leg execution is complex; partial fills on any leg create unhedged exposure and tracking error against the index",
+    "The top-10 basket only captures ~55% of NIFTY weight, so basis calculations have inherent noise from the other 40 stocks",
+    "F&O expiry weeks cause basis to behave anomalously due to rollover dynamics, creating false signals"
+  ],
+  "prior_art": "Index arbitrage is well-documented (Brennan & Schwartz 1990, MacKinlay & Ramaswamy 1988). This is a simplified retail version using partial replication, inspired by Harris et al. (1995) on index arb profitability.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe; order book data integration. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

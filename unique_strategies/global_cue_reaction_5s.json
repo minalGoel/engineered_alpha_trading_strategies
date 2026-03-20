@@ -1,0 +1,118 @@
+{
+  "name": "global_cue_reaction_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-3",
+  "original_strategy": "global_cue_reaction_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_262.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Indian markets open at 09:15 IST, by which time SGX NIFTY futures (trading in Singapore from 06:30 IST) have already priced in overnight US, European, and Asian market moves. The opening gap in NIFTY relative to SGX NIFTY's implied open provides a tradeable signal: (1) when NIFTY opens at a PREMIUM to SGX NIFTY implied level (domestic enthusiasm exceeds global cues), the premium fades within 30 minutes as arbitrageurs and institutions align prices, (2) when NIFTY opens at a DISCOUNT to SGX NIFTY, the discount closes similarly. The inefficiency exists because: retail traders react to absolute NIFTY gap direction without comparing to SGX NIFTY, and the SGX NIFTY / NSE NIFTY convergence is a near-arbitrage that institutions exploit but retail misses.",
+  "mechanism": "SGX NIFTY futures trade overnight and price in global market moves before Indian markets open. The opening gap reflects this information, but the initial price discovery is noisy. Within the first 5-15 minutes, the gap either extends (genuine revaluation) or fades (overnight overreaction), creating a tradeable directional signal.",
+  "indicators": [
+    {
+      "name": "sgx_implied_open",
+      "formula": "SGX_NIFTY_close_at_0914 (last price before NSE open)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "nifty_open",
+      "formula": "NIFTY_futures_open at 09:15",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "premium_bps",
+      "formula": "(nifty_open - sgx_implied_open) / sgx_implied_open * 10000",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "gap_from_prev_close",
+      "formula": "(nifty_open - nifty_prev_close) / nifty_prev_close * 10000",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "excess_gap",
+      "formula": "gap_from_prev_close - (sgx_implied_open - nifty_prev_close) / nifty_prev_close * 10000",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "premium_bps < -10 (NIFTY opened at discount to SGX \u2014 expect convergence upward)",
+        "abs(excess_gap) > 10 bps (meaningful domestic discount)",
+        "SGX NIFTY was stable in last 30 min before NSE open (not trending against India)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "premium_bps > 10 (NIFTY opened at premium to SGX \u2014 expect convergence downward)",
+        "abs(excess_gap) > 10 bps",
+        "SGX NIFTY was stable in last 30 min before NSE open"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 8,
+    "stop_points": 4,
+    "time_stop_bars": 24,
+    "signal_exit": "SGX NIFTY itself moves significantly during NSE session (new information)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 25 (in high VIX, convergence may not happen as domestic fear dominates)",
+    "volume_filter": "NIFTY futures volume > 0.8x normal in first 15 min",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 7
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "SGX NIFTY data is not freely available via Zerodha. Requires separate data subscription or scraping from financial portals with latency.",
+    "On days with significant India-specific overnight news (regulatory changes, geopolitical events), the premium/discount is justified and won't converge.",
+    "The signal generates only 1 trade per day and targets a small edge (~22 bps). Annual returns depend heavily on consistency across 250 trading days."
+  ],
+  "prior_art": "Madhavan (2000) 'Market Microstructure' on price discovery across venues. Eun & Sabherwal (2003) 'Cross-Border Listings and Price Discovery'. In India, Mukherjee (2011) studies NIFTY-SGX NIFTY price discovery. NSE's GIFT NIFTY (replacing SGX NIFTY) maintains the same dynamics.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

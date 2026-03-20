@@ -1,0 +1,109 @@
+{
+  "name": "implied_vol_dislocation_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "implied_vol_dislocation_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_46.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "When India VIX (implied vol) diverges significantly from Nifty50 realized vol (last 20 days annualized), a correction is imminent. If VIX > 1.3 * realized_vol, the market is overpricing fear \u2014 go long equities. If VIX < 0.8 * realized_vol, the market is underpricing risk \u2014 go short. This inefficiency exists because options market makers set implied vol based on order flow and hedging needs, not pure statistical forecasting. Edge persists because the IV-RV spread requires cross-asset analysis most equity traders don't perform.",
+  "mechanism": "VIX measures implied volatility premium. When VIX is elevated, options market makers carry large gamma exposure, causing them to delta-hedge aggressively \u2014 buying into rallies and selling into dips. This amplifies directional moves in spot. Conversely, low VIX environments produce smoother, more predictable mean-reverting behavior in the underlying.",
+  "indicators": [
+    {
+      "name": "rv_20d",
+      "formula": "annualized realized vol of Nifty50 over last 20 trading days",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "baseline realized volatility"
+    },
+    {
+      "name": "iv_rv_ratio",
+      "formula": "vix / rv_20d",
+      "lookback": 12,
+      "computed_on": "option",
+      "purpose": "implied to realized vol ratio"
+    },
+    {
+      "name": "nifty_return_30",
+      "formula": "(nifty50_close - nifty50_close[360]) / nifty50_close[30] * 100",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "short-term index direction"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop for individual stocks"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "iv_rv_ratio > 1.3 (market overpricing fear)",
+        "nifty_return_30 > -0.3 (index stabilizing)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "iv_rv_ratio < 0.8 (market underpricing risk)",
+        "nifty_return_30 < 0.3 (index stalling)"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "iv_rv_ratio returns to 0.9-1.1 range",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "core to strategy",
+    "volume_filter": "normal",
+    "expiry_filter": "skip on expiry day, RBI policy day, budget day"
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "IV-RV dislocation can persist for days/weeks \u2014 intraday resolution is not guaranteed",
+    "Using a daily input (20-day RV) in a 1-min strategy creates a mismatch in signal granularity",
+    "Very low frequency \u2014 dislocation signals fire maybe 3-5 times per month"
+  ],
+  "prior_art": "Implied-realized volatility spread trade \u2014 standard options/vol arb concept. Applied here to equity direction.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

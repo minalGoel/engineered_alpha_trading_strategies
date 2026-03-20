@@ -1,0 +1,130 @@
+{
+  "name": "hmm_regime_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus-agent-4",
+  "original_strategy": "hmm_regime_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_304.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 12,
+  "thesis": "Financial markets exhibit latent states (trending, mean-reverting, volatile-choppy) that are not directly observable but can be inferred from observable quantities (returns, volume, spread) using a Hidden Markov Model. By fitting a 3-state HMM on the previous session's 1-min data (observations: return, volume_ratio, range) and using the Viterbi algorithm to decode current state in real-time, we select the appropriate sub-strategy: trend-follow in state 1, mean-revert in state 2, and sit out in state 3 (choppy). The inefficiency exists because HMM implementation at 1-min frequency requires quantitative expertise and latency-sensitive computation. Most HMM applications in finance are at daily or lower frequency.",
+  "mechanism": "Market microstructure varies across volatility regimes. In low-vol regimes, mean-reversion dominates as market makers provide tight liquidity. In high-vol regimes, momentum persists as liquidity thins and stop-cascades amplify moves. Adapting the signal to the current regime captures the appropriate edge for prevailing conditions.",
+  "indicators": [
+    {
+      "name": "HMM_State",
+      "formula": "",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "State_Prob",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "EMA_9",
+      "formula": "",
+      "lookback": 108,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "EMA_21",
+      "formula": "",
+      "lookback": 252,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_mid",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_lower",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "BB_upper",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "STATE_1 (trending): HMM_State == 1 AND State_Prob > 0.70 AND EMA(close,9) > EMA(close,21) AND close > vwap",
+        "STATE_2 (mean-reverting): HMM_State == 2 AND State_Prob > 0.70 AND close < BB_lower"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "STATE_1 (trending): HMM_State == 1 AND State_Prob > 0.70 AND EMA(close,9) < EMA(close,21) AND close < vwap",
+        "STATE_2 (mean-reverting): HMM_State == 2 AND State_Prob > 0.70 AND close > BB_upper"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "HMM_State transitions to State 3 (choppy) \u2014 immediately flatten",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25; if VIX > 20, require State_Prob > 0.80 for entry",
+    "volume_filter": "Volume on entry bar > SMA(volume, 15)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "HMM fitted on previous session's data assumes stationarity of state dynamics across sessions \u2014 this breaks down during earnings season, macro events, or regime changes",
+    "3-state HMM is a strong modeling assumption \u2014 true market dynamics may have more states or non-Gaussian emissions; model misspecification leads to incorrect state decoding",
+    "Forward algorithm computation at each 1-min bar adds latency (O(N\u00b2) per bar where N=3 states); with many stocks this may exceed latency budget for real-time trading"
+  ],
+  "prior_art": "Bulla et al. (2011) on HMM for stock returns; Hamilton (1989) regime-switching models; Ryd\u00e9n et al. (1998) stylized facts and HMMs; hmmlearn library in Python widely available but intraday application is rare",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,0 +1,96 @@
+{
+  "name": "volume_spike_exhaustion_fade_5s",
+  "version": "1.0.0",
+  "author": "adapted from Gemini Quant",
+  "original_strategy": "volume_spike_exhaustion_fade",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_357.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 30,
+  "thesis": "Exploits 'exhaustion gaps'. A massive volume spike (5x average) on a 1-min bar without a significant price breakout usually indicates a 'climax' where all buyers/sellers are exhausted. This typically leads to a mean reversion as the order book refills. This is a market microstructure phenomenon.",
+  "mechanism": "Short-term selling exhausts available demand at a price level, creating a temporary liquidity vacuum. Market makers who absorbed the selling begin marking prices back to reduce inventory risk. Limit buy orders resting below create a floor, and new participants entering the long side accelerate the reversion as the forced selling pressure dissipates.",
+  "indicators": [
+    {
+      "name": "vol_spike",
+      "formula": "volume > sma(volume, 600) * 5",
+      "lookback": 600,
+      "computed_on": "spot",
+      "purpose": "trigger"
+    },
+    {
+      "name": "range_check",
+      "formula": "abs(close - open) / (high - low) < 0.3",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "exhaustion_check"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_spike == True",
+        "close < close[1]",
+        "range_check == True"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_spike == True",
+        "close > close[1]",
+        "range_check == True"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "exit on opposing signal",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India VIX < 25",
+    "volume_filter": "volume > average",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "reversion_threshold",
+      "default": 0.0005,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Spikes can be part of a high-frequency wash trade",
+    "Requires extremely low slippage to be profitable"
+  ],
+  "prior_art": "Microstructure Exhaustion Alpha",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; apply to NIFTY/BANKNIFTY index instead of FnO universe; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

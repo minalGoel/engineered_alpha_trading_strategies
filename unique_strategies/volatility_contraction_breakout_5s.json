@@ -1,0 +1,122 @@
+{
+  "name": "volatility_contraction_breakout_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude-4.6-opus",
+  "original_strategy": "volatility_contraction_breakout_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_177.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "When ATR(14) on 1-min bars contracts to below the 20th percentile of its session distribution, it signals a volatility squeeze that precedes a directional breakout. This is the intraday equivalent of daily ATR contraction patterns. The mechanism is that low ATR indicates temporary equilibrium between buyers and sellers \u2014 once this equilibrium breaks, the move is often sustained because trapped traders on the wrong side need to cover. The edge exists because ATR percentile analysis on 1-min bars is not a standard tool \u2014 most traders use ATR as a fixed number for stop-loss sizing, not as a dynamic squeeze indicator. The inefficiency persists because real-time ATR percentile computation requires session-level context that standard charting tools do not provide.",
+  "mechanism": "Consolidation periods accumulate resting orders above resistance and below support. A breakout triggers these resting orders as stop-losses and breakout entries fire simultaneously. The resulting order flow imbalance overwhelms the resting liquidity, and market makers widen spreads in the breakout direction, accelerating the move.",
+  "indicators": [
+    {
+      "name": "ATR_14",
+      "formula": "",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "ATR_pctile",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "squeeze_bars",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "VWAP",
+      "formula": "",
+      "lookback": 4320,
+      "computed_on": "spot",
+      "purpose": ""
+    },
+    {
+      "name": "volume_ratio",
+      "formula": "",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": ""
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ATR_pctile < 20 within last 5 bars (squeeze recently occurred)",
+        "squeeze_bars >= 10 (sustained squeeze, not momentary dip)",
+        "close > VWAP",
+        "volume_ratio > 2.0 on breakout bar",
+        "bar_range > ATR_14 * 1.5 (expansion bar \u2014 range exceeds recent ATR)"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "ATR_pctile < 20 within last 5 bars",
+        "squeeze_bars >= 10",
+        "close < VWAP",
+        "volume_ratio > 2.0",
+        "bar_range > ATR_14 * 1.5"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 7,
+    "stop_points": 4,
+    "time_stop_bars": 18,
+    "signal_exit": "exit if ATR_pctile drops back below 20 after initial expansion (failed breakout, re-squeezing)",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "India_VIX < 22; VIX squeeze + ATR squeeze is a strong setup",
+    "volume_filter": "expansion bar volume > 2x 20-bar SMA (genuine breakout, not drift)",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 4,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 6
+  },
+  "tunable_params": [
+    {
+      "name": "breakout_threshold",
+      "default": 0.0004,
+      "low": 0.0002,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Not all ATR squeezes resolve with directional breakouts \u2014 some simply continue as low-vol drift (no expansion)",
+    "The 10-bar minimum squeeze requirement may miss shorter compression patterns that also lead to valid breakouts",
+    "Using the squeeze range as stop means the stop distance varies \u2014 can be very tight (good) or very wide (bad) depending on the squeeze"
+  ],
+  "prior_art": "ATR contraction/expansion: John Carter's TTM Squeeze indicator. Bollinger Band width squeeze is the classic version (Bollinger, 2001). Using ATR percentile rather than absolute ATR is an adaptation from quantile-based analysis. Volatility clustering (GARCH) literature supports the theoretical basis for squeeze\u2192expansion sequences.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

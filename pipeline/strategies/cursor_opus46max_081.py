@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Straddle Proxy v1 — cursor_opus46max_081
 
 Thesis: Synthetic straddle in equity by entering at a pivot level
@@ -61,6 +62,8 @@ class Strategy(BaseStrategy):
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=99.0)
         day_id = df["day_id"].to_numpy()
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── Pivot = first bar close per day (proxy for prev day close) ──
         pivot = np.zeros(n, dtype=np.float64)
@@ -120,8 +123,8 @@ class Strategy(BaseStrategy):
 
         squeeze = (bb_pctile_arr < bb_pctile) & recent_compress & near_pivot_recent
 
-        long_entry = squeeze & (close > upper_trigger) & vol_ok & vix_ok
-        short_entry = squeeze & (close < lower_trigger) & vol_ok & vix_ok
+        long_entry = squeeze & (close > upper_trigger) & vol_ok & vix_ok & in_session
+        short_entry = squeeze & (close < lower_trigger) & vol_ok & vix_ok & in_session
 
         signal_exit_long = np.zeros(n, dtype=np.bool_)
         signal_exit_short = np.zeros(n, dtype=np.bool_)

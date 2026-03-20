@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Vol-of-Vol Signal v1 — cursor_opus46max_082
 
 Thesis: Vol-of-vol (rolling_std of ATR) detects regime transitions.
@@ -97,6 +98,8 @@ class Strategy(BaseStrategy):
         volume = np.nan_to_num(volume, nan=1.0)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=99.0)
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── VWAP ──
         df_v = df.with_columns([
@@ -172,8 +175,8 @@ class Strategy(BaseStrategy):
         trans_long = transitioning & ema8_cross_up & vol_surge & vix_ok
         trans_short = transitioning & ema8_cross_down & vol_surge & vix_ok
 
-        long_entry = stable_long | trans_long
-        short_entry = stable_short | trans_short
+        long_entry = (stable_long | trans_long) & in_session
+        short_entry = (stable_short | trans_short) & in_session
 
         # ── Signal exit: regime changes to volatile ──
         volatile_regime = vov_z >= vov_z_volatile

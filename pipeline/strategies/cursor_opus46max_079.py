@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Intraday Vol Pattern v1 — cursor_opus46max_079
 
 Thesis: Intraday volatility follows a U-shape. Mean-reversion during lunch
@@ -90,6 +91,7 @@ class Strategy(BaseStrategy):
         high = df["high"].to_numpy().astype(np.float64)
         low = df["low"].to_numpy().astype(np.float64)
         time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── Bollinger Bands ──
         sma = np.zeros(n, dtype=np.float64)
@@ -146,14 +148,14 @@ class Strategy(BaseStrategy):
         open_close_long = (is_open | is_close_period) & (ema5 > ema13) & (vol_surprise > vol_surprise_high) & (close > high_20)
         afternoon_long = is_afternoon & (close > sma) & (vol_surprise > 1.0)
 
-        long_entry = lunch_long | open_close_long | afternoon_long
+        long_entry = (lunch_long | open_close_long | afternoon_long) & in_session
 
         # ── Short entries by period ──
         lunch_short = is_lunch & (close > bb_upper) & (vol_surprise < vol_surprise_low) & (rsi > 70)
         open_close_short = (is_open | is_close_period) & (ema5 < ema13) & (vol_surprise > vol_surprise_high) & (close < low_20)
         afternoon_short = is_afternoon & (close < sma) & (vol_surprise > 1.0)
 
-        short_entry = lunch_short | open_close_short | afternoon_short
+        short_entry = (lunch_short | open_close_short | afternoon_short) & in_session
 
         signal_exit_long = np.zeros(n, dtype=np.bool_)
         signal_exit_short = np.zeros(n, dtype=np.bool_)

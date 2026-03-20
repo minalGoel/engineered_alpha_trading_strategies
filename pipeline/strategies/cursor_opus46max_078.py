@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Vol-Adjusted Mean Reversion v1 — cursor_opus46max_078
 
 Thesis: Dynamically scale mean-reversion z-score threshold based on
@@ -81,6 +82,8 @@ class Strategy(BaseStrategy):
         low = df["low"].to_numpy().astype(np.float64)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=99.0)
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── VWAP ──
         df_v = df.with_columns([
@@ -130,7 +133,8 @@ class Strategy(BaseStrategy):
             (rsi < rsi_long) &
             (close < vwap) &
             vol_ok &
-            vix_ok
+            vix_ok &
+            in_session
         )
 
         short_entry = (
@@ -139,7 +143,8 @@ class Strategy(BaseStrategy):
             (rsi > rsi_short) &
             (close > vwap) &
             vol_ok &
-            vix_ok
+            vix_ok &
+            in_session
         )
 
         # ── Signal exit: price_z crosses 0 (mean reversion complete) ──

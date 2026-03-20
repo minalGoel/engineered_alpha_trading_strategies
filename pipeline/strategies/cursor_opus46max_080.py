@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Vol Breakout Squeeze v1 — cursor_opus46max_080
 
 Thesis: When ATR(14) contracts to 120-bar min AND BB width percentile < 10
@@ -56,6 +57,8 @@ class Strategy(BaseStrategy):
         opn = df["open"].to_numpy().astype(np.float64)
         volume = df["volume"].to_numpy().astype(np.float64)
         volume = np.nan_to_num(volume, nan=1.0)
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── ATR(14) ──
         atr = _compute_atr(high, low, close, 14)
@@ -106,8 +109,8 @@ class Strategy(BaseStrategy):
         vol_ok = volume > vol_mult * avg_vol
 
         # ── Entry ──
-        long_entry = recent_squeeze & atr_expanding & bullish_bar & (close > sma20) & vol_ok
-        short_entry = recent_squeeze & atr_expanding & bearish_bar & (close < sma20) & vol_ok
+        long_entry = recent_squeeze & atr_expanding & bullish_bar & (close > sma20) & vol_ok & in_session
+        short_entry = recent_squeeze & atr_expanding & bearish_bar & (close < sma20) & vol_ok & in_session
 
         # ── Signal exit: ATR starts contracting within 10 bars ──
         signal_exit_long = np.zeros(n, dtype=np.bool_)

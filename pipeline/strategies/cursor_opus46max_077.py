@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Low Vol Momentum v1 — cursor_opus46max_077
 
 Thesis: Low-volatility stocks with positive intraday momentum (above VWAP,
@@ -68,6 +69,8 @@ class Strategy(BaseStrategy):
         volume = np.nan_to_num(volume, nan=1.0)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=99.0)
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── VWAP ──
         df_v = df.with_columns([
@@ -122,7 +125,8 @@ class Strategy(BaseStrategy):
             (close > vwap) &
             (ema9 > ema21) &
             (close >= session_high_arr) &
-            vix_ok
+            vix_ok &
+            in_session
         )
 
         # ── Short: high vol + below VWAP + EMA aligned down + new session low ──
@@ -132,7 +136,8 @@ class Strategy(BaseStrategy):
             (close < vwap) &
             (ema9 < ema21) &
             (close <= session_low_arr) &
-            vix_ok
+            vix_ok &
+            in_session
         )
 
         # ── Signal exit: VIX spikes above 20 ──

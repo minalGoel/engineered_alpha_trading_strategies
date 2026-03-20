@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """VIX Mean Reversion v1 — cursor_opus46max_076
 
 Thesis: India VIX exhibits strong intraday mean-reversion after spikes.
@@ -84,6 +85,8 @@ class Strategy(BaseStrategy):
         index_close = df["index_close"].to_numpy().astype(np.float64)
         index_close = np.nan_to_num(index_close, nan=0.0)
         day_id = df["day_id"].to_numpy()
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         # ── VWAP ──
         df_v = df.with_columns([
@@ -141,13 +144,15 @@ class Strategy(BaseStrategy):
             (drawdown < -0.5) &
             (rsi < rsi_long_thresh) &
             vix_declining &
-            (vix < 25.0)
+            (vix < 25.0) &
+            in_session
         )
 
         short_entry = (
             (vix_30_change < -vix_crush_pct) &
             (vix_z < vix_z_short) &
-            vix_rising
+            vix_rising &
+            in_session
         )
 
         # ── Signal exit: VIX makes new session high while long ──

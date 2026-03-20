@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Implied vs Realized Vol v1 — cursor_opus46max_074
 
 Thesis: When VIX (implied) spikes vs realized vol (VRP elevated), NIFTY
@@ -81,6 +82,8 @@ class Strategy(BaseStrategy):
         close = df["close"].to_numpy().astype(np.float64)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=15.0)
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         rsi30 = _compute_rsi(close, 30)
 
@@ -130,9 +133,9 @@ class Strategy(BaseStrategy):
 
         # Entry
         long_entry = ((vrp_z > vrp_z_long) & (vix_z > vix_z_long)
-                       & vix_declining & (rsi30 < rsi_low))
+                       & vix_declining & (rsi30 < rsi_low) & in_session)
         short_entry = ((vrp_z < vrp_z_short) & (vix_z < -1.0)
-                        & vix_rising & (rsi30 > rsi_high))
+                        & vix_rising & (rsi30 > rsi_high) & in_session)
 
         # Signal exit: VIX makes new session high (long) or VRP normalizes
         signal_exit_long = np.zeros(n, dtype=np.bool_)

@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """ATR Breakout Volatility v1 — cursor_opus46max_073
 
 Thesis: ATR channel breakouts (2x ATR from session mean) with volume and
@@ -57,6 +58,8 @@ class Strategy(BaseStrategy):
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=99.0)
         day_ids = df["day_id"].to_numpy()
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         atr14 = _compute_atr(high_, low_, close, 14)
 
@@ -100,7 +103,7 @@ class Strategy(BaseStrategy):
         long_entry = np.zeros(n, dtype=np.bool_)
         short_entry = np.zeros(n, dtype=np.bool_)
         for i in range(n):
-            if not vix_ok[i]:
+            if not vix_ok[i] or not in_session[i]:
                 continue
             if (close[i] > upper_ch[i] and atr_expansion[i] > atr_exp_min
                     and vol_ratio[i] > vol_ratio_min and close_pos[i] > 0.75):

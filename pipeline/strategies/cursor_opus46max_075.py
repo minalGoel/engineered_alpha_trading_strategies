@@ -1,3 +1,4 @@
+# AUDIT FIX: Add session window filter to entry signals (entries were firing outside session_start/session_end)
 """Vol Clustering v1 — cursor_opus46max_075
 
 Thesis: GARCH(1,1)-based vol forecast identifies high-vol clusters where
@@ -65,6 +66,8 @@ class Strategy(BaseStrategy):
         volume = df["volume"].to_numpy().astype(np.float64)
         vix = df["vix"].to_numpy().astype(np.float64)
         vix = np.nan_to_num(vix, nan=15.0)
+        time_min = df["time_minutes"].to_numpy()
+        in_session = (time_min >= self.session_start) & (time_min <= self.session_end)
 
         atr14 = _compute_atr(high_, low_, close, 14)
         ema8 = _ema(close, 8)
@@ -133,7 +136,7 @@ class Strategy(BaseStrategy):
         long_entry = np.zeros(n, dtype=np.bool_)
         short_entry = np.zeros(n, dtype=np.bool_)
         for i in range(n):
-            if not in_cluster[i] or not vix_ok[i]:
+            if not in_cluster[i] or not vix_ok[i] or not in_session[i]:
                 continue
             if (close[i] >= high_20[i] and close[i] > ema8[i] and ema8[i] > ema21[i]
                     and momentum[i] > 0 and range_ratio[i] > 1.2 and vol_ratio[i] > 1.3):

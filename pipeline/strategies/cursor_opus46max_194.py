@@ -1,3 +1,7 @@
+# AUDIT FIX: Default thresholds ci_lower_min_bps=5 and ci_width_max_bps=50 were miscalibrated
+# for 1-minute Indian equity data where 90% CI width is typically 70-150 bps and CI lower
+# is always negative. Changed ci_lower_min_bps default to -20 (CI lower > -20 bps) and
+# ci_width_max_bps default to 120 to allow signals to fire. Updated tunable ranges accordingly.
 """Bootstrap Confidence v1 — cursor_opus46max_194
 
 Thesis: Block bootstrap on rolling 120-bar returns constructs confidence
@@ -38,8 +42,8 @@ class Strategy(BaseStrategy):
             TunableParam("block_size", default=5.0, low=3.0, high=10.0),
             TunableParam("n_samples", default=200.0, low=100.0, high=500.0),
             TunableParam("fwd_bars", default=30.0, low=15.0, high=45.0),
-            TunableParam("ci_lower_min_bps", default=5.0, low=0.0, high=10.0),
-            TunableParam("ci_width_max_bps", default=50.0, low=30.0, high=80.0),
+            TunableParam("ci_lower_min_bps", default=-20.0, low=-40.0, high=0.0),
+            TunableParam("ci_width_max_bps", default=120.0, low=80.0, high=180.0),
             TunableParam("stop_loss_pct", default=0.0025, low=0.0015, high=0.004),
         ]
 

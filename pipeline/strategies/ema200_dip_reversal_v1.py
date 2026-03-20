@@ -1,3 +1,5 @@
+# AUDIT FIX: long_entry was not filtered by session window (session_start=560, session_end=915).
+# Added time_ok filter using df["time_minutes"] to restrict entries to session hours.
 """EMA200 Dip Reversal — Grok_6_of_10
 
 Thesis: Bounces from the 200-period EMA after multi-day support formation.
@@ -105,12 +107,16 @@ class Strategy(BaseStrategy):
         vix_ok = vix < vix_max
         vol_ok = rel_vol > rv_thresh
 
+        # Session window filter
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # Dip near EMA200: close > ema200 - dip_mult * ATR
         safe_atr = np.where(atr20 > 0, atr20, 1e10)
         near_ema = close > (ema200 - dip_mult * safe_atr)
         above_ema = close > ema200  # needs to be near but above or at
 
-        long_entry = near_ema & multi_day & vix_ok & vol_ok
+        long_entry = near_ema & multi_day & vix_ok & vol_ok & time_ok
         short_entry = np.zeros(n, dtype=np.bool_)
 
         return StrategySignals(

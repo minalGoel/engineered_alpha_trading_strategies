@@ -1,3 +1,5 @@
+# AUDIT FIX: long_entry and short_entry were not filtered by session window (session_start=560,
+# session_end=915). Added time_ok filter to restrict entries to within session hours.
 """EMA Crossover — GPT_7_of_10
 
 Thesis: EMA9/EMA21 crossover captures short-term momentum shifts.
@@ -41,9 +43,13 @@ class Strategy(BaseStrategy):
         avg_vol_10 = np.clip(avg_vol_10, 1.0, None)
         vol_ok = volume > avg_vol_10
 
+        # ── Session filter ──
+        time_mins = df["time_minutes"].to_numpy().astype(np.int32)
+        time_ok = (time_mins >= self.session_start) & (time_mins <= self.session_end)
+
         # ── Entry ──
-        long_entry = (close > ema9) & (ema9 > ema21) & vol_ok
-        short_entry = (close < ema9) & (ema9 < ema21) & vol_ok
+        long_entry = (close > ema9) & (ema9 > ema21) & vol_ok & time_ok
+        short_entry = (close < ema9) & (ema9 < ema21) & vol_ok & time_ok
 
         return StrategySignals(
             long_entry=long_entry,

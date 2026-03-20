@@ -1,0 +1,113 @@
+{
+  "name": "vwap_rsi_volume_confluence_5s",
+  "version": "1.0.0",
+  "author": "adapted from claude_strategist",
+  "original_strategy": "vwap_rsi_volume_confluence_v1",
+  "original_source": "trading_strategies/unique_strategies_all/Strategy_59.json",
+  "underlying": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:18-15:25 IST",
+  "hold_time_seconds": [
+    50,
+    180
+  ],
+  "max_hold_bars": 36,
+  "max_trades_per_day": 10,
+  "thesis": "Individual signals (VWAP deviation, RSI extreme, volume surge) are noisy alone. But when all three fire simultaneously \u2014 price > 1.5 SD below VWAP AND RSI(7) < 20 AND volume > 3x average \u2014 the probability of mean reversion is dramatically higher. This 3-factor confluence reduces false positives by ~60% vs any single factor. Edge persists because most traders use these indicators independently; the conjunction filter is computationally simple but rarely implemented systematically across 50 stocks in real-time.",
+  "mechanism": "Short-term selling exhausts available demand at a price level, creating a temporary liquidity vacuum. Market makers who absorbed the selling begin marking prices back to reduce inventory risk. Limit buy orders resting below create a floor, and new participants entering the long side accelerate the reversion as the forced selling pressure dissipates.",
+  "indicators": [
+    {
+      "name": "vwap_zscore",
+      "formula": "(close - vwap) / rolling_std(close - vwap, 720)",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": "VWAP deviation"
+    },
+    {
+      "name": "rsi_7",
+      "formula": "RSI(close, 84)",
+      "lookback": 84,
+      "computed_on": "spot",
+      "purpose": "short-term momentum extreme"
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume / SMA(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "volume surge"
+    },
+    {
+      "name": "atr_20",
+      "formula": "ATR(high, low, close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "stop sizing"
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_zscore < -1.5",
+        "rsi_7 < 20",
+        "vol_ratio > 3.0",
+        "vix < 22"
+      ]
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_zscore > 1.5",
+        "rsi_7 > 80",
+        "vol_ratio > 3.0",
+        "vix < 22"
+      ]
+    },
+    "strike_selection": "ATM",
+    "delta_filter": "abs(delta) > 0.35"
+  },
+  "exit": {
+    "target_points": 5,
+    "stop_points": 3,
+    "time_stop_bars": 12,
+    "signal_exit": "first of target conditions hit",
+    "eod_flatten": "15:25 IST"
+  },
+  "filters": {
+    "time_filter": "no entries before 09:18 or after 15:20",
+    "vix_filter": "vix < 22",
+    "volume_filter": "vol_ratio > 3.0 is a core condition",
+    "expiry_filter": ""
+  },
+  "risk": {
+    "lots_per_trade": "sized from allocated capital",
+    "max_loss_per_trade_points": 3,
+    "max_daily_loss_inr": 25000,
+    "max_concurrent_positions": 1
+  },
+  "cost_model": {
+    "spread_per_side": 1.0,
+    "broker": "upstox",
+    "min_edge_points_after_costs": 4
+  },
+  "tunable_params": [
+    {
+      "name": "signal_threshold",
+      "default": 0.0003,
+      "low": 0.0001,
+      "high": 0.001
+    },
+    {
+      "name": "primary_lookback_bars",
+      "default": 12,
+      "low": 6,
+      "high": 60
+    }
+  ],
+  "weaknesses": [
+    "Extremely rare signal \u2014 all three conditions firing simultaneously may happen 1-2 times per week across all 30 stocks",
+    "During genuine panic selloffs, all three fire but the stock keeps falling \u2014 stop loss is essential",
+    "Confluence requirement means you miss many trades where 2 of 3 conditions hold (and those might also be profitable)"
+  ],
+  "prior_art": "Multi-factor signal confluence \u2014 systematic trading concept. Specific VWAP+RSI+Volume combo is novel.",
+  "adaptation_notes": "Converted from 1min to 5s bars. Lookback multiplier: 12x. Adaptations: timeframe scaling to 5-second candles; signal conversion from individual stock to NIFTY/BANKNIFTY index; lookback period scaling for 5-second bars; stop/target recalibration for 5-second timeframe. Stop/target calibrated for options point-based exits. Universe narrowed to NIFTY index."
+}

@@ -1,3 +1,5 @@
+# AUDIT FIX: Rolling max/min included current bar's high/low, making close > orb_high impossible.
+# Fixed by shifting orb_high/orb_low by 1 (exclude current bar from the lookback window).
 """ORB Momentum v32 — Gemini31Pro Strategy 032
 
 Thesis: Opening range breakout with institutional order flow.
@@ -80,9 +82,15 @@ class Strategy(BaseStrategy):
         vwap = df_v["_vwap"].to_numpy().astype(np.float64)
         vwap = np.nan_to_num(vwap, nan=0.0)
 
-        # ── ORB: HIGHEST(high, 21) and LOWEST(low, 21) ──
-        orb_high = _rolling_max(high, 21)
-        orb_low = _rolling_min(low, 21)
+        # ── ORB: HIGHEST(high, 21) and LOWEST(low, 21) (shifted 1 bar to exclude current bar) ──
+        # Shift by 1 so that we compare close[i] against the max/min of the PREVIOUS 21 bars.
+        # Without the shift, close > orb_high is impossible because high[i] >= close[i].
+        orb_high_raw = _rolling_max(high, 21)
+        orb_low_raw = _rolling_min(low, 21)
+        orb_high = np.roll(orb_high_raw, 1)
+        orb_high[0] = orb_high_raw[0]
+        orb_low = np.roll(orb_low_raw, 1)
+        orb_low[0] = orb_low_raw[0]
         orb_high = np.nan_to_num(orb_high, nan=1e10)
         orb_low = np.nan_to_num(orb_low, nan=-1e10)
 

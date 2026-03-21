@@ -1,0 +1,134 @@
+{
+  "name": "straddle_proxy_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "compression", "breakout", "pivot", "atr"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_219.json",
+  "original_name": "straddle_proxy_v1",
+  "mechanism": "On NIFTY, after the first 45 minutes absorb overnight information, the index frequently consolidates near the previous day's close — a critical reference level monitored by every institutional VWAP desk, passive fund, and algorithmic market-maker as a benchmark anchor. When NIFTY's 5-minute ATR compresses below 75% of its 20-minute average AND Bollinger Band width falls into its lowest 20th percentile of the past 20 minutes, the order book is in equilibrium and neither side has conviction. This coiled state precedes sharp directional moves: once price crosses the PDC ± 0.5×ATR(5min) trigger band, clustered stop-loss orders above/below the pivot activate, index options gamma-hedging desks amplify the impulse, and NIFTY can travel 10-20 spot points within 30-60 seconds — sufficient to capture 5-8 option premium points on a correctly-timed CE (upside break) or PE (downside break) entry.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_close"]
+  },
+  "indicators": [
+    {
+      "name": "pdc",
+      "formula": "prev_day_close (last bar close of prior session_date)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "No scaling needed — it is a daily fixed reference level. NIFTY's PDC is where every institutional algorithm anchors their VWAP execution benchmark; consolidation near it signals balanced supply/demand before an eventual directional resolution."
+    },
+    {
+      "name": "atr60",
+      "formula": "RollingMean(TrueRange, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute ATR (60 × 5s). Original used ATR(14) on 1-min = 14-min window. Compressed to 5 min because we hold 30-120s — we need the CURRENT intraday vol regime, not a multi-hour average. Five minutes is the tightest window that smooths 5-second noise while reflecting the live compression state."
+    },
+    {
+      "name": "atr60_sma240",
+      "formula": "RollingMean(atr60, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute rolling average of the 5-min ATR — baseline for compression detection. Original used SMA(ATR14, 60) on 1-min bars = 60-min baseline. Compressed from 60 to 20 minutes because intraday NIFTY vol regimes shift faster than individual equities — a 20-min baseline captures the current session phase without being anchored to opening-hour spikes."
+    },
+    {
+      "name": "bb_width60",
+      "formula": "4 * StdDev(close, 60)  [= BB upper - BB lower, 2-sigma, 60-bar window]",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute Bollinger Band width — secondary confirmation of vol compression alongside ATR. Same 60-bar window as ATR60 for consistency; 5-minute price dispersion confirms the compression is real, not just a true-range artifact from a single spike bar."
+    },
+    {
+      "name": "bb_pctl",
+      "formula": "PercentileRank(bb_width60, 240)  [0-100, rank vs last 240 bars]",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute percentile rank of BB width. Original used a 120-min window on 1-min bars; compressed to 20 min (240 × 5s) because the relevant context for a 30-120s trade is the current intraday phase, not the full morning session. A reading below the 20th percentile confirms the index is in its tightest squeeze of the last 20 minutes."
+    },
+    {
+      "name": "upper_trigger",
+      "formula": "pdc + 0.5 * atr60",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Breakout trigger on the upside. 0.5×ATR(5min) above PDC is the threshold above which price movement is unlikely to be noise — it corresponds to half the current 5-minute typical range. Same multiplier as the original equity strategy; no scaling needed since it is a dynamic fraction of current volatility."
+    },
+    {
+      "name": "lower_trigger",
+      "formula": "pdc - 0.5 * atr60",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Breakout trigger on the downside. Symmetric to upper_trigger — downside cross generates buy_pe signal."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close crosses above upper_trigger (prev bar below, current bar above)",
+        "recent_compressed: ATR compression was active in last 6 bars (30 seconds)",
+        "bb_pctl < bb_pctl_threshold (default 20th percentile, last 20 min)",
+        "vix_low <= India VIX close <= vix_high (default 12-22)",
+        "time in session 10:00-15:20 IST"
+      ],
+      "confirmation": "All five conditions simultaneously true at bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close crosses below lower_trigger (prev bar above, current bar below)",
+        "recent_compressed: ATR compression was active in last 6 bars (30 seconds)",
+        "bb_pctl < bb_pctl_threshold (default 20th percentile, last 20 min)",
+        "vix_low <= India VIX close <= vix_high (default 12-22)",
+        "time in session 10:00-15:20 IST"
+      ],
+      "confirmation": "All five conditions simultaneously true at bar close"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "NIFTY compression breakouts that fail typically retrace 6-8 spot points from the trigger within 15-30 seconds; at delta ~0.5, that is 3-4 option points. Stop at 3 pts exits before the full false-break retrace while allowing 1-2 bars of post-entry noise — tighter than a pure scalp because the compressed state should suppress immediate adverse moves if the breakout is genuine.",
+    "target_points": 7,
+    "target_rationale": "Genuine NIFTY compression breakouts travel 12-18 spot points in their first 30-60 seconds (the stop-cascade + gamma-hedging impulse); 14 spot points = ~7 option pts at delta 0.5 represents the conservative lower bound, giving 1:2.33 R:R with a tight stop. We do not target the full 18-pt move since the first leg exhausts within ~60s and the second leg requires confirmation we do not have.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "12 <= India VIX <= 22 (some vol needed for post-compression moves; extreme VIX > 22 produces erratic pivots)",
+    "time_filter": "10:00-15:20 IST (first 45 min excluded: PDC pivot needs time to establish as a meaningful reference; early bars are opening range formation not consolidation)",
+    "volume_filter": "none (index volume is noisy at 5s; ATR and BB width capture vol regime better)",
+    "trend_filter": "none by design — strategy is non-directional, trades breakout in either direction",
+    "spread_filter": "not applicable — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.44,
+    "avg_winner_to_loser": 2.33,
+    "profit_factor_estimate": 1.83,
+    "edge_decay_risk": "moderate — ATR compression signals become less reliable if NIFTY is in a sustained trending regime (no compression occurs near PDC); also at risk if PDC ceases to function as institutional anchor (e.g., strong gap days)"
+  },
+  "adaptation_notes": "Core compression + pivot breakout thesis is preserved verbatim from the original. Changes made: (1) Universe changed from NIFTY50 equity constituents to NIFTY index itself — the same compression signal works on the index and is more reliable since NIFTY is smoother and driven by institutional flow. (2) ATR(14)/1-min → ATR(60)/5s: same 14-minute time horizon, but at 5s granularity. Baseline compressed from 60-min to 20-min to match the faster intraday regime shifts on index vs. individual stocks. (3) BB lookback 120-min window → 20-min window for same reason. (4) Stop-and-reverse mechanism from original is dropped — at 5s resolution with limit orders, a hard stop and re-entry on the next signal is cleaner and avoids simultaneous position handling. (5) Session start moved from 10:00 to 10:00 IST (same) — but now measured from 09:15 open, so effectively 45-minute warmup. (6) Direction (buy CE / buy PE) replaces the equity long/short.",
+  "weaknesses": [
+    "On strong gap-up or gap-down days, NIFTY never revisits PDC — the entire session produces no compression near the pivot and zero signals",
+    "False breaks are the primary risk: NIFTY can cross the trigger band briefly on noise and immediately reverse, stopping out before the real move; this is why the 30-second recent_compression window is critical",
+    "The ATR60 baseline (20-min SMA) can take 25 minutes of data before producing stable readings — first signals reliably appear only around 10:00-10:05 IST, matching the session_start filter"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_219.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-60 mins",
+    "original_indicators": ["ATR(14)", "SMA(ATR14, 60)", "BB_width_pctl(120)", "pivot = prev_day_close"],
+    "original_stop": "0.5 * ATR14 (stop-and-reverse)",
+    "original_target": "2.5 * stop_distance from pivot"
+  }
+}

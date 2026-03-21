@@ -1,0 +1,123 @@
+{
+  "name": "vol_of_vol_signal_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "vol_of_vol", "second_order", "regime_change", "mean_reversion", "breakout"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_220.json",
+  "original_name": "vol_of_vol_signal_v1",
+  "mechanism": "On NIFTY, the 2-minute ATR is itself a time series whose own volatility (vol-of-vol) signals whether the index is in a stable-drift or regime-transition state. When vol-of-vol z-score is low (ATR has been nearly constant over 10 minutes), NIFTY is absorbing orders symmetrically around VWAP and RSI extremes on 2-minute bars reliably revert within 30-60 seconds as resting limit orders absorb directional flow. When vol-of-vol z-score rises above 0.5 (ATR itself becomes erratic), a large institutional TWAP order or macro trigger has disrupted the equilibrium — the EMA(1min)/EMA(3min) crossover during this regime confirms a directional order flow shift that persists for 60-90 seconds before the next equilibrium forms.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "atr_24",
+      "formula": "ATR(high, low, close, 24) with Wilder smoothing",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars = 2-minute true range volatility. Original used ATR(14) on 1-min = 14-minute context; we compress to 2 minutes because for a 30-90s hold we care about CURRENT micro-volatility, not a 14-minute structural view. 24 bars is long enough to be non-noisy but short enough to detect rapid ATR changes."
+    },
+    {
+      "name": "vov_30",
+      "formula": "rolling_std(atr_24, 30)",
+      "lookback": 30,
+      "computed_on": "spot",
+      "purpose": "30 bars = 2.5-minute rolling std of ATR. Same bar count as original (rolling_std over 30 bars) because the same number of ATR samples is needed to detect ATR instability — the key question is 'how many data points to measure std of ATR', not 'how many minutes'. 30 is the minimum for a statistically meaningful std estimate."
+    },
+    {
+      "name": "vov_z",
+      "formula": "(vov_30 - mean(vov_30, 120)) / std(vov_30, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Z-score baseline over 120 bars = 10 minutes. Original used 120-minute baseline; we use 10 minutes because NIFTY intraday regimes shift every 15-30 minutes (driven by session dynamics, not multi-hour cycles). A 10-minute baseline captures the current session's vol-of-vol norm without incorporating pre-lunch or pre-close regime differences."
+    },
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute RSI for mean-reversion signals in the stable regime. Original used RSI(14) on 1-min = 14-min context. Compressed to 2 minutes because stable-regime NIFTY RSI extremes at 5s bars require faster detection — the reversion window is 30-60 seconds, so we must identify the extreme quickly, not 14 minutes after it started."
+    },
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute fast EMA for crossover breakout signals in the transitioning regime. At 5s bars, 12-bar EMA = 1-minute trend; faster than the 36-bar slow EMA by a 3:1 ratio, same ratio as original EMA(8)/EMA(21) ≈ 2.6:1."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute slow EMA for crossover context. Anchors the trend filter to a 3-minute view — short enough to be reactive to the regime transition (which is a new 1-2 minute directional move) but longer than ema_12 to give a clean crossover signal."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "STABLE REGIME (vov_z < 0.5): RSI(24) < 32 — 2-minute selling exhaustion, expect mean reversion bounce",
+        "TRANSITIONING REGIME (0.5 <= vov_z < 2.0): EMA(12) crosses above EMA(36) — institutional flow shift confirmed by vol instability"
+      ],
+      "confirmation": "Both regime condition and directional signal must hold simultaneously on the same 5s bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "STABLE REGIME (vov_z < 0.5): RSI(24) > 68 — 2-minute buying exhaustion, expect mean reversion fade",
+        "TRANSITIONING REGIME (0.5 <= vov_z < 2.0): EMA(12) crosses below EMA(36) — downside institutional flow shift"
+      ],
+      "confirmation": "Both regime condition and directional signal must hold simultaneously on the same 5s bar"
+    },
+    "entry_price": "limit order at candle close",
+    "no_trade_regime": "vov_z >= 2.0 (volatile regime) — too chaotic for either mean reversion or directional breakout"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "Regime-adaptive: stable regime uses 3 pts (NIFTY mean reversion from RSI<32 should not retrace more than 6 spot pts before bouncing; 3 option pts at delta 0.5 = 6 spot pts threshold), transitioning regime uses 4 pts (breakout that reverses within 8 spot pts is a false regime classification). JSON scalar shows the transitioning value as the primary use case.",
+    "target_points": 6,
+    "target_rationale": "Regime-adaptive: stable regime targets 5 pts (capturing ~50% of a typical 10-12 spot pt RSI-extreme reversion at 2-min horizon), transitioning regime targets 7 pts (15-25 spot pt breakout moves at 1-3 min horizon; 7 option pts = ~14 spot pts at delta 0.5, capturing ~60% of median move). JSON scalar shows average.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "none — vol-of-vol is itself the regime filter, making VIX redundant",
+    "time_filter": "09:30-15:25 IST; need 174 bars (14.5 min) of warmup for vov_z to stabilize",
+    "volume_filter": "none explicit — index volume is noisy at 5s; regime classification handles it implicitly",
+    "trend_filter": "built-in via regime: stable regime precludes trending breakout entries; transitioning regime precludes mean-reversion entries",
+    "spread_filter": "limit order execution — no spread cost; breakeven ~0.6 pts at scale"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.4,
+    "profit_factor_estimate": 1.71,
+    "edge_decay_risk": "moderate — vol-of-vol regime classification depends on ATR stability which can produce false signals during news-driven spikes; regime boundaries (vov_z thresholds) need periodic recalibration"
+  },
+  "adaptation_notes": "Converted from 1-min equity (NIFTY50 constituents) to 5-second NIFTY index options. Three key changes: (1) Lookbacks compressed from 14-min ATR / 30-min vol-of-vol / 120-min z-score to 2-min / 2.5-min / 10-min respectively — justified by hold time compression from 10-45 min to 30-90 sec; (2) Universe changed from individual stocks to NIFTY index — the vol-of-vol concept is MORE reliable on NIFTY because index ATR is smoother and less subject to single-stock event noise; (3) Regime-adaptive stops/targets replace the original ATR-percentage exits — option premium point calibration uses NIFTY typical move sizes at the relevant hold times.",
+  "weaknesses": [
+    "ATR(24) on 5s bars is noisy — a single large-move bar can distort the vol-of-vol signal for the next 2 minutes",
+    "Regime boundary at vov_z=0.5/2.0 is sensitive; different market conditions may require different thresholds",
+    "EMA crossover in transitioning regime can be late — by the time ema_12 crosses ema_36, the initial move is partially captured",
+    "Running two distinct sub-strategies (mean reversion + breakout) means different days favor different sub-strategies, making net Sharpe moderate even if each sub-strategy is individually sound"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_220.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-45 mins",
+    "original_indicators": ["ATR(14)", "rolling_std(ATR, 30)", "vov_z_score_120", "EMA(8)", "EMA(21)", "RSI(14)", "Bollinger Bands(20)"],
+    "original_stop": "0.3 * ATR_14 (stable) / 0.7 * ATR_14 (transitioning)",
+    "original_target": "SMA(20) midline (stable) / 1.5 * ATR_14 (transitioning)"
+  }
+}

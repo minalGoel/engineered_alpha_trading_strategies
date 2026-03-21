@@ -1,0 +1,135 @@
+{
+  "name": "spectral_analysis_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["spectral", "fourier", "cycle-detection", "frequency", "quantitative", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_321.json",
+  "original_name": "spectral_analysis_v1",
+  "mechanism": "On NIFTY, large institutional participants executing TWAP/VWAP orders slice their inventory into fixed time-based tranches (typically 30-90 seconds each), and option market makers continuously delta-hedge by periodically buying or selling the index in rhythmic bursts. These execution patterns create measurable periodic micro-oscillations in NIFTY's 5-second price series at cycle lengths of 30-180 seconds. When the FFT of the last 20 minutes of 5-second closes reveals a dominant spectral peak at a 30-180 second period with power exceeding 3.5x the spectral noise floor — and that dominant period has been stable for the past 30 seconds — the institution-driven cycle is significant and exploitable. We enter at confirmed phase extrema: at cycle troughs (phase ≈ π, cosine minimum) with a 10-second positive ROC confirmation for CE, and at cycle peaks (phase ≈ 0, cosine maximum) with negative ROC for PE.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:40-15:20 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "fft_window_close",
+      "formula": "detrend(close[-240:], linear) → rfft → power spectrum",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "240 bars = 20 minutes. Target cycle range is 30-180 seconds (6-36 bars at 5s). Reliable spectral estimation requires at least 4-6 complete cycles of the longest target cycle (36-bar cycle needs 144+ bars to see 4 repetitions). 240 bars provides 4-6 complete cycles at the upper end of the range while being short enough to stay within the current institutional execution regime. NOT a 12x scaling of the original's 128-bar window (which would give 1536 bars = 128 minutes, far too long and spanning multiple market regimes). Frequency resolution = 1/240 cycles/bar, distinguishing cycles differing by just 6 bars."
+    },
+    {
+      "name": "dominant_period",
+      "formula": "window / argmax(power[k_min:k_max+1]) where k_min=240//36=6, k_max=240//6=40",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Period of the dominant spectral component in bars (6-36 bars = 30s-3min). Constrained to the tradeable range: sub-30s cycles are microstructure noise, above-3min cycles require hold times exceeding our 60s max. The dominant period determines the hold window and phase thresholds."
+    },
+    {
+      "name": "spectral_ratio",
+      "formula": "power[dom_k] / mean(power[1:N/2+1])",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Signal-to-noise ratio of the dominant cycle. Threshold 3.5 separates genuine institution-driven rhythms from stochastic noise. Values < 3.5 indicate no reliable periodicity — random walks will occasionally show a 'dominant' frequency by chance. Higher threshold (vs original's 3.0) is appropriate because 5-second bars are noisier than 1-minute bars, and the NIFTY index time series is smoother than individual stocks."
+    },
+    {
+      "name": "cycle_phase",
+      "formula": "angle(fft_vals[dom_k]) % (2*pi) — phase of dominant component at current bar",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Instantaneous phase of the dominant frequency component at the current bar. For cosine representation: phase=0 is a peak (price locally highest), phase=π is a trough (price locally lowest). Entering at troughs (CE) or peaks (PE) optimizes entry timing within the cycle."
+    },
+    {
+      "name": "period_stable",
+      "formula": "max(dominant_period[-6:]) - min(dominant_period[-6:]) <= 2 bars",
+      "lookback": 246,
+      "computed_on": "spot",
+      "purpose": "Dominant period must be stable within ±2 bars for the past 6 bars (30 seconds). Unstable dominant period indicates the cycle is collapsing or regime is shifting — do not trade. Filters out the transition moments where spectral ratio may be temporarily high but period is fluctuating wildly."
+    },
+    {
+      "name": "roc_2",
+      "formula": "close[i] - close[i-2]",
+      "lookback": 2,
+      "computed_on": "spot",
+      "purpose": "2-bar (10-second) rate-of-change for directional confirmation at entry. Confirms that price has already started moving in the expected direction before we enter — reduces false entries at phase extrema where price may hover before reversing."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "spectral_ratio >= 3.5 (cycle is statistically significant above noise floor)",
+        "dominant_period in [6, 36] bars (30s-3min tradeable cycle length)",
+        "period_stable == True (dominant period stable ±2 bars for past 30s)",
+        "cycle_phase within π/4 of π (near trough — price locally low, expect rise)",
+        "roc_2 > 0 (price already turning up — confirmation)",
+        "vix_close < 22 (cyclical patterns unreliable in high-vol regime)",
+        "time in session [09:40, 15:20) IST"
+      ],
+      "confirmation": "roc_2 > 0 (10-second positive ROC)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "spectral_ratio >= 3.5",
+        "dominant_period in [6, 36] bars",
+        "period_stable == True",
+        "cycle_phase within π/4 of 0 or 2π (near peak — price locally high, expect fall)",
+        "roc_2 < 0 (price already turning down — confirmation)",
+        "vix_close < 22",
+        "time in session [09:40, 15:20) IST"
+      ],
+      "confirmation": "roc_2 < 0 (10-second negative ROC)"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option points = ~6 NIFTY spot points at delta 0.5. For 30-90 second institutional cycles, a 6-spot-point counter-move within 30s indicates the cycle has broken down or been overwhelmed by a news event — at this level the oscillation thesis is falsified. Calibrated against the 2-5 option point typical move at 15-60 second holds; 3 points gives 60% retrace budget before stopping out.",
+    "target_points": 5,
+    "target_rationale": "5 option points ≈ 10 NIFTY spot points at delta 0.5. Half-cycle reversion from a confirmed trough/peak on NIFTY at 30-90 second cycles yields 8-14 spot points in normal conditions; 5 option points targets the lower-middle of this range for a 1:1.67 risk-reward. Achievable in 15-45 seconds on cycles where the spectral ratio is 3.5+ and the phase is accurately estimated.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22 — high-volatility regimes introduce large directional moves that swamp micro-cyclical patterns; institution-driven TWAP rhythms break down when market makers widen quotes and reduce order size",
+    "time_filter": "09:40-15:20 IST — need 240 bars (20 min) of warmup for FFT; avoid last 10 min due to closing auction distortions",
+    "volume_filter": "None — index volume at 5s bars is noisy and does not reliably filter cycle quality; spectral_ratio threshold serves as quality gate",
+    "trend_filter": "None explicit — the spectral cycle signal is trend-agnostic; we are timing intra-cycle moves, not macro direction",
+    "spread_filter": "Limit order execution — no spread cost. strike_offset=0 (ATM) for maximum liquidity.",
+    "other_filters": [
+      "period_stable filter: dominant period stable ±2 bars for last 6 bars (30 seconds)"
+    ]
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.49,
+    "edge_decay_risk": "High — FFT cycle detection on financial price series is inherently fragile; apparent cycles may be noise artifacts. However, NIFTY is a better candidate than individual stocks (smoother, more liquid, institutionally driven). The spectral_ratio > 3.5 threshold is designed to trade only when cyclicality is unusually persistent."
+  },
+  "adaptation_notes": "Original: FFT on 128-bar 1-min windows of individual NIFTY 50 stocks, detecting 10-30 min cycles, holding half a cycle. Converted: (1) Universe → NIFTY index only (no cross-sectional data). (2) Cycle range → compressed from 10-30 min to 30-180 seconds to match 15-60 second hold target; this required dramatically shortening the target period range, NOT scaling the 128-bar window by 12 (which would give 1536 bars = 128 min window). (3) FFT window → 240 bars (20 min) chosen to contain 4-6 complete cycles of the longest target cycle (36 bars), enabling reliable spectral estimation without spanning multiple intraday regimes. (4) Phase estimation → adapted from 1-min bar cycle-position tracking to per-5s-bar complex FFT coefficient phase angle. (5) Hold time → time_stop_bars=12 (60s) to capture half-cycle moves at the 30-90s dominant period range. (6) VIX filter retained at <22 since cycles break down in high-vol equally on index as on stocks.",
+  "weaknesses": [
+    "Financial price series are not truly periodic — the 'dominant cycle' may be an artifact of the stochastic price process; the spectral_ratio threshold filters most noise but cannot eliminate it",
+    "Frequency resolution is 1/240 bars = 0.0042 cycles/bar, so cycles of 6 and 7 bars (30s vs 35s) can be confused — phase estimation error at the margin",
+    "Phase estimation from FFT uses complex coefficient angle, which is sensitive to the linear detrending accuracy; if there is a strong micro-trend within the 240-bar window, detrending artifacts may misplace the phase",
+    "Low signal density — spectral_ratio > 3.5 fires rarely, so the strategy may produce only 3-5 trades per day, limiting statistical significance during evaluation"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_321.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "half of dominant cycle period (10-30 min)",
+    "original_indicators": ["FFT_Spectrum(128)", "Dominant_Period", "Spectral_Ratio", "Cycle_Phase", "VWAP_Distance"],
+    "original_stop": "1.5x expected cycle amplitude",
+    "original_target": "half dominant period (cycle trough to peak)"
+  }
+}

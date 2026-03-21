@@ -1,0 +1,132 @@
+{
+  "name": "maximum_entropy_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean-reversion", "statistical", "tail-event", "entropy", "cornish-fisher", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_326.json",
+  "original_name": "maximum_entropy_v1 (equity)",
+  "mechanism": "On NIFTY, a 5-second return that falls beyond the 95th percentile of the past 5-minute return distribution represents a statistically anomalous flush of market orders — typically cascading stop-loss triggers or short-term momentum algos overshooting on thin liquidity. The maximum entropy distribution (approximated via Cornish-Fisher expansion using rolling mean, std, and skewness) correctly identifies when positive or negative skew makes an event truly extreme rather than just 'large under a normal assumption.' Within 30-90 seconds, NIFTY's structural mean-reversion forces (VWAP-anchored institutional accumulation, market-maker delta-hedging from gamma exposure) fade these overshoots. Entering at the close of the extreme bar — while still below VWAP for longs, above VWAP for shorts — captures the early phase of the reversion before it completes.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ret_5s",
+      "formula": "(close[i] - close[i-1]) / close[i-1]",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Raw 5-second return — the signal input. Original used 1-min returns; we use 5s returns because we are detecting micro-level tail events that resolve within 30-90 seconds."
+    },
+    {
+      "name": "roll_mean_60",
+      "formula": "mean(ret_5s, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60-bar (5-minute) rolling mean of 5s returns. Chosen as 5 minutes rather than the original's 60-minute window because we need the current micro-volatility regime, not the full-session average. A 60-minute window would blend morning gap-fill volatility with afternoon calm, blurring the threshold calibration. 60 bars also provides enough data points (60 observations) for reasonable skewness estimation."
+    },
+    {
+      "name": "roll_std_60",
+      "formula": "std(ret_5s, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling standard deviation. Same window as roll_mean_60 — they must be computed on the same sample for the distribution to be internally consistent."
+    },
+    {
+      "name": "roll_skew_60",
+      "formula": "skewness(ret_5s, 60) = mean(((ret - mean) / std)^3)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling skewness — the critical improvement over simple z-scores. NIFTY intraday returns exhibit negative skew during sell-offs (many small positive returns, occasional large negatives) and positive skew during trending up days. The Cornish-Fisher expansion uses this to shift the tail thresholds asymmetrically, avoiding false 'extreme' signals on the fat-tail side of the distribution."
+    },
+    {
+      "name": "maxent_p5_cornish_fisher",
+      "formula": "roll_mean + (z_lo + (roll_skew/6) * (z_lo^2 - 1)) * roll_std  where z_lo = -1.645",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Cornish-Fisher approximation of the MaxEnt P5 threshold. The CF expansion adjusts the normal quantile by skewness without requiring numerical optimization, making it stable and fast at 5s bar frequency."
+    },
+    {
+      "name": "maxent_p95_cornish_fisher",
+      "formula": "roll_mean + (z_hi + (roll_skew/6) * (z_hi^2 - 1)) * roll_std  where z_hi = +1.645",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Cornish-Fisher P95 threshold. When a 5s return exceeds this level, it is in the top 5% of the past 5-minute distribution — statistically extreme relative to the current regime."
+    },
+    {
+      "name": "session_vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative session VWAP as a directional anchor. VWAP-benchmarked algos accumulate below VWAP and distribute above VWAP, making VWAP a structural mean-reversion attractor. VWAP below-close filter prevents fading a strong trend: we only buy CE after an extreme DOWN move when price is below VWAP (aligning with the VWAP reversion pull), and buy PE after an extreme UP move when above VWAP."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ret_5s < maxent_p5_cornish_fisher (extreme negative 5s return — bottom 5% of recent distribution)",
+        "close < session_vwap (price below VWAP, structural mean-reversion pull is upward)",
+        "vix_close < vix_max=22 (elevated VIX causes frequent extremes, degrading signal quality)",
+        "roll_std > 0 (sufficient recent volatility for meaningful distribution fitting)"
+      ],
+      "confirmation": "Signal fires at bar close — no extra confirmation to avoid missing fast reversions"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ret_5s > maxent_p95_cornish_fisher (extreme positive 5s return — top 5% of recent distribution)",
+        "close > session_vwap (price above VWAP, structural mean-reversion pull is downward)",
+        "vix_close < vix_max=22",
+        "roll_std > 0"
+      ],
+      "confirmation": "Signal fires at bar close"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option points = ~6 spot points retracement. If a NIFTY 5-second extreme return (which is itself ~8-15 spot points at the P5/P95 level) continues to deepen by another 6 spot points rather than reverting, the thesis is wrong — momentum has overwhelmed mean-reversion. At delta ~0.5, 3 option pts = 6 spot pts, consistent with a maximum acceptable adverse continuation within our 30-90s hold window.",
+    "target_points": 5.0,
+    "target_rationale": "5 option points = ~10 spot point reversion. Statistical tail events on NIFTY (P5/P95 at 5-min distribution) typically overshoot by 8-15 spot points and revert 60-80% within 60-90 seconds — capturing 10 spot pts (5 option pts) is the lower bound of the expected reversion (1:1.67 R:R). This is calibrated against the 30-90s window where NIFTY reversion averages 8-12 pts (4-6 option pts).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22 — in high VIX regimes, tail events occur frequently (multiple per hour) and do NOT revert reliably; the statistical rarity that makes them meaningful breaks down",
+    "time_filter": "No entries before 09:30 (need 60-bar warmup from 09:20 open for distribution estimation) or after 15:20",
+    "volume_filter": "None — NIFTY volume is institutional-dominated and poorly correlated with mean-reversion quality at 5s",
+    "trend_filter": "Implicit via VWAP — only enter in direction of VWAP reversion, avoiding strong trend continuation",
+    "spread_filter": "None — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.42,
+    "edge_decay_risk": "Moderate — the Cornish-Fisher skewness adjustment is a genuine statistical improvement over simple z-scores, but if NIFTY's 5-minute return skewness regime shifts (e.g., post-news), the threshold calibration can lag by 2-5 minutes"
+  },
+  "adaptation_notes": "The original strategy operated on NIFTY 50 constituent stocks individually. The core idea — using maximum entropy distribution fitted to rolling moments rather than a naive normal assumption — translates directly to the NIFTY index return series. Key changes: (1) Timeframe compressed from 1-min to 5s bars, lookback compressed from 60-minute to 5-minute window (different reasoning: we need the current micro-volatility regime, not a multi-hour average); (2) MaxEnt optimization replaced with Cornish-Fisher approximation for numerical stability at 5s frequency; (3) Universe dependency removed — one index, not 50 stocks; (4) Stock-specific filters (volume, bid-ask spread on individual stocks) replaced by NIFTY structural filter (VWAP position); (5) Mean-reversion thesis preserved — statistically extreme returns revert, and the skewness-adjusted threshold correctly identifies 'truly extreme' vs 'extreme under normal assumption.'",
+  "weaknesses": [
+    "60-bar window (5 minutes) provides only marginal statistical power for skewness estimation — requires ~100+ observations for reliable skewness; use CF adjustment as directional bias, not precise quantile",
+    "NIFTY index 5s returns have very thin tails at short lookbacks — P5/P95 may be triggered by routine 3-5 spot point moves during low-volatility periods, generating noise signals",
+    "Mean-reversion at 30-90s can fail on macro event days (RBI announcements, budget, global shock) when the 'extreme' return is information-driven, not noise; no event filter implemented"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_326.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 min",
+    "original_indicators": ["Return_1min", "Rolling_Mean(60)", "Rolling_Var(60)", "Rolling_Skew(60)", "MaxEnt_P5", "MaxEnt_P95", "VWAP"],
+    "original_stop": "20 bps from entry",
+    "original_target": "30 bps from entry"
+  }
+}

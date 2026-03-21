@@ -161,7 +161,7 @@ def run_sensitivity(
 
     fragile = abs(worst_degradation) > SHARPE_DEGRADATION_LIMIT
 
-    return {
+    result = {
         "baseline_sharpe": round(baseline_sharpe, 4),
         "baseline_trades": baseline_trades,
         "param_results": param_results,
@@ -170,6 +170,127 @@ def run_sensitivity(
         "fragile": fragile,
         "verdict": "FRAGILE" if fragile else "ROBUST",
     }
+
+    # ── Save each perturbed run to the ResultStore ────────────────────────────
+    # Add save hook at output point only. Do not reimplement sensitivity logic.
+    _save_sensitivity_runs_to_store(
+        strategy, spot_df, option_df, vix_df, lot_size,
+        params, param_results, capital=capital,
+    )
+
+    return result
+
+
+def _save_sensitivity_runs_to_store(
+    strategy,
+    spot_df,
+    option_df,
+    vix_df,
+    lot_size: int,
+    baseline_params: dict,
+    param_results: dict,
+    capital=None,
+):
+    """Save each sensitivity perturbation run to the ResultStore.
+
+    Called after run_sensitivity() computes results. Writes is_sensitivity_run=True
+    runs to the same schema as regular backtest runs. Does not rerun backtests.
+    """
+    try:
+        from pipeline.result_store import (
+            get_store, build_run_record, build_result_record,
+            build_feature_records, build_split_record, COST_MODEL_VERSION,
+            BACKTEST_ENGINE,
+        )
+        from pipeline.run_all import backtest_strategy
+    except ImportError:
+        return
+
+    if capital is None:
+        from pipeline.cost_model import CAPITAL_PER_ENTRY
+        capital = CAPITAL_PER_ENTRY
+
+    store = get_store()
+    total_days = spot_df["day_id"].n_unique() if (
+        spot_df is not None and "day_id" in spot_df.columns
+    ) else 12
+
+    for pname, directions in param_results.items():
+        for direction, info in directions.items():
+            if info.get("clamped"):
+                continue
+            perturbed_value = info.get("value")
+            if perturbed_value is None:
+                continue
+            perturbed_params = dict(baseline_params)
+            perturbed_params[pname] = perturbed_value
+
+            try:
+                trades_df, metrics = backtest_strategy(
+                    strategy, spot_df, option_df, vix_df, lot_size,
+                    perturbed_params, capital=capital,
+                )
+            except Exception as exc:
+                log.warning("Sensitivity save: backtest error for %s %s=%s: %s",
+                            strategy.name, pname, perturbed_value, exc)
+                continue
+
+            run_record = build_run_record(
+                strategy_id=strategy.name,
+                spot_df=spot_df,
+                backtest_engine=BACKTEST_ENGINE,
+                cost_model_version=COST_MODEL_VERSION,
+                is_sensitivity_run=True,
+                notes=f"sensitivity:{pname}:{direction}",
+            )
+
+            param_records = [
+                {
+                    "param_name": k,
+                    "param_value": v,
+                    "param_type": "entry",
+                    "is_optimized": 0,
+                }
+                for k, v in perturbed_params.items()
+            ]
+            # Mark the perturbed parameter
+            for pr in param_records:
+                if pr["param_name"] == pname:
+                    pr["is_optimized"] = 0  # not optimised, just perturbed
+
+            feature_records = build_feature_records(strategy)
+            result_record = build_result_record(
+                metrics, split="full", fold_number=0, total_trading_days=total_days,
+            )
+            split_record = build_split_record(spot_df, fold_number=0, split_type="fixed")
+
+            signal_arrays = None
+            try:
+                signals = strategy.compute(spot_df, option_df, vix_df, perturbed_params)
+                signal_arrays = {
+                    "buy_ce": signals.buy_ce,
+                    "buy_pe": signals.buy_pe,
+                    "stop_points": signals.stop_points,
+                    "target_points": signals.target_points,
+                }
+            except Exception:
+                pass
+
+            try:
+                store.save_run(
+                    run_record=run_record,
+                    parameters=param_records,
+                    features=feature_records,
+                    splits=[split_record],
+                    results=[result_record],
+                    trades=trades_df,
+                    lot_size=lot_size,
+                    capital=capital,
+                    signal_arrays=signal_arrays,
+                )
+            except Exception as exc:
+                log.warning("Sensitivity save error for %s %s: %s",
+                            strategy.name, pname, exc)
 
 
 def format_sensitivity_report(name: str, result: dict) -> str:

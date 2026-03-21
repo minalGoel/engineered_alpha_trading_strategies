@@ -25,6 +25,99 @@ log = logging.getLogger(__name__)
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
+# ── Result-store save callback ────────────────────────────────────────────────
+
+def make_optuna_save_callback(
+    strategy,
+    spot_df: pl.DataFrame,
+    option_df: pl.DataFrame,
+    vix_df: pl.DataFrame,
+    lot_size: int,
+    study_id: str,
+):
+    """Return an Optuna callback that saves each trial to the ResultStore.
+
+    Attach to study.optimize(..., callbacks=[make_optuna_save_callback(...)])
+    Do not alter study configuration — add callback only.
+    """
+    try:
+        from pipeline.result_store import (
+            get_store, build_run_record, build_result_record,
+            build_feature_records, build_split_record, COST_MODEL_VERSION,
+            BACKTEST_ENGINE,
+        )
+        from pipeline.run_all import backtest_strategy
+    except ImportError:
+        return None
+
+    def _callback(study: optuna.Study, trial: optuna.trial.FrozenTrial) -> None:
+        if trial.state != optuna.trial.TrialState.COMPLETE:
+            return
+        if trial.value is None or trial.value < -900:
+            return
+        try:
+            params = trial.params
+            trades_df, metrics = backtest_strategy(
+                strategy, spot_df, option_df, vix_df, lot_size, params,
+            )
+            store = get_store()
+
+            run_record = build_run_record(
+                strategy_id=strategy.name,
+                spot_df=spot_df,
+                backtest_engine=BACKTEST_ENGINE,
+                cost_model_version=COST_MODEL_VERSION,
+                optuna_study_id=study_id,
+                optuna_trial_number=trial.number,
+                notes=f"optuna_trial_{trial.number}",
+            )
+
+            param_records = [
+                {
+                    "param_name": k,
+                    "param_value": v,
+                    "param_type": "entry",
+                    "is_optimized": 1,
+                }
+                for k, v in params.items()
+            ]
+
+            feature_records = build_feature_records(strategy)
+            total_days = spot_df["day_id"].n_unique() if "day_id" in spot_df.columns else 12
+            result_record = build_result_record(metrics, split="full", fold_number=0,
+                                                 total_trading_days=total_days)
+            split_record = build_split_record(spot_df, fold_number=0, split_type="fixed")
+
+            # Signal snapshot for entry_signal_values
+            signal_arrays = None
+            try:
+                signals = strategy.compute(spot_df, option_df, vix_df, params)
+                signal_arrays = {
+                    "buy_ce": signals.buy_ce,
+                    "buy_pe": signals.buy_pe,
+                    "stop_points": signals.stop_points,
+                    "target_points": signals.target_points,
+                    "strike_offset": signals.strike_offset,
+                }
+            except Exception:
+                pass
+
+            store.save_run(
+                run_record=run_record,
+                parameters=param_records,
+                features=feature_records,
+                splits=[split_record],
+                results=[result_record],
+                trades=trades_df,
+                lot_size=lot_size,
+                signal_arrays=signal_arrays,
+            )
+        except Exception as exc:
+            log.warning("Optuna save callback error (trial %d): %s", trial.number, exc)
+
+    return _callback
+
+
 def _estimate_trading_days(spot_df: pl.DataFrame) -> int:
     """Estimate total trading days from the data."""
     if "day_id" in spot_df.columns:
@@ -154,10 +247,19 @@ def run_optimization(
         except Exception:
             return -999.0
 
+    import uuid as _uuid
+    study_id = str(_uuid.uuid4())
+
     study = optuna.create_study(
         direction="maximize",
         sampler=optuna.samplers.TPESampler(seed=42),
     )
+
+    # Attach result-store save callback (add only — do not alter study config)
+    save_cb = make_optuna_save_callback(
+        strategy, spot_df, option_df, vix_df, lot_size, study_id,
+    )
+    callbacks = [save_cb] if save_cb is not None else []
 
     start_time = time.time()
 
@@ -167,6 +269,7 @@ def run_optimization(
             n_trials=OPTUNA_TRIALS,
             timeout=OPTUNA_TIMEOUT_SECS,
             show_progress_bar=False,
+            callbacks=callbacks,
         )
     except Exception as e:
         log.warning("Optuna error for %s: %s", strategy.name, e)

@@ -311,6 +311,91 @@ def _get_qualified_strategies() -> list[dict]:
     return triage.get("qualified_strategies", [])
 
 
+def _save_strategy_run(
+    strategy,
+    trades_df,
+    metrics,
+    spot_df,
+    option_df,
+    vix_df,
+    lot_size: int,
+    params: dict,
+    is_sensitivity_run: bool = False,
+    optuna_study_id: str = None,
+    optuna_trial_number: int = None,
+) -> str:
+    """Save one backtest run to the ResultStore. Returns run_id."""
+    try:
+        from pipeline.result_store import (
+            get_store, build_run_record, build_result_record,
+            build_feature_records, build_split_record,
+            COST_MODEL_VERSION, BACKTEST_ENGINE,
+        )
+        from pipeline.cost_model import CAPITAL_PER_ENTRY
+    except ImportError as e:
+        log.warning("ResultStore not available: %s", e)
+        return ""
+
+    store = get_store()
+    total_days = spot_df["day_id"].n_unique() if "day_id" in spot_df.columns else 12
+
+    run_record = build_run_record(
+        strategy_id=strategy.name,
+        spot_df=spot_df,
+        backtest_engine=BACKTEST_ENGINE,
+        cost_model_version=COST_MODEL_VERSION,
+        optuna_study_id=optuna_study_id,
+        optuna_trial_number=optuna_trial_number,
+        is_sensitivity_run=is_sensitivity_run,
+    )
+
+    param_records = [
+        {
+            "param_name": k,
+            "param_value": v,
+            "param_type": "entry",
+            "is_optimized": 0,
+        }
+        for k, v in (params or {}).items()
+    ]
+
+    feature_records = build_feature_records(strategy)
+    result_record = build_result_record(metrics, split="full", fold_number=0,
+                                         total_trading_days=total_days)
+    split_record = build_split_record(spot_df, fold_number=0, split_type="fixed")
+
+    # Capture entry_signal_values via a separate compute() call (pure, no side effects)
+    signal_arrays = None
+    try:
+        signals = strategy.compute(spot_df, option_df, vix_df, params or {})
+        signal_arrays = {
+            "buy_ce": signals.buy_ce,
+            "buy_pe": signals.buy_pe,
+            "stop_points": signals.stop_points,
+            "target_points": signals.target_points,
+            "strike_offset": signals.strike_offset,
+        }
+    except Exception:
+        pass
+
+    try:
+        run_id = store.save_run(
+            run_record=run_record,
+            parameters=param_records,
+            features=feature_records,
+            splits=[split_record],
+            results=[result_record],
+            trades=trades_df,
+            lot_size=lot_size,
+            signal_arrays=signal_arrays,
+        )
+        log.info("  Saved run %s to ResultStore", run_id)
+        return run_id
+    except Exception as e:
+        log.warning("  ResultStore save failed: %s", e)
+        return ""
+
+
 def main():
     parser = argparse.ArgumentParser(description="5-Second Option Trading Pipeline")
     parser.add_argument("--parallel-strategies", type=int,
@@ -319,7 +404,40 @@ def main():
                         help="Run only this strategy name")
     parser.add_argument("--dry-run", action="store_true",
                         help="Load data and strategies, compute nothing")
+    parser.add_argument("--save", action="store_true",
+                        help="Save backtest results to ResultStore after each run")
+    parser.add_argument("--dashboard", action="store_true",
+                        help="Start the strategy dashboard server")
+    parser.add_argument("--audit", action="store_true",
+                        help="Run ResultStore.audit() and print report")
     args = parser.parse_args()
+
+    # ── Dashboard mode ──
+    if args.dashboard:
+        log.info("Starting dashboard server...")
+        try:
+            from pipeline.dashboard_server import start_server
+            start_server()
+        except ImportError:
+            log.error("dashboard_server not found. Run: pip install fastapi uvicorn")
+        return
+
+    # ── Audit mode ──
+    if args.audit:
+        log.info("Running ResultStore audit...")
+        try:
+            from pipeline.result_store import get_store
+            store = get_store()
+            warnings = store.audit()
+            print("\n" + "=" * 70)
+            print("RESULT STORE AUDIT")
+            print("=" * 70)
+            for w in warnings:
+                print(w)
+            print("=" * 70 + "\n")
+        except Exception as e:
+            log.error("Audit failed: %s", e)
+        return
 
     log.info("=" * 70)
     log.info("5-Second Option Trading Pipeline — Starting")
@@ -414,6 +532,7 @@ def main():
 
         try:
             # Run full backtest
+            default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
             trades_df, metrics = backtest_strategy(
                 strategy, spot_df, option_df, vix_df, lot_size,
             )
@@ -424,12 +543,26 @@ def main():
             log.info("  Trades: %d, Sharpe: %.4f, Net PnL: INR %.0f",
                      n_trades, sharpe, total_pnl)
 
-            all_results.append({
+            result_entry = {
                 "name": name,
                 "verdict": "BACKTEST_OK" if n_trades > 0 else "ZERO_TRADES",
                 "underlying": underlying,
                 "metrics": metrics,
-            })
+            }
+            all_results.append(result_entry)
+
+            # ── Auto-save to ResultStore if --save flag is set ──
+            if args.save and n_trades > 0:
+                _save_strategy_run(
+                    strategy=strategy,
+                    trades_df=trades_df,
+                    metrics=metrics,
+                    spot_df=spot_df,
+                    option_df=option_df,
+                    vix_df=vix_df,
+                    lot_size=lot_size,
+                    params=default_params,
+                )
 
         except Exception as e:
             log.error("  Error: %s", e)

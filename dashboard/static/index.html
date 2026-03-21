@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategy Dashboard</title>
+<script src="./chart.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #252836;
+    --border: #2e3347; --text: #e2e6f0; --text2: #8b90a7;
+    --green: #22c55e; --yellow: #f59e0b; --red: #ef4444;
+    --blue: #3b82f6; --purple: #a78bfa; --accent: #6366f1;
+    --amber: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
+  a { color: var(--blue); text-decoration: none; }
+  button { cursor: pointer; }
+
+  /* Layout */
+  #app { display: flex; flex-direction: column; height: 100vh; }
+  #topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 8px 20px; display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+  #topbar h1 { font-size: 16px; font-weight: 600; color: var(--text); }
+  .tab-btn { background: none; border: none; color: var(--text2); padding: 6px 14px; border-radius: 6px; font-size: 13px; transition: all .15s; }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .tab-btn:hover:not(.active) { background: var(--bg3); color: var(--text); }
+  #content { flex: 1; overflow: auto; padding: 20px; }
+
+  /* Cards */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+
+  /* Tables */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--bg3); color: var(--text2); font-weight: 500; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; user-select: none; }
+  th:hover { color: var(--text); }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: rgba(99,102,241,.06); }
+  tr.row-green td { border-left: 3px solid var(--green); }
+  tr.row-yellow td { border-left: 3px solid var(--yellow); }
+  tr.row-red td { border-left: 3px solid var(--red); }
+  tr.family-row { background: var(--bg3); cursor: pointer; font-weight: 500; }
+  tr.family-row:hover td { background: rgba(99,102,241,.12); }
+  tr.family-row td:first-child::before { content: '▶ '; font-size: 10px; color: var(--text2); margin-right: 4px; }
+  tr.family-row.open td:first-child::before { content: '▼ '; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .badge-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .badge-red { background: rgba(239,68,68,.15); color: var(--red); }
+  .badge-blue { background: rgba(59,130,246,.15); color: var(--blue); }
+  .badge-purple { background: rgba(167,139,250,.15); color: var(--purple); }
+  .badge-amber { background: rgba(245,158,11,.2); color: var(--amber); }
+
+  /* Strategy detail */
+  #detail-panel { margin-top: 20px; }
+  .detail-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .detail-tab { background: none; border: none; color: var(--text2); padding: 8px 14px; font-size: 12px; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
+  .detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .detail-tab:hover:not(.active) { color: var(--text); }
+
+  /* Grid helpers */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 900px) { .grid2,.grid3,.grid4 { grid-template-columns: 1fr 1fr; } }
+
+  /* Stat boxes */
+  .stat { background: var(--bg3); border-radius: 8px; padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 600; }
+  .stat-value.pos { color: var(--green); }
+  .stat-value.neg { color: var(--red); }
+
+  /* Charts */
+  .chart-wrap { position: relative; height: 260px; }
+  .chart-wrap-sm { position: relative; height: 180px; }
+
+  /* Vectorized warning banner */
+  .vec-banner { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.4); color: var(--red); padding: 10px 14px; border-radius: 8px; font-weight: 500; margin-bottom: 12px; }
+
+  /* Cost bar */
+  .cost-bar { height: 28px; display: flex; border-radius: 6px; overflow: hidden; }
+  .cost-bar-seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: rgba(255,255,255,.8); white-space: nowrap; overflow: hidden; }
+  .cost-bar-gross { background: var(--blue); }
+  .cost-bar-fees { background: var(--red); }
+  .cost-bar-net-pos { background: var(--green); }
+  .cost-bar-net-neg { background: var(--red); }
+
+  /* Heatmap */
+  .heatmap-wrap { overflow: auto; }
+  .heatmap td { width: 36px; height: 28px; text-align: center; font-size: 10px; border: 1px solid var(--bg); }
+  .heatmap th { font-size: 9px; padding: 4px 3px; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Overfit warning */
+  .overfit-warn { color: var(--red); font-weight: 700; font-size: 12px; }
+  .dsr-panel { background: var(--bg3); border-radius: 8px; padding: 14px; }
+
+  /* Trade log */
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .filter-row select, .filter-row input { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 9px; font-size: 12px; }
+  .pagination { display: flex; gap: 6px; align-items: center; margin-top: 10px; }
+  .pagination button { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 5px; font-size: 12px; }
+  .pagination button:disabled { opacity: .4; cursor: default; }
+  .pagination span { font-size: 12px; color: var(--text2); }
+
+  /* Misc */
+  .section-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .note { font-size: 11px; color: var(--text2); font-style: italic; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text2); }
+  select.run-select { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 9px; font-size: 12px; max-width: 400px; }
+  .loading { text-align: center; padding: 30px; color: var(--text2); }
+  .err { color: var(--red); padding: 12px; }
+
+  /* Compare checkboxes */
+  .compare-check { width: 14px; height: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1>Strategy Dashboard</h1>
+    <button class="tab-btn active" onclick="showTab('leaderboard')">Strategy Leaderboard</button>
+    <button class="tab-btn" onclick="showTab('portfolio')">Portfolio View</button>
+    <span style="margin-left:auto;font-size:11px;color:var(--text2)" id="run-count"></span>
+  </div>
+  <div id="content">
+    <div id="tab-leaderboard"></div>
+    <div id="tab-portfolio" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+const API = '';  // same-origin
+
+// ── State ──────────────────────────────────────────────────────────────────
+let state = {
+  leaderboard: null,
+  portfolio: null,
+  selectedStrategy: null,
+  strategyDetail: null,
+  strategyRuns: null,
+  strategyResults: null,
+  trades: null,
+  tradeFilters: { page:1, page_size:100, direction:'', exit_reason:'', fold_number:'' },
+  detailTab: 'overview',
+  sortCol: null, sortDir: 1,
+  selectedRunIds: [],
+  comparisonData: null,
+  charts: {},
+};
+
+// ── Fetch helpers ─────────────────────────────────────────────────────────
+async function api(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${path}`);
+  return r.json();
+}
+async function post(path, body) {
+  const r = await fetch(API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}: ${path}`);
+  return r.json();
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i === (tab==='leaderboard'?0:1)));
+  document.getElementById('tab-leaderboard').style.display = tab==='leaderboard'?'':'none';
+  document.getElementById('tab-portfolio').style.display = tab==='portfolio'?'':'none';
+  if (tab==='portfolio' && !state.portfolio) loadPortfolio();
+}
+
+// ── Number format helpers ─────────────────────────────────────────────────
+const fmt2 = v => (v==null||isNaN(v)) ? '—' : Number(v).toFixed(2);
+const fmt4 = v => (v==null||isNaN(v)) ? '—' : Number(v).toFixed(4);
+const fmtPct = v => (v==null||isNaN(v)) ? '—' : (Number(v)*100).toFixed(1)+'%';
+const fmtBps = v => (v==null||isNaN(v)) ? '—' : Number(v).toFixed(1)+' bps';
+const colorNum = (v, threshold=0) => v == null ? '' : (v > threshold ? 'color:var(--green)' : v < threshold ? 'color:var(--red)' : '');
+
+// ── LEADERBOARD TAB ───────────────────────────────────────────────────────
+async function loadLeaderboard() {
+  const el = document.getElementById('tab-leaderboard');
+  el.innerHTML = '<div class="loading">Loading leaderboard…</div>';
+  try {
+    const data = await api('/api/leaderboard');
+    state.leaderboard = data;
+    document.getElementById('run-count').textContent = `${data.n_total_runs} total runs`;
+    renderLeaderboard(el, data);
+  } catch(e) {
+    el.innerHTML = `<div class="err">Error loading leaderboard: ${e.message}</div>`;
+  }
+}
+
+function renderLeaderboard(el, data) {
+  let html = `
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Strategy Families — grouped by signal logic family</div>
+    <div class="tbl-wrap">
+    <table id="lb-table">
+      <thead>
+        <tr>
+          <th>Family</th>
+          <th onclick="sortLB('n_strategies')"># Strategies</th>
+          <th onclick="sortLB('best_dsr')">Best DSR ▼</th>
+          <th onclick="sortLB('best_net_edge_bps')">Best Net Edge (bps)</th>
+          <th onclick="sortLB('avg_intra_family_corr')">Avg Intra-Family Corr</th>
+          <th onclick="sortLB('n_passing_kill')"># Passing Kill</th>
+          <th onclick="sortLB('n_flagged_vectorized')"># Vectorized</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body">`;
+
+  for (const fam of data.families) {
+    const famId = 'fam-' + fam.family.replace(/[^a-z0-9]/gi,'_');
+    html += `
+      <tr class="family-row" onclick="toggleFamily('${famId}','${fam.family}',this)">
+        <td>${fam.family}</td>
+        <td>${fam.n_strategies}</td>
+        <td style="${colorNum(fam.best_dsr-0.5)}">${fmt4(fam.best_dsr)}</td>
+        <td style="${colorNum(fam.best_net_edge_bps)}">${fmtBps(fam.best_net_edge_bps)}</td>
+        <td>${fam.avg_intra_family_corr != null ? fmt2(fam.avg_intra_family_corr) : '—'}</td>
+        <td>${fam.n_passing_kill} / ${fam.n_strategies}</td>
+        <td>${fam.n_flagged_vectorized > 0 ? `<span class="badge badge-yellow">${fam.n_flagged_vectorized}</span>` : '0'}</td>
+      </tr>
+      <tr id="${famId}" style="display:none"><td colspan="7" style="padding:0">
+        <table style="width:100%;background:var(--bg)">
+          <thead><tr>
+            <th></th>
+            <th>Strategy ID</th>
+            <th>DSR</th>
+            <th>Sharpe (raw)</th>
+            <th>Net Edge (bps)</th>
+            <th>Win Rate</th>
+            <th>Kill</th>
+            <th>Engine</th>
+          </tr></thead>
+          <tbody>`;
+    for (const s of (fam.strategies||[])) {
+      const colorCls = `row-${s.color||'red'}`;
+      const killBadge = s.kill_triggered ? '<span class="badge badge-red">KILL</span>' : '<span class="badge badge-green">OK</span>';
+      const engineBadge = s.engine === 'vectorized'
+        ? '<span class="badge badge-yellow">vectorized</span>'
+        : '<span class="badge badge-blue">event_driven</span>';
+      html += `
+          <tr class="${colorCls}" style="cursor:pointer" onclick="loadStrategyDetail('${s.strategy_id}')">
+            <td><input type="checkbox" class="compare-check" onclick="toggleCompare(event,'${s.strategy_id}')" title="Add to comparison"></td>
+            <td><b>${s.strategy_id}</b></td>
+            <td style="${colorNum(s.sharpe_deflated-0.5)}">${fmt4(s.sharpe_deflated)}</td>
+            <td>${fmt4(s.sharpe_raw)}</td>
+            <td style="${colorNum(s.net_edge_bps)}">${fmtBps(s.net_edge_bps)}</td>
+            <td>—</td>
+            <td>${killBadge}</td>
+            <td>${engineBadge}</td>
+          </tr>`;
+    }
+    html += `</tbody></table></td></tr>`;
+  }
+
+  html += `</tbody></table></div></div>
+  <div id="detail-panel"></div>`;
+  el.innerHTML = html;
+}
+
+function toggleFamily(famId, famName, tr) {
+  const row = document.getElementById(famId);
+  const open = row.style.display === '';
+  row.style.display = open ? 'none' : '';
+  tr.classList.toggle('open', !open);
+}
+
+function sortLB(col) {
+  if (!state.leaderboard) return;
+  const fams = state.leaderboard.families;
+  if (state.sortCol === col) state.sortDir *= -1; else { state.sortCol = col; state.sortDir = -1; }
+  fams.sort((a,b) => state.sortDir * ((a[col]||0) - (b[col]||0)));
+  renderLeaderboard(document.getElementById('tab-leaderboard'), state.leaderboard);
+}
+
+// ── Strategy Detail ───────────────────────────────────────────────────────
+async function loadStrategyDetail(strategyId) {
+  state.selectedStrategy = strategyId;
+  const panel = document.getElementById('detail-panel');
+  if (!panel) return;
+  panel.innerHTML = '<div class="loading">Loading strategy detail…</div>';
+  try {
+    const [detail, runs] = await Promise.all([
+      api(`/api/strategy/${strategyId}`),
+      api(`/api/strategy/${strategyId}/runs`),
+    ]);
+    state.strategyDetail = detail;
+    state.strategyRuns = runs;
+    renderDetailPanel(panel, detail, runs);
+  } catch(e) {
+    panel.innerHTML = `<div class="err">Error: ${e.message}</div>`;
+  }
+}
+
+function renderDetailPanel(panel, detail, runs) {
+  const runList = (runs.runs || []);
+  const sid = detail.strategy_id;
+
+  let html = `
+  <div class="card" id="strategy-detail-card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <h2 style="font-size:15px">${sid}</h2>
+      <span class="badge badge-blue">${detail.family}</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--text2)">${runList.length} run(s)</span>
+    </div>
+    <div class="detail-tabs">
+      <button class="detail-tab active" onclick="switchDetailTab('overview','${sid}')">Overview</button>
+      <button class="detail-tab" onclick="switchDetailTab('features','${sid}')">Features & Parameters</button>
+      <button class="detail-tab" onclick="switchDetailTab('backtest','${sid}')">Backtest Results</button>
+      <button class="detail-tab" onclick="switchDetailTab('trades','${sid}')">Trade Log</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>`;
+  panel.innerHTML = html;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  renderDetailTab('overview', detail, runs);
+}
+
+function switchDetailTab(tab, sid) {
+  state.detailTab = tab;
+  document.querySelectorAll('.detail-tab').forEach((b,i) =>
+    b.classList.toggle('active', b.textContent.trim().toLowerCase().startsWith(tab.split(' ')[0]))
+  );
+  renderDetailTab(tab, state.strategyDetail, state.strategyRuns);
+}
+
+async function renderDetailTab(tab, detail, runs) {
+  const el = document.getElementById('detail-content');
+  if (!el) return;
+  const sid = detail.strategy_id;
+
+  if (tab === 'overview') renderOverviewTab(el, detail, runs);
+  else if (tab === 'features') renderFeaturesTab(el, detail, runs);
+  else if (tab === 'backtest') await renderBacktestTab(el, detail, runs);
+  else if (tab === 'trades') await renderTradesTab(el, detail, runs);
+}
+
+// ── Tab A: Overview ───────────────────────────────────────────────────────
+function renderOverviewTab(el, detail, runs) {
+  const spec = detail.strategy_spec || {};
+  const runList = runs.runs || [];
+  const latest = runList[0] || {};
+  const res = latest.result_summary || {};
+
+  const sharpe = res.sharpe_raw || 0;
+  const dsr = res.sharpe_deflated || 0;
+  const netEdge = res.net_edge_bps || 0;
+  const isVec = (latest.backtest_engine || '') === 'vectorized';
+  const costVer = latest.cost_model_version || detail.cost_model_version || '?';
+  const isCurrent = costVer.includes('apr_2025') || costVer.includes('post');
+
+  let vecBanner = isVec ? `<div class="vec-banner">⚠ SUSPECT — no fill model. Do not use for promotion decisions.</div>` : '';
+
+  // Cost breakdown bar (from latest result)
+  const gross = res.gross_edge_bps || 0;
+  const fees = res.fees_cost_bps || 0;
+  const net = res.net_edge_bps || 0;
+  const total = Math.max(Math.abs(gross) + Math.abs(fees), 1);
+  const grossPct = (Math.abs(gross)/total*100).toFixed(1);
+  const feesPct = (Math.abs(fees)/total*100).toFixed(1);
+  const netPct = (Math.abs(net)/total*100).toFixed(1);
+  const netCls = net >= 0 ? 'cost-bar-net-pos' : 'cost-bar-net-neg';
+
+  let html = `${vecBanner}
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-label">DSR (deflated)</div>
+      <div class="stat-value ${dsr>0.5?'pos':dsr<0.5?'neg':''}">${fmt4(dsr)}</div></div>
+    <div class="stat"><div class="stat-label">Sharpe (raw)</div>
+      <div class="stat-value ${sharpe>0.5?'pos':''}">${fmt4(sharpe)}</div></div>
+    <div class="stat"><div class="stat-label">Net Edge</div>
+      <div class="stat-value ${netEdge>0?'pos':'neg'}">${fmtBps(netEdge)}</div></div>
+    <div class="stat"><div class="stat-label">Win Rate</div>
+      <div class="stat-value">${fmtPct(res.win_rate)}</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Strategy Spec</div>
+    <table>`;
+
+  for (const [k,v] of Object.entries(spec)) {
+    if (Array.isArray(v)) {
+      html += `<tr><td style="color:var(--text2);width:180px">${k}</td><td>${v.join('; ') || '—'}</td></tr>`;
+    } else {
+      html += `<tr><td style="color:var(--text2);width:180px">${k}</td><td>${v != null ? v : '—'}</td></tr>`;
+    }
+  }
+  html += `</table></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Cost Breakdown (avg per trade in bps)</div>
+    <div style="margin-bottom:8px">
+      <div class="cost-bar">
+        <div class="cost-bar-seg cost-bar-gross" style="width:${grossPct}%">Gross ${fmt2(gross)}</div>
+        <div class="cost-bar-seg cost-bar-fees" style="width:${feesPct}%">Fees ${fmt2(fees)}</div>
+        <div class="cost-bar-seg ${netCls}" style="width:${netPct}%">Net ${fmt2(net)}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text2)">
+      Spread cost: 0 bps (limit orders at close) &nbsp;|&nbsp;
+      Slippage: 0 bps (no slippage model) &nbsp;|&nbsp;
+      Cost model: <span style="${isCurrent?'color:var(--green)':'color:var(--yellow)'}">${costVer}</span>
+      ${isCurrent ? '' : ' <span class="badge badge-yellow">NOT CURRENT</span>'}
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+// ── Tab B: Features & Parameters ─────────────────────────────────────────
+function renderFeaturesTab(el, detail, runs) {
+  const runList = runs.runs || [];
+  const latest = runList[0] || {};
+  const rid = latest.run_id;
+  const n_total = detail.n_total_runs || 1;
+  const eff_n = detail.effective_n || n_total;
+  const sr_bench = detail.sr_benchmark_annualized || 0;
+  const features = detail.features || [];
+  const params = detail.parameters || [];
+  const latestRes = latest.result_summary || {};
+
+  let html = `
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">Features</div>
+      ${features.length === 0 ? '<div class="note">No feature records stored.</div>' : `
+      <table>
+        <thead><tr><th>Name</th><th>Description</th><th>Window</th><th>Source</th><th>Importance</th></tr></thead>
+        <tbody>
+        ${features.map(f => `<tr>
+          <td><code>${f.feature_name}</code></td>
+          <td style="max-width:200px">${f.feature_description||'—'}</td>
+          <td>${f.computation_window||'—'}</td>
+          <td>${f.data_source||'—'}</td>
+          <td>${f.importance_score != null ? fmt2(f.importance_score) : '—'}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>`}
+    </div>
+    <div class="card">
+      <div class="card-title">Parameters</div>
+      ${params.length === 0 ? '<div class="note">No parameter records stored.</div>' : `
+      <table>
+        <thead><tr><th>Name</th><th>Value</th><th>Type</th><th>Optimized?</th></tr></thead>
+        <tbody>
+        ${params.map(p => `<tr ${p.is_optimized?'style="background:rgba(245,158,11,.08)"':''}>
+          <td><code>${p.param_name}</code></td>
+          <td>${fmt4(p.param_value)}</td>
+          <td><span class="badge badge-blue">${p.param_type||'other'}</span></td>
+          <td>${p.is_optimized ? '<span class="badge badge-amber">OPTIMIZED ⚠</span>' : 'No'}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+      ${params.some(p=>p.is_optimized) ? '<div class="note" style="margin-top:8px">⚠ Amber rows are optimized parameters — highest overfitting risk</div>' : ''}`}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">DSR Analysis (multiple-testing corrected)</div>
+    <div class="dsr-panel">
+      <div class="grid4" style="margin-bottom:12px">
+        <div class="stat"><div class="stat-label">Total Runs (N)</div><div class="stat-value">${n_total}</div></div>
+        <div class="stat"><div class="stat-label">Effective N</div><div class="stat-value">${eff_n}</div></div>
+        <div class="stat"><div class="stat-label">E[max SR] Benchmark</div><div class="stat-value" style="color:var(--amber)">${fmt4(sr_bench)}</div></div>
+        <div class="stat"><div class="stat-label">DSR (must beat benchmark)</div>
+          <div class="stat-value ${(latestRes.sharpe_deflated||0)>0.5?'pos':'neg'}">${fmt4(latestRes.sharpe_deflated)}</div></div>
+      </div>
+      <div class="note">DSR is P(true SR > E[max SR | N_eff]). Passes if DSR > 0.5.
+        Benchmark is NOT zero — it is the expected max Sharpe from ${eff_n} correlated-adjusted independent trials.</div>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+  // Scatter: parameter sweep (only if multiple runs exist)
+  _renderParamScatter(detail.strategy_id, params, runList);
+}
+
+async function _renderParamScatter(sid, params, runList) {
+  if (runList.length < 2 || params.length === 0) return;
+  try {
+    const results = await api(`/api/strategy/${sid}/results`);
+    state.strategyResults = results.results || [];
+    // Already rendered — we'd need a canvas. Skip for now.
+  } catch(e) {}
+}
+
+// ── Tab C: Backtest Results ───────────────────────────────────────────────
+async function renderBacktestTab(el, detail, runs) {
+  el.innerHTML = '<div class="loading">Loading backtest data…</div>';
+  const runList = runs.runs || [];
+  if (runList.length === 0) {
+    el.innerHTML = '<div class="empty-state">No runs stored yet. Run with --save flag.</div>';
+    return;
+  }
+
+  const sid = detail.strategy_id;
+  const latestRun = runList[0];
+  const rid = latestRun.run_id;
+  const isVec = (latestRun.backtest_engine || '') === 'vectorized';
+
+  let resultsData;
+  try {
+    resultsData = await api(`/api/strategy/${sid}/results`);
+  } catch(e) {
+    el.innerHTML = `<div class="err">Failed to load results: ${e.message}</div>`;
+    return;
+  }
+
+  const results = resultsData.results || [];
+  const fullResults = results.filter(r => r.run_id === rid);
+
+  const latestRes = latestRun.result_summary || {};
+  const sharpeRaw = latestRes.sharpe_raw || 0;
+  const sharpeDefl = latestRes.sharpe_deflated || 0;
+  const maxDD = latestRes.max_drawdown || 0;
+  const winRate = latestRes.win_rate || 0;
+  const trades = latestRes.total_trades || 0;
+
+  let vecBanner = isVec ? `<div class="vec-banner">⚠ SUSPECT — vectorized backtest. No fill model. Do not use for promotion decisions.</div>` : '';
+
+  // Run selector with comparison checkboxes
+  let runSelectorHtml = `<div style="margin-bottom:12px;display:flex;gap:10px;align-items:center">
+    <span style="color:var(--text2);font-size:12px">Run:</span>
+    <select class="run-select" id="run-selector" onchange="loadBacktestRun(this.value,'${sid}')">
+    ${runList.map(r => `<option value="${r.run_id}" ${r.run_id===rid?'selected':''}>
+      ${r.run_id.slice(0,8)}… — ${(r.created_at||'').slice(0,16)} — Sharpe: ${fmt2(r.result_summary?.sharpe_raw)}
+    </option>`).join('')}
+    </select>
+    <span style="font-size:11px;color:var(--text2)">Select 2+ for comparison:</span>
+    ${runList.slice(0,5).map(r => `<label style="font-size:11px"><input type="checkbox" onchange="runCompare()" class="cmp-run" data-rid="${r.run_id}"> ${r.run_id.slice(0,6)}…</label>`).join(' ')}
+  </div>`;
+
+  let html = `${vecBanner}${runSelectorHtml}
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-label">Sharpe (raw)</div>
+      <div class="stat-value ${sharpeRaw>0.5?'pos':''}">${fmt4(sharpeRaw)}</div></div>
+    <div class="stat"><div class="stat-label">DSR</div>
+      <div class="stat-value ${sharpeDefl>0.5?'pos':'neg'}">${fmt4(sharpeDefl)}</div></div>
+    <div class="stat"><div class="stat-label">Max Drawdown</div>
+      <div class="stat-value neg">₹${maxDD.toLocaleString('en-IN', {maximumFractionDigits:0})}</div></div>
+    <div class="stat"><div class="stat-label">Win Rate</div>
+      <div class="stat-value">${fmtPct(winRate)}</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Metrics by Fold</div>
+    ${fullResults.length === 0 ? '<div class="note">No fold results stored.</div>' : `
+    <table>
+      <thead><tr>
+        <th>Fold</th><th>Split</th><th>Sharpe (raw)</th><th>DSR</th>
+        <th>Net Edge (bps)</th><th>Win Rate</th><th>Trades</th><th>Kill</th>
+      </tr></thead>
+      <tbody>
+      ${fullResults.map(r => `<tr>
+        <td>${r.fold_number}</td>
+        <td><span class="badge badge-blue">${r.split}</span></td>
+        <td style="${colorNum(r.sharpe_raw-0.5)}">${fmt4(r.sharpe_raw)}</td>
+        <td style="${colorNum(r.sharpe_deflated-0.5)}">${fmt4(r.sharpe_deflated)}</td>
+        <td style="${colorNum(r.net_edge_bps)}">${fmtBps(r.net_edge_bps)}</td>
+        <td>${fmtPct(r.win_rate)}</td>
+        <td>${r.total_trades||0}</td>
+        <td>${r.kill_condition_triggered ? '<span class="badge badge-red">KILL</span>' : '<span class="badge badge-green">OK</span>'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>`}
+  </div>
+
+  <div id="compare-section"></div>`;
+
+  el.innerHTML = html;
+}
+
+async function runCompare() {
+  const boxes = document.querySelectorAll('.cmp-run:checked');
+  const rids = Array.from(boxes).map(b => b.dataset.rid);
+  if (rids.length < 2) {
+    document.getElementById('compare-section').innerHTML = '';
+    return;
+  }
+  try {
+    const cmp = await post('/api/compare', { run_ids: rids });
+    renderComparison(document.getElementById('compare-section'), cmp, rids);
+  } catch(e) {
+    document.getElementById('compare-section').innerHTML = `<div class="err">${e.message}</div>`;
+  }
+}
+
+function renderComparison(el, cmp, rids) {
+  const rows = cmp.comparison || [];
+  const diffs = cmp.param_diffs || [];
+  let html = `<div class="card" style="margin-bottom:16px">
+    <div class="card-title">Run Comparison (${rids.length} runs)</div>
+    ${rows.length === 0 ? '<div class="note">No data</div>' : `
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Metric</th>${rids.map(r=>`<th>${r.slice(0,8)}…</th>`).join('')}</tr></thead>
+      <tbody>`;
+
+  const metricKeys = ['sharpe_raw','sharpe_deflated','net_edge_bps','win_rate','max_drawdown',
+                      'total_trades','cagr','gross_edge_bps','fees_cost_bps'];
+  for (const key of metricKeys) {
+    const vals = rids.map(rid => rows.find(r => r.run_id === rid)?.[key]);
+    const allSame = vals.every(v => v == vals[0]);
+    html += `<tr><td style="color:var(--text2)">${key}</td>`;
+    for (const v of vals) {
+      const highlight = !allSame ? 'background:rgba(99,102,241,.12)' : '';
+      html += `<td style="${highlight}">${fmt4(v)}</td>`;
+    }
+    html += '</tr>';
+  }
+
+  html += `</tbody></table></div>`;
+  if (diffs.length > 0) {
+    html += `<div class="card-title" style="margin-top:12px">Parameter Differences</div>
+    <table><thead><tr><th>Parameter</th>${rids.map(r=>`<th>${r.slice(0,8)}…</th>`).join('')}</tr></thead><tbody>`;
+    for (const d of diffs) {
+      html += `<tr><td><code>${d.param_name}</code></td>`;
+      for (const rid of rids) {
+        html += `<td style="background:rgba(245,158,11,.1)">${fmt4(d.values[rid])}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Tab D: Trade Log ──────────────────────────────────────────────────────
+async function renderTradesTab(el, detail, runs) {
+  el.innerHTML = '<div class="loading">Loading trades…</div>';
+  const sid = detail.strategy_id;
+  const runList = runs.runs || [];
+  if (runList.length === 0) {
+    el.innerHTML = '<div class="empty-state">No runs stored yet.</div>';
+    return;
+  }
+  const rid = runList[0].run_id;
+  state.tradeFilters.page = 1;
+  state.tradeFilters._sid = sid;
+  state.tradeFilters._rid = rid;
+  await _loadAndRenderTrades(el, sid, rid);
+}
+
+async function _loadAndRenderTrades(el, sid, rid) {
+  const f = state.tradeFilters;
+  let url = `/api/strategy/${sid}/trades/${rid}?page=${f.page}&page_size=${f.page_size}`;
+  if (f.direction) url += `&direction=${f.direction}`;
+  if (f.exit_reason) url += `&exit_reason=${f.exit_reason}`;
+
+  try {
+    const data = await api(url);
+    state.trades = data;
+    renderTradeTable(el, data, sid, rid);
+  } catch(e) {
+    el.innerHTML = `<div class="err">Failed to load trades: ${e.message}</div>`;
+  }
+}
+
+function renderTradeTable(el, data, sid, rid) {
+  const trades = data.trades || [];
+  const total = data.total || 0;
+  const page = data.page || 1;
+  const pageSize = data.page_size || 100;
+  const totalPages = Math.ceil(total / pageSize);
+
+  // Collect all features for signal scatter dropdown
+  const features = state.strategyDetail?.features || [];
+  const featureNames = features.map(f => f.feature_name);
+
+  // Check if any trade has entry_signal_values
+  const hasSignals = trades.some(t => t.entry_signal_values);
+  const noSignalMsg = !hasSignals ?
+    '<div class="note">entry_signal_values not available for this run (run predates signal snapshot capture)</div>' : '';
+
+  let html = `
+  <div class="filter-row">
+    <label style="color:var(--text2)">Direction:</label>
+    <select onchange="applyTradeFilter('direction',this.value,'${sid}','${rid}')">
+      <option value="">All</option>
+      <option value="CE" ${state.tradeFilters.direction==='CE'?'selected':''}>CE (Call)</option>
+      <option value="PE" ${state.tradeFilters.direction==='PE'?'selected':''}>PE (Put)</option>
+    </select>
+    <label style="color:var(--text2)">Exit Reason:</label>
+    <select onchange="applyTradeFilter('exit_reason',this.value,'${sid}','${rid}')">
+      <option value="">All</option>
+      ${['STOP','TARGET','SIGNAL','TIME','EOD'].map(r=>`<option value="${r}" ${state.tradeFilters.exit_reason===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+    <span style="margin-left:auto;font-size:11px;color:var(--text2)">Total: ${total} trades</span>
+  </div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr>
+      <th>Entry Time</th><th>Exit Time</th><th>Hold (min)</th>
+      <th>Dir</th><th>Entry Prem</th><th>Exit Prem</th>
+      <th>Gross PnL</th><th>Net PnL</th><th>Net (bps)</th>
+      <th>Exit Reason</th><th>Fill Type</th><th>Slippage (bps)</th>
+    </tr></thead>
+    <tbody>
+    ${trades.map(t => {
+      const pnl = t.net_pnl || t.pnl || 0;
+      const side = t.side === 1 ? '<span class="badge badge-blue">CE</span>' : '<span class="badge badge-purple">PE</span>';
+      const hold = t.holding_bars != null ? (t.holding_bars * 5 / 60).toFixed(1) : '—';
+      return `<tr>
+        <td style="font-size:11px">${(t.entry_time||'').slice(0,19)}</td>
+        <td style="font-size:11px">${(t.exit_time||'').slice(0,19)}</td>
+        <td>${hold}</td>
+        <td>${side}</td>
+        <td>${fmt2(t.entry_premium)}</td>
+        <td>${fmt2(t.exit_premium)}</td>
+        <td style="${colorNum(t.pnl||0)}">₹${((t.pnl||0)).toFixed(0)}</td>
+        <td style="${colorNum(pnl)}">₹${pnl.toFixed(0)}</td>
+        <td style="${colorNum(t.net_pnl_bps||0)}">${fmtBps(t.net_pnl_bps)}</td>
+        <td><span class="badge badge-blue">${t.exit_reason||'—'}</span></td>
+        <td>${t.fill_type||'limit'}</td>
+        <td>${fmtBps(t.slippage_actual_bps)}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>
+
+  <div class="pagination">
+    <button onclick="tradePageNav(-1,'${sid}','${rid}')" ${page<=1?'disabled':''}>← Prev</button>
+    <span>Page ${page} / ${totalPages}</span>
+    <button onclick="tradePageNav(1,'${sid}','${rid}')" ${page>=totalPages?'disabled':''}>Next →</button>
+  </div>
+
+  ${noSignalMsg}
+
+  <div class="grid3" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Net PnL Distribution</div>
+      <div class="chart-wrap-sm"><canvas id="c-pnl-hist"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Hold Time Distribution</div>
+      <div class="chart-wrap-sm"><canvas id="c-hold-hist"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Signal Scatter</div>
+      ${hasSignals && featureNames.length > 0 ? `
+        <select onchange="renderSignalScatter(this.value)" style="font-size:11px;margin-bottom:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:3px">
+          ${featureNames.map(f=>`<option value="${f}">${f}</option>`).join('')}
+        </select>` : ''}
+      <div class="chart-wrap-sm"><canvas id="c-signal-scatter"></canvas></div>
+      ${!hasSignals ? '<div class="note" style="margin-top:8px">No signal snapshots for this run</div>' : ''}
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+  _renderTradeCharts(trades, featureNames[0], hasSignals);
+}
+
+function applyTradeFilter(key, val, sid, rid) {
+  state.tradeFilters[key] = val;
+  state.tradeFilters.page = 1;
+  const el = document.getElementById('detail-content');
+  _loadAndRenderTrades(el, sid, rid);
+}
+
+function tradePageNav(delta, sid, rid) {
+  const data = state.trades;
+  const total = data?.total || 0;
+  const ps = state.tradeFilters.page_size;
+  const maxPage = Math.ceil(total / ps);
+  state.tradeFilters.page = Math.max(1, Math.min(maxPage, state.tradeFilters.page + delta));
+  const el = document.getElementById('detail-content');
+  _loadAndRenderTrades(el, sid, rid);
+}
+
+function _renderTradeCharts(trades, defaultFeature, hasSignals) {
+  // PnL histogram
+  const pnlVals = trades.map(t => t.net_pnl || t.pnl || 0).filter(v => v != null);
+  _renderHistogram('c-pnl-hist', pnlVals, 'Net PnL (INR)', 'var(--blue)');
+
+  // Hold histogram
+  const holdVals = trades.map(t => (t.holding_bars || 0) * 5).filter(v => v > 0);
+  _renderHistogram('c-hold-hist', holdVals, 'Hold (seconds)', 'var(--purple)');
+
+  // Signal scatter
+  if (hasSignals && defaultFeature) {
+    renderSignalScatter(defaultFeature);
+  }
+}
+
+function _renderHistogram(canvasId, vals, label, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || vals.length === 0) return;
+  if (state.charts[canvasId]) state.charts[canvasId].destroy();
+  const n = Math.min(20, Math.ceil(Math.sqrt(vals.length)));
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const step = (max - min) / n || 1;
+  const bins = Array.from({length:n}, (_,i) => min + i*step);
+  const counts = new Array(n).fill(0);
+  for (const v of vals) {
+    const i = Math.min(n-1, Math.floor((v - min) / step));
+    if (i >= 0) counts[i]++;
+  }
+  state.charts[canvasId] = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: bins.map(b=>b.toFixed(0)), datasets: [{ data: counts, backgroundColor: color, borderWidth: 0 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+               scales:{x:{ticks:{font:{size:9},color:'#8b90a7'}},y:{ticks:{font:{size:9},color:'#8b90a7'}}}}
+  });
+}
+
+function renderSignalScatter(featureName) {
+  const canvas = document.getElementById('c-signal-scatter');
+  if (!canvas) return;
+  if (state.charts['c-signal-scatter']) state.charts['c-signal-scatter'].destroy();
+  const trades = state.trades?.trades || [];
+  const points = [];
+  for (const t of trades) {
+    if (!t.entry_signal_values) continue;
+    try {
+      const sv = typeof t.entry_signal_values === 'string' ? JSON.parse(t.entry_signal_values) : t.entry_signal_values;
+      const x = sv[featureName];
+      const y = t.net_pnl || t.pnl || 0;
+      if (x != null) points.push({ x: Number(x), y });
+    } catch(e) {}
+  }
+  if (points.length === 0) return;
+  state.charts['c-signal-scatter'] = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets: [{ label: featureName, data: points,
+      backgroundColor: points.map(p => p.y >= 0 ? 'rgba(34,197,94,.6)' : 'rgba(239,68,68,.6)'),
+      pointRadius: 3 }] },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label: ctx => `x=${ctx.parsed.x.toFixed(3)}, y=${ctx.parsed.y.toFixed(0)}`}} },
+      scales: { x:{title:{display:true,text:featureName,font:{size:10},color:'#8b90a7'},ticks:{font:{size:9},color:'#8b90a7'}},
+                y:{title:{display:true,text:'Net PnL',font:{size:10},color:'#8b90a7'},ticks:{font:{size:9},color:'#8b90a7'}} } }
+  });
+}
+
+// ── PORTFOLIO TAB ─────────────────────────────────────────────────────────
+async function loadPortfolio() {
+  const el = document.getElementById('tab-portfolio');
+  el.innerHTML = '<div class="loading">Loading portfolio data…</div>';
+  try {
+    const data = await api('/api/portfolio');
+    state.portfolio = data;
+    renderPortfolio(el, data);
+  } catch(e) {
+    el.innerHTML = `<div class="err">Error loading portfolio: ${e.message}</div>`;
+  }
+}
+
+function renderPortfolio(el, data) {
+  const { corr_labels, corr_matrix, dsr_summary, kill_summary, cost_summary, effective_n, sr_benchmark, n_total_runs } = data;
+
+  let html = `
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-label">Total Stored Runs (N)</div><div class="stat-value">${n_total_runs}</div></div>
+    <div class="stat"><div class="stat-label">Effective N (rank-based)</div><div class="stat-value">${effective_n}</div></div>
+    <div class="stat"><div class="stat-label">E[max SR] Benchmark</div><div class="stat-value" style="color:var(--amber)">${fmt4(sr_benchmark)}</div></div>
+    <div class="stat"><div class="stat-label">Strategies w/ Kill Triggered</div>
+      <div class="stat-value neg">${kill_summary.filter(k=>k.kill_triggered).length} / ${kill_summary.length}</div></div>
+  </div>
+
+  <!-- DSR Summary Table -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">DSR Summary — primary "is there real signal?" view</div>
+    <div class="note" style="margin-bottom:8px">
+      Benchmark: E[max SR | N_eff=${effective_n}, T] = ${fmt4(sr_benchmark)} (annualized). Strategies must beat this to pass DSR.
+    </div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Strategy</th><th>Raw N</th><th>Eff N</th>
+        <th>E[max SR] Benchmark</th><th>Sharpe (raw)</th><th>DSR</th><th>Passes DSR</th>
+      </tr></thead>
+      <tbody>
+      ${dsr_summary.map(s => `<tr>
+        <td style="cursor:pointer" onclick="loadStrategyDetail('${s.strategy_id}')">${s.strategy_id}</td>
+        <td>${s.raw_n}</td><td>${s.effective_n}</td>
+        <td style="color:var(--amber)">${fmt4(s.sr_benchmark)}</td>
+        <td>${fmt4(s.sharpe_raw)}</td>
+        <td style="${colorNum(s.sharpe_deflated-0.5)}">${fmt4(s.sharpe_deflated)}</td>
+        <td>${s.passes_dsr ? '<span class="badge badge-green">PASS</span>' : '<span class="badge badge-red">FAIL</span>'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Cost Summary -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Cost Summary (sorted by total cost)</div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Strategy</th><th>Total Cost (bps)</th><th>Net Edge (bps)</th></tr></thead>
+      <tbody>
+      ${cost_summary.slice(0,20).map(s => `<tr>
+        <td>${s.strategy_id}</td>
+        <td style="color:var(--red)">${fmtBps(s.total_cost_bps)}</td>
+        <td style="${colorNum(s.net_edge_bps)}">${fmtBps(s.net_edge_bps)}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Kill Condition Status -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Kill Condition Status</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+    ${kill_summary.map(s => `<span class="badge ${s.kill_triggered?'badge-red':'badge-green'}"
+      style="cursor:pointer" onclick="loadStrategyDetail('${s.strategy_id}')"
+      title="${s.kill_triggered?'Kill triggered':'OK'}">${s.strategy_id}</span>`).join('')}
+    </div>
+  </div>
+
+  <!-- Correlation Heatmap -->
+  <div class="card">
+    <div class="card-title">Strategy Return Correlation Heatmap</div>
+    ${!corr_matrix ? '<div class="note">Not enough data to compute correlation matrix. Run backtests with --save to populate.</div>' : `
+    <div class="heatmap-wrap"><table class="heatmap" id="heatmap-table"></table></div>`}
+  </div>`;
+
+  el.innerHTML = html;
+
+  if (corr_matrix && corr_labels) {
+    _renderHeatmap(corr_labels, corr_matrix);
+  }
+}
+
+function _renderHeatmap(labels, matrix) {
+  const tbl = document.getElementById('heatmap-table');
+  if (!tbl) return;
+  // Header row
+  let html = '<tr><th></th>' + labels.map(l=>`<th title="${l}">${l.slice(0,8)}</th>`).join('') + '</tr>';
+  for (let i=0; i<matrix.length; i++) {
+    html += `<tr><th style="text-align:right;padding-right:6px">${labels[i].slice(0,10)}</th>`;
+    for (let j=0; j<matrix[i].length; j++) {
+      const v = matrix[i][j];
+      const bg = _corrColor(v);
+      html += `<td style="background:${bg}" title="${labels[i]} × ${labels[j]} = ${v.toFixed(2)}">${v.toFixed(2)}</td>`;
+    }
+    html += '</tr>';
+  }
+  tbl.innerHTML = html;
+}
+
+function _corrColor(v) {
+  if (v >= 0.8) return 'rgba(239,68,68,.6)';
+  if (v >= 0.6) return 'rgba(245,158,11,.5)';
+  if (v >= 0.4) return 'rgba(245,158,11,.3)';
+  if (v >= 0.2) return 'rgba(59,130,246,.2)';
+  if (v >= 0) return 'rgba(59,130,246,.08)';
+  if (v >= -0.2) return 'rgba(34,197,94,.08)';
+  return 'rgba(34,197,94,.25)';
+}
+
+function toggleCompare(evt, sid) {
+  evt.stopPropagation();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadLeaderboard();
+});
+</script>
+</body>
+</html>

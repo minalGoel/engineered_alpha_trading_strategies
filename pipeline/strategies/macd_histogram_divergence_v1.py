@@ -30,7 +30,13 @@ def _compute_ema(arr: np.ndarray, period: int) -> np.ndarray:
 def _find_pivot_lows(low: np.ndarray, k: int):
     """Detect confirmed pivot lows with k-bar lookback each side.
 
-    A pivot low at bar i is confirmed at bar i+k (need k future bars to confirm).
+    CAUSALITY NOTE (audit 2025-03): Although the inner loop reads k future bars
+    (low[i+1:i+k+1]), the result is stamped at ``confirm = i + k``, NOT at bar i.
+    Downstream code only reads pivot_vals[j] at bar j — the confirmation bar — by
+    which time all k "future" bars are already in the past.  This is the standard
+    causal pivot detection pattern: detect at i, materialise at i+k, consume at i+k.
+    No look-ahead bias exists.
+
     Returns (pivot_vals, pivot_idxs) — both length n.
       pivot_vals[j] = low value at the confirmed pivot (NaN if not a confirm bar)
       pivot_idxs[j] = index of the actual pivot bar (−1 if not a confirm bar)
@@ -48,6 +54,8 @@ def _find_pivot_lows(low: np.ndarray, k: int):
 
 def _find_pivot_highs(high: np.ndarray, k: int):
     """Detect confirmed pivot highs with k-bar lookback each side.
+
+    See _find_pivot_lows CAUSALITY NOTE — same pattern applies here.
 
     Returns (pivot_vals, pivot_idxs).
     """

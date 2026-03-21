@@ -1,0 +1,1832 @@
+2026-03-21 00:10:22 ═══ PREFLIGHT (codegen-only mode) ═══
+2026-03-21 00:10:22 All preflight checks passed.
+2026-03-21 00:10:23 Qualified total: 291
+2026-03-21 00:10:23 Already done:    0
+2026-03-21 00:10:23 Failed (prior):  0
+2026-03-21 00:10:23 Remaining:       291
+2026-03-21 00:10:23 Mode:            normal
+2026-03-21 00:10:23 [1/291] sma_crossover_banknifty_v1 — starting
+2026-03-21 00:11:23   [HEARTBEAT] sma_crossover_banknifty_v1 — claude running
+2026-03-21 00:12:23   [HEARTBEAT] sma_crossover_banknifty_v1 — claude running
+2026-03-21 00:12:29   CONVERTED | 2m6s
+2026-03-21 00:12:29   ── [1/291] 2m elapsed | ~10h9m left | conv=1 kill=0 fail=0
+2026-03-21 00:12:31 [2/291] index_momentum_v1 — starting
+2026-03-21 00:13:31   [HEARTBEAT] index_momentum_v1 — claude running
+2026-03-21 00:14:31   CONVERTED | 2m0s
+2026-03-21 00:14:31   ── [2/291] 4m elapsed | ~9h57m left | conv=2 kill=0 fail=0
+2026-03-21 00:14:33 [3/291] vwap_mean_reversion_v18 — starting
+2026-03-21 00:15:33   [HEARTBEAT] vwap_mean_reversion_v18 — claude running
+2026-03-21 00:16:33   [HEARTBEAT] vwap_mean_reversion_v18 — claude running
+2026-03-21 00:17:00   CONVERTED | 2m27s
+2026-03-21 00:17:00   ── [3/291] 6m elapsed | ~10h33m left | conv=3 kill=0 fail=0
+2026-03-21 00:17:02 [4/291] vwap_mean_reversion_v19 — starting
+2026-03-21 00:18:02   [HEARTBEAT] vwap_mean_reversion_v19 — claude running
+2026-03-21 00:19:02   [HEARTBEAT] vwap_mean_reversion_v19 — claude running
+2026-03-21 00:20:02   [HEARTBEAT] vwap_mean_reversion_v19 — claude running
+2026-03-21 00:20:12   CONVERTED | 3m10s
+2026-03-21 00:20:12   ── [4/291] 9m elapsed | ~11h43m left | conv=4 kill=0 fail=0
+2026-03-21 00:20:14 [5/291] orb_momentum_v22 — starting
+2026-03-21 00:21:14   [HEARTBEAT] orb_momentum_v22 — claude running
+2026-03-21 00:22:14   [HEARTBEAT] orb_momentum_v22 — claude running
+2026-03-21 00:23:14   [HEARTBEAT] orb_momentum_v22 — claude running
+2026-03-21 00:23:48   CONVERTED | 3m34s
+2026-03-21 00:23:48   [GIT] Committed
+2026-03-21 00:23:48   ── [5/291] 13m elapsed | ~12h47m left | conv=5 kill=0 fail=0
+2026-03-21 00:23:50 [6/291] orb_momentum_v29 — starting
+2026-03-21 00:24:50   [HEARTBEAT] orb_momentum_v29 — claude running
+2026-03-21 00:25:50   [HEARTBEAT] orb_momentum_v29 — claude running
+2026-03-21 00:26:50   [HEARTBEAT] orb_momentum_v29 — claude running
+2026-03-21 00:27:05   CONVERTED | 3m15s
+2026-03-21 00:27:05   ── [6/291] 16m elapsed | ~13h13m left | conv=6 kill=0 fail=0
+2026-03-21 00:27:07 [7/291] orb_momentum_v32 — starting
+2026-03-21 00:28:07   [HEARTBEAT] orb_momentum_v32 — claude running
+2026-03-21 00:29:07   [HEARTBEAT] orb_momentum_v32 — claude running
+2026-03-21 00:30:07   [HEARTBEAT] orb_momentum_v32 — claude running
+2026-03-21 00:30:23   CONVERTED | 3m16s
+2026-03-21 00:30:23   ── [7/291] 20m elapsed | ~13h29m left | conv=7 kill=0 fail=0
+2026-03-21 00:30:25 [8/291] rsi_connors_pullback_v41 — starting
+2026-03-21 00:31:25   [HEARTBEAT] rsi_connors_pullback_v41 — claude running
+2026-03-21 00:32:25   [HEARTBEAT] rsi_connors_pullback_v41 — claude running
+2026-03-21 00:33:25   [HEARTBEAT] rsi_connors_pullback_v41 — claude running
+2026-03-21 00:33:26   CONVERTED | 3m1s
+2026-03-21 00:33:26   ── [8/291] 23m elapsed | ~13h31m left | conv=8 kill=0 fail=0
+2026-03-21 00:33:28 [9/291] rsi_connors_pullback_v42 — starting
+2026-03-21 00:34:28   [HEARTBEAT] rsi_connors_pullback_v42 — claude running
+2026-03-21 00:35:28   [HEARTBEAT] rsi_connors_pullback_v42 — claude running
+2026-03-21 00:36:28   [HEARTBEAT] rsi_connors_pullback_v42 — claude running
+2026-03-21 00:36:31   CONVERTED | 3m3s
+2026-03-21 00:36:31   ── [9/291] 26m elapsed | ~13h37m left | conv=9 kill=0 fail=0
+2026-03-21 00:36:33 [10/291] rsi_connors_pullback_v46 — starting
+2026-03-21 00:37:33   [HEARTBEAT] rsi_connors_pullback_v46 — claude running
+2026-03-21 00:38:33   [HEARTBEAT] rsi_connors_pullback_v46 — claude running
+2026-03-21 00:39:12   CONVERTED | 2m39s
+2026-03-21 00:39:12   [GIT] Committed
+2026-03-21 00:39:12   ── [10/291] 28m elapsed | ~13h25m left | conv=10 kill=0 fail=0
+2026-03-21 00:39:14 [11/291] rsi_connors_pullback_v49 — starting
+2026-03-21 00:40:14   [HEARTBEAT] rsi_connors_pullback_v49 — claude running
+2026-03-21 00:41:14   [HEARTBEAT] rsi_connors_pullback_v49 — claude running
+2026-03-21 00:42:14   [HEARTBEAT] rsi_connors_pullback_v49 — claude running
+2026-03-21 00:42:32   CONVERTED | 3m18s
+2026-03-21 00:42:32   ── [11/291] 32m elapsed | ~13h36m left | conv=11 kill=0 fail=0
+2026-03-21 00:42:34 [12/291] rsi_connors_pullback_v50 — starting
+2026-03-21 00:43:34   [HEARTBEAT] rsi_connors_pullback_v50 — claude running
+2026-03-21 00:44:34   [HEARTBEAT] rsi_connors_pullback_v50 — claude running
+2026-03-21 00:45:05   CONVERTED | 2m31s
+2026-03-21 00:45:05   ── [12/291] 34m elapsed | ~13h24m left | conv=12 kill=0 fail=0
+2026-03-21 00:45:07 [13/291] orb_breakout_v1 — starting
+2026-03-21 00:45:25   KILLED | 0m18s
+2026-03-21 00:45:25   ── [13/291] 35m elapsed | ~12h25m left | conv=12 kill=1 fail=0
+2026-03-21 00:45:28 [14/291] rsi_connors_pullback_v54 — starting
+2026-03-21 00:46:28   [HEARTBEAT] rsi_connors_pullback_v54 — claude running
+2026-03-21 00:47:28   [HEARTBEAT] rsi_connors_pullback_v54 — claude running
+2026-03-21 00:48:28   [HEARTBEAT] rsi_connors_pullback_v54 — claude running
+2026-03-21 00:48:43   CONVERTED | 3m15s
+2026-03-21 00:48:43   ── [14/291] 38m elapsed | ~12h37m left | conv=13 kill=1 fail=0
+2026-03-21 00:48:45 [15/291] macd_trend_continuation_v71 — starting
+2026-03-21 00:49:45   [HEARTBEAT] macd_trend_continuation_v71 — claude running
+2026-03-21 00:50:45   [HEARTBEAT] macd_trend_continuation_v71 — claude running
+2026-03-21 00:51:26   CONVERTED | 2m41s
+2026-03-21 00:51:26   [GIT] Committed
+2026-03-21 00:51:26   ── [15/291] 41m elapsed | ~12h34m left | conv=14 kill=1 fail=0
+2026-03-21 00:51:28 [16/291] bollinger_squeeze_breakout_v82 — starting
+2026-03-21 00:52:28   [HEARTBEAT] bollinger_squeeze_breakout_v82 — claude running
+2026-03-21 00:53:28   [HEARTBEAT] bollinger_squeeze_breakout_v82 — claude running
+2026-03-21 00:54:28   [HEARTBEAT] bollinger_squeeze_breakout_v82 — claude running
+2026-03-21 00:54:29   CONVERTED | 3m1s
+2026-03-21 00:54:29   ── [16/291] 44m elapsed | ~12h36m left | conv=15 kill=1 fail=0
+2026-03-21 00:54:31 [17/291] gap_fade_reversion_v103 — starting
+2026-03-21 00:55:31   [HEARTBEAT] gap_fade_reversion_v103 — claude running
+2026-03-21 00:56:31   [HEARTBEAT] gap_fade_reversion_v103 — claude running
+2026-03-21 00:57:31   [HEARTBEAT] gap_fade_reversion_v103 — claude running
+2026-03-21 00:57:39   CONVERTED | 3m8s
+2026-03-21 00:57:39   ── [17/291] 47m elapsed | ~12h38m left | conv=16 kill=1 fail=0
+2026-03-21 00:57:41 [18/291] gap_fade_reversion_v104 — starting
+2026-03-21 00:58:41   [HEARTBEAT] gap_fade_reversion_v104 — claude running
+2026-03-21 00:59:12   KILLED | 1m31s
+2026-03-21 00:59:12   ── [18/291] 48m elapsed | ~12h17m left | conv=16 kill=2 fail=0
+2026-03-21 00:59:14 [19/291] gap_fade_reversion_v106 — starting
+2026-03-21 00:59:44   KILLED | 0m30s
+2026-03-21 00:59:44   ── [19/291] 49m elapsed | ~11h42m left | conv=16 kill=3 fail=0
+2026-03-21 00:59:46 [20/291] gap_fade_reversion_v116 — starting
+2026-03-21 01:00:46   [HEARTBEAT] gap_fade_reversion_v116 — claude running
+2026-03-21 01:01:46   [HEARTBEAT] gap_fade_reversion_v116 — claude running
+2026-03-21 01:02:46   [HEARTBEAT] gap_fade_reversion_v116 — claude running
+2026-03-21 01:03:02   CONVERTED | 3m16s
+2026-03-21 01:03:02   [GIT] Committed
+2026-03-21 01:03:02   ── [20/291] 52m elapsed | ~11h49m left | conv=17 kill=3 fail=0
+2026-03-21 01:03:04 [21/291] vix_filtered_index_trend_v124 — starting
+2026-03-21 01:04:04   [HEARTBEAT] vix_filtered_index_trend_v124 — claude running
+2026-03-21 01:05:04   [HEARTBEAT] vix_filtered_index_trend_v124 — claude running
+2026-03-21 01:05:51   CONVERTED | 2m47s
+2026-03-21 01:05:51   ── [21/291] 55m elapsed | ~11h51m left | conv=18 kill=3 fail=0
+2026-03-21 01:05:53 [22/291] vix_filtered_index_trend_v126 — starting
+2026-03-21 01:06:53   [HEARTBEAT] vix_filtered_index_trend_v126 — claude running
+2026-03-21 01:07:53   [HEARTBEAT] vix_filtered_index_trend_v126 — claude running
+2026-03-21 01:08:27   CONVERTED | 2m34s
+2026-03-21 01:08:27   ── [22/291] 58m elapsed | ~11h48m left | conv=19 kill=3 fail=0
+2026-03-21 01:08:29 [23/291] vix_filtered_index_trend_v133 — starting
+2026-03-21 01:09:29   [HEARTBEAT] vix_filtered_index_trend_v133 — claude running
+2026-03-21 01:10:29   [HEARTBEAT] vix_filtered_index_trend_v133 — claude running
+2026-03-21 01:11:25   CONVERTED | 2m56s
+2026-03-21 01:11:25   ── [23/291] 61m elapsed | ~11h50m left | conv=20 kill=3 fail=0
+2026-03-21 01:11:27 [24/291] gap_momentum_v1 — starting
+2026-03-21 01:12:27   [HEARTBEAT] gap_momentum_v1 — claude running
+2026-03-21 01:13:27   [HEARTBEAT] gap_momentum_v1 — claude running
+2026-03-21 01:14:27   [HEARTBEAT] gap_momentum_v1 — claude running
+2026-03-21 01:15:06   CONVERTED | 3m39s
+2026-03-21 01:15:06   ── [24/291] 64m elapsed | ~11h56m left | conv=21 kill=3 fail=0
+2026-03-21 01:15:08 [25/291] pdh_pdl_fakeout_v141 — starting
+2026-03-21 01:16:08   [HEARTBEAT] pdh_pdl_fakeout_v141 — claude running
+2026-03-21 01:17:08   [HEARTBEAT] pdh_pdl_fakeout_v141 — claude running
+2026-03-21 01:18:08   [HEARTBEAT] pdh_pdl_fakeout_v141 — claude running
+2026-03-21 01:18:54   CONVERTED | 3m46s
+2026-03-21 01:18:54   [GIT] Committed
+2026-03-21 01:18:54   ── [25/291] 68m elapsed | ~12h7m left | conv=22 kill=3 fail=0
+2026-03-21 01:18:56 [26/291] inside_bar_breakout_v177 — starting
+2026-03-21 01:19:56   [HEARTBEAT] inside_bar_breakout_v177 — claude running
+2026-03-21 01:20:56   [HEARTBEAT] inside_bar_breakout_v177 — claude running
+2026-03-21 01:21:56   [HEARTBEAT] inside_bar_breakout_v177 — claude running
+2026-03-21 01:22:10   CONVERTED | 3m14s
+2026-03-21 01:22:10   ── [26/291] 71m elapsed | ~12h8m left | conv=23 kill=3 fail=0
+2026-03-21 01:22:12 [27/291] gap_fill_stall_001 — starting
+2026-03-21 01:23:12   [HEARTBEAT] gap_fill_stall_001 — claude running
+2026-03-21 01:24:12   [HEARTBEAT] gap_fill_stall_001 — claude running
+2026-03-21 01:25:12   [HEARTBEAT] gap_fill_stall_001 — claude running
+2026-03-21 01:26:12   [HEARTBEAT] gap_fill_stall_001 — claude running
+2026-03-21 01:26:18   CONVERTED | 4m6s
+2026-03-21 01:26:18   ── [27/291] 75m elapsed | ~12h19m left | conv=24 kill=3 fail=0
+2026-03-21 01:26:20 [28/291] open_high_low_v1 — starting
+2026-03-21 01:27:20   [HEARTBEAT] open_high_low_v1 — claude running
+2026-03-21 01:28:20   [HEARTBEAT] open_high_low_v1 — claude running
+2026-03-21 01:29:20   [HEARTBEAT] open_high_low_v1 — claude running
+2026-03-21 01:29:34   CONVERTED | 3m14s
+2026-03-21 01:29:35   ── [28/291] 79m elapsed | ~12h20m left | conv=25 kill=3 fail=0
+2026-03-21 01:29:37 [29/291] opening_drive_reversal_001 — starting
+2026-03-21 01:30:37   [HEARTBEAT] opening_drive_reversal_001 — claude running
+2026-03-21 01:31:37   [HEARTBEAT] opening_drive_reversal_001 — claude running
+2026-03-21 01:32:37   [HEARTBEAT] opening_drive_reversal_001 — claude running
+2026-03-21 01:33:37   [HEARTBEAT] opening_drive_reversal_001 — claude running
+2026-03-21 01:33:44   CONVERTED | 4m7s
+2026-03-21 01:33:44   ── [29/291] 83m elapsed | ~12h31m left | conv=26 kill=3 fail=0
+2026-03-21 01:33:46 [30/291] opening_range_breakout_002 — starting
+2026-03-21 01:34:46   [HEARTBEAT] opening_range_breakout_002 — claude running
+2026-03-21 01:34:53   KILLED | 1m7s
+2026-03-21 01:34:53   [GIT] Committed
+2026-03-21 01:34:53   ── [30/291] 84m elapsed | ~12h15m left | conv=26 kill=4 fail=0
+2026-03-21 01:34:55 [31/291] range_day_band_fade_003 — starting
+2026-03-21 01:35:55   [HEARTBEAT] range_day_band_fade_003 — claude running
+2026-03-21 01:36:55   [HEARTBEAT] range_day_band_fade_003 — claude running
+2026-03-21 01:37:55   [HEARTBEAT] range_day_band_fade_003 — claude running
+2026-03-21 01:38:55   [HEARTBEAT] range_day_band_fade_003 — claude running
+2026-03-21 01:39:42   CONVERTED | 4m47s
+2026-03-21 01:39:42   ── [31/291] 89m elapsed | ~12h25m left | conv=27 kill=4 fail=0
+2026-03-21 01:39:44 [32/291] squeeze_release_breakout_001 — starting
+2026-03-21 01:40:45   [HEARTBEAT] squeeze_release_breakout_001 — claude running
+2026-03-21 01:41:45   [HEARTBEAT] squeeze_release_breakout_001 — claude running
+2026-03-21 01:42:45   [HEARTBEAT] squeeze_release_breakout_001 — claude running
+2026-03-21 01:43:45   [HEARTBEAT] squeeze_release_breakout_001 — claude running
+2026-03-21 01:43:55   CONVERTED | 4m11s
+2026-03-21 01:43:55   ── [32/291] 93m elapsed | ~12h35m left | conv=28 kill=4 fail=0
+2026-03-21 01:43:57 [33/291] vwap_overshoot_fade_001 — starting
+2026-03-21 01:44:57   [HEARTBEAT] vwap_overshoot_fade_001 — claude running
+2026-03-21 01:45:57   [HEARTBEAT] vwap_overshoot_fade_001 — claude running
+2026-03-21 01:46:57   [HEARTBEAT] vwap_overshoot_fade_001 — claude running
+2026-03-21 01:47:57   [HEARTBEAT] vwap_overshoot_fade_001 — claude running
+2026-03-21 01:48:01   CONVERTED | 4m4s
+2026-03-21 01:48:01   ── [33/291] 97m elapsed | ~12h41m left | conv=29 kill=4 fail=0
+2026-03-21 01:48:03 [34/291] vwap_overshoot_fade_002 — starting
+2026-03-21 01:49:03   [HEARTBEAT] vwap_overshoot_fade_002 — claude running
+2026-03-21 01:50:03   [HEARTBEAT] vwap_overshoot_fade_002 — claude running
+2026-03-21 01:51:03   [HEARTBEAT] vwap_overshoot_fade_002 — claude running
+2026-03-21 01:52:03   [HEARTBEAT] vwap_overshoot_fade_002 — claude running
+2026-03-21 01:53:03   [HEARTBEAT] vwap_overshoot_fade_002 — claude running
+2026-03-21 01:53:18   CONVERTED | 5m15s
+2026-03-21 01:53:18   ── [34/291] 102m elapsed | ~12h55m left | conv=30 kill=4 fail=0
+2026-03-21 01:53:20 [35/291] vwap_overshoot_fade_003 — starting
+2026-03-21 01:54:20   [HEARTBEAT] vwap_overshoot_fade_003 — claude running
+2026-03-21 01:55:20   [HEARTBEAT] vwap_overshoot_fade_003 — claude running
+2026-03-21 01:56:20   [HEARTBEAT] vwap_overshoot_fade_003 — claude running
+2026-03-21 01:57:20   [HEARTBEAT] vwap_overshoot_fade_003 — claude running
+2026-03-21 01:57:55   CONVERTED | 4m35s
+2026-03-21 01:57:56   [GIT] Committed
+2026-03-21 01:57:56   ── [35/291] 107m elapsed | ~13h5m left | conv=31 kill=4 fail=0
+2026-03-21 01:57:58 [36/291] vwap_reclaim_trend_001 — starting
+2026-03-21 01:58:58   [HEARTBEAT] vwap_reclaim_trend_001 — claude running
+2026-03-21 01:59:58   [HEARTBEAT] vwap_reclaim_trend_001 — claude running
+2026-03-21 02:00:58   [HEARTBEAT] vwap_reclaim_trend_001 — claude running
+2026-03-21 02:01:23   CONVERTED | 3m25s
+2026-03-21 02:01:23   ── [36/291] 111m elapsed | ~13h6m left | conv=32 kill=4 fail=0
+2026-03-21 02:01:25 [37/291] vwap_mean_reversion_basic_v1 — starting
+2026-03-21 02:02:25   [HEARTBEAT] vwap_mean_reversion_basic_v1 — claude running
+2026-03-21 02:03:25   [HEARTBEAT] vwap_mean_reversion_basic_v1 — claude running
+2026-03-21 02:04:25   [HEARTBEAT] vwap_mean_reversion_basic_v1 — claude running
+2026-03-21 02:05:25   [HEARTBEAT] vwap_mean_reversion_basic_v1 — claude running
+2026-03-21 02:06:25   [HEARTBEAT] vwap_mean_reversion_basic_v1 — claude running
+2026-03-21 02:06:58   CONVERTED | 5m33s
+2026-03-21 02:06:58   ── [37/291] 116m elapsed | ~13h20m left | conv=33 kill=4 fail=0
+2026-03-21 02:07:00 [38/291] vwap_pivot_rejection_v1 — starting
+2026-03-21 02:08:00   [HEARTBEAT] vwap_pivot_rejection_v1 — claude running
+2026-03-21 02:09:00   [HEARTBEAT] vwap_pivot_rejection_v1 — claude running
+2026-03-21 02:10:00   [HEARTBEAT] vwap_pivot_rejection_v1 — claude running
+2026-03-21 02:11:00   [HEARTBEAT] vwap_pivot_rejection_v1 — claude running
+2026-03-21 02:11:49   CONVERTED | 4m49s
+2026-03-21 02:11:49   ── [38/291] 121m elapsed | ~13h25m left | conv=34 kill=4 fail=0
+2026-03-21 02:11:51 [39/291] vwap_zscore_bounce_v1 — starting
+2026-03-21 02:12:51   [HEARTBEAT] vwap_zscore_bounce_v1 — claude running
+2026-03-21 02:13:51   [HEARTBEAT] vwap_zscore_bounce_v1 — claude running
+2026-03-21 02:14:51   [HEARTBEAT] vwap_zscore_bounce_v1 — claude running
+2026-03-21 02:14:55   CONVERTED | 3m4s
+2026-03-21 02:14:55   ── [39/291] 124m elapsed | ~13h22m left | conv=35 kill=4 fail=0
+2026-03-21 02:14:57 [40/291] vwap_cross_momentum_v1 — starting
+2026-03-21 02:15:57   [HEARTBEAT] vwap_cross_momentum_v1 — claude running
+2026-03-21 02:16:58   [HEARTBEAT] vwap_cross_momentum_v1 — claude running
+2026-03-21 02:17:58   [HEARTBEAT] vwap_cross_momentum_v1 — claude running
+2026-03-21 02:18:58   [HEARTBEAT] vwap_cross_momentum_v1 — claude running
+2026-03-21 02:19:27   CONVERTED | 4m30s
+2026-03-21 02:19:27   [GIT] Committed
+2026-03-21 02:19:27   ── [40/291] 129m elapsed | ~13h27m left | conv=36 kill=4 fail=0
+2026-03-21 02:19:29 [41/291] vwap_band_squeeze_v1 — starting
+2026-03-21 02:20:29   [HEARTBEAT] vwap_band_squeeze_v1 — claude running
+2026-03-21 02:21:29   [HEARTBEAT] vwap_band_squeeze_v1 — claude running
+2026-03-21 02:22:29   [HEARTBEAT] vwap_band_squeeze_v1 — claude running
+2026-03-21 02:23:29   [HEARTBEAT] vwap_band_squeeze_v1 — claude running
+2026-03-21 02:24:15   CONVERTED | 4m46s
+2026-03-21 02:24:15   ── [41/291] 133m elapsed | ~13h32m left | conv=37 kill=4 fail=0
+2026-03-21 02:24:17 [42/291] vwap_slope_trend_v1 — starting
+2026-03-21 02:25:17   [HEARTBEAT] vwap_slope_trend_v1 — claude running
+2026-03-21 02:26:17   [HEARTBEAT] vwap_slope_trend_v1 — claude running
+2026-03-21 02:27:17   [HEARTBEAT] vwap_slope_trend_v1 — claude running
+2026-03-21 02:27:46   CONVERTED | 3m29s
+2026-03-21 02:27:46   ── [42/291] 137m elapsed | ~13h33m left | conv=38 kill=4 fail=0
+2026-03-21 02:27:48 [43/291] vwap_anchored_support_v1 — starting
+2026-03-21 02:28:48   [HEARTBEAT] vwap_anchored_support_v1 — claude running
+2026-03-21 02:29:48   [HEARTBEAT] vwap_anchored_support_v1 — claude running
+2026-03-21 02:30:48   [HEARTBEAT] vwap_anchored_support_v1 — claude running
+2026-03-21 02:31:49   [HEARTBEAT] vwap_anchored_support_v1 — claude running
+2026-03-21 02:32:16   CONVERTED | 4m28s
+2026-03-21 02:32:16   ── [43/291] 141m elapsed | ~13h34m left | conv=39 kill=4 fail=0
+2026-03-21 02:32:18 [44/291] vwap_volume_divergence_v1 — starting
+2026-03-21 02:33:19   [HEARTBEAT] vwap_volume_divergence_v1 — claude running
+2026-03-21 02:34:19   [HEARTBEAT] vwap_volume_divergence_v1 — claude running
+2026-03-21 02:35:19   [HEARTBEAT] vwap_volume_divergence_v1 — claude running
+2026-03-21 02:36:19   [HEARTBEAT] vwap_volume_divergence_v1 — claude running
+2026-03-21 02:36:23   CONVERTED | 4m5s
+2026-03-21 02:36:23   ── [44/291] 146m elapsed | ~13h39m left | conv=40 kill=4 fail=0
+2026-03-21 02:36:25 [45/291] vwap_rsi_confluence_v1 — starting
+2026-03-21 02:37:25   [HEARTBEAT] vwap_rsi_confluence_v1 — claude running
+2026-03-21 02:38:26   [HEARTBEAT] vwap_rsi_confluence_v1 — claude running
+2026-03-21 02:39:26   [HEARTBEAT] vwap_rsi_confluence_v1 — claude running
+2026-03-21 02:39:34   CONVERTED | 3m9s
+2026-03-21 02:39:34   [GIT] Committed
+2026-03-21 02:39:34   ── [45/291] 149m elapsed | ~13h31m left | conv=41 kill=4 fail=0
+2026-03-21 02:39:36 [46/291] vwap_gap_fill_v1 — starting
+2026-03-21 02:40:36   [HEARTBEAT] vwap_gap_fill_v1 — claude running
+2026-03-21 02:41:36   [HEARTBEAT] vwap_gap_fill_v1 — claude running
+2026-03-21 02:42:36   [HEARTBEAT] vwap_gap_fill_v1 — claude running
+2026-03-21 02:43:36   [HEARTBEAT] vwap_gap_fill_v1 — claude running
+2026-03-21 02:44:36   [HEARTBEAT] vwap_gap_fill_v1 — claude running
+2026-03-21 02:45:36   [HEARTBEAT] vwap_gap_fill_v1 — claude running
+2026-03-21 02:46:16   CONVERTED | 6m40s
+2026-03-21 02:46:16   ── [46/291] 155m elapsed | ~13h48m left | conv=42 kill=4 fail=0
+2026-03-21 02:46:18 [47/291] bollinger_mean_reversion_v1 — starting
+2026-03-21 02:47:18   [HEARTBEAT] bollinger_mean_reversion_v1 — claude running
+2026-03-21 02:48:18   [HEARTBEAT] bollinger_mean_reversion_v1 — claude running
+2026-03-21 02:49:18   [HEARTBEAT] bollinger_mean_reversion_v1 — claude running
+2026-03-21 02:49:56   CONVERTED | 3m38s
+2026-03-21 02:49:56   ── [47/291] 159m elapsed | ~13h45m left | conv=43 kill=4 fail=0
+2026-03-21 02:49:58 [48/291] bollinger_price_action_v1 — starting
+2026-03-21 02:50:58   [HEARTBEAT] bollinger_price_action_v1 — claude running
+2026-03-21 02:51:58   [HEARTBEAT] bollinger_price_action_v1 — claude running
+2026-03-21 02:52:58   [HEARTBEAT] bollinger_price_action_v1 — claude running
+2026-03-21 02:53:53   CONVERTED | 3m55s
+2026-03-21 02:53:53   ── [48/291] 163m elapsed | ~13h46m left | conv=44 kill=4 fail=0
+2026-03-21 02:53:55 [49/291] keltner_channel_reversion_v1 — starting
+2026-03-21 02:54:55   [HEARTBEAT] keltner_channel_reversion_v1 — claude running
+2026-03-21 02:55:55   [HEARTBEAT] keltner_channel_reversion_v1 — claude running
+2026-03-21 02:56:55   [HEARTBEAT] keltner_channel_reversion_v1 — claude running
+2026-03-21 02:57:55   [HEARTBEAT] keltner_channel_reversion_v1 — claude running
+2026-03-21 02:58:01   CONVERTED | 4m6s
+2026-03-21 02:58:01   ── [49/291] 167m elapsed | ~13h46m left | conv=45 kill=4 fail=0
+2026-03-21 02:58:03 [50/291] zscore_reversion_v1 — starting
+2026-03-21 02:59:03   [HEARTBEAT] zscore_reversion_v1 — claude running
+2026-03-21 03:00:04   [HEARTBEAT] zscore_reversion_v1 — claude running
+2026-03-21 03:01:04   [HEARTBEAT] zscore_reversion_v1 — claude running
+2026-03-21 03:01:16   CONVERTED | 3m13s
+2026-03-21 03:01:17   [GIT] Committed
+2026-03-21 03:01:17   ── [50/291] 170m elapsed | ~13h43m left | conv=46 kill=4 fail=0
+2026-03-21 03:01:19 [51/291] rsi_extreme_reversion_v1 — starting
+2026-03-21 03:02:19   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 03:03:19   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 03:04:19   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 03:05:19   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 03:05:21   CONVERTED | 4m2s
+2026-03-21 03:05:21   ── [51/291] 174m elapsed | ~13h40m left | conv=47 kill=4 fail=0
+2026-03-21 03:05:23 [52/291] deviation_from_ema_v1 — starting
+2026-03-21 03:06:23   [HEARTBEAT] deviation_from_ema_v1 — claude running
+2026-03-21 03:07:23   [HEARTBEAT] deviation_from_ema_v1 — claude running
+2026-03-21 03:08:23   [HEARTBEAT] deviation_from_ema_v1 — claude running
+2026-03-21 03:08:55   CONVERTED | 3m32s
+2026-03-21 03:08:55   ── [52/291] 178m elapsed | ~13h40m left | conv=48 kill=4 fail=0
+2026-03-21 03:08:57 [53/291] intraday_range_reversion_v1 — starting
+2026-03-21 03:09:57   [HEARTBEAT] intraday_range_reversion_v1 — claude running
+2026-03-21 03:10:57   [HEARTBEAT] intraday_range_reversion_v1 — claude running
+2026-03-21 03:11:57   [HEARTBEAT] intraday_range_reversion_v1 — claude running
+2026-03-21 03:12:25   CONVERTED | 3m28s
+2026-03-21 03:12:25   ── [53/291] 182m elapsed | ~13h37m left | conv=49 kill=4 fail=0
+2026-03-21 03:12:27 [54/291] microstructure_reversion_v1 — starting
+2026-03-21 03:13:27   [HEARTBEAT] microstructure_reversion_v1 — claude running
+2026-03-21 03:14:27   [HEARTBEAT] microstructure_reversion_v1 — claude running
+2026-03-21 03:15:27   [HEARTBEAT] microstructure_reversion_v1 — claude running
+2026-03-21 03:16:27   [HEARTBEAT] microstructure_reversion_v1 — claude running
+2026-03-21 03:17:22   CONVERTED | 4m55s
+2026-03-21 03:17:22   ── [54/291] 186m elapsed | ~13h37m left | conv=50 kill=4 fail=0
+2026-03-21 03:17:24 [55/291] stochastic_reversion_v1 — starting
+2026-03-21 03:18:24   [HEARTBEAT] stochastic_reversion_v1 — claude running
+2026-03-21 03:19:25   [HEARTBEAT] stochastic_reversion_v1 — claude running
+2026-03-21 03:20:25   [HEARTBEAT] stochastic_reversion_v1 — claude running
+2026-03-21 03:21:05   CONVERTED | 3m41s
+2026-03-21 03:21:05   [GIT] Committed
+2026-03-21 03:21:05   ── [55/291] 190m elapsed | ~13h38m left | conv=51 kill=4 fail=0
+2026-03-21 03:21:07 [56/291] williams_r_reversion_v1 — starting
+2026-03-21 03:22:07   [HEARTBEAT] williams_r_reversion_v1 — claude running
+2026-03-21 03:23:07   [HEARTBEAT] williams_r_reversion_v1 — claude running
+2026-03-21 03:24:07   [HEARTBEAT] williams_r_reversion_v1 — claude running
+2026-03-21 03:25:07   [HEARTBEAT] williams_r_reversion_v1 — claude running
+2026-03-21 03:25:09   CONVERTED | 4m2s
+2026-03-21 03:25:09   ── [56/291] 194m elapsed | ~13h34m left | conv=52 kill=4 fail=0
+2026-03-21 03:25:11 [57/291] ema_crossover_momentum_v1 — starting
+2026-03-21 03:26:11   [HEARTBEAT] ema_crossover_momentum_v1 — claude running
+2026-03-21 03:27:11   [HEARTBEAT] ema_crossover_momentum_v1 — claude running
+2026-03-21 03:28:11   [HEARTBEAT] ema_crossover_momentum_v1 — claude running
+2026-03-21 03:28:57   CONVERTED | 3m46s
+2026-03-21 03:28:57   ── [57/291] 198m elapsed | ~13h35m left | conv=53 kill=4 fail=0
+2026-03-21 03:28:59 [58/291] ema200_dip_reversal_v1 — starting
+2026-03-21 03:29:59   [HEARTBEAT] ema200_dip_reversal_v1 — claude running
+2026-03-21 03:30:59   [HEARTBEAT] ema200_dip_reversal_v1 — claude running
+2026-03-21 03:31:59   [HEARTBEAT] ema200_dip_reversal_v1 — claude running
+2026-03-21 03:32:59   [HEARTBEAT] ema200_dip_reversal_v1 — claude running
+2026-03-21 03:33:35   CONVERTED | 4m36s
+2026-03-21 03:33:35   ── [58/291] 203m elapsed | ~13h35m left | conv=54 kill=4 fail=0
+2026-03-21 03:33:37 [59/291] macd_signal_momentum_v1 — starting
+2026-03-21 03:34:37   [HEARTBEAT] macd_signal_momentum_v1 — claude running
+2026-03-21 03:35:37   [HEARTBEAT] macd_signal_momentum_v1 — claude running
+2026-03-21 03:36:38   [HEARTBEAT] macd_signal_momentum_v1 — claude running
+2026-03-21 03:37:31   CONVERTED | 3m54s
+2026-03-21 03:37:31   ── [59/291] 207m elapsed | ~13h32m left | conv=55 kill=4 fail=0
+2026-03-21 03:37:33 [60/291] adx_trend_strength_v1 — starting
+2026-03-21 03:38:34   [HEARTBEAT] adx_trend_strength_v1 — claude running
+2026-03-21 03:39:34   [HEARTBEAT] adx_trend_strength_v1 — claude running
+2026-03-21 03:40:19   CONVERTED | 2m46s
+2026-03-21 03:40:19   [GIT] Committed
+2026-03-21 03:40:19   ── [60/291] 209m elapsed | ~13h24m left | conv=56 kill=4 fail=0
+2026-03-21 03:40:21 [61/291] roc_momentum_v1 — starting
+2026-03-21 03:41:21   [HEARTBEAT] roc_momentum_v1 — claude running
+2026-03-21 03:42:21   [HEARTBEAT] roc_momentum_v1 — claude running
+2026-03-21 03:43:21   [HEARTBEAT] roc_momentum_v1 — claude running
+2026-03-21 03:44:03   CONVERTED | 3m42s
+2026-03-21 03:44:03   ── [61/291] 213m elapsed | ~13h25m left | conv=57 kill=4 fail=0
+2026-03-21 03:44:05 [62/291] price_channel_breakout_v1 — starting
+2026-03-21 03:45:06   [HEARTBEAT] price_channel_breakout_v1 — claude running
+2026-03-21 03:46:06   [HEARTBEAT] price_channel_breakout_v1 — claude running
+2026-03-21 03:47:06   [HEARTBEAT] price_channel_breakout_v1 — claude running
+2026-03-21 03:47:29   CONVERTED | 3m24s
+2026-03-21 03:47:29   ── [62/291] 217m elapsed | ~13h21m left | conv=58 kill=4 fail=0
+2026-03-21 03:47:31 [63/291] momentum_score_composite_v1 — starting
+2026-03-21 03:48:31   [HEARTBEAT] momentum_score_composite_v1 — claude running
+2026-03-21 03:49:31   [HEARTBEAT] momentum_score_composite_v1 — claude running
+2026-03-21 03:50:31   [HEARTBEAT] momentum_score_composite_v1 — claude running
+2026-03-21 03:51:31   [HEARTBEAT] momentum_score_composite_v1 — claude running
+2026-03-21 03:52:10   CONVERTED | 4m39s
+2026-03-21 03:52:10   ── [63/291] 221m elapsed | ~13h21m left | conv=59 kill=4 fail=0
+2026-03-21 03:52:12 [64/291] relative_momentum_v1 — starting
+2026-03-21 03:53:12   [HEARTBEAT] relative_momentum_v1 — claude running
+2026-03-21 03:54:12   [HEARTBEAT] relative_momentum_v1 — claude running
+2026-03-21 03:55:12   [HEARTBEAT] relative_momentum_v1 — claude running
+2026-03-21 03:56:13   CONVERTED | 4m1s
+2026-03-21 03:56:13   ── [64/291] 225m elapsed | ~13h18m left | conv=60 kill=4 fail=0
+2026-03-21 03:56:15 [65/291] volume_momentum_v1 — starting
+2026-03-21 03:57:15   [HEARTBEAT] volume_momentum_v1 — claude running
+2026-03-21 03:58:15   [HEARTBEAT] volume_momentum_v1 — claude running
+2026-03-21 03:59:15   [HEARTBEAT] volume_momentum_v1 — claude running
+2026-03-21 04:00:15   [HEARTBEAT] volume_momentum_v1 — claude running
+2026-03-21 04:00:30   CONVERTED | 4m15s
+2026-03-21 04:00:30   [GIT] Committed
+2026-03-21 04:00:30   ── [65/291] 230m elapsed | ~13h18m left | conv=61 kill=4 fail=0
+2026-03-21 04:00:32 [66/291] acceleration_momentum_v1 — starting
+2026-03-21 04:01:32   [HEARTBEAT] acceleration_momentum_v1 — claude running
+2026-03-21 04:02:32   [HEARTBEAT] acceleration_momentum_v1 — claude running
+2026-03-21 04:03:25   CONVERTED | 2m53s
+2026-03-21 04:03:25   ── [66/291] 233m elapsed | ~13h11m left | conv=62 kill=4 fail=0
+2026-03-21 04:03:27 [67/291] institutional_flow_momentum_v1 — starting
+2026-03-21 04:04:27   [HEARTBEAT] institutional_flow_momentum_v1 — claude running
+2026-03-21 04:05:27   [HEARTBEAT] institutional_flow_momentum_v1 — claude running
+2026-03-21 04:06:18   CONVERTED | 2m51s
+2026-03-21 04:06:18   ── [67/291] 235m elapsed | ~13h7m left | conv=63 kill=4 fail=0
+2026-03-21 04:06:20 [68/291] gap_continuation_momentum_v1 — starting
+2026-03-21 04:07:20   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 04:08:20   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 04:09:20   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 04:10:20   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 04:11:20   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 04:11:33   CONVERTED | 5m13s
+2026-03-21 04:11:33   ── [68/291] 241m elapsed | ~13h7m left | conv=64 kill=4 fail=0
+2026-03-21 04:11:35 [69/291] ma_crossover_momentum_v1 — starting
+2026-03-21 04:12:35   [HEARTBEAT] ma_crossover_momentum_v1 — claude running
+2026-03-21 04:13:35   [HEARTBEAT] ma_crossover_momentum_v1 — claude running
+2026-03-21 04:14:35   [HEARTBEAT] ma_crossover_momentum_v1 — claude running
+2026-03-21 04:14:40   CONVERTED | 3m5s
+2026-03-21 04:14:40   ── [69/291] 244m elapsed | ~13h4m left | conv=65 kill=4 fail=0
+2026-03-21 04:14:42 [70/291] intraday_trend_channel_v1 — starting
+2026-03-21 04:15:42   [HEARTBEAT] intraday_trend_channel_v1 — claude running
+2026-03-21 04:16:42   [HEARTBEAT] intraday_trend_channel_v1 — claude running
+2026-03-21 04:17:42   [HEARTBEAT] intraday_trend_channel_v1 — claude running
+2026-03-21 04:18:24   CONVERTED | 3m42s
+2026-03-21 04:18:25   [GIT] Committed
+2026-03-21 04:18:25   ── [70/291] 248m elapsed | ~13h0m left | conv=66 kill=4 fail=0
+2026-03-21 04:18:27 [71/291] parabolic_sar_momentum_v1 — starting
+2026-03-21 04:19:27   [HEARTBEAT] parabolic_sar_momentum_v1 — claude running
+2026-03-21 04:20:27   [HEARTBEAT] parabolic_sar_momentum_v1 — claude running
+2026-03-21 04:21:27   [HEARTBEAT] parabolic_sar_momentum_v1 — claude running
+2026-03-21 04:22:27   [HEARTBEAT] parabolic_sar_momentum_v1 — claude running
+2026-03-21 04:22:38   CONVERTED | 4m10s
+2026-03-21 04:22:38   ── [71/291] 252m elapsed | ~13h1m left | conv=67 kill=4 fail=0
+2026-03-21 04:22:40 [72/291] supertrend_momentum_v1 — starting
+2026-03-21 04:23:40   [HEARTBEAT] supertrend_momentum_v1 — claude running
+2026-03-21 04:24:40   [HEARTBEAT] supertrend_momentum_v1 — claude running
+2026-03-21 04:25:40   [HEARTBEAT] supertrend_momentum_v1 — claude running
+2026-03-21 04:26:40   [HEARTBEAT] supertrend_momentum_v1 — claude running
+2026-03-21 04:27:15   CONVERTED | 4m35s
+2026-03-21 04:27:15   ── [72/291] 256m elapsed | ~13h1m left | conv=68 kill=4 fail=0
+2026-03-21 04:27:17 [73/291] hull_ma_momentum_v1 — starting
+2026-03-21 04:28:17   [HEARTBEAT] hull_ma_momentum_v1 — claude running
+2026-03-21 04:29:17   [HEARTBEAT] hull_ma_momentum_v1 — claude running
+2026-03-21 04:30:17   [HEARTBEAT] hull_ma_momentum_v1 — claude running
+2026-03-21 04:30:54   CONVERTED | 3m37s
+2026-03-21 04:30:54   ── [73/291] 260m elapsed | ~12h57m left | conv=69 kill=4 fail=0
+2026-03-21 04:30:56 [74/291] opening_range_breakout_v1 — starting
+2026-03-21 04:31:57   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 04:32:57   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 04:33:57   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 04:34:07   CONVERTED | 3m11s
+2026-03-21 04:34:07   ── [74/291] 263m elapsed | ~12h50m left | conv=70 kill=4 fail=0
+2026-03-21 04:34:09 [75/291] opening_range_breakout_30_v1 — starting
+2026-03-21 04:35:09   [HEARTBEAT] opening_range_breakout_30_v1 — claude running
+2026-03-21 04:36:09   [HEARTBEAT] opening_range_breakout_30_v1 — claude running
+2026-03-21 04:37:09   [HEARTBEAT] opening_range_breakout_30_v1 — claude running
+2026-03-21 04:37:14   CONVERTED | 3m5s
+2026-03-21 04:37:15   [GIT] Committed
+2026-03-21 04:37:15   ── [75/291] 266m elapsed | ~12h46m left | conv=71 kill=4 fail=0
+2026-03-21 04:37:17 [76/291] narrow_range_breakout_v1 — starting
+2026-03-21 04:38:17   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 04:39:17   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 04:40:17   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 04:40:41   CONVERTED | 3m24s
+2026-03-21 04:40:41   ── [76/291] 270m elapsed | ~12h43m left | conv=72 kill=4 fail=0
+2026-03-21 04:40:43 [77/291] volatility_contraction_breakout_v1 — starting
+2026-03-21 04:41:43   [HEARTBEAT] volatility_contraction_breakout_v1 — claude running
+2026-03-21 04:42:43   [HEARTBEAT] volatility_contraction_breakout_v1 — claude running
+2026-03-21 04:43:43   [HEARTBEAT] volatility_contraction_breakout_v1 — claude running
+2026-03-21 04:44:43   [HEARTBEAT] volatility_contraction_breakout_v1 — claude running
+2026-03-21 04:45:04   CONVERTED | 4m21s
+2026-03-21 04:45:04   ── [77/291] 274m elapsed | ~12h43m left | conv=73 kill=4 fail=0
+2026-03-21 04:45:06 [78/291] volume_breakout_v1 — starting
+2026-03-21 04:46:06   [HEARTBEAT] volume_breakout_v1 — claude running
+2026-03-21 04:47:06   [HEARTBEAT] volume_breakout_v1 — claude running
+2026-03-21 04:48:06   [HEARTBEAT] volume_breakout_v1 — claude running
+2026-03-21 04:48:42   CONVERTED | 3m36s
+2026-03-21 04:48:42   ── [78/291] 278m elapsed | ~12h39m left | conv=74 kill=4 fail=0
+2026-03-21 04:48:44 [79/291] range_expansion_breakout_v1 — starting
+2026-03-21 04:49:44   [HEARTBEAT] range_expansion_breakout_v1 — claude running
+2026-03-21 04:50:44   [HEARTBEAT] range_expansion_breakout_v1 — claude running
+2026-03-21 04:51:44   [HEARTBEAT] range_expansion_breakout_v1 — claude running
+2026-03-21 04:51:44   CONVERTED | 3m0s
+2026-03-21 04:51:44   ── [79/291] 281m elapsed | ~12h32m left | conv=75 kill=4 fail=0
+2026-03-21 04:51:46 [80/291] pullback_momentum_v1 — starting
+2026-03-21 04:52:47   [HEARTBEAT] pullback_momentum_v1 — claude running
+2026-03-21 04:53:47   [HEARTBEAT] pullback_momentum_v1 — claude running
+2026-03-21 04:54:36   CONVERTED | 2m50s
+2026-03-21 04:54:36   [GIT] Committed
+2026-03-21 04:54:36   ── [80/291] 284m elapsed | ~12h29m left | conv=76 kill=4 fail=0
+2026-03-21 04:54:38 [81/291] pivot_point_breakout_v1 — starting
+2026-03-21 04:55:38   [HEARTBEAT] pivot_point_breakout_v1 — claude running
+2026-03-21 04:56:38   [HEARTBEAT] pivot_point_breakout_v1 — claude running
+2026-03-21 04:57:35   CONVERTED | 2m57s
+2026-03-21 04:57:35   ── [81/291] 287m elapsed | ~12h22m left | conv=77 kill=4 fail=0
+2026-03-21 04:57:37 [82/291] previous_day_hl_breakout_v1 — starting
+2026-03-21 04:58:38   [HEARTBEAT] previous_day_hl_breakout_v1 — claude running
+2026-03-21 04:59:38   [HEARTBEAT] previous_day_hl_breakout_v1 — claude running
+2026-03-21 05:00:38   [HEARTBEAT] previous_day_hl_breakout_v1 — claude running
+2026-03-21 05:00:59   CONVERTED | 3m22s
+2026-03-21 05:00:59   ── [82/291] 290m elapsed | ~12h18m left | conv=78 kill=4 fail=0
+2026-03-21 05:01:01 [83/291] consolidation_breakout_v1 — starting
+2026-03-21 05:02:01   [HEARTBEAT] consolidation_breakout_v1 — claude running
+2026-03-21 05:03:01   [HEARTBEAT] consolidation_breakout_v1 — claude running
+2026-03-21 05:04:01   [HEARTBEAT] consolidation_breakout_v1 — claude running
+2026-03-21 05:04:52   CONVERTED | 3m51s
+2026-03-21 05:04:52   ── [83/291] 294m elapsed | ~12h14m left | conv=79 kill=4 fail=0
+2026-03-21 05:04:54 [84/291] vwap_breakout_v1 — starting
+2026-03-21 05:05:54   [HEARTBEAT] vwap_breakout_v1 — claude running
+2026-03-21 05:06:54   [HEARTBEAT] vwap_breakout_v1 — claude running
+2026-03-21 05:07:54   [HEARTBEAT] vwap_breakout_v1 — claude running
+2026-03-21 05:08:14   CONVERTED | 3m20s
+2026-03-21 05:08:14   ── [84/291] 297m elapsed | ~12h11m left | conv=80 kill=4 fail=0
+2026-03-21 05:08:16 [85/291] fibonacci_breakout_v1 — starting
+2026-03-21 05:09:16   [HEARTBEAT] fibonacci_breakout_v1 — claude running
+2026-03-21 05:10:16   [HEARTBEAT] fibonacci_breakout_v1 — claude running
+2026-03-21 05:11:16   [HEARTBEAT] fibonacci_breakout_v1 — claude running
+2026-03-21 05:11:49   CONVERTED | 3m33s
+2026-03-21 05:11:49   [GIT] Committed
+2026-03-21 05:11:49   ── [85/291] 301m elapsed | ~12h7m left | conv=81 kill=4 fail=0
+2026-03-21 05:11:51 [86/291] premarket_range_breakout_v1 — starting
+2026-03-21 05:12:51   [HEARTBEAT] premarket_range_breakout_v1 — claude running
+2026-03-21 05:12:57   KILLED | 1m6s
+2026-03-21 05:12:57   ── [86/291] 302m elapsed | ~12h0m left | conv=81 kill=5 fail=0
+2026-03-21 05:12:59 [87/291] index_correlated_breakout_v1 — starting
+2026-03-21 05:13:59   [HEARTBEAT] index_correlated_breakout_v1 — claude running
+2026-03-21 05:14:59   [HEARTBEAT] index_correlated_breakout_v1 — claude running
+2026-03-21 05:15:59   [HEARTBEAT] index_correlated_breakout_v1 — claude running
+2026-03-21 05:17:00   [HEARTBEAT] index_correlated_breakout_v1 — claude running
+2026-03-21 05:17:48   CONVERTED | 4m49s
+2026-03-21 05:17:48   ── [87/291] 307m elapsed | ~12h0m left | conv=82 kill=5 fail=0
+2026-03-21 05:17:50 [88/291] multi_timeframe_breakout_v1 — starting
+2026-03-21 05:18:51   [HEARTBEAT] multi_timeframe_breakout_v1 — claude running
+2026-03-21 05:19:51   [HEARTBEAT] multi_timeframe_breakout_v1 — claude running
+2026-03-21 05:20:27   CONVERTED | 2m37s
+2026-03-21 05:20:27   ── [88/291] 310m elapsed | ~11h53m left | conv=83 kill=5 fail=0
+2026-03-21 05:20:29 [89/291] atr_expansion_breakout_v1 — starting
+2026-03-21 05:21:29   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 05:22:29   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 05:23:29   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 05:24:29   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 05:24:43   CONVERTED | 4m14s
+2026-03-21 05:24:43   ── [89/291] 314m elapsed | ~11h50m left | conv=84 kill=5 fail=0
+2026-03-21 05:24:45 [90/291] support_resistance_reversal_v1 — starting
+2026-03-21 05:25:45   [HEARTBEAT] support_resistance_reversal_v1 — claude running
+2026-03-21 05:26:45   [HEARTBEAT] support_resistance_reversal_v1 — claude running
+2026-03-21 05:27:45   [HEARTBEAT] support_resistance_reversal_v1 — claude running
+2026-03-21 05:28:17   CONVERTED | 3m32s
+2026-03-21 05:28:18   [GIT] Committed
+2026-03-21 05:28:18   ── [90/291] 317m elapsed | ~11h46m left | conv=85 kill=5 fail=0
+2026-03-21 05:28:20 [91/291] index_arb_nifty_components_v1 — starting
+2026-03-21 05:29:08   KILLED | 0m48s
+2026-03-21 05:29:08   ── [91/291] 318m elapsed | ~11h40m left | conv=85 kill=6 fail=0
+2026-03-21 05:29:10 [92/291] etf_nav_arbitrage_v1 — starting
+2026-03-21 05:29:53   KILLED | 0m43s
+2026-03-21 05:29:53   ── [92/291] 319m elapsed | ~11h29m left | conv=85 kill=7 fail=0
+2026-03-21 05:29:55 [93/291] beta_neutral_stat_arb_v1 — starting
+2026-03-21 05:30:35   KILLED | 0m40s
+2026-03-21 05:30:35   ── [93/291] 320m elapsed | ~11h19m left | conv=85 kill=8 fail=0
+2026-03-21 05:30:37 [94/291] correlation_breakdown_arb_v1 — starting
+2026-03-21 05:31:25   KILLED | 0m48s
+2026-03-21 05:31:25   ── [94/291] 321m elapsed | ~11h9m left | conv=85 kill=9 fail=0
+2026-03-21 05:31:27 [95/291] cross_listed_arb_v1 — starting
+2026-03-21 05:32:02   KILLED | 0m35s
+2026-03-21 05:32:02   [GIT] Committed
+2026-03-21 05:32:02   ── [95/291] 321m elapsed | ~11h3m left | conv=85 kill=10 fail=0
+2026-03-21 05:32:04 [96/291] gap_fill_full_v1 — starting
+2026-03-21 05:33:04   [HEARTBEAT] gap_fill_full_v1 — claude running
+2026-03-21 05:34:04   [HEARTBEAT] gap_fill_full_v1 — claude running
+2026-03-21 05:35:04   [HEARTBEAT] gap_fill_full_v1 — claude running
+2026-03-21 05:35:49   CONVERTED | 3m45s
+2026-03-21 05:35:49   ── [96/291] 325m elapsed | ~10h59m left | conv=86 kill=10 fail=0
+2026-03-21 05:35:51 [97/291] vwap_mean_reversion_v1 — starting
+2026-03-21 05:36:51   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 05:37:51   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 05:38:51   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 05:39:44   CONVERTED | 3m53s
+2026-03-21 05:39:44   ── [97/291] 329m elapsed | ~10h56m left | conv=87 kill=10 fail=0
+2026-03-21 05:39:46 [98/291] vwap_mean_reversion_v1 — starting
+2026-03-21 05:40:46   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 05:41:46   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 05:42:46   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 05:43:16   CONVERTED | 3m30s
+2026-03-21 05:43:16   ── [98/291] 332m elapsed | ~10h52m left | conv=88 kill=10 fail=0
+2026-03-21 05:43:18 [99/291] gap_fill_partial_v1 — starting
+2026-03-21 05:44:18   [HEARTBEAT] gap_fill_partial_v1 — claude running
+2026-03-21 05:45:18   [HEARTBEAT] gap_fill_partial_v1 — claude running
+2026-03-21 05:46:18   [HEARTBEAT] gap_fill_partial_v1 — claude running
+2026-03-21 05:47:18   [HEARTBEAT] gap_fill_partial_v1 — claude running
+2026-03-21 05:48:18   [HEARTBEAT] gap_fill_partial_v1 — claude running
+2026-03-21 05:48:23   CONVERTED | 5m5s
+2026-03-21 05:48:23   ── [99/291] 338m elapsed | ~10h52m left | conv=89 kill=10 fail=0
+2026-03-21 05:48:25 [100/291] gap_fade_large_v1 — starting
+2026-03-21 05:49:25   [HEARTBEAT] gap_fade_large_v1 — claude running
+2026-03-21 05:50:25   [HEARTBEAT] gap_fade_large_v1 — claude running
+2026-03-21 05:51:25   [HEARTBEAT] gap_fade_large_v1 — claude running
+2026-03-21 05:51:42   CONVERTED | 3m17s
+2026-03-21 05:51:42   [GIT] Committed
+2026-03-21 05:51:42   ── [100/291] 341m elapsed | ~10h49m left | conv=90 kill=10 fail=0
+2026-03-21 05:51:44 [101/291] gap_continuation_v1 — starting
+2026-03-21 05:52:44   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 05:53:44   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 05:54:45   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 05:55:45   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 05:56:22   CONVERTED | 4m38s
+2026-03-21 05:56:22   ── [101/291] 345m elapsed | ~10h49m left | conv=91 kill=10 fail=0
+2026-03-21 05:56:24 [102/291] gap_reversal_volume_v1 — starting
+2026-03-21 05:57:24   [HEARTBEAT] gap_reversal_volume_v1 — claude running
+2026-03-21 05:58:24   [HEARTBEAT] gap_reversal_volume_v1 — claude running
+2026-03-21 05:59:24   [HEARTBEAT] gap_reversal_volume_v1 — claude running
+2026-03-21 06:00:24   [HEARTBEAT] gap_reversal_volume_v1 — claude running
+2026-03-21 06:01:24   [HEARTBEAT] gap_reversal_volume_v1 — claude running
+2026-03-21 06:01:46   CONVERTED | 5m22s
+2026-03-21 06:01:46   ── [102/291] 351m elapsed | ~10h48m left | conv=92 kill=10 fail=0
+2026-03-21 06:01:48 [103/291] gap_to_vwap_v1 — starting
+2026-03-21 06:02:48   [HEARTBEAT] gap_to_vwap_v1 — claude running
+2026-03-21 06:03:48   [HEARTBEAT] gap_to_vwap_v1 — claude running
+2026-03-21 06:04:48   [HEARTBEAT] gap_to_vwap_v1 — claude running
+2026-03-21 06:05:05   CONVERTED | 3m17s
+2026-03-21 06:05:05   ── [103/291] 354m elapsed | ~10h45m left | conv=93 kill=10 fail=0
+2026-03-21 06:05:07 [104/291] opening_drive_post_gap_v1 — starting
+2026-03-21 06:06:07   [HEARTBEAT] opening_drive_post_gap_v1 — claude running
+2026-03-21 06:07:07   [HEARTBEAT] opening_drive_post_gap_v1 — claude running
+2026-03-21 06:08:07   [HEARTBEAT] opening_drive_post_gap_v1 — claude running
+2026-03-21 06:09:07   [HEARTBEAT] opening_drive_post_gap_v1 — claude running
+2026-03-21 06:10:04   CONVERTED | 4m57s
+2026-03-21 06:10:04   ── [104/291] 359m elapsed | ~10h45m left | conv=94 kill=10 fail=0
+2026-03-21 06:10:07 [105/291] gap_exhaustion_v1 — starting
+2026-03-21 06:11:07   [HEARTBEAT] gap_exhaustion_v1 — claude running
+2026-03-21 06:12:07   [HEARTBEAT] gap_exhaustion_v1 — claude running
+2026-03-21 06:13:07   [HEARTBEAT] gap_exhaustion_v1 — claude running
+2026-03-21 06:14:06   CONVERTED | 3m59s
+2026-03-21 06:14:06   [GIT] Committed
+2026-03-21 06:14:06   ── [105/291] 363m elapsed | ~10h41m left | conv=95 kill=10 fail=0
+2026-03-21 06:14:08 [106/291] vix_regime_switch_v1 — starting
+2026-03-21 06:15:08   [HEARTBEAT] vix_regime_switch_v1 — claude running
+2026-03-21 06:16:08   [HEARTBEAT] vix_regime_switch_v1 — claude running
+2026-03-21 06:17:08   [HEARTBEAT] vix_regime_switch_v1 — claude running
+2026-03-21 06:17:42   CONVERTED | 3m34s
+2026-03-21 06:17:42   ── [106/291] 367m elapsed | ~10h38m left | conv=96 kill=10 fail=0
+2026-03-21 06:17:44 [107/291] bollinger_squeeze_reversion_v1 — starting
+2026-03-21 06:18:45   [HEARTBEAT] bollinger_squeeze_reversion_v1 — claude running
+2026-03-21 06:19:45   [HEARTBEAT] bollinger_squeeze_reversion_v1 — claude running
+2026-03-21 06:20:25   CONVERTED | 2m41s
+2026-03-21 06:20:25   ── [107/291] 370m elapsed | ~10h34m left | conv=97 kill=10 fail=0
+2026-03-21 06:20:27 [108/291] bollinger_squeeze_v1 — starting
+2026-03-21 06:21:27   [HEARTBEAT] bollinger_squeeze_v1 — claude running
+2026-03-21 06:22:27   [HEARTBEAT] bollinger_squeeze_v1 — claude running
+2026-03-21 06:23:27   [HEARTBEAT] bollinger_squeeze_v1 — claude running
+2026-03-21 06:24:27   [HEARTBEAT] bollinger_squeeze_v1 — claude running
+2026-03-21 06:25:27   [HEARTBEAT] bollinger_squeeze_v1 — claude running
+2026-03-21 06:26:10   CONVERTED | 5m43s
+2026-03-21 06:26:10   ── [108/291] 375m elapsed | ~10h34m left | conv=98 kill=10 fail=0
+2026-03-21 06:26:12 [109/291] atr_breakout_volatility_v1 — starting
+2026-03-21 06:27:12   [HEARTBEAT] atr_breakout_volatility_v1 — claude running
+2026-03-21 06:28:12   [HEARTBEAT] atr_breakout_volatility_v1 — claude running
+2026-03-21 06:29:12   [HEARTBEAT] atr_breakout_volatility_v1 — claude running
+2026-03-21 06:29:30   CONVERTED | 3m18s
+2026-03-21 06:29:30   ── [109/291] 379m elapsed | ~10h30m left | conv=99 kill=10 fail=0
+2026-03-21 06:29:32 [110/291] implied_vs_realized_vol_v1 — starting
+2026-03-21 06:30:32   [HEARTBEAT] implied_vs_realized_vol_v1 — claude running
+2026-03-21 06:31:32   [HEARTBEAT] implied_vs_realized_vol_v1 — claude running
+2026-03-21 06:32:32   [HEARTBEAT] implied_vs_realized_vol_v1 — claude running
+2026-03-21 06:32:50   CONVERTED | 3m18s
+2026-03-21 06:32:51   [GIT] Committed
+2026-03-21 06:32:51   ── [110/291] 382m elapsed | ~10h27m left | conv=100 kill=10 fail=0
+2026-03-21 06:32:53 [111/291] vol_clustering_v1 — starting
+2026-03-21 06:33:53   [HEARTBEAT] vol_clustering_v1 — claude running
+2026-03-21 06:34:53   [HEARTBEAT] vol_clustering_v1 — claude running
+2026-03-21 06:35:53   [HEARTBEAT] vol_clustering_v1 — claude running
+2026-03-21 06:36:35   CONVERTED | 3m42s
+2026-03-21 06:36:35   ── [111/291] 386m elapsed | ~10h24m left | conv=101 kill=10 fail=0
+2026-03-21 06:36:37 [112/291] vix_mean_reversion_v1 — starting
+2026-03-21 06:37:37   [HEARTBEAT] vix_mean_reversion_v1 — claude running
+2026-03-21 06:38:37   [HEARTBEAT] vix_mean_reversion_v1 — claude running
+2026-03-21 06:39:33   CONVERTED | 2m56s
+2026-03-21 06:39:33   ── [112/291] 389m elapsed | ~10h20m left | conv=102 kill=10 fail=0
+2026-03-21 06:39:35 [113/291] low_vol_momentum_v1 — starting
+2026-03-21 06:40:35   [HEARTBEAT] low_vol_momentum_v1 — claude running
+2026-03-21 06:41:35   [HEARTBEAT] low_vol_momentum_v1 — claude running
+2026-03-21 06:42:35   [HEARTBEAT] low_vol_momentum_v1 — claude running
+2026-03-21 06:43:12   CONVERTED | 3m37s
+2026-03-21 06:43:12   ── [113/291] 392m elapsed | ~10h17m left | conv=103 kill=10 fail=0
+2026-03-21 06:43:14 [114/291] vol_adjusted_reversion_v1 — starting
+2026-03-21 06:44:14   [HEARTBEAT] vol_adjusted_reversion_v1 — claude running
+2026-03-21 06:45:15   [HEARTBEAT] vol_adjusted_reversion_v1 — claude running
+2026-03-21 06:45:55   CONVERTED | 2m41s
+2026-03-21 06:45:55   ── [114/291] 395m elapsed | ~10h13m left | conv=104 kill=10 fail=0
+2026-03-21 06:45:57 [115/291] intraday_vol_pattern_v1 — starting
+2026-03-21 06:46:57   [HEARTBEAT] intraday_vol_pattern_v1 — claude running
+2026-03-21 06:47:57   [HEARTBEAT] intraday_vol_pattern_v1 — claude running
+2026-03-21 06:48:57   [HEARTBEAT] intraday_vol_pattern_v1 — claude running
+2026-03-21 06:49:01   CONVERTED | 3m4s
+2026-03-21 06:49:01   [GIT] Committed
+2026-03-21 06:49:01   ── [115/291] 398m elapsed | ~10h7m left | conv=105 kill=10 fail=0
+2026-03-21 06:49:03 [116/291] vol_breakout_squeeze_v1 — starting
+2026-03-21 06:50:03   [HEARTBEAT] vol_breakout_squeeze_v1 — claude running
+2026-03-21 06:51:03   [HEARTBEAT] vol_breakout_squeeze_v1 — claude running
+2026-03-21 06:52:03   [HEARTBEAT] vol_breakout_squeeze_v1 — claude running
+2026-03-21 06:52:41   CONVERTED | 3m38s
+2026-03-21 06:52:41   ── [116/291] 402m elapsed | ~10h6m left | conv=106 kill=10 fail=0
+2026-03-21 06:52:43 [117/291] straddle_proxy_v1 — starting
+2026-03-21 06:53:43   [HEARTBEAT] straddle_proxy_v1 — claude running
+2026-03-21 06:54:43   [HEARTBEAT] straddle_proxy_v1 — claude running
+2026-03-21 06:55:43   [HEARTBEAT] straddle_proxy_v1 — claude running
+2026-03-21 06:56:43   [HEARTBEAT] straddle_proxy_v1 — claude running
+2026-03-21 06:57:01   CONVERTED | 4m18s
+2026-03-21 06:57:01   ── [117/291] 406m elapsed | ~10h3m left | conv=107 kill=10 fail=0
+2026-03-21 06:57:03 [118/291] rsi_extreme_reversion_v1 — starting
+2026-03-21 06:58:03   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 06:59:03   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 07:00:03   [HEARTBEAT] rsi_extreme_reversion_v1 — claude running
+2026-03-21 07:00:53   CONVERTED | 3m50s
+2026-03-21 07:00:53   ── [118/291] 410m elapsed | ~9h59m left | conv=108 kill=10 fail=0
+2026-03-21 07:00:55 [119/291] vol_of_vol_signal_v1 — starting
+2026-03-21 07:01:55   [HEARTBEAT] vol_of_vol_signal_v1 — claude running
+2026-03-21 07:02:55   [HEARTBEAT] vol_of_vol_signal_v1 — claude running
+2026-03-21 07:03:55   [HEARTBEAT] vol_of_vol_signal_v1 — claude running
+2026-03-21 07:04:10   CONVERTED | 3m15s
+2026-03-21 07:04:10   ── [119/291] 413m elapsed | ~9h56m left | conv=109 kill=10 fail=0
+2026-03-21 07:04:12 [120/291] regime_detection_vol_v1 — starting
+2026-03-21 07:05:12   [HEARTBEAT] regime_detection_vol_v1 — claude running
+2026-03-21 07:06:12   [HEARTBEAT] regime_detection_vol_v1 — claude running
+2026-03-21 07:07:12   [HEARTBEAT] regime_detection_vol_v1 — claude running
+2026-03-21 07:07:31   CONVERTED | 3m19s
+2026-03-21 07:07:31   [GIT] Committed
+2026-03-21 07:07:31   ── [120/291] 417m elapsed | ~9h52m left | conv=110 kill=10 fail=0
+2026-03-21 07:07:33 [121/291] overnight_vol_carry_v1 — starting
+2026-03-21 07:08:33   [HEARTBEAT] overnight_vol_carry_v1 — claude running
+2026-03-21 07:09:33   [HEARTBEAT] overnight_vol_carry_v1 — claude running
+2026-03-21 07:10:33   [HEARTBEAT] overnight_vol_carry_v1 — claude running
+2026-03-21 07:10:51   CONVERTED | 3m18s
+2026-03-21 07:10:51   ── [121/291] 420m elapsed | ~9h49m left | conv=111 kill=10 fail=0
+2026-03-21 07:10:53 [122/291] vol_surface_signal_v1 — starting
+2026-03-21 07:11:54   [HEARTBEAT] vol_surface_signal_v1 — claude running
+2026-03-21 07:12:54   [HEARTBEAT] vol_surface_signal_v1 — claude running
+2026-03-21 07:13:54   [HEARTBEAT] vol_surface_signal_v1 — claude running
+2026-03-21 07:14:54   [HEARTBEAT] vol_surface_signal_v1 — claude running
+2026-03-21 07:15:54   [HEARTBEAT] vol_surface_signal_v1 — claude running
+2026-03-21 07:15:56   CONVERTED | 5m3s
+2026-03-21 07:15:56   ── [122/291] 425m elapsed | ~9h48m left | conv=112 kill=10 fail=0
+2026-03-21 07:15:58 [123/291] orb_5min_v1 — starting
+2026-03-21 07:16:58   [HEARTBEAT] orb_5min_v1 — claude running
+2026-03-21 07:17:58   [HEARTBEAT] orb_5min_v1 — claude running
+2026-03-21 07:18:58   [HEARTBEAT] orb_5min_v1 — claude running
+2026-03-21 07:19:50   CONVERTED | 3m52s
+2026-03-21 07:19:50   ── [123/291] 429m elapsed | ~9h45m left | conv=113 kill=10 fail=0
+2026-03-21 07:19:52 [124/291] orb_15min_filtered_v1 — starting
+2026-03-21 07:20:52   [HEARTBEAT] orb_15min_filtered_v1 — claude running
+2026-03-21 07:21:52   [HEARTBEAT] orb_15min_filtered_v1 — claude running
+2026-03-21 07:22:52   [HEARTBEAT] orb_15min_filtered_v1 — claude running
+2026-03-21 07:23:06   CONVERTED | 3m14s
+2026-03-21 07:23:06   ── [124/291] 432m elapsed | ~9h41m left | conv=114 kill=10 fail=0
+2026-03-21 07:23:08 [125/291] orb_30min_volume_v1 — starting
+2026-03-21 07:24:08   [HEARTBEAT] orb_30min_volume_v1 — claude running
+2026-03-21 07:25:08   [HEARTBEAT] orb_30min_volume_v1 — claude running
+2026-03-21 07:26:08   [HEARTBEAT] orb_30min_volume_v1 — claude running
+2026-03-21 07:26:54   CONVERTED | 3m46s
+2026-03-21 07:26:54   [GIT] Committed
+2026-03-21 07:26:54   ── [125/291] 436m elapsed | ~9h38m left | conv=115 kill=10 fail=0
+2026-03-21 07:26:56 [126/291] orb_narrow_range_v1 — starting
+2026-03-21 07:27:56   [HEARTBEAT] orb_narrow_range_v1 — claude running
+2026-03-21 07:28:56   [HEARTBEAT] orb_narrow_range_v1 — claude running
+2026-03-21 07:29:56   [HEARTBEAT] orb_narrow_range_v1 — claude running
+2026-03-21 07:30:56   [HEARTBEAT] orb_narrow_range_v1 — claude running
+2026-03-21 07:31:34   CONVERTED | 4m38s
+2026-03-21 07:31:34   ── [126/291] 441m elapsed | ~9h37m left | conv=116 kill=10 fail=0
+2026-03-21 07:31:36 [127/291] orb_wide_range_fade_v1 — starting
+2026-03-21 07:32:36   [HEARTBEAT] orb_wide_range_fade_v1 — claude running
+2026-03-21 07:33:36   [HEARTBEAT] orb_wide_range_fade_v1 — claude running
+2026-03-21 07:34:36   [HEARTBEAT] orb_wide_range_fade_v1 — claude running
+2026-03-21 07:34:43   CONVERTED | 3m7s
+2026-03-21 07:34:43   ── [127/291] 444m elapsed | ~9h31m left | conv=117 kill=10 fail=0
+2026-03-21 07:34:46 [128/291] orb_index_aligned_v1 — starting
+2026-03-21 07:35:46   [HEARTBEAT] orb_index_aligned_v1 — claude running
+2026-03-21 07:36:46   [HEARTBEAT] orb_index_aligned_v1 — claude running
+2026-03-21 07:37:46   [HEARTBEAT] orb_index_aligned_v1 — claude running
+2026-03-21 07:37:55   CONVERTED | 3m10s
+2026-03-21 07:37:55   ── [128/291] 447m elapsed | ~9h27m left | conv=118 kill=10 fail=0
+2026-03-21 07:37:57 [129/291] vwap_band_reversion_v1 — starting
+2026-03-21 07:38:57   [HEARTBEAT] vwap_band_reversion_v1 — claude running
+2026-03-21 07:39:57   [HEARTBEAT] vwap_band_reversion_v1 — claude running
+2026-03-21 07:40:36   CONVERTED | 2m39s
+2026-03-21 07:40:36   ── [129/291] 450m elapsed | ~9h24m left | conv=119 kill=10 fail=0
+2026-03-21 07:40:38 [130/291] orb_vwap_confirmation_v1 — starting
+2026-03-21 07:41:38   [HEARTBEAT] orb_vwap_confirmation_v1 — claude running
+2026-03-21 07:42:39   [HEARTBEAT] orb_vwap_confirmation_v1 — claude running
+2026-03-21 07:43:39   [HEARTBEAT] orb_vwap_confirmation_v1 — claude running
+2026-03-21 07:44:20   CONVERTED | 3m42s
+2026-03-21 07:44:21   [GIT] Committed
+2026-03-21 07:44:21   ── [130/291] 453m elapsed | ~9h20m left | conv=120 kill=10 fail=0
+2026-03-21 07:44:23 [131/291] orb_failure_trade_v1 — starting
+2026-03-21 07:45:23   [HEARTBEAT] orb_failure_trade_v1 — claude running
+2026-03-21 07:46:23   [HEARTBEAT] orb_failure_trade_v1 — claude running
+2026-03-21 07:47:23   [HEARTBEAT] orb_failure_trade_v1 — claude running
+2026-03-21 07:48:19   CONVERTED | 3m56s
+2026-03-21 07:48:19   ── [131/291] 457m elapsed | ~9h17m left | conv=121 kill=10 fail=0
+2026-03-21 07:48:21 [132/291] orb_gap_combo_v1 — starting
+2026-03-21 07:49:21   [HEARTBEAT] orb_gap_combo_v1 — claude running
+2026-03-21 07:50:21   [HEARTBEAT] orb_gap_combo_v1 — claude running
+2026-03-21 07:51:21   [HEARTBEAT] orb_gap_combo_v1 — claude running
+2026-03-21 07:52:21   [HEARTBEAT] orb_gap_combo_v1 — claude running
+2026-03-21 07:53:09   CONVERTED | 4m48s
+2026-03-21 07:53:09   ── [132/291] 462m elapsed | ~9h16m left | conv=122 kill=10 fail=0
+2026-03-21 07:53:11 [133/291] orb_atr_scaled_v1 — starting
+2026-03-21 07:54:11   [HEARTBEAT] orb_atr_scaled_v1 — claude running
+2026-03-21 07:55:11   [HEARTBEAT] orb_atr_scaled_v1 — claude running
+2026-03-21 07:56:11   [HEARTBEAT] orb_atr_scaled_v1 — claude running
+2026-03-21 07:57:11   [HEARTBEAT] orb_atr_scaled_v1 — claude running
+2026-03-21 07:58:11   [HEARTBEAT] orb_atr_scaled_v1 — claude running
+2026-03-21 07:58:59   CONVERTED | 5m48s
+2026-03-21 07:58:59   ── [133/291] 468m elapsed | ~9h15m left | conv=123 kill=10 fail=0
+2026-03-21 07:59:01 [134/291] orb_multi_stock_v1 — starting
+2026-03-21 07:59:34   KILLED | 0m33s
+2026-03-21 07:59:34   ── [134/291] 469m elapsed | ~9h9m left | conv=123 kill=11 fail=0
+2026-03-21 07:59:36 [135/291] orb_pullback_entry_v1 — starting
+2026-03-21 08:00:36   [HEARTBEAT] orb_pullback_entry_v1 — claude running
+2026-03-21 08:01:37   [HEARTBEAT] orb_pullback_entry_v1 — claude running
+2026-03-21 08:02:37   [HEARTBEAT] orb_pullback_entry_v1 — claude running
+2026-03-21 08:03:23   CONVERTED | 3m47s
+2026-03-21 08:03:23   [GIT] Committed
+2026-03-21 08:03:23   ── [135/291] 473m elapsed | ~9h6m left | conv=124 kill=11 fail=0
+2026-03-21 08:03:25 [136/291] orb_retest_v1 — starting
+2026-03-21 08:04:25   [HEARTBEAT] orb_retest_v1 — claude running
+2026-03-21 08:05:25   [HEARTBEAT] orb_retest_v1 — claude running
+2026-03-21 08:06:26   [HEARTBEAT] orb_retest_v1 — claude running
+2026-03-21 08:07:26   [HEARTBEAT] orb_retest_v1 — claude running
+2026-03-21 08:08:19   CONVERTED | 4m54s
+2026-03-21 08:08:19   ── [136/291] 477m elapsed | ~9h2m left | conv=125 kill=11 fail=0
+2026-03-21 08:08:21 [137/291] orb_closing_range_v1 — starting
+2026-03-21 08:09:21   [HEARTBEAT] orb_closing_range_v1 — claude running
+2026-03-21 08:10:21   [HEARTBEAT] orb_closing_range_v1 — claude running
+2026-03-21 08:11:21   [HEARTBEAT] orb_closing_range_v1 — claude running
+2026-03-21 08:12:21   [HEARTBEAT] orb_closing_range_v1 — claude running
+2026-03-21 08:12:42   CONVERTED | 4m21s
+2026-03-21 08:12:42   ── [137/291] 482m elapsed | ~9h1m left | conv=126 kill=11 fail=0
+2026-03-21 08:12:44 [138/291] bid_ask_imbalance_v1 — starting
+2026-03-21 08:13:44   [HEARTBEAT] bid_ask_imbalance_v1 — claude running
+2026-03-21 08:14:44   [HEARTBEAT] bid_ask_imbalance_v1 — claude running
+2026-03-21 08:15:19   CONVERTED | 2m35s
+2026-03-21 08:15:19   ── [138/291] 484m elapsed | ~8h55m left | conv=127 kill=11 fail=0
+2026-03-21 08:15:21 [139/291] ema_crossover_reversion_v1 — starting
+2026-03-21 08:16:21   [HEARTBEAT] ema_crossover_reversion_v1 — claude running
+2026-03-21 08:17:21   [HEARTBEAT] ema_crossover_reversion_v1 — claude running
+2026-03-21 08:18:22   [HEARTBEAT] ema_crossover_reversion_v1 — claude running
+2026-03-21 08:19:22   [HEARTBEAT] ema_crossover_reversion_v1 — claude running
+2026-03-21 08:19:37   CONVERTED | 4m16s
+2026-03-21 08:19:37   ── [139/291] 489m elapsed | ~8h54m left | conv=128 kill=11 fail=0
+2026-03-21 08:19:39 [140/291] trade_size_clustering_v1 — starting
+2026-03-21 08:20:28   KILLED | 0m49s
+2026-03-21 08:20:29   [GIT] Committed
+2026-03-21 08:20:29   ── [140/291] 490m elapsed | ~8h48m left | conv=128 kill=12 fail=0
+2026-03-21 08:20:31 [141/291] tick_direction_momentum_v1 — starting
+2026-03-21 08:21:31   [HEARTBEAT] tick_direction_momentum_v1 — claude running
+2026-03-21 08:22:31   [HEARTBEAT] tick_direction_momentum_v1 — claude running
+2026-03-21 08:23:31   [HEARTBEAT] tick_direction_momentum_v1 — claude running
+2026-03-21 08:23:35   CONVERTED | 3m4s
+2026-03-21 08:23:35   ── [141/291] 493m elapsed | ~8h42m left | conv=129 kill=12 fail=0
+2026-03-21 08:23:37 [142/291] volume_clock_signal_v1 — starting
+2026-03-21 08:24:37   [HEARTBEAT] volume_clock_signal_v1 — claude running
+2026-03-21 08:25:37   [HEARTBEAT] volume_clock_signal_v1 — claude running
+2026-03-21 08:26:37   [HEARTBEAT] volume_clock_signal_v1 — claude running
+2026-03-21 08:27:21   CONVERTED | 3m44s
+2026-03-21 08:27:21   ── [142/291] 496m elapsed | ~8h39m left | conv=130 kill=12 fail=0
+2026-03-21 08:27:23 [143/291] price_impact_reversion_v1 — starting
+2026-03-21 08:28:23   [HEARTBEAT] price_impact_reversion_v1 — claude running
+2026-03-21 08:29:23   [HEARTBEAT] price_impact_reversion_v1 — claude running
+2026-03-21 08:30:23   [HEARTBEAT] price_impact_reversion_v1 — claude running
+2026-03-21 08:30:25   CONVERTED | 3m2s
+2026-03-21 08:30:25   ── [143/291] 500m elapsed | ~8h35m left | conv=131 kill=12 fail=0
+2026-03-21 08:30:27 [144/291] order_flow_imbalance_v1 — starting
+2026-03-21 08:31:27   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 08:32:27   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 08:33:27   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 08:34:27   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 08:34:43   CONVERTED | 4m16s
+2026-03-21 08:34:43   ── [144/291] 504m elapsed | ~8h34m left | conv=132 kill=12 fail=0
+2026-03-21 08:34:45 [145/291] adverse_selection_filter_v1 — starting
+2026-03-21 08:35:45   [HEARTBEAT] adverse_selection_filter_v1 — claude running
+2026-03-21 08:36:45   [HEARTBEAT] adverse_selection_filter_v1 — claude running
+2026-03-21 08:37:45   [HEARTBEAT] adverse_selection_filter_v1 — claude running
+2026-03-21 08:37:45   CONVERTED | 3m0s
+2026-03-21 08:37:45   [GIT] Committed
+2026-03-21 08:37:45   ── [145/291] 507m elapsed | ~8h28m left | conv=133 kill=12 fail=0
+2026-03-21 08:37:47 [146/291] liquidity_provision_v1 — starting
+2026-03-21 08:38:47   [HEARTBEAT] liquidity_provision_v1 — claude running
+2026-03-21 08:39:47   [HEARTBEAT] liquidity_provision_v1 — claude running
+2026-03-21 08:40:47   [HEARTBEAT] liquidity_provision_v1 — claude running
+2026-03-21 08:41:12   CONVERTED | 3m25s
+2026-03-21 08:41:12   ── [146/291] 510m elapsed | ~8h25m left | conv=134 kill=12 fail=0
+2026-03-21 08:41:14 [147/291] trade_arrival_rate_v1 — starting
+2026-03-21 08:42:14   [HEARTBEAT] trade_arrival_rate_v1 — claude running
+2026-03-21 08:43:14   [HEARTBEAT] trade_arrival_rate_v1 — claude running
+2026-03-21 08:44:14   [HEARTBEAT] trade_arrival_rate_v1 — claude running
+2026-03-21 08:44:47   CONVERTED | 3m33s
+2026-03-21 08:44:47   ── [147/291] 514m elapsed | ~8h21m left | conv=135 kill=12 fail=0
+2026-03-21 08:44:49 [148/291] spread_dynamics_v1 — starting
+2026-03-21 08:45:49   [HEARTBEAT] spread_dynamics_v1 — claude running
+2026-03-21 08:46:50   [HEARTBEAT] spread_dynamics_v1 — claude running
+2026-03-21 08:47:50   [HEARTBEAT] spread_dynamics_v1 — claude running
+2026-03-21 08:48:50   [HEARTBEAT] spread_dynamics_v1 — claude running
+2026-03-21 08:49:30   CONVERTED | 4m41s
+2026-03-21 08:49:30   ── [148/291] 519m elapsed | ~8h20m left | conv=136 kill=12 fail=0
+2026-03-21 08:49:32 [149/291] overnight_gap_reversion_v1 — starting
+2026-03-21 08:50:33   [HEARTBEAT] overnight_gap_reversion_v1 — claude running
+2026-03-21 08:51:33   [HEARTBEAT] overnight_gap_reversion_v1 — claude running
+2026-03-21 08:52:33   [HEARTBEAT] overnight_gap_reversion_v1 — claude running
+2026-03-21 08:53:05   CONVERTED | 3m33s
+2026-03-21 08:53:05   ── [149/291] 522m elapsed | ~8h17m left | conv=137 kill=12 fail=0
+2026-03-21 08:53:07 [150/291] nifty_banknifty_spread_v1 — starting
+2026-03-21 08:54:07   [HEARTBEAT] nifty_banknifty_spread_v1 — claude running
+2026-03-21 08:54:36   KILLED | 1m28s
+2026-03-21 08:54:36   [GIT] Committed
+2026-03-21 08:54:36   ── [150/291] 524m elapsed | ~8h11m left | conv=137 kill=13 fail=0
+2026-03-21 08:54:38 [151/291] intraday_rsi_divergence_v1 — starting
+2026-03-21 08:55:38   [HEARTBEAT] intraday_rsi_divergence_v1 — claude running
+2026-03-21 08:56:38   [HEARTBEAT] intraday_rsi_divergence_v1 — claude running
+2026-03-21 08:57:16   CONVERTED | 2m38s
+2026-03-21 08:57:16   ── [151/291] 526m elapsed | ~8h7m left | conv=138 kill=13 fail=0
+2026-03-21 08:57:18 [152/291] rbi_policy_reaction_v1 — starting
+2026-03-21 08:58:18   [HEARTBEAT] rbi_policy_reaction_v1 — claude running
+2026-03-21 08:58:23   KILLED | 1m5s
+2026-03-21 08:58:23   ── [152/291] 528m elapsed | ~8h1m left | conv=138 kill=14 fail=0
+2026-03-21 08:58:25 [153/291] expiry_day_pattern_v1 — starting
+2026-03-21 08:59:25   [HEARTBEAT] expiry_day_pattern_v1 — claude running
+2026-03-21 09:00:25   [HEARTBEAT] expiry_day_pattern_v1 — claude running
+2026-03-21 09:01:25   [HEARTBEAT] expiry_day_pattern_v1 — claude running
+2026-03-21 09:02:06   CONVERTED | 3m41s
+2026-03-21 09:02:06   ── [153/291] 531m elapsed | ~7h58m left | conv=139 kill=14 fail=0
+2026-03-21 09:02:08 [154/291] global_cue_reaction_v1 — starting
+2026-03-21 09:02:54   KILLED | 0m46s
+2026-03-21 09:02:54   ── [154/291] 532m elapsed | ~7h52m left | conv=139 kill=15 fail=0
+2026-03-21 09:02:56 [155/291] microstructure_volume_reversion_v1 — starting
+2026-03-21 09:03:56   [HEARTBEAT] microstructure_volume_reversion_v1 — claude running
+2026-03-21 09:04:56   [HEARTBEAT] microstructure_volume_reversion_v1 — claude running
+2026-03-21 09:05:56   CONVERTED | 3m0s
+2026-03-21 09:05:56   [GIT] Committed
+2026-03-21 09:05:56   ── [155/291] 535m elapsed | ~7h49m left | conv=140 kill=15 fail=0
+2026-03-21 09:05:58 [156/291] harmonic_pattern_v1 — starting
+2026-03-21 09:06:58   [HEARTBEAT] harmonic_pattern_v1 — claude running
+2026-03-21 09:07:58   [HEARTBEAT] harmonic_pattern_v1 — claude running
+2026-03-21 09:08:58   [HEARTBEAT] harmonic_pattern_v1 — claude running
+2026-03-21 09:09:58   [HEARTBEAT] harmonic_pattern_v1 — claude running
+2026-03-21 09:10:58   [HEARTBEAT] harmonic_pattern_v1 — claude running
+2026-03-21 09:11:57   CONVERTED | 5m59s
+2026-03-21 09:11:57   ── [156/291] 541m elapsed | ~7h48m left | conv=141 kill=15 fail=0
+2026-03-21 09:11:59 [157/291] opening_range_breakout_v1 — starting
+2026-03-21 09:12:59   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 09:13:59   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 09:14:59   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 09:15:25   CONVERTED | 3m26s
+2026-03-21 09:15:25   ── [157/291] 545m elapsed | ~7h44m left | conv=142 kill=15 fail=0
+2026-03-21 09:15:27 [158/291] elliott_impulse_v1 — starting
+2026-03-21 09:16:27   [HEARTBEAT] elliott_impulse_v1 — claude running
+2026-03-21 09:17:27   [HEARTBEAT] elliott_impulse_v1 — claude running
+2026-03-21 09:18:27   [HEARTBEAT] elliott_impulse_v1 — claude running
+2026-03-21 09:19:20   CONVERTED | 3m53s
+2026-03-21 09:19:20   ── [158/291] 548m elapsed | ~7h41m left | conv=143 kill=15 fail=0
+2026-03-21 09:19:22 [159/291] market_profile_poc_v1 — starting
+2026-03-21 09:20:22   [HEARTBEAT] market_profile_poc_v1 — claude running
+2026-03-21 09:21:22   [HEARTBEAT] market_profile_poc_v1 — claude running
+2026-03-21 09:22:22   [HEARTBEAT] market_profile_poc_v1 — claude running
+2026-03-21 09:23:22   [HEARTBEAT] market_profile_poc_v1 — claude running
+2026-03-21 09:24:22   [HEARTBEAT] market_profile_poc_v1 — claude running
+2026-03-21 09:24:42   CONVERTED | 5m20s
+2026-03-21 09:24:42   ── [159/291] 554m elapsed | ~7h39m left | conv=144 kill=15 fail=0
+2026-03-21 09:24:44 [160/291] order_block_entry_v1 — starting
+2026-03-21 09:25:45   [HEARTBEAT] order_block_entry_v1 — claude running
+2026-03-21 09:26:45   [HEARTBEAT] order_block_entry_v1 — claude running
+2026-03-21 09:27:45   [HEARTBEAT] order_block_entry_v1 — claude running
+2026-03-21 09:28:45   [HEARTBEAT] order_block_entry_v1 — claude running
+2026-03-21 09:29:45   [HEARTBEAT] order_block_entry_v1 — claude running
+2026-03-21 09:30:37   CONVERTED | 5m53s
+2026-03-21 09:30:37   [GIT] Committed
+2026-03-21 09:30:37   ── [160/291] 560m elapsed | ~7h38m left | conv=145 kill=15 fail=0
+2026-03-21 09:30:39 [161/291] ichimoku_cloud_v1 — starting
+2026-03-21 09:31:39   [HEARTBEAT] ichimoku_cloud_v1 — claude running
+2026-03-21 09:32:39   [HEARTBEAT] ichimoku_cloud_v1 — claude running
+2026-03-21 09:33:39   [HEARTBEAT] ichimoku_cloud_v1 — claude running
+2026-03-21 09:34:07   CONVERTED | 3m28s
+2026-03-21 09:34:07   ── [161/291] 563m elapsed | ~7h35m left | conv=146 kill=15 fail=0
+2026-03-21 09:34:09 [162/291] fractal_breakout_v1 — starting
+2026-03-21 09:35:09   [HEARTBEAT] fractal_breakout_v1 — claude running
+2026-03-21 09:36:09   [HEARTBEAT] fractal_breakout_v1 — claude running
+2026-03-21 09:37:10   [HEARTBEAT] fractal_breakout_v1 — claude running
+2026-03-21 09:38:10   [HEARTBEAT] fractal_breakout_v1 — claude running
+2026-03-21 09:39:10   [HEARTBEAT] fractal_breakout_v1 — claude running
+2026-03-21 09:40:04   CONVERTED | 5m55s
+2026-03-21 09:40:04   ── [162/291] 569m elapsed | ~7h31m left | conv=147 kill=15 fail=0
+2026-03-21 09:40:06 [163/291] demark_sequential_v1 — starting
+2026-03-21 09:41:06   [HEARTBEAT] demark_sequential_v1 — claude running
+2026-03-21 09:42:07   [HEARTBEAT] demark_sequential_v1 — claude running
+2026-03-21 09:43:07   [HEARTBEAT] demark_sequential_v1 — claude running
+2026-03-21 09:44:07   [HEARTBEAT] demark_sequential_v1 — claude running
+2026-03-21 09:44:38   CONVERTED | 4m32s
+2026-03-21 09:44:38   ── [163/291] 574m elapsed | ~7h30m left | conv=148 kill=15 fail=0
+2026-03-21 09:44:40 [164/291] pivot_camarilla_v1 — starting
+2026-03-21 09:45:40   [HEARTBEAT] pivot_camarilla_v1 — claude running
+2026-03-21 09:46:40   [HEARTBEAT] pivot_camarilla_v1 — claude running
+2026-03-21 09:47:40   [HEARTBEAT] pivot_camarilla_v1 — claude running
+2026-03-21 09:47:43   CONVERTED | 3m3s
+2026-03-21 09:47:43   ── [164/291] 577m elapsed | ~7h26m left | conv=149 kill=15 fail=0
+2026-03-21 09:47:45 [165/291] heikin_ashi_trend_v1 — starting
+2026-03-21 09:48:45   [HEARTBEAT] heikin_ashi_trend_v1 — claude running
+2026-03-21 09:49:45   [HEARTBEAT] heikin_ashi_trend_v1 — claude running
+2026-03-21 09:50:45   [HEARTBEAT] heikin_ashi_trend_v1 — claude running
+2026-03-21 09:51:45   [HEARTBEAT] heikin_ashi_trend_v1 — claude running
+2026-03-21 09:52:04   CONVERTED | 4m19s
+2026-03-21 09:52:05   [GIT] Committed
+2026-03-21 09:52:05   ── [165/291] 581m elapsed | ~7h23m left | conv=150 kill=15 fail=0
+2026-03-21 09:52:07 [166/291] elder_impulse_v1 — starting
+2026-03-21 09:53:07   [HEARTBEAT] elder_impulse_v1 — claude running
+2026-03-21 09:54:07   [HEARTBEAT] elder_impulse_v1 — claude running
+2026-03-21 09:55:07   [HEARTBEAT] elder_impulse_v1 — claude running
+2026-03-21 09:55:19   CONVERTED | 3m12s
+2026-03-21 09:55:19   ── [166/291] 584m elapsed | ~7h19m left | conv=151 kill=15 fail=0
+2026-03-21 09:55:21 [167/291] vwap_rsi_volume_hybrid_v1 — starting
+2026-03-21 09:56:21   [HEARTBEAT] vwap_rsi_volume_hybrid_v1 — claude running
+2026-03-21 09:57:21   [HEARTBEAT] vwap_rsi_volume_hybrid_v1 — claude running
+2026-03-21 09:58:21   [HEARTBEAT] vwap_rsi_volume_hybrid_v1 — claude running
+2026-03-21 09:58:34   CONVERTED | 3m13s
+2026-03-21 09:58:34   ── [167/291] 588m elapsed | ~7h16m left | conv=152 kill=15 fail=0
+2026-03-21 09:58:36 [168/291] momentum_ignition_v1 — starting
+2026-03-21 09:59:36   [HEARTBEAT] momentum_ignition_v1 — claude running
+2026-03-21 10:00:36   [HEARTBEAT] momentum_ignition_v1 — claude running
+2026-03-21 10:01:36   [HEARTBEAT] momentum_ignition_v1 — claude running
+2026-03-21 10:02:36   [HEARTBEAT] momentum_ignition_v1 — claude running
+2026-03-21 10:02:51   CONVERTED | 4m15s
+2026-03-21 10:02:51   ── [168/291] 592m elapsed | ~7h12m left | conv=153 kill=15 fail=0
+2026-03-21 10:02:53 [169/291] momentum_reversion_switch_v1 — starting
+2026-03-21 10:03:53   [HEARTBEAT] momentum_reversion_switch_v1 — claude running
+2026-03-21 10:04:54   [HEARTBEAT] momentum_reversion_switch_v1 — claude running
+2026-03-21 10:05:54   [HEARTBEAT] momentum_reversion_switch_v1 — claude running
+2026-03-21 10:06:47   CONVERTED | 3m54s
+2026-03-21 10:06:47   ── [169/291] 596m elapsed | ~7h9m left | conv=154 kill=15 fail=0
+2026-03-21 10:06:49 [170/291] trend_counter_trend_v1 — starting
+2026-03-21 10:07:49   [HEARTBEAT] trend_counter_trend_v1 — claude running
+2026-03-21 10:08:49   [HEARTBEAT] trend_counter_trend_v1 — claude running
+2026-03-21 10:09:49   [HEARTBEAT] trend_counter_trend_v1 — claude running
+2026-03-21 10:10:49   [HEARTBEAT] trend_counter_trend_v1 — claude running
+2026-03-21 10:11:32   CONVERTED | 4m43s
+2026-03-21 10:11:32   [GIT] Committed
+2026-03-21 10:11:32   ── [170/291] 601m elapsed | ~7h7m left | conv=155 kill=15 fail=0
+2026-03-21 10:11:34 [171/291] multi_indicator_consensus_v1 — starting
+2026-03-21 10:12:35   [HEARTBEAT] multi_indicator_consensus_v1 — claude running
+2026-03-21 10:13:35   [HEARTBEAT] multi_indicator_consensus_v1 — claude running
+2026-03-21 10:14:35   [HEARTBEAT] multi_indicator_consensus_v1 — claude running
+2026-03-21 10:15:35   [HEARTBEAT] multi_indicator_consensus_v1 — claude running
+2026-03-21 10:16:23   CONVERTED | 4m49s
+2026-03-21 10:16:23   ── [171/291] 606m elapsed | ~7h4m left | conv=156 kill=15 fail=0
+2026-03-21 10:16:25 [172/291] factor_momentum_v1 — starting
+2026-03-21 10:17:01   KILLED | 0m36s
+2026-03-21 10:17:01   ── [172/291] 606m elapsed | ~6h58m left | conv=156 kill=16 fail=0
+2026-03-21 10:17:03 [173/291] quality_momentum_v1 — starting
+2026-03-21 10:18:03   [HEARTBEAT] quality_momentum_v1 — claude running
+2026-03-21 10:19:03   [HEARTBEAT] quality_momentum_v1 — claude running
+2026-03-21 10:20:03   [HEARTBEAT] quality_momentum_v1 — claude running
+2026-03-21 10:20:23   CONVERTED | 3m20s
+2026-03-21 10:20:23   ── [173/291] 610m elapsed | ~6h54m left | conv=157 kill=16 fail=0
+2026-03-21 10:20:25 [174/291] smart_beta_intraday_v1 — starting
+2026-03-21 10:21:25   [HEARTBEAT] smart_beta_intraday_v1 — claude running
+2026-03-21 10:22:25   [HEARTBEAT] smart_beta_intraday_v1 — claude running
+2026-03-21 10:23:25   [HEARTBEAT] smart_beta_intraday_v1 — claude running
+2026-03-21 10:23:27   CONVERTED | 3m1s
+2026-03-21 10:23:27   ── [174/291] 613m elapsed | ~6h51m left | conv=158 kill=16 fail=0
+2026-03-21 10:23:29 [175/291] mean_variance_optimal_v1 — starting
+2026-03-21 10:24:29   [HEARTBEAT] mean_variance_optimal_v1 — claude running
+2026-03-21 10:25:29   [HEARTBEAT] mean_variance_optimal_v1 — claude running
+2026-03-21 10:26:03   CONVERTED | 2m34s
+2026-03-21 10:26:03   [GIT] Committed
+2026-03-21 10:26:03   ── [175/291] 615m elapsed | ~6h47m left | conv=159 kill=16 fail=0
+2026-03-21 10:26:05 [176/291] ensemble_signal_v1 — starting
+2026-03-21 10:27:05   [HEARTBEAT] ensemble_signal_v1 — claude running
+2026-03-21 10:28:05   [HEARTBEAT] ensemble_signal_v1 — claude running
+2026-03-21 10:29:05   [HEARTBEAT] ensemble_signal_v1 — claude running
+2026-03-21 10:30:05   [HEARTBEAT] ensemble_signal_v1 — claude running
+2026-03-21 10:30:12   CONVERTED | 4m7s
+2026-03-21 10:30:12   ── [176/291] 619m elapsed | ~6h44m left | conv=160 kill=16 fail=0
+2026-03-21 10:30:14 [177/291] bayesian_update_v1 — starting
+2026-03-21 10:31:14   [HEARTBEAT] bayesian_update_v1 — claude running
+2026-03-21 10:32:14   [HEARTBEAT] bayesian_update_v1 — claude running
+2026-03-21 10:33:15   [HEARTBEAT] bayesian_update_v1 — claude running
+2026-03-21 10:33:47   CONVERTED | 3m33s
+2026-03-21 10:33:47   ── [177/291] 623m elapsed | ~6h40m left | conv=161 kill=16 fail=0
+2026-03-21 10:33:49 [178/291] opening_range_breakout_v1 — starting
+2026-03-21 10:34:49   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 10:35:50   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 10:36:50   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 10:37:50   [HEARTBEAT] opening_range_breakout_v1 — claude running
+2026-03-21 10:38:34   CONVERTED | 4m45s
+2026-03-21 10:38:34   ── [178/291] 628m elapsed | ~6h37m left | conv=162 kill=16 fail=0
+2026-03-21 10:38:36 [179/291] intraday_trend_following_v1 — starting
+2026-03-21 10:39:36   [HEARTBEAT] intraday_trend_following_v1 — claude running
+2026-03-21 10:40:36   [HEARTBEAT] intraday_trend_following_v1 — claude running
+2026-03-21 10:41:36   [HEARTBEAT] intraday_trend_following_v1 — claude running
+2026-03-21 10:42:04   CONVERTED | 3m28s
+2026-03-21 10:42:04   ── [179/291] 631m elapsed | ~6h33m left | conv=163 kill=16 fail=0
+2026-03-21 10:42:06 [180/291] adaptive_threshold_v1 — starting
+2026-03-21 10:43:06   [HEARTBEAT] adaptive_threshold_v1 — claude running
+2026-03-21 10:44:06   [HEARTBEAT] adaptive_threshold_v1 — claude running
+2026-03-21 10:45:01   CONVERTED | 2m55s
+2026-03-21 10:45:01   [GIT] Committed
+2026-03-21 10:45:01   ── [180/291] 634m elapsed | ~6h30m left | conv=164 kill=16 fail=0
+2026-03-21 10:45:03 [181/291] multi_asset_signal_v1 — starting
+2026-03-21 10:46:03   [HEARTBEAT] multi_asset_signal_v1 — claude running
+2026-03-21 10:47:03   [HEARTBEAT] multi_asset_signal_v1 — claude running
+2026-03-21 10:48:03   [HEARTBEAT] multi_asset_signal_v1 — claude running
+2026-03-21 10:48:18   CONVERTED | 3m15s
+2026-03-21 10:48:18   ── [181/291] 637m elapsed | ~6h26m left | conv=165 kill=16 fail=0
+2026-03-21 10:48:20 [182/291] composite_breadth_v1 — starting
+2026-03-21 10:48:59   KILLED | 0m39s
+2026-03-21 10:48:59   ── [182/291] 638m elapsed | ~6h21m left | conv=165 kill=17 fail=0
+2026-03-21 10:49:01 [183/291] weighted_indicator_v1 — starting
+2026-03-21 10:50:01   [HEARTBEAT] weighted_indicator_v1 — claude running
+2026-03-21 10:51:01   [HEARTBEAT] weighted_indicator_v1 — claude running
+2026-03-21 10:52:01   [HEARTBEAT] weighted_indicator_v1 — claude running
+2026-03-21 10:53:01   [HEARTBEAT] weighted_indicator_v1 — claude running
+2026-03-21 10:53:27   CONVERTED | 4m26s
+2026-03-21 10:53:27   ── [183/291] 643m elapsed | ~6h18m left | conv=166 kill=17 fail=0
+2026-03-21 10:53:29 [184/291] hmm_regime_v1 — starting
+2026-03-21 10:54:29   [HEARTBEAT] hmm_regime_v1 — claude running
+2026-03-21 10:55:29   [HEARTBEAT] hmm_regime_v1 — claude running
+2026-03-21 10:56:29   [HEARTBEAT] hmm_regime_v1 — claude running
+2026-03-21 10:56:40   CONVERTED | 3m11s
+2026-03-21 10:56:40   ── [184/291] 646m elapsed | ~6h14m left | conv=167 kill=17 fail=0
+2026-03-21 10:56:42 [185/291] vol_regime_adaptive_v1 — starting
+2026-03-21 10:57:42   [HEARTBEAT] vol_regime_adaptive_v1 — claude running
+2026-03-21 10:58:42   [HEARTBEAT] vol_regime_adaptive_v1 — claude running
+2026-03-21 10:59:42   [HEARTBEAT] vol_regime_adaptive_v1 — claude running
+2026-03-21 10:59:43   CONVERTED | 3m1s
+2026-03-21 10:59:44   [GIT] Committed
+2026-03-21 10:59:44   ── [185/291] 649m elapsed | ~6h11m left | conv=168 kill=17 fail=0
+2026-03-21 10:59:46 [186/291] trend_strength_adaptive_v1 — starting
+2026-03-21 11:00:46   [HEARTBEAT] trend_strength_adaptive_v1 — claude running
+2026-03-21 11:01:46   [HEARTBEAT] trend_strength_adaptive_v1 — claude running
+2026-03-21 11:02:46   [HEARTBEAT] trend_strength_adaptive_v1 — claude running
+2026-03-21 11:03:46   [HEARTBEAT] trend_strength_adaptive_v1 — claude running
+2026-03-21 11:04:09   CONVERTED | 4m23s
+2026-03-21 11:04:09   ── [186/291] 653m elapsed | ~6h7m left | conv=169 kill=17 fail=0
+2026-03-21 11:04:11 [187/291] market_state_classifier_v1 — starting
+2026-03-21 11:05:11   [HEARTBEAT] market_state_classifier_v1 — claude running
+2026-03-21 11:06:11   [HEARTBEAT] market_state_classifier_v1 — claude running
+2026-03-21 11:07:11   [HEARTBEAT] market_state_classifier_v1 — claude running
+2026-03-21 11:08:11   [HEARTBEAT] market_state_classifier_v1 — claude running
+2026-03-21 11:09:11   [HEARTBEAT] market_state_classifier_v1 — claude running
+2026-03-21 11:09:59   CONVERTED | 5m48s
+2026-03-21 11:09:59   ── [187/291] 659m elapsed | ~6h5m left | conv=170 kill=17 fail=0
+2026-03-21 11:10:01 [188/291] vix_bucket_strategy_v1 — starting
+2026-03-21 11:11:01   [HEARTBEAT] vix_bucket_strategy_v1 — claude running
+2026-03-21 11:12:01   [HEARTBEAT] vix_bucket_strategy_v1 — claude running
+2026-03-21 11:13:01   [HEARTBEAT] vix_bucket_strategy_v1 — claude running
+2026-03-21 11:14:01   [HEARTBEAT] vix_bucket_strategy_v1 — claude running
+2026-03-21 11:14:45   CONVERTED | 4m44s
+2026-03-21 11:14:45   ── [188/291] 664m elapsed | ~6h3m left | conv=171 kill=17 fail=0
+2026-03-21 11:14:47 [189/291] autocorrelation_regime_v1 — starting
+2026-03-21 11:15:47   [HEARTBEAT] autocorrelation_regime_v1 — claude running
+2026-03-21 11:16:47   [HEARTBEAT] autocorrelation_regime_v1 — claude running
+2026-03-21 11:17:47   [HEARTBEAT] autocorrelation_regime_v1 — claude running
+2026-03-21 11:17:49   CONVERTED | 3m2s
+2026-03-21 11:17:49   ── [189/291] 667m elapsed | ~5h58m left | conv=172 kill=17 fail=0
+2026-03-21 11:17:51 [190/291] hurst_exponent_v1 — starting
+2026-03-21 11:18:51   [HEARTBEAT] hurst_exponent_v1 — claude running
+2026-03-21 11:19:51   [HEARTBEAT] hurst_exponent_v1 — claude running
+2026-03-21 11:20:40   CONVERTED | 2m48s
+2026-03-21 11:20:40   [GIT] Committed
+2026-03-21 11:20:40   ── [190/291] 670m elapsed | ~5h55m left | conv=173 kill=17 fail=0
+2026-03-21 11:20:42 [191/291] fractal_dimension_v1 — starting
+2026-03-21 11:21:42   [HEARTBEAT] fractal_dimension_v1 — claude running
+2026-03-21 11:22:42   [HEARTBEAT] fractal_dimension_v1 — claude running
+2026-03-21 11:23:42   [HEARTBEAT] fractal_dimension_v1 — claude running
+2026-03-21 11:24:42   [HEARTBEAT] fractal_dimension_v1 — claude running
+2026-03-21 11:24:43   CONVERTED | 4m1s
+2026-03-21 11:24:43   ── [191/291] 674m elapsed | ~5h51m left | conv=174 kill=17 fail=0
+2026-03-21 11:24:45 [192/291] entropy_regime_v1 — starting
+2026-03-21 11:25:45   [HEARTBEAT] entropy_regime_v1 — claude running
+2026-03-21 11:26:45   [HEARTBEAT] entropy_regime_v1 — claude running
+2026-03-21 11:27:45   [HEARTBEAT] entropy_regime_v1 — claude running
+2026-03-21 11:28:45   [HEARTBEAT] entropy_regime_v1 — claude running
+2026-03-21 11:29:08   CONVERTED | 4m23s
+2026-03-21 11:29:08   ── [192/291] 678m elapsed | ~5h49m left | conv=175 kill=17 fail=0
+2026-03-21 11:29:10 [193/291] rolling_sharpe_adaptive_v1 — starting
+2026-03-21 11:30:10   [HEARTBEAT] rolling_sharpe_adaptive_v1 — claude running
+2026-03-21 11:31:10   [HEARTBEAT] rolling_sharpe_adaptive_v1 — claude running
+2026-03-21 11:32:10   [HEARTBEAT] rolling_sharpe_adaptive_v1 — claude running
+2026-03-21 11:32:30   CONVERTED | 3m20s
+2026-03-21 11:32:30   ── [193/291] 682m elapsed | ~5h46m left | conv=176 kill=17 fail=0
+2026-03-21 11:32:32 [194/291] drawdown_adaptive_v1 — starting
+2026-03-21 11:33:32   [HEARTBEAT] drawdown_adaptive_v1 — claude running
+2026-03-21 11:34:32   [HEARTBEAT] drawdown_adaptive_v1 — claude running
+2026-03-21 11:35:32   [HEARTBEAT] drawdown_adaptive_v1 — claude running
+2026-03-21 11:35:58   CONVERTED | 3m26s
+2026-03-21 11:35:58   ── [194/291] 685m elapsed | ~5h42m left | conv=177 kill=17 fail=0
+2026-03-21 11:36:00 [195/291] momentum_decay_adaptive_v1 — starting
+2026-03-21 11:37:00   [HEARTBEAT] momentum_decay_adaptive_v1 — claude running
+2026-03-21 11:38:00   [HEARTBEAT] momentum_decay_adaptive_v1 — claude running
+2026-03-21 11:38:36   CONVERTED | 2m36s
+2026-03-21 11:38:36   [GIT] Committed
+2026-03-21 11:38:36   ── [195/291] 688m elapsed | ~5h37m left | conv=178 kill=17 fail=0
+2026-03-21 11:38:38 [196/291] mean_reversion_speed_v1 — starting
+2026-03-21 11:39:38   [HEARTBEAT] mean_reversion_speed_v1 — claude running
+2026-03-21 11:40:38   [HEARTBEAT] mean_reversion_speed_v1 — claude running
+2026-03-21 11:41:38   [HEARTBEAT] mean_reversion_speed_v1 — claude running
+2026-03-21 11:42:38   [HEARTBEAT] mean_reversion_speed_v1 — claude running
+2026-03-21 11:42:46   CONVERTED | 4m8s
+2026-03-21 11:42:46   ── [196/291] 692m elapsed | ~5h34m left | conv=179 kill=17 fail=0
+2026-03-21 11:42:48 [197/291] dynamic_stop_regime_v1 — starting
+2026-03-21 11:43:48   [HEARTBEAT] dynamic_stop_regime_v1 — claude running
+2026-03-21 11:44:48   [HEARTBEAT] dynamic_stop_regime_v1 — claude running
+2026-03-21 11:45:48   [HEARTBEAT] dynamic_stop_regime_v1 — claude running
+2026-03-21 11:45:58   CONVERTED | 3m10s
+2026-03-21 11:45:58   ── [197/291] 695m elapsed | ~5h30m left | conv=180 kill=17 fail=0
+2026-03-21 11:46:00 [198/291] kalman_filter_trend_v1 — starting
+2026-03-21 11:47:00   [HEARTBEAT] kalman_filter_trend_v1 — claude running
+2026-03-21 11:48:00   [HEARTBEAT] kalman_filter_trend_v1 — claude running
+2026-03-21 11:49:00   [HEARTBEAT] kalman_filter_trend_v1 — claude running
+2026-03-21 11:50:00   [HEARTBEAT] kalman_filter_trend_v1 — claude running
+2026-03-21 11:51:00   [HEARTBEAT] kalman_filter_trend_v1 — claude running
+2026-03-21 11:51:34   CONVERTED | 5m34s
+2026-03-21 11:51:34   ── [198/291] 701m elapsed | ~5h28m left | conv=181 kill=17 fail=0
+2026-03-21 11:51:36 [199/291] previous_day_high_low_breakout_v1 — starting
+2026-03-21 11:52:36   [HEARTBEAT] previous_day_high_low_breakout_v1 — claude running
+2026-03-21 11:53:36   [HEARTBEAT] previous_day_high_low_breakout_v1 — claude running
+2026-03-21 11:54:36   [HEARTBEAT] previous_day_high_low_breakout_v1 — claude running
+2026-03-21 11:55:17   CONVERTED | 3m41s
+2026-03-21 11:55:17   ── [199/291] 704m elapsed | ~5h25m left | conv=182 kill=17 fail=0
+2026-03-21 11:55:19 [200/291] wavelet_decomposition_v1 — starting
+2026-03-21 11:56:19   [HEARTBEAT] wavelet_decomposition_v1 — claude running
+2026-03-21 11:57:19   [HEARTBEAT] wavelet_decomposition_v1 — claude running
+2026-03-21 11:58:19   [HEARTBEAT] wavelet_decomposition_v1 — claude running
+2026-03-21 11:59:11   CONVERTED | 3m52s
+2026-03-21 11:59:11   [GIT] Committed
+2026-03-21 11:59:11   ── [200/291] 708m elapsed | ~5h21m left | conv=183 kill=17 fail=0
+2026-03-21 11:59:13 [201/291] spectral_analysis_v1 — starting
+2026-03-21 12:00:13   [HEARTBEAT] spectral_analysis_v1 — claude running
+2026-03-21 12:01:14   [HEARTBEAT] spectral_analysis_v1 — claude running
+2026-03-21 12:02:14   [HEARTBEAT] spectral_analysis_v1 — claude running
+2026-03-21 12:03:14   [HEARTBEAT] spectral_analysis_v1 — claude running
+2026-03-21 12:03:39   CONVERTED | 4m26s
+2026-03-21 12:03:39   ── [201/291] 713m elapsed | ~5h18m left | conv=184 kill=17 fail=0
+2026-03-21 12:03:41 [202/291] cointegration_residual_v1 — starting
+2026-03-21 12:04:28   KILLED | 0m47s
+2026-03-21 12:04:28   ── [202/291] 714m elapsed | ~5h14m left | conv=184 kill=18 fail=0
+2026-03-21 12:04:30 [203/291] granger_causality_v1 — starting
+2026-03-21 12:05:28   KILLED | 0m58s
+2026-03-21 12:05:28   ── [203/291] 715m elapsed | ~5h9m left | conv=184 kill=19 fail=0
+2026-03-21 12:05:30 [204/291] information_ratio_v1 — starting
+2026-03-21 12:06:14   KILLED | 0m44s
+2026-03-21 12:06:14   ── [204/291] 715m elapsed | ~5h4m left | conv=184 kill=20 fail=0
+2026-03-21 12:06:16 [205/291] maximum_entropy_v1 — starting
+2026-03-21 12:07:16   [HEARTBEAT] maximum_entropy_v1 — claude running
+2026-03-21 12:08:16   [HEARTBEAT] maximum_entropy_v1 — claude running
+2026-03-21 12:09:16   [HEARTBEAT] maximum_entropy_v1 — claude running
+2026-03-21 12:09:19   CONVERTED | 3m3s
+2026-03-21 12:09:20   [GIT] Committed
+2026-03-21 12:09:20   ── [205/291] 718m elapsed | ~5h1m left | conv=185 kill=20 fail=0
+2026-03-21 12:09:22 [206/291] robust_regression_v1 — starting
+2026-03-21 12:10:22   [HEARTBEAT] robust_regression_v1 — claude running
+2026-03-21 12:11:22   [HEARTBEAT] robust_regression_v1 — claude running
+2026-03-21 12:12:22   [HEARTBEAT] robust_regression_v1 — claude running
+2026-03-21 12:13:22   [HEARTBEAT] robust_regression_v1 — claude running
+2026-03-21 12:13:40   CONVERTED | 4m18s
+2026-03-21 12:13:40   ── [206/291] 723m elapsed | ~4h57m left | conv=186 kill=20 fail=0
+2026-03-21 12:13:42 [207/291] quantile_regression_v1 — starting
+2026-03-21 12:14:42   [HEARTBEAT] quantile_regression_v1 — claude running
+2026-03-21 12:15:42   [HEARTBEAT] quantile_regression_v1 — claude running
+2026-03-21 12:16:42   [HEARTBEAT] quantile_regression_v1 — claude running
+2026-03-21 12:16:45   CONVERTED | 3m3s
+2026-03-21 12:16:45   ── [207/291] 726m elapsed | ~4h54m left | conv=187 kill=20 fail=0
+2026-03-21 12:16:47 [208/291] first_pullback_after_trend_v1 — starting
+2026-03-21 12:17:47   [HEARTBEAT] first_pullback_after_trend_v1 — claude running
+2026-03-21 12:18:47   [HEARTBEAT] first_pullback_after_trend_v1 — claude running
+2026-03-21 12:19:47   [HEARTBEAT] first_pullback_after_trend_v1 — claude running
+2026-03-21 12:20:37   CONVERTED | 3m50s
+2026-03-21 12:20:37   ── [208/291] 730m elapsed | ~4h50m left | conv=188 kill=20 fail=0
+2026-03-21 12:20:39 [209/291] changepoint_detection_v1 — starting
+2026-03-21 12:21:39   [HEARTBEAT] changepoint_detection_v1 — claude running
+2026-03-21 12:22:39   [HEARTBEAT] changepoint_detection_v1 — claude running
+2026-03-21 12:23:05   CONVERTED | 2m26s
+2026-03-21 12:23:05   ── [209/291] 732m elapsed | ~4h47m left | conv=189 kill=20 fail=0
+2026-03-21 12:23:07 [210/291] kernel_density_v1 — starting
+2026-03-21 12:24:07   [HEARTBEAT] kernel_density_v1 — claude running
+2026-03-21 12:25:07   [HEARTBEAT] kernel_density_v1 — claude running
+2026-03-21 12:26:08   [HEARTBEAT] kernel_density_v1 — claude running
+2026-03-21 12:27:08   [HEARTBEAT] kernel_density_v1 — claude running
+2026-03-21 12:27:48   CONVERTED | 4m41s
+2026-03-21 12:27:49   [GIT] Committed
+2026-03-21 12:27:49   ── [210/291] 737m elapsed | ~4h43m left | conv=190 kill=20 fail=0
+2026-03-21 12:27:51 [211/291] bootstrap_confidence_v1 — starting
+2026-03-21 12:28:51   [HEARTBEAT] bootstrap_confidence_v1 — claude running
+2026-03-21 12:29:51   [HEARTBEAT] bootstrap_confidence_v1 — claude running
+2026-03-21 12:30:51   [HEARTBEAT] bootstrap_confidence_v1 — claude running
+2026-03-21 12:31:11   CONVERTED | 3m20s
+2026-03-21 12:31:11   ── [211/291] 740m elapsed | ~4h40m left | conv=191 kill=20 fail=0
+2026-03-21 12:31:13 [212/291] lasso_feature_select_v1 — starting
+2026-03-21 12:32:13   [HEARTBEAT] lasso_feature_select_v1 — claude running
+2026-03-21 12:33:13   [HEARTBEAT] lasso_feature_select_v1 — claude running
+2026-03-21 12:34:13   [HEARTBEAT] lasso_feature_select_v1 — claude running
+2026-03-21 12:35:13   [HEARTBEAT] lasso_feature_select_v1 — claude running
+2026-03-21 12:36:13   [HEARTBEAT] lasso_feature_select_v1 — claude running
+2026-03-21 12:36:53   CONVERTED | 5m40s
+2026-03-21 12:36:53   ── [212/291] 746m elapsed | ~4h37m left | conv=192 kill=20 fail=0
+2026-03-21 12:36:55 [213/291] vwap_zscore_mean_reversion — starting
+2026-03-21 12:37:55   [HEARTBEAT] vwap_zscore_mean_reversion — claude running
+2026-03-21 12:38:55   [HEARTBEAT] vwap_zscore_mean_reversion — claude running
+2026-03-21 12:39:49   CONVERTED | 2m54s
+2026-03-21 12:39:49   ── [213/291] 749m elapsed | ~4h34m left | conv=193 kill=20 fail=0
+2026-03-21 12:39:51 [214/291] narrow_range_breakout_v1 — starting
+2026-03-21 12:40:51   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 12:41:51   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 12:42:51   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 12:43:51   [HEARTBEAT] narrow_range_breakout_v1 — claude running
+2026-03-21 12:44:34   CONVERTED | 4m43s
+2026-03-21 12:44:34   ── [214/291] 754m elapsed | ~4h30m left | conv=194 kill=20 fail=0
+2026-03-21 12:44:36 [215/291] opening_range_breakout_15 — starting
+2026-03-21 12:45:36   [HEARTBEAT] opening_range_breakout_15 — claude running
+2026-03-21 12:46:36   [HEARTBEAT] opening_range_breakout_15 — claude running
+2026-03-21 12:47:28   CONVERTED | 2m52s
+2026-03-21 12:47:28   [GIT] Committed
+2026-03-21 12:47:28   ── [215/291] 757m elapsed | ~4h27m left | conv=195 kill=20 fail=0
+2026-03-21 12:47:30 [216/291] momentum_exhaustion_vix_reversal — starting
+2026-03-21 12:48:30   [HEARTBEAT] momentum_exhaustion_vix_reversal — claude running
+2026-03-21 12:49:30   [HEARTBEAT] momentum_exhaustion_vix_reversal — claude running
+2026-03-21 12:50:30   [HEARTBEAT] momentum_exhaustion_vix_reversal — claude running
+2026-03-21 12:50:36   CONVERTED | 3m6s
+2026-03-21 12:50:36   ── [216/291] 760m elapsed | ~4h23m left | conv=196 kill=20 fail=0
+2026-03-21 12:50:38 [217/291] vwap_pinch_breakout — starting
+2026-03-21 12:51:38   [HEARTBEAT] vwap_pinch_breakout — claude running
+2026-03-21 12:52:38   [HEARTBEAT] vwap_pinch_breakout — claude running
+2026-03-21 12:53:15   CONVERTED | 2m37s
+2026-03-21 12:53:15   ── [217/291] 762m elapsed | ~4h19m left | conv=197 kill=20 fail=0
+2026-03-21 12:53:17 [218/291] european_open_momentum_continuation — starting
+2026-03-21 12:54:17   [HEARTBEAT] european_open_momentum_continuation — claude running
+2026-03-21 12:55:17   [HEARTBEAT] european_open_momentum_continuation — claude running
+2026-03-21 12:56:17   [HEARTBEAT] european_open_momentum_continuation — claude running
+2026-03-21 12:57:00   CONVERTED | 3m43s
+2026-03-21 12:57:00   ── [218/291] 766m elapsed | ~4h15m left | conv=198 kill=20 fail=0
+2026-03-21 12:57:02 [219/291] bollinger_squeeze_breakout — starting
+2026-03-21 12:58:02   [HEARTBEAT] bollinger_squeeze_breakout — claude running
+2026-03-21 12:59:02   [HEARTBEAT] bollinger_squeeze_breakout — claude running
+2026-03-21 13:00:02   [HEARTBEAT] bollinger_squeeze_breakout — claude running
+2026-03-21 13:00:05   CONVERTED | 3m3s
+2026-03-21 13:00:05   ── [219/291] 769m elapsed | ~4h12m left | conv=199 kill=20 fail=0
+2026-03-21 13:00:07 [220/291] pullback_to_vwap_trend_ride — starting
+2026-03-21 13:01:08   [HEARTBEAT] pullback_to_vwap_trend_ride — claude running
+2026-03-21 13:02:08   [HEARTBEAT] pullback_to_vwap_trend_ride — claude running
+2026-03-21 13:02:56   CONVERTED | 2m49s
+2026-03-21 13:02:57   [GIT] Committed
+2026-03-21 13:02:57   ── [220/291] 772m elapsed | ~4h8m left | conv=200 kill=20 fail=0
+2026-03-21 13:02:59 [221/291] psychological_level_mean_reversion — starting
+2026-03-21 13:03:59   [HEARTBEAT] psychological_level_mean_reversion — claude running
+2026-03-21 13:04:59   [HEARTBEAT] psychological_level_mean_reversion — claude running
+2026-03-21 13:05:59   [HEARTBEAT] psychological_level_mean_reversion — claude running
+2026-03-21 13:06:14   CONVERTED | 3m15s
+2026-03-21 13:06:14   ── [221/291] 775m elapsed | ~4h5m left | conv=201 kill=20 fail=0
+2026-03-21 13:06:16 [222/291] afternoon_profit_fade — starting
+2026-03-21 13:07:16   [HEARTBEAT] afternoon_profit_fade — claude running
+2026-03-21 13:08:16   [HEARTBEAT] afternoon_profit_fade — claude running
+2026-03-21 13:09:17   [HEARTBEAT] afternoon_profit_fade — claude running
+2026-03-21 13:09:34   CONVERTED | 3m18s
+2026-03-21 13:09:34   ── [222/291] 779m elapsed | ~4h1m left | conv=202 kill=20 fail=0
+2026-03-21 13:09:36 [223/291] gap_momentum_continuation — starting
+2026-03-21 13:10:36   [HEARTBEAT] gap_momentum_continuation — claude running
+2026-03-21 13:11:36   [HEARTBEAT] gap_momentum_continuation — claude running
+2026-03-21 13:12:36   [HEARTBEAT] gap_momentum_continuation — claude running
+2026-03-21 13:13:33   CONVERTED | 3m57s
+2026-03-21 13:13:33   ── [223/291] 783m elapsed | ~3h58m left | conv=203 kill=20 fail=0
+2026-03-21 13:13:35 [224/291] three_bar_momentum_v1 — starting
+2026-03-21 13:14:35   [HEARTBEAT] three_bar_momentum_v1 — claude running
+2026-03-21 13:15:35   [HEARTBEAT] three_bar_momentum_v1 — claude running
+2026-03-21 13:15:57   CONVERTED | 2m22s
+2026-03-21 13:15:57   ── [224/291] 785m elapsed | ~3h54m left | conv=204 kill=20 fail=0
+2026-03-21 13:15:59 [225/291] adx_strong_trend_pullback — starting
+2026-03-21 13:16:59   [HEARTBEAT] adx_strong_trend_pullback — claude running
+2026-03-21 13:17:59   [HEARTBEAT] adx_strong_trend_pullback — claude running
+2026-03-21 13:18:59   [HEARTBEAT] adx_strong_trend_pullback — claude running
+2026-03-21 13:19:03   CONVERTED | 3m4s
+2026-03-21 13:19:04   [GIT] Committed
+2026-03-21 13:19:04   ── [225/291] 788m elapsed | ~3h51m left | conv=205 kill=20 fail=0
+2026-03-21 13:19:06 [226/291] narrow_range_7_breakout — starting
+2026-03-21 13:20:06   [HEARTBEAT] narrow_range_7_breakout — claude running
+2026-03-21 13:21:06   [HEARTBEAT] narrow_range_7_breakout — claude running
+2026-03-21 13:22:06   [HEARTBEAT] narrow_range_7_breakout — claude running
+2026-03-21 13:23:06   [HEARTBEAT] narrow_range_7_breakout — claude running
+2026-03-21 13:24:06   [HEARTBEAT] narrow_range_7_breakout — claude running
+2026-03-21 13:24:14   CONVERTED | 5m8s
+2026-03-21 13:24:14   ── [226/291] 793m elapsed | ~3h47m left | conv=206 kill=20 fail=0
+2026-03-21 13:24:16 [227/291] mean_reversion_hull_ma — starting
+2026-03-21 13:25:16   [HEARTBEAT] mean_reversion_hull_ma — claude running
+2026-03-21 13:26:16   [HEARTBEAT] mean_reversion_hull_ma — claude running
+2026-03-21 13:26:58   CONVERTED | 2m42s
+2026-03-21 13:26:58   ── [227/291] 796m elapsed | ~3h44m left | conv=207 kill=20 fail=0
+2026-03-21 13:27:00 [228/291] multi_ema_ribbon_squeeze — starting
+2026-03-21 13:28:00   [HEARTBEAT] multi_ema_ribbon_squeeze — claude running
+2026-03-21 13:29:00   [HEARTBEAT] multi_ema_ribbon_squeeze — claude running
+2026-03-21 13:29:45   CONVERTED | 2m45s
+2026-03-21 13:29:45   ── [228/291] 799m elapsed | ~3h40m left | conv=208 kill=20 fail=0
+2026-03-21 13:29:47 [229/291] vix_spike_mean_reversion — starting
+2026-03-21 13:30:47   [HEARTBEAT] vix_spike_mean_reversion — claude running
+2026-03-21 13:31:47   [HEARTBEAT] vix_spike_mean_reversion — claude running
+2026-03-21 13:32:31   CONVERTED | 2m44s
+2026-03-21 13:32:31   ── [229/291] 802m elapsed | ~3h37m left | conv=209 kill=20 fail=0
+2026-03-21 13:32:33 [230/291] prev_day_hl_reversal — starting
+2026-03-21 13:33:33   [HEARTBEAT] prev_day_hl_reversal — claude running
+2026-03-21 13:34:33   [HEARTBEAT] prev_day_hl_reversal — claude running
+2026-03-21 13:35:33   [HEARTBEAT] prev_day_hl_reversal — claude running
+2026-03-21 13:36:21   CONVERTED | 3m48s
+2026-03-21 13:36:22   [GIT] Committed
+2026-03-21 13:36:22   ── [230/291] 805m elapsed | ~3h33m left | conv=210 kill=20 fail=0
+2026-03-21 13:36:24 [231/291] volume_spike_exhaustion_fade — starting
+2026-03-21 13:37:24   [HEARTBEAT] volume_spike_exhaustion_fade — claude running
+2026-03-21 13:38:24   [HEARTBEAT] volume_spike_exhaustion_fade — claude running
+2026-03-21 13:38:55   CONVERTED | 2m31s
+2026-03-21 13:38:55   ── [231/291] 808m elapsed | ~3h30m left | conv=211 kill=20 fail=0
+2026-03-21 13:38:57 [232/291] fibonacci_intraday_retracement — starting
+2026-03-21 13:39:57   [HEARTBEAT] fibonacci_intraday_retracement — claude running
+2026-03-21 13:40:57   [HEARTBEAT] fibonacci_intraday_retracement — claude running
+2026-03-21 13:41:50   CONVERTED | 2m53s
+2026-03-21 13:41:50   ── [232/291] 811m elapsed | ~3h25m left | conv=212 kill=20 fail=0
+2026-03-21 13:41:52 [233/291] rsi_reversal_v1 — starting
+2026-03-21 13:42:52   [HEARTBEAT] rsi_reversal_v1 — claude running
+2026-03-21 13:43:52   [HEARTBEAT] rsi_reversal_v1 — claude running
+2026-03-21 13:44:34   CONVERTED | 2m42s
+2026-03-21 13:44:34   ── [233/291] 814m elapsed | ~3h22m left | conv=213 kill=20 fail=0
+2026-03-21 13:44:36 [234/291] vix_regime_switch_v1 — starting
+2026-03-21 13:45:36   [HEARTBEAT] vix_regime_switch_v1 — claude running
+2026-03-21 13:46:36   [HEARTBEAT] vix_regime_switch_v1 — claude running
+2026-03-21 13:47:36   [HEARTBEAT] vix_regime_switch_v1 — claude running
+2026-03-21 13:47:58   CONVERTED | 3m22s
+2026-03-21 13:47:58   ── [234/291] 817m elapsed | ~3h18m left | conv=214 kill=20 fail=0
+2026-03-21 13:48:00 [235/291] intraday_volatility_breakout_v1 — starting
+2026-03-21 13:49:00   [HEARTBEAT] intraday_volatility_breakout_v1 — claude running
+2026-03-21 13:50:00   [HEARTBEAT] intraday_volatility_breakout_v1 — claude running
+2026-03-21 13:51:00   [HEARTBEAT] intraday_volatility_breakout_v1 — claude running
+2026-03-21 13:51:00   CONVERTED | 3m0s
+2026-03-21 13:51:01   [GIT] Committed
+2026-03-21 13:51:01   ── [235/291] 820m elapsed | ~3h15m left | conv=215 kill=20 fail=0
+2026-03-21 13:51:03 [236/291] vix_mean_reversion_intraday_v1 — starting
+2026-03-21 13:52:03   [HEARTBEAT] vix_mean_reversion_intraday_v1 — claude running
+2026-03-21 13:53:03   [HEARTBEAT] vix_mean_reversion_intraday_v1 — claude running
+2026-03-21 13:54:03   [HEARTBEAT] vix_mean_reversion_intraday_v1 — claude running
+2026-03-21 13:54:45   CONVERTED | 3m42s
+2026-03-21 13:54:45   ── [236/291] 824m elapsed | ~3h11m left | conv=216 kill=20 fail=0
+2026-03-21 13:54:47 [237/291] low_vol_compression_long_v1 — starting
+2026-03-21 13:55:47   [HEARTBEAT] low_vol_compression_long_v1 — claude running
+2026-03-21 13:56:47   [HEARTBEAT] low_vol_compression_long_v1 — claude running
+2026-03-21 13:57:47   [HEARTBEAT] low_vol_compression_long_v1 — claude running
+2026-03-21 13:57:58   CONVERTED | 3m11s
+2026-03-21 13:57:58   ── [237/291] 827m elapsed | ~3h8m left | conv=217 kill=20 fail=0
+2026-03-21 13:58:00 [238/291] atr_channel_breakout_v1 — starting
+2026-03-21 13:59:00   [HEARTBEAT] atr_channel_breakout_v1 — claude running
+2026-03-21 14:00:00   [HEARTBEAT] atr_channel_breakout_v1 — claude running
+2026-03-21 14:00:49   CONVERTED | 2m49s
+2026-03-21 14:00:49   ── [238/291] 830m elapsed | ~3h4m left | conv=218 kill=20 fail=0
+2026-03-21 14:00:51 [239/291] implied_vol_dislocation_v1 — starting
+2026-03-21 14:01:51   [HEARTBEAT] implied_vol_dislocation_v1 — claude running
+2026-03-21 14:02:51   [HEARTBEAT] implied_vol_dislocation_v1 — claude running
+2026-03-21 14:03:51   [HEARTBEAT] implied_vol_dislocation_v1 — claude running
+2026-03-21 14:04:52   [HEARTBEAT] implied_vol_dislocation_v1 — claude running
+2026-03-21 14:05:42   CONVERTED | 4m51s
+2026-03-21 14:05:42   ── [239/291] 835m elapsed | ~3h1m left | conv=219 kill=20 fail=0
+2026-03-21 14:05:44 [240/291] gap_continuation_momentum_v1 — starting
+2026-03-21 14:06:44   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 14:07:44   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 14:08:44   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 14:09:44   [HEARTBEAT] gap_continuation_momentum_v1 — claude running
+2026-03-21 14:09:44   CONVERTED | 4m0s
+2026-03-21 14:09:45   [GIT] Committed
+2026-03-21 14:09:45   ── [240/291] 839m elapsed | ~2h57m left | conv=220 kill=20 fail=0
+2026-03-21 14:09:47 [241/291] partial_gap_fill_scalp_v1 — starting
+2026-03-21 14:10:47   [HEARTBEAT] partial_gap_fill_scalp_v1 — claude running
+2026-03-21 14:11:47   [HEARTBEAT] partial_gap_fill_scalp_v1 — claude running
+2026-03-21 14:12:47   [HEARTBEAT] partial_gap_fill_scalp_v1 — claude running
+2026-03-21 14:13:47   [HEARTBEAT] partial_gap_fill_scalp_v1 — claude running
+2026-03-21 14:13:54   CONVERTED | 4m7s
+2026-03-21 14:13:54   ── [241/291] 843m elapsed | ~2h55m left | conv=221 kill=20 fail=0
+2026-03-21 14:13:56 [242/291] gap_and_go_with_volume_v1 — starting
+2026-03-21 14:14:56   [HEARTBEAT] gap_and_go_with_volume_v1 — claude running
+2026-03-21 14:15:56   [HEARTBEAT] gap_and_go_with_volume_v1 — claude running
+2026-03-21 14:16:56   [HEARTBEAT] gap_and_go_with_volume_v1 — claude running
+2026-03-21 14:17:56   [HEARTBEAT] gap_and_go_with_volume_v1 — claude running
+2026-03-21 14:18:56   [HEARTBEAT] gap_and_go_with_volume_v1 — claude running
+2026-03-21 14:19:30   CONVERTED | 5m34s
+2026-03-21 14:19:30   ── [242/291] 849m elapsed | ~2h51m left | conv=222 kill=20 fail=0
+2026-03-21 14:19:32 [243/291] bollinger_band_reversion_v1 — starting
+2026-03-21 14:20:32   [HEARTBEAT] bollinger_band_reversion_v1 — claude running
+2026-03-21 14:21:32   [HEARTBEAT] bollinger_band_reversion_v1 — claude running
+2026-03-21 14:22:05   CONVERTED | 2m33s
+2026-03-21 14:22:05   ── [243/291] 851m elapsed | ~2h48m left | conv=223 kill=20 fail=0
+2026-03-21 14:22:07 [244/291] vwap_crossover_flow_v1 — starting
+2026-03-21 14:23:07   [HEARTBEAT] vwap_crossover_flow_v1 — claude running
+2026-03-21 14:24:07   [HEARTBEAT] vwap_crossover_flow_v1 — claude running
+2026-03-21 14:25:07   [HEARTBEAT] vwap_crossover_flow_v1 — claude running
+2026-03-21 14:25:26   CONVERTED | 3m19s
+2026-03-21 14:25:26   ── [244/291] 855m elapsed | ~2h44m left | conv=224 kill=20 fail=0
+2026-03-21 14:25:28 [245/291] closing_auction_anticipation_v1 — starting
+2026-03-21 14:26:28   [HEARTBEAT] closing_auction_anticipation_v1 — claude running
+2026-03-21 14:27:28   [HEARTBEAT] closing_auction_anticipation_v1 — claude running
+2026-03-21 14:28:10   CONVERTED | 2m42s
+2026-03-21 14:28:10   [GIT] Committed
+2026-03-21 14:28:10   ── [245/291] 857m elapsed | ~2h41m left | conv=225 kill=20 fail=0
+2026-03-21 14:28:12 [246/291] order_flow_imbalance_v1 — starting
+2026-03-21 14:29:12   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 14:30:12   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 14:31:13   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 14:32:13   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 14:33:13   [HEARTBEAT] order_flow_imbalance_v1 — claude running
+2026-03-21 14:33:44   NO RESULT LINE | 5m32s
+2026-03-21 14:33:44   ── [246/291] 863m elapsed | ~2h37m left | conv=225 kill=20 fail=1
+2026-03-21 14:33:46 [247/291] lunch_hour_range_compression_v1 — starting
+2026-03-21 14:34:46   [HEARTBEAT] lunch_hour_range_compression_v1 — claude running
+2026-03-21 14:35:46   [HEARTBEAT] lunch_hour_range_compression_v1 — claude running
+2026-03-21 14:36:46   [HEARTBEAT] lunch_hour_range_compression_v1 — claude running
+2026-03-21 14:37:26   CONVERTED | 3m40s
+2026-03-21 14:37:26   ── [247/291] 867m elapsed | ~2h34m left | conv=226 kill=20 fail=1
+2026-03-21 14:37:28 [248/291] expiry_day_premium_decay_v1 — starting
+2026-03-21 14:38:28   [HEARTBEAT] expiry_day_premium_decay_v1 — claude running
+2026-03-21 14:39:28   [HEARTBEAT] expiry_day_premium_decay_v1 — claude running
+2026-03-21 14:40:28   [HEARTBEAT] expiry_day_premium_decay_v1 — claude running
+2026-03-21 14:41:23   CONVERTED | 3m55s
+2026-03-21 14:41:23   ── [248/291] 871m elapsed | ~2h30m left | conv=227 kill=20 fail=1
+2026-03-21 14:41:25 [249/291] pre_market_auction_edge_v1 — starting
+2026-03-21 14:42:25   [HEARTBEAT] pre_market_auction_edge_v1 — claude running
+2026-03-21 14:43:25   [HEARTBEAT] pre_market_auction_edge_v1 — claude running
+2026-03-21 14:44:25   [HEARTBEAT] pre_market_auction_edge_v1 — claude running
+2026-03-21 14:45:25   [HEARTBEAT] pre_market_auction_edge_v1 — claude running
+2026-03-21 14:46:04   CONVERTED | 4m39s
+2026-03-21 14:46:04   ── [249/291] 875m elapsed | ~2h27m left | conv=228 kill=20 fail=1
+2026-03-21 14:46:06 [250/291] last_30_min_momentum_v1 — starting
+2026-03-21 14:47:06   [HEARTBEAT] last_30_min_momentum_v1 — claude running
+2026-03-21 14:48:06   [HEARTBEAT] last_30_min_momentum_v1 — claude running
+2026-03-21 14:49:06   [HEARTBEAT] last_30_min_momentum_v1 — claude running
+2026-03-21 14:49:33   CONVERTED | 3m27s
+2026-03-21 14:49:33   [GIT] Committed
+2026-03-21 14:49:33   ── [250/291] 879m elapsed | ~2h24m left | conv=229 kill=20 fail=1
+2026-03-21 14:49:35 [251/291] monday_reversal_v1 — starting
+2026-03-21 14:50:35   [HEARTBEAT] monday_reversal_v1 — claude running
+2026-03-21 14:51:35   [HEARTBEAT] monday_reversal_v1 — claude running
+2026-03-21 14:52:35   [HEARTBEAT] monday_reversal_v1 — claude running
+2026-03-21 14:53:35   [HEARTBEAT] monday_reversal_v1 — claude running
+2026-03-21 14:54:35   CONVERTED | 5m0s
+2026-03-21 14:54:35   ── [251/291] 884m elapsed | ~2h20m left | conv=230 kill=20 fail=1
+2026-03-21 14:54:37 [252/291] vwap_rsi_volume_confluence_v1 — starting
+2026-03-21 14:55:37   [HEARTBEAT] vwap_rsi_volume_confluence_v1 — claude running
+2026-03-21 14:56:37   [HEARTBEAT] vwap_rsi_volume_confluence_v1 — claude running
+2026-03-21 14:57:37   [HEARTBEAT] vwap_rsi_volume_confluence_v1 — claude running
+2026-03-21 14:58:37   [HEARTBEAT] vwap_rsi_volume_confluence_v1 — claude running
+2026-03-21 14:59:37   [HEARTBEAT] vwap_rsi_volume_confluence_v1 — claude running
+2026-03-21 15:00:11   CONVERTED | 5m34s
+2026-03-21 15:00:11   ── [252/291] 889m elapsed | ~2h17m left | conv=231 kill=20 fail=1
+2026-03-21 15:00:13 [253/291] atr_breakout_v1 — starting
+2026-03-21 15:01:13   [HEARTBEAT] atr_breakout_v1 — claude running
+2026-03-21 15:02:13   [HEARTBEAT] atr_breakout_v1 — claude running
+2026-03-21 15:02:23   CONVERTED | 2m10s
+2026-03-21 15:02:23   ── [253/291] 892m elapsed | ~2h13m left | conv=232 kill=20 fail=1
+2026-03-21 15:02:25 [254/291] gap_vwap_momentum_trifecta_v1 — starting
+2026-03-21 15:03:25   [HEARTBEAT] gap_vwap_momentum_trifecta_v1 — claude running
+2026-03-21 15:04:25   [HEARTBEAT] gap_vwap_momentum_trifecta_v1 — claude running
+2026-03-21 15:05:25   [HEARTBEAT] gap_vwap_momentum_trifecta_v1 — claude running
+2026-03-21 15:05:40   CONVERTED | 3m15s
+2026-03-21 15:05:40   ── [254/291] 895m elapsed | ~2h10m left | conv=233 kill=20 fail=1
+2026-03-21 15:05:42 [255/291] multi_timeframe_confirmation_v1 — starting
+2026-03-21 15:06:42   [HEARTBEAT] multi_timeframe_confirmation_v1 — claude running
+2026-03-21 15:07:42   [HEARTBEAT] multi_timeframe_confirmation_v1 — claude running
+2026-03-21 15:08:42   [HEARTBEAT] multi_timeframe_confirmation_v1 — claude running
+2026-03-21 15:09:00   CONVERTED | 3m18s
+2026-03-21 15:09:00   [GIT] Committed
+2026-03-21 15:09:00   ── [255/291] 898m elapsed | ~2h6m left | conv=234 kill=20 fail=1
+2026-03-21 15:09:02 [256/291] orb_plus_sector_filter_v1 — starting
+2026-03-21 15:10:02   [HEARTBEAT] orb_plus_sector_filter_v1 — claude running
+2026-03-21 15:11:02   [HEARTBEAT] orb_plus_sector_filter_v1 — claude running
+2026-03-21 15:12:02   [HEARTBEAT] orb_plus_sector_filter_v1 — claude running
+2026-03-21 15:13:02   [HEARTBEAT] orb_plus_sector_filter_v1 — claude running
+2026-03-21 15:14:03   [HEARTBEAT] orb_plus_sector_filter_v1 — claude running
+2026-03-21 15:15:03   [HEARTBEAT] orb_plus_sector_filter_v1 — claude running
+2026-03-21 15:15:47   CONVERTED | 6m45s
+2026-03-21 15:15:47   ── [256/291] 905m elapsed | ~2h3m left | conv=235 kill=20 fail=1
+2026-03-21 15:15:49 [257/291] vix_adjusted_mean_reversion_v1 — starting
+2026-03-21 15:16:49   [HEARTBEAT] vix_adjusted_mean_reversion_v1 — claude running
+2026-03-21 15:17:49   [HEARTBEAT] vix_adjusted_mean_reversion_v1 — claude running
+2026-03-21 15:18:49   CONVERTED | 3m0s
+2026-03-21 15:18:49   ── [257/291] 908m elapsed | ~2h0m left | conv=236 kill=20 fail=1
+2026-03-21 15:18:51 [258/291] divergence_plus_level_confluence_v1 — starting
+2026-03-21 15:19:51   [HEARTBEAT] divergence_plus_level_confluence_v1 — claude running
+2026-03-21 15:20:51   [HEARTBEAT] divergence_plus_level_confluence_v1 — claude running
+2026-03-21 15:21:51   [HEARTBEAT] divergence_plus_level_confluence_v1 — claude running
+2026-03-21 15:22:51   [HEARTBEAT] divergence_plus_level_confluence_v1 — claude running
+2026-03-21 15:23:27   CONVERTED | 4m36s
+2026-03-21 15:23:27   ── [258/291] 913m elapsed | ~1h56m left | conv=237 kill=20 fail=1
+2026-03-21 15:23:29 [259/291] index_momentum_stock_selection_v1 — starting
+2026-03-21 15:24:29   [HEARTBEAT] index_momentum_stock_selection_v1 — claude running
+2026-03-21 15:25:29   [HEARTBEAT] index_momentum_stock_selection_v1 — claude running
+2026-03-21 15:26:29   [HEARTBEAT] index_momentum_stock_selection_v1 — claude running
+2026-03-21 15:26:44   CONVERTED | 3m15s
+2026-03-21 15:26:44   ── [259/291] 916m elapsed | ~1h53m left | conv=238 kill=20 fail=1
+2026-03-21 15:26:46 [260/291] adversarial_ensemble_v1 — starting
+2026-03-21 15:27:46   [HEARTBEAT] adversarial_ensemble_v1 — claude running
+2026-03-21 15:28:46   [HEARTBEAT] adversarial_ensemble_v1 — claude running
+2026-03-21 15:29:46   [HEARTBEAT] adversarial_ensemble_v1 — claude running
+2026-03-21 15:30:46   [HEARTBEAT] adversarial_ensemble_v1 — claude running
+2026-03-21 15:31:32   CONVERTED | 4m46s
+2026-03-21 15:31:32   [GIT] Committed
+2026-03-21 15:31:32   ── [260/291] 921m elapsed | ~1h49m left | conv=239 kill=20 fail=1
+2026-03-21 15:31:34 [261/291] vwap_mean_reversion_v1 — starting
+2026-03-21 15:32:34   [HEARTBEAT] vwap_mean_reversion_v1 — claude running
+2026-03-21 15:33:16   CONVERTED | 1m42s
+2026-03-21 15:33:16   ── [261/291] 922m elapsed | ~1h46m left | conv=240 kill=20 fail=1
+2026-03-21 15:33:18 [262/291] orb_15min_v1 — starting
+2026-03-21 15:34:18   [HEARTBEAT] orb_15min_v1 — claude running
+2026-03-21 15:35:18   [HEARTBEAT] orb_15min_v1 — claude running
+2026-03-21 15:36:18   [HEARTBEAT] orb_15min_v1 — claude running
+2026-03-21 15:37:18   [HEARTBEAT] orb_15min_v1 — claude running
+2026-03-21 15:38:18   [HEARTBEAT] orb_15min_v1 — claude running
+2026-03-21 15:38:31   CONVERTED | 5m13s
+2026-03-21 15:38:31   ── [262/291] 928m elapsed | ~1h42m left | conv=241 kill=20 fail=1
+2026-03-21 15:38:33 [263/291] ema_crossover_v1 — starting
+2026-03-21 15:39:33   [HEARTBEAT] ema_crossover_v1 — claude running
+2026-03-21 15:40:33   [HEARTBEAT] ema_crossover_v1 — claude running
+2026-03-21 15:41:33   [HEARTBEAT] ema_crossover_v1 — claude running
+2026-03-21 15:42:33   [HEARTBEAT] ema_crossover_v1 — claude running
+2026-03-21 15:43:26   CONVERTED | 4m53s
+2026-03-21 15:43:26   ── [263/291] 933m elapsed | ~1h38m left | conv=242 kill=20 fail=1
+2026-03-21 15:43:28 [264/291] gap_fill_fade_v1 — starting
+2026-03-21 15:44:29   [HEARTBEAT] gap_fill_fade_v1 — claude running
+2026-03-21 15:45:29   [HEARTBEAT] gap_fill_fade_v1 — claude running
+2026-03-21 15:46:29   [HEARTBEAT] gap_fill_fade_v1 — claude running
+2026-03-21 15:46:33   CONVERTED | 3m5s
+2026-03-21 15:46:33   ── [264/291] 936m elapsed | ~1h35m left | conv=243 kill=20 fail=1
+2026-03-21 15:46:36 [265/291] intraday_momentum_ema_cross_v1 — starting
+2026-03-21 15:47:36   [HEARTBEAT] intraday_momentum_ema_cross_v1 — claude running
+2026-03-21 15:48:36   [HEARTBEAT] intraday_momentum_ema_cross_v1 — claude running
+2026-03-21 15:49:36   [HEARTBEAT] intraday_momentum_ema_cross_v1 — claude running
+2026-03-21 15:50:36   [HEARTBEAT] intraday_momentum_ema_cross_v1 — claude running
+2026-03-21 15:50:58   CONVERTED | 4m22s
+2026-03-21 15:50:58   [GIT] Committed
+2026-03-21 15:50:58   ── [265/291] 940m elapsed | ~1h31m left | conv=244 kill=20 fail=1
+2026-03-21 15:51:00 [266/291] vix_regime_breakout_v1 — starting
+2026-03-21 15:52:00   [HEARTBEAT] vix_regime_breakout_v1 — claude running
+2026-03-21 15:53:00   [HEARTBEAT] vix_regime_breakout_v1 — claude running
+2026-03-21 15:54:00   [HEARTBEAT] vix_regime_breakout_v1 — claude running
+2026-03-21 15:54:58   CONVERTED | 3m58s
+2026-03-21 15:54:58   ── [266/291] 944m elapsed | ~1h28m left | conv=245 kill=20 fail=1
+2026-03-21 15:55:00 [267/291] volume_profile_breakout_v1 — starting
+2026-03-21 15:56:00   [HEARTBEAT] volume_profile_breakout_v1 — claude running
+2026-03-21 15:57:00   [HEARTBEAT] volume_profile_breakout_v1 — claude running
+2026-03-21 15:58:00   [HEARTBEAT] volume_profile_breakout_v1 — claude running
+2026-03-21 15:59:00   [HEARTBEAT] volume_profile_breakout_v1 — claude running
+2026-03-21 15:59:10   CONVERTED | 4m10s
+2026-03-21 15:59:10   ── [267/291] 948m elapsed | ~1h25m left | conv=246 kill=20 fail=1
+2026-03-21 15:59:12 [268/291] banknifty_lead_lag_v1 — starting
+2026-03-21 16:00:12   [HEARTBEAT] banknifty_lead_lag_v1 — claude running
+2026-03-21 16:00:49   KILLED | 1m37s
+2026-03-21 16:00:49   ── [268/291] 950m elapsed | ~1h21m left | conv=246 kill=21 fail=1
+2026-03-21 16:00:51 [269/291] rsi_divergence_vwap_v1 — starting
+2026-03-21 16:01:51   [HEARTBEAT] rsi_divergence_vwap_v1 — claude running
+2026-03-21 16:02:52   [HEARTBEAT] rsi_divergence_vwap_v1 — claude running
+2026-03-21 16:03:52   [HEARTBEAT] rsi_divergence_vwap_v1 — claude running
+2026-03-21 16:04:52   [HEARTBEAT] rsi_divergence_vwap_v1 — claude running
+2026-03-21 16:05:02   CONVERTED | 4m11s
+2026-03-21 16:05:02   ── [269/291] 954m elapsed | ~1h17m left | conv=247 kill=21 fail=1
+2026-03-21 16:05:04 [270/291] prev_day_hl_breakout_v1 — starting
+2026-03-21 16:06:04   [HEARTBEAT] prev_day_hl_breakout_v1 — claude running
+2026-03-21 16:07:04   [HEARTBEAT] prev_day_hl_breakout_v1 — claude running
+2026-03-21 16:08:04   [HEARTBEAT] prev_day_hl_breakout_v1 — claude running
+2026-03-21 16:08:41   CONVERTED | 3m37s
+2026-03-21 16:08:42   [GIT] Committed
+2026-03-21 16:08:42   ── [270/291] 958m elapsed | ~1h14m left | conv=248 kill=21 fail=1
+2026-03-21 16:08:44 [271/291] connors_rsi_extreme_v1 — starting
+2026-03-21 16:09:44   [HEARTBEAT] connors_rsi_extreme_v1 — claude running
+2026-03-21 16:10:44   [HEARTBEAT] connors_rsi_extreme_v1 — claude running
+2026-03-21 16:11:44   [HEARTBEAT] connors_rsi_extreme_v1 — claude running
+2026-03-21 16:12:15   CONVERTED | 3m31s
+2026-03-21 16:12:15   ── [271/291] 961m elapsed | ~1h10m left | conv=249 kill=21 fail=1
+2026-03-21 16:12:17 [272/291] volume_breakout_v1 — starting
+2026-03-21 16:13:17   [HEARTBEAT] volume_breakout_v1 — claude running
+2026-03-21 16:14:17   [HEARTBEAT] volume_breakout_v1 — claude running
+2026-03-21 16:15:02   CONVERTED | 2m45s
+2026-03-21 16:15:02   ── [272/291] 964m elapsed | ~1h7m left | conv=250 kill=21 fail=1
+2026-03-21 16:15:04 [273/291] first_hour_range_breakout_v1 — starting
+2026-03-21 16:16:04   [HEARTBEAT] first_hour_range_breakout_v1 — claude running
+2026-03-21 16:17:04   [HEARTBEAT] first_hour_range_breakout_v1 — claude running
+2026-03-21 16:18:04   [HEARTBEAT] first_hour_range_breakout_v1 — claude running
+2026-03-21 16:18:13   CONVERTED | 3m9s
+2026-03-21 16:18:13   ── [273/291] 967m elapsed | ~1h3m left | conv=251 kill=21 fail=1
+2026-03-21 16:18:15 [274/291] bb_squeeze_breakout_v1 — starting
+2026-03-21 16:19:15   [HEARTBEAT] bb_squeeze_breakout_v1 — claude running
+2026-03-21 16:20:15   [HEARTBEAT] bb_squeeze_breakout_v1 — claude running
+2026-03-21 16:21:13   CONVERTED | 2m58s
+2026-03-21 16:21:13   ── [274/291] 970m elapsed | ~1h0m left | conv=252 kill=21 fail=1
+2026-03-21 16:21:15 [275/291] moc_drift_v1 — starting
+2026-03-21 16:22:15   [HEARTBEAT] moc_drift_v1 — claude running
+2026-03-21 16:23:15   [HEARTBEAT] moc_drift_v1 — claude running
+2026-03-21 16:24:15   [HEARTBEAT] moc_drift_v1 — claude running
+2026-03-21 16:24:40   CONVERTED | 3m25s
+2026-03-21 16:24:40   [GIT] Committed
+2026-03-21 16:24:40   ── [275/291] 974m elapsed | ~0h56m left | conv=253 kill=21 fail=1
+2026-03-21 16:24:42 [276/291] keltner_channel_trend_v1 — starting
+2026-03-21 16:25:42   [HEARTBEAT] keltner_channel_trend_v1 — claude running
+2026-03-21 16:26:42   [HEARTBEAT] keltner_channel_trend_v1 — claude running
+2026-03-21 16:27:42   [HEARTBEAT] keltner_channel_trend_v1 — claude running
+2026-03-21 16:28:27   CONVERTED | 3m45s
+2026-03-21 16:28:27   ── [276/291] 978m elapsed | ~0h53m left | conv=254 kill=21 fail=1
+2026-03-21 16:28:29 [277/291] round_number_reversal_v1 — starting
+2026-03-21 16:29:29   [HEARTBEAT] round_number_reversal_v1 — claude running
+2026-03-21 16:30:29   [HEARTBEAT] round_number_reversal_v1 — claude running
+2026-03-21 16:31:29   [HEARTBEAT] round_number_reversal_v1 — claude running
+2026-03-21 16:32:29   [HEARTBEAT] round_number_reversal_v1 — claude running
+2026-03-21 16:32:45   CONVERTED | 4m16s
+2026-03-21 16:32:45   ── [277/291] 982m elapsed | ~0h49m left | conv=255 kill=21 fail=1
+2026-03-21 16:32:47 [278/291] atr_expansion_breakout_v1 — starting
+2026-03-21 16:33:47   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 16:34:47   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 16:35:47   [HEARTBEAT] atr_expansion_breakout_v1 — claude running
+2026-03-21 16:36:15   CONVERTED | 3m28s
+2026-03-21 16:36:15   ── [278/291] 985m elapsed | ~0h45m left | conv=256 kill=21 fail=1
+2026-03-21 16:36:17 [279/291] vwap_slope_momentum_v1 — starting
+2026-03-21 16:37:17   [HEARTBEAT] vwap_slope_momentum_v1 — claude running
+2026-03-21 16:38:17   [HEARTBEAT] vwap_slope_momentum_v1 — claude running
+2026-03-21 16:38:36   CONVERTED | 2m19s
+2026-03-21 16:38:36   ── [279/291] 988m elapsed | ~0h42m left | conv=257 kill=21 fail=1
+2026-03-21 16:38:38 [280/291] macd_histogram_divergence_v1 — starting
+2026-03-21 16:39:39   [HEARTBEAT] macd_histogram_divergence_v1 — claude running
+2026-03-21 16:40:39   [HEARTBEAT] macd_histogram_divergence_v1 — claude running
+2026-03-21 16:41:39   [HEARTBEAT] macd_histogram_divergence_v1 — claude running
+2026-03-21 16:42:05   CONVERTED | 3m27s
+2026-03-21 16:42:05   [GIT] Committed
+2026-03-21 16:42:05   ── [280/291] 991m elapsed | ~0h38m left | conv=258 kill=21 fail=1
+2026-03-21 16:42:07 [281/291] gap_fade_v1 — starting
+2026-03-21 16:43:07   [HEARTBEAT] gap_fade_v1 — claude running
+2026-03-21 16:44:07   [HEARTBEAT] gap_fade_v1 — claude running
+2026-03-21 16:45:07   [HEARTBEAT] gap_fade_v1 — claude running
+2026-03-21 16:46:07   [HEARTBEAT] gap_fade_v1 — claude running
+2026-03-21 16:47:08   [HEARTBEAT] gap_fade_v1 — claude running
+2026-03-21 16:48:08   [HEARTBEAT] gap_fade_v1 — claude running
+2026-03-21 16:48:52   CONVERTED | 6m45s
+2026-03-21 16:48:52   ── [281/291] 998m elapsed | ~0h35m left | conv=259 kill=21 fail=1
+2026-03-21 16:48:55 [282/291] donchian_channel_breakout_v1 — starting
+2026-03-21 16:49:55   [HEARTBEAT] donchian_channel_breakout_v1 — claude running
+2026-03-21 16:50:55   [HEARTBEAT] donchian_channel_breakout_v1 — claude running
+2026-03-21 16:51:01   CONVERTED | 2m6s
+2026-03-21 16:51:01   ── [282/291] 1000m elapsed | ~0h31m left | conv=260 kill=21 fail=1
+2026-03-21 16:51:03 [283/291] gap_continuation_v1 — starting
+2026-03-21 16:52:03   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 16:53:04   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 16:54:04   [HEARTBEAT] gap_continuation_v1 — claude running
+2026-03-21 16:54:38   CONVERTED | 3m35s
+2026-03-21 16:54:38   ── [283/291] 1004m elapsed | ~0h28m left | conv=261 kill=21 fail=1
+2026-03-21 16:54:40 [284/291] multi_factor_composite_v1 — starting
+2026-03-21 16:55:40   [HEARTBEAT] multi_factor_composite_v1 — claude running
+2026-03-21 16:56:40   [HEARTBEAT] multi_factor_composite_v1 — claude running
+2026-03-21 16:57:40   [HEARTBEAT] multi_factor_composite_v1 — claude running
+2026-03-21 16:58:40   [HEARTBEAT] multi_factor_composite_v1 — claude running
+2026-03-21 16:59:33   CONVERTED | 4m53s
+2026-03-21 16:59:33   ── [284/291] 1009m elapsed | ~0h24m left | conv=262 kill=21 fail=1
+2026-03-21 16:59:35 [285/291] vwap_mean_reversion_v3 — starting
+2026-03-21 17:00:35   [HEARTBEAT] vwap_mean_reversion_v3 — claude running
+2026-03-21 17:01:35   [HEARTBEAT] vwap_mean_reversion_v3 — claude running
+2026-03-21 17:02:11   CONVERTED | 2m36s
+2026-03-21 17:02:11   [GIT] Committed
+2026-03-21 17:02:11   ── [285/291] 1011m elapsed | ~0h21m left | conv=263 kill=21 fail=1
+2026-03-21 17:02:13 [286/291] vwap_mean_reversion_v5 — starting
+2026-03-21 17:03:13   [HEARTBEAT] vwap_mean_reversion_v5 — claude running
+2026-03-21 17:04:13   [HEARTBEAT] vwap_mean_reversion_v5 — claude running
+2026-03-21 17:05:13   [HEARTBEAT] vwap_mean_reversion_v5 — claude running
+2026-03-21 17:05:45   CONVERTED | 3m32s
+2026-03-21 17:05:45   ── [286/291] 1015m elapsed | ~0h17m left | conv=264 kill=21 fail=1
+2026-03-21 17:05:47 [287/291] vwap_mean_reversion_v10 — starting
+2026-03-21 17:06:47   [HEARTBEAT] vwap_mean_reversion_v10 — claude running
+2026-03-21 17:07:47   [HEARTBEAT] vwap_mean_reversion_v10 — claude running
+2026-03-21 17:08:47   [HEARTBEAT] vwap_mean_reversion_v10 — claude running
+2026-03-21 17:09:47   [HEARTBEAT] vwap_mean_reversion_v10 — claude running
+2026-03-21 17:10:47   [HEARTBEAT] vwap_mean_reversion_v10 — claude running
+2026-03-21 17:10:57   CONVERTED | 5m10s
+2026-03-21 17:10:57   ── [287/291] 1020m elapsed | ~0h14m left | conv=265 kill=21 fail=1
+2026-03-21 17:10:59 [288/291] vwap_mean_reversion_v11 — starting
+2026-03-21 17:11:59   [HEARTBEAT] vwap_mean_reversion_v11 — claude running
+2026-03-21 17:12:59   [HEARTBEAT] vwap_mean_reversion_v11 — claude running
+2026-03-21 17:14:00   [HEARTBEAT] vwap_mean_reversion_v11 — claude running
+2026-03-21 17:15:00   [HEARTBEAT] vwap_mean_reversion_v11 — claude running
+2026-03-21 17:15:43   CONVERTED | 4m44s
+2026-03-21 17:15:43   ── [288/291] 1025m elapsed | ~0h10m left | conv=266 kill=21 fail=1
+2026-03-21 17:15:45 [289/291] vwap_mean_reversion_v12 — starting
+2026-03-21 17:16:45   [HEARTBEAT] vwap_mean_reversion_v12 — claude running
+2026-03-21 17:17:45   [HEARTBEAT] vwap_mean_reversion_v12 — claude running
+2026-03-21 17:18:36   CONVERTED | 2m51s
+2026-03-21 17:18:36   ── [289/291] 1028m elapsed | ~0h7m left | conv=267 kill=21 fail=1
+2026-03-21 17:18:38 [290/291] vwap_mean_reversion_v13 — starting
+2026-03-21 17:19:38   [HEARTBEAT] vwap_mean_reversion_v13 — claude running
+2026-03-21 17:20:38   [HEARTBEAT] vwap_mean_reversion_v13 — claude running
+2026-03-21 17:21:38   [HEARTBEAT] vwap_mean_reversion_v13 — claude running
+2026-03-21 17:22:18   CONVERTED | 3m40s
+2026-03-21 17:22:18   [GIT] Committed
+2026-03-21 17:22:18   ── [290/291] 1031m elapsed | ~0h3m left | conv=268 kill=21 fail=1
+2026-03-21 17:22:20 [291/291] vwap_mean_reversion_v14 — starting
+2026-03-21 17:23:20   [HEARTBEAT] vwap_mean_reversion_v14 — claude running
+2026-03-21 17:24:20   [HEARTBEAT] vwap_mean_reversion_v14 — claude running
+2026-03-21 17:25:20   [HEARTBEAT] vwap_mean_reversion_v14 — claude running
+2026-03-21 17:26:20   [HEARTBEAT] vwap_mean_reversion_v14 — claude running
+2026-03-21 17:27:20   [HEARTBEAT] vwap_mean_reversion_v14 — claude running
+2026-03-21 17:28:06   CONVERTED | 5m46s
+2026-03-21 17:28:06   ── [291/291] 1037m elapsed | ~0h0m left | conv=269 kill=21 fail=1
+2026-03-21 17:28:08 ════════════════════════════════════════════════════════════
+2026-03-21 17:28:08   COMPLETE (codegen-only)
+2026-03-21 17:28:08   Runtime:      17h 17m
+2026-03-21 17:28:08   Converted:    269
+2026-03-21 17:28:08   Killed:       21
+2026-03-21 17:28:08   Failed:       1 (retryable with --retry-failed)
+2026-03-21 17:28:08   Processed:    291
+2026-03-21 17:28:08   ──
+2026-03-21 17:28:08   JSONs:        258 in unique_strategies/
+2026-03-21 17:28:08   Python:       258 in pipeline/strategies/
+2026-03-21 17:28:08   Failed list:  /Users/minalgoel/Coding_Projects/engineered_alpha_trading_strategies/logs/failed_strategies.txt (1 entries)
+2026-03-21 17:28:08   Killed list:  /Users/minalgoel/Coding_Projects/engineered_alpha_trading_strategies/outputs/conversion_kills.json
+2026-03-21 17:28:08 ════════════════════════════════════════════════════════════

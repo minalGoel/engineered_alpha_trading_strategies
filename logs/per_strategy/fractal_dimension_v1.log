@@ -1,0 +1,5 @@
+0 signals on noisy random walk is correct — fractal dimension of Gaussian noise sits near 1.5, well above the 1.30 threshold. Strategy correctly filters it out.
+
+---
+
+RESULT: fractal_dimension_v1 STATUS=CONVERTED

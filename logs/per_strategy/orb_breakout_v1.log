@@ -1,0 +1,14 @@
+The strategy `orb_breakout_v1` (Strategy_11.json) has already been processed — a kill entry exists in `outputs/conversion_kills.json`:
+
+```json
+{
+  "name": "orb_breakout_v1",
+  "source_file": "trading_strategies/unique_strategies_all/Strategy_11.json",
+  "reason": "Near-duplicate of orb_momentum_v22. Same ORB breakout thesis, uses 15-min range instead of 20-min but fundamentally identical strategy.",
+  "duplicate_of": "orb_momentum_v22"
+}
+```
+
+The strategy is an equity FnO stock ORB breakout (top 50 FnO stocks, 15-min range, rel_volume filter). It's functionally identical to `orb_momentum_v22` which was already converted — same thesis, same institutional opening-range mechanics, trivially different range window (15 vs 20 min). No new conversion needed.
+
+RESULT: orb_breakout_v1 STATUS=KILLED

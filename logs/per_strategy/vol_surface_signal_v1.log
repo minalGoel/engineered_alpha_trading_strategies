@@ -1,0 +1,16 @@
+Import successful.
+
+RESULT: vol_surface_signal_v1 STATUS=CONVERTED
+
+---
+
+**Summary of conversion decisions:**
+
+- **Convert** — the ATM PE/CE relative premium is a price-based intraday skew proxy that doesn't require Black-Scholes IV computation. The core thesis (extreme put/call demand exhaustion → fade) works at 5-second bars.
+
+- **Key adaptations from original:**
+  - ATM options instead of 25-delta OTM (avoids IV computation, works with raw option prices)
+  - 20-min rolling z-score (240 bars) instead of 20-day window — independently calibrated for intraday order-flow cycles, not a scaled version
+  - Hold time 30-90s vs 60-240 min; fires 3-6x/day vs 2-4x/month
+
+- **Stop 5 pts / Target 8 pts (1:1.6 R:R)** — calibrated to NIFTY's typical 1-min move range (3-7 option pts); 8 pts is achievable on strong exhaustion setups, 5 pt stop exits when the extreme is deepening (thesis invalidated)

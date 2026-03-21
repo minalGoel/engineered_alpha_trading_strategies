@@ -1,0 +1,3 @@
+The kill entry for `gap_fade_reversion_v104` is already present in `outputs/conversion_kills.json` (lines 52-57) — it was previously killed as a near-duplicate of `gap_fade_reversion_v103`, which has the same overnight gap fade thesis, same indicators (gap_pct + volume), and same mechanism. No further action needed.
+
+RESULT: gap_fade_reversion_v104 STATUS=KILLED

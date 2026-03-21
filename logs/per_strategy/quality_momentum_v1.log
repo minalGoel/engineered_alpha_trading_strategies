@@ -1,0 +1,13 @@
+Import validates successfully. Files written:
+
+- `unique_strategies/quality_momentum_v1.json` — JSON spec with EMA acceleration + ROC + VWAP mechanism
+- `pipeline/strategies/quality_momentum_v1.py` — Python implementation
+
+**Key design decisions:**
+- **CONVERTED** (not killed) — the quality filter is equity-specific, but the signal core (EMA crossover with widening gap confirmation + ROC + VWAP) transfers cleanly to NIFTY index
+- **EMA(36)/EMA(120)** — 3-min/10-min, not 12x blind (9×12=108 min would be absurd); compressed proportionally to the 30-90s hold time
+- **ROC(60)** — 5-min, not 30-min (original); trade trigger compressed with hold time
+- **Gap acceleration** — 6-bar (30s) window confirms the institutional program is still active, the unique differentiator from plain crossover strategies
+- **Stop 3pt / Target 5pt** — calibrated to 30-90s NIFTY move ranges per calibration table
+
+RESULT: quality_momentum_v1 STATUS=CONVERTED

@@ -1,0 +1,22 @@
+Import succeeds. 
+
+RESULT: range_day_band_fade_003 STATUS=CONVERTED
+
+---
+
+**Summary of what was produced:**
+
+**Decision:** CONVERT — the range-day VWAP mean reversion thesis applies cleanly to NIFTY as a single instrument. No cross-sectional equity dependency.
+
+**Mechanism (specific to NIFTY):** VWAP-benchmarked institutional algos aggressively fade NIFTY deviations from session VWAP on range days because they receive statistically favorable fills vs benchmark. When 1-min MFI simultaneously hits extreme (≤22/≥78), short-term directional pressure is exhausted. 20-min BB prevents fading genuine breakouts.
+
+**Key adaptations from original:**
+| Original | Converted | Why |
+|---|---|---|
+| VWAP dev 0.7% | 0.05% (tunable) | NIFTY index is far smoother; 0.7% is never reached on range days |
+| MFI(5) on 1-min = 5 min | MFI(12) on 5s = 1 min | Want FAST exhaustion signal, not 5-min lagged |
+| ADX(14) on 1-min = 14 min | ADX(120) on 5s = 10 min | Same time window, not blind 12x scale |
+| BB(20) on 1-min = 20 min | BB(240) on 5s = 20 min | Fixed time window — kept identical |
+| VWAP slope 10-bar = 10 min | 60-bar = 5 min | Tighter flatness check for 5s entry |
+
+**Stops/Targets:** 4 pts stop (ADX-regime break signal) / 7 pts target (70-130% VWAP gap reversion at delta ~0.5) — 1:1.75 R:R.

@@ -1,0 +1,14 @@
+`opening_range_breakout_002` is already present in `outputs/conversion_kills.json` with a kill entry from a prior run. The entry is:
+
+```json
+{
+  "name": "opening_range_breakout_002",
+  "source_file": "trading_strategies/unique_strategies_all/Strategy_131.json",
+  "reason": "Near-duplicate of orb_momentum_v22. Opening range breakout with institutional continuation — same core thesis.",
+  "duplicate_of": "orb_momentum_v22"
+}
+```
+
+This strategy (5-min ORB on NIFTY200 stocks + VWAP + EMA trend) shares the same core mechanism as the already-converted `orb_momentum_v22` (ORB with VWAP/volume, institutional continuation). The differentiation in indicators (EMA(8/20) vs no EMA) is insufficient to warrant a second ORB conversion when three other ORB variants have already been killed for the same reason.
+
+RESULT: opening_range_breakout_002 STATUS=KILLED

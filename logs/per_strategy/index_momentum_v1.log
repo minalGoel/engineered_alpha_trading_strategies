@@ -1,25 +1,3 @@
-All steps complete. Here is the full summary:
+Validation passed.
 
----
-
-**STEP 1 — CONVERT:** Signal is NIFTY-index-based (5-min return threshold), maps directly to index options. No equity-specific data required.
-
-**STEP 4 — SMOKE TEST:** First bar hour = 9 (IST) ✓. buy_ce=97, buy_pe=79 on one day. All arrays len==4500, no NaN.
-
-**STEP 6 — STRIKE LOCK:** Trade #1 BUY_PE 24350 at 09:24:00 IST — entry 302.50, exit 314.95 match raw parquet exactly. **Strike lock verified: YES**
-
-**STEP 7 — CONDITION ALIGNMENT (trade #1):**
-- `ret_60 = -0.2018%` — PASS (need < -0.20%)
-- `ret_12 = -14.55 pts` — PASS (need < 0)
-- `time_minutes = 564 (09:24)` — PASS (in session)
-- `warmed (idx=108 ≥ 72)` — PASS
-
-All 4 conditions PASS.
-
----
-
-```
-RESULT: index_momentum_v1 STATUS=CONVERTED TRADES=120 GROSS=-4442.75 NET=-27613.23 VERIFIED=YES
-```
-
-**Note:** The strategy is unprofitable on this 12-day window (win rate ~37.5%, cost drag heavy). The mechanism is sound but the 0.2% threshold generates too many signals during choppy intraday sessions where the momentum continuation thesis doesn't hold — the institutional TWAP flow often exhausts faster than the 30s confirmation allows. Raising the threshold (e.g. 0.35%) would reduce trade count and potentially improve quality.
+RESULT: index_momentum_v1 STATUS=CONVERTED

@@ -20,6 +20,15 @@ from pathlib import Path
 # Prevent Numba from spawning its own thread pool inside each worker.
 os.environ.setdefault("NUMBA_NUM_THREADS", "1")
 
+# Raise file descriptor limit — macOS default is 256, insufficient for parallel strategy loading.
+try:
+    import resource as _resource
+    _soft, _hard = _resource.getrlimit(_resource.RLIMIT_NOFILE)
+    _target = min(max(_hard, 4096), 65536)
+    _resource.setrlimit(_resource.RLIMIT_NOFILE, (_target, _hard))
+except Exception:
+    pass
+
 from pipeline.config import (
     RESULTS_DIR, OUTPUTS_DIR, STRATEGY_DIR,
     DEFAULT_PARALLEL_STRATEGIES, DEFAULT_CORES_PER_STRATEGY,
@@ -68,6 +77,9 @@ def _sanitise_for_json(obj):
     return obj
 
 
+import json
+import threading
+import concurrent.futures
 import numpy as np
 import polars as pl
 
@@ -323,6 +335,12 @@ def _save_strategy_run(
     is_sensitivity_run: bool = False,
     optuna_study_id: str = None,
     optuna_trial_number: int = None,
+    notes: str = None,
+    split: str = "full",
+    fold_number: int = 0,
+    split_type: str = "fixed",
+    test_day_id: int = None,
+    is_optimized: bool = False,
 ) -> str:
     """Save one backtest run to the ResultStore. Returns run_id."""
     try:
@@ -347,6 +365,7 @@ def _save_strategy_run(
         optuna_study_id=optuna_study_id,
         optuna_trial_number=optuna_trial_number,
         is_sensitivity_run=is_sensitivity_run,
+        notes=notes,
     )
 
     param_records = [
@@ -354,15 +373,16 @@ def _save_strategy_run(
             "param_name": k,
             "param_value": v,
             "param_type": "entry",
-            "is_optimized": 0,
+            "is_optimized": int(is_optimized),
         }
         for k, v in (params or {}).items()
     ]
 
     feature_records = build_feature_records(strategy)
-    result_record = build_result_record(metrics, split="full", fold_number=0,
+    result_record = build_result_record(metrics, split=split, fold_number=fold_number,
                                          total_trading_days=total_days)
-    split_record = build_split_record(spot_df, fold_number=0, split_type="fixed")
+    split_record = build_split_record(spot_df, fold_number=fold_number,
+                                       split_type=split_type, test_day_id=test_day_id)
 
     # Capture entry_signal_values via a separate compute() call (pure, no side effects)
     signal_arrays = None
@@ -379,6 +399,8 @@ def _save_strategy_run(
         pass
 
     try:
+        from pipeline.cost_model import CAPITAL_PER_ENTRY
+        capital = CAPITAL_PER_ENTRY
         run_id = store.save_run(
             run_record=run_record,
             parameters=param_records,
@@ -387,13 +409,235 @@ def _save_strategy_run(
             results=[result_record],
             trades=trades_df,
             lot_size=lot_size,
+            capital=capital,
             signal_arrays=signal_arrays,
         )
-        log.info("  Saved run %s to ResultStore", run_id)
         return run_id
     except Exception as e:
         log.warning("  ResultStore save failed: %s", e)
         return ""
+
+
+def _resolve_data(strategy, all_data):
+    """Resolve spot_df, option_df, lot_size for a strategy's underlying."""
+    underlying = strategy.underlying.upper()
+    if underlying in ("NIFTY", "NSE:NIFTY50-INDEX"):
+        return all_data["nifty_spot"], all_data["nifty_options"], NIFTY_LOT
+    elif underlying in ("BANKNIFTY", "NSE:NIFTYBANK-INDEX"):
+        return all_data["banknifty_spot"], all_data["banknifty_options"], BANKNIFTY_LOT
+    else:
+        return all_data["nifty_spot"], all_data["nifty_options"], NIFTY_LOT
+
+
+def _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> dict:
+    """Full pipeline: default backtest → optimize → LOO-CV → sensitivity.
+
+    LOO-CV is proper leave-one-day-out: for each fold the model is TESTED on one day
+    while the state-machine is initialised from the full dataset (indicators warm up
+    from all 12 days).  This is more representative than a cold-start single-day test.
+
+    Returns a summary dict with all stage results.
+    """
+    from pipeline.config import MIN_TRADES_FULL, MIN_PROFITABLE_DAYS
+    from pipeline.optimizer import run_optimization
+    from pipeline.sensitivity import run_sensitivity
+
+    name = strategy.name
+    default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
+    total_days = spot_df["day_id"].n_unique() if "day_id" in spot_df.columns else 12
+
+    summary = {
+        "name": name,
+        "stages_completed": [],
+        "default_sharpe": 0.0,
+        "optimized_sharpe": 0.0,
+        "cv_passed": None,
+        "cv_profitable_days": 0,
+        "sensitivity_verdict": None,
+        "n_optuna_trials": 0,
+        "total_runs_saved": 0,
+    }
+
+    # ── Stage 1: Default params full backtest ────────────────────────────────
+    trades_df, metrics = backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size)
+    n_trades = metrics.get("total_trades", 0)
+    default_sharpe = metrics.get("sharpe_annualized", 0.0)
+    summary["default_sharpe"] = round(default_sharpe, 4)
+
+    if n_trades == 0:
+        summary["verdict"] = "ZERO_TRADES"
+        return summary
+
+    run_id = _save_strategy_run(
+        strategy, trades_df, metrics, spot_df, option_df, vix_df,
+        lot_size, default_params, notes="default_params_full", split="full",
+    )
+    if run_id:
+        summary["total_runs_saved"] += 1
+        log.info("  [%s] Stage 1 saved: run_id=%s default_sr=%.2f trades=%d",
+                 name, run_id[:8], default_sharpe, n_trades)
+    summary["stages_completed"].append("default_backtest")
+
+    # ── Stage 2: Optuna optimization ────────────────────────────────────────
+    best_params = default_params
+    has_tunable = len(strategy.tunable_params()) > 0
+
+    if n_trades >= MIN_TRADES_FULL and has_tunable:
+        try:
+            opt_result = run_optimization(
+                strategy, spot_df, option_df, vix_df,
+                default_sharpe, total_days, lot_size,
+            )
+            best_params = opt_result.get("optimized_params", default_params)
+            summary["optimized_sharpe"] = opt_result.get("optimized_sharpe", default_sharpe)
+            n_trials = opt_result.get("optuna_trials_completed", 0)
+            summary["n_optuna_trials"] = n_trials
+            # Optuna save callback stores qualifying individual trials (sharpe > 0)
+            summary["total_runs_saved"] += n_trials
+            summary["stages_completed"].append("optimization")
+            log.info("  [%s] Stage 2 done: %d trials, best_sr=%.2f overfit=%s",
+                     name, n_trials, summary["optimized_sharpe"],
+                     opt_result.get("overfit_flag", False))
+
+            # Save the best-params full run explicitly (the single "canonical" optimized run)
+            opt_trades, opt_metrics = backtest_strategy(
+                strategy, spot_df, option_df, vix_df, lot_size, params=best_params,
+            )
+            if opt_trades is not None and opt_metrics.get("total_trades", 0) > 0:
+                rid = _save_strategy_run(
+                    strategy, opt_trades, opt_metrics, spot_df, option_df, vix_df,
+                    lot_size, best_params, notes="optimized_params_full",
+                    split="full", is_optimized=True,
+                )
+                if rid:
+                    summary["total_runs_saved"] += 1
+
+        except Exception as e:
+            log.warning("  [%s] Optimization failed: %s", name, e)
+    else:
+        summary["optimized_sharpe"] = round(default_sharpe, 4)
+        reason = "no_tunable_params" if not has_tunable else "too_few_trades"
+        summary["stages_completed"].append(f"optimization_skipped_{reason}")
+
+    # ── Stage 3: Leave-one-day-out CV with best params ───────────────────────
+    # Proper LOO: signals are computed on the full dataset so indicators warm up
+    # correctly.  Only the TRADES that fall on the test day are evaluated.
+    try:
+        day_ids = sorted(spot_df["day_id"].unique().to_list())
+        cv_fold_results = []
+
+        # Pre-compute full-dataset signals once (avoids 12× recomputation)
+        full_signals = strategy.compute(spot_df, option_df, vix_df, best_params)
+
+        for fold_num, test_day_id in enumerate(day_ids):
+            # Run full backtest on all data with best params
+            fold_trades_all, fold_metrics_all = backtest_strategy(
+                strategy, spot_df, option_df, vix_df, lot_size, best_params,
+            )
+            # Filter trades to only those that entered on the test day
+            if fold_trades_all is not None and not fold_trades_all.is_empty():
+                test_spot_day = spot_df.filter(pl.col("day_id") == test_day_id)
+                if not test_spot_day.is_empty():
+                    test_date = test_spot_day["session_date"].head(1).to_list()[0]
+                    fold_trades = fold_trades_all.filter(
+                        pl.col("entry_time").cast(pl.Date) == test_date
+                    ) if "entry_time" in fold_trades_all.columns else fold_trades_all.head(0)
+                else:
+                    fold_trades = fold_trades_all.head(0)
+            else:
+                fold_trades = None
+
+            # Recompute metrics for this fold's trades only
+            if fold_trades is not None and not fold_trades.is_empty():
+                from pipeline.metrics import compute_metrics
+                fold_metrics = compute_metrics(
+                    fold_trades, lot_size=lot_size, total_trading_days=1,
+                )
+            else:
+                from pipeline.metrics import _empty_metrics
+                fold_metrics = _empty_metrics()
+
+            day_pnl = fold_metrics.get("total_pnl", 0.0)
+            fold_n_trades = fold_metrics.get("total_trades", 0)
+
+            # Save each fold's trades to ResultStore
+            test_spot_fold = spot_df.filter(pl.col("day_id") == test_day_id)
+            if fold_n_trades > 0:
+                rid = _save_strategy_run(
+                    strategy, fold_trades, fold_metrics, test_spot_fold,
+                    option_df, vix_df, lot_size, best_params,
+                    notes=f"cv_fold_{fold_num}",
+                    split="test", fold_number=fold_num, split_type="leave_one_out",
+                    test_day_id=test_day_id, is_optimized=has_tunable,
+                )
+                if rid:
+                    summary["total_runs_saved"] += 1
+
+            cv_fold_results.append({
+                "fold": fold_num,
+                "day_id": test_day_id,
+                "pnl": day_pnl,
+                "trades": fold_n_trades,
+                "profitable": day_pnl > 0,
+            })
+
+        days_profitable = sum(1 for d in cv_fold_results if d["profitable"])
+        passed_cv = days_profitable >= MIN_PROFITABLE_DAYS
+        summary["cv_passed"] = passed_cv
+        summary["cv_profitable_days"] = days_profitable
+        summary["stages_completed"].append("cross_validation")
+        log.info("  [%s] Stage 3 done: %d/%d profitable days, cv_passed=%s",
+                 name, days_profitable, total_days, passed_cv)
+
+    except Exception as e:
+        log.warning("  [%s] CV failed: %s", name, e)
+
+    # ── Stage 4: Sensitivity analysis with best params ───────────────────────
+    if n_trades >= 10 and has_tunable:
+        try:
+            sens_result = run_sensitivity(
+                strategy, spot_df, option_df, vix_df, lot_size, params=best_params,
+            )
+            # run_sensitivity internally saves perturbed runs via _save_sensitivity_runs_to_store
+            summary["sensitivity_verdict"] = sens_result.get("verdict", "UNKNOWN")
+            n_perturbations = sum(
+                1 for pname, dirs in sens_result.get("param_results", {}).items()
+                for d, info in dirs.items() if not info.get("clamped")
+            )
+            summary["total_runs_saved"] += n_perturbations
+            summary["stages_completed"].append("sensitivity")
+            log.info("  [%s] Stage 4 done: %d perturbations, verdict=%s",
+                     name, n_perturbations, summary["sensitivity_verdict"])
+        except Exception as e:
+            log.warning("  [%s] Sensitivity failed: %s", name, e)
+
+    summary["verdict"] = "FULL_PIPELINE_OK"
+    return summary
+
+
+# ── Checkpoint helpers ──────────────────────────────────────────────────────
+
+_CHECKPOINT_LOCK = threading.Lock()
+
+def _load_checkpoint(path: Path) -> dict:
+    """Load {strategy_id: summary_dict} checkpoint. Returns {} if not found."""
+    if path.exists():
+        try:
+            return json.loads(path.read_text())
+        except Exception:
+            return {}
+    return {}
+
+
+def _save_checkpoint(path: Path, checkpoint: dict) -> None:
+    """Atomically write checkpoint JSON."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(checkpoint, indent=2))
+        os.replace(tmp, path)
+    except Exception as e:
+        log.warning("Checkpoint write failed: %s", e)
 
 
 def main():
@@ -405,7 +649,13 @@ def main():
     parser.add_argument("--dry-run", action="store_true",
                         help="Load data and strategies, compute nothing")
     parser.add_argument("--save", action="store_true",
-                        help="Save backtest results to ResultStore after each run")
+                        help="Quick mode: default-params backtest only, save to ResultStore")
+    parser.add_argument("--full", action="store_true",
+                        help="Full pipeline: optimize → CV → sensitivity per strategy. "
+                        "Saves all results to ResultStore. Expect 2-4 hours for 291 strategies.")
+    parser.add_argument("--resume", action="store_true",
+                        help="With --full: skip strategies already recorded in "
+                        "outputs/full_pipeline_checkpoint.json. Safe to re-run after a crash.")
     parser.add_argument("--dashboard", action="store_true",
                         help="Start the strategy dashboard server")
     parser.add_argument("--audit", action="store_true",
@@ -440,7 +690,8 @@ def main():
         return
 
     log.info("=" * 70)
-    log.info("5-Second Option Trading Pipeline — Starting")
+    mode_label = "FULL PIPELINE" if args.full else ("QUICK + SAVE" if args.save else "QUICK (no save)")
+    log.info("5-Second Option Trading Pipeline — %s", mode_label)
     log.info("=" * 70)
 
     start_time = time.time()
@@ -494,102 +745,161 @@ def main():
     warmup_numba()
     log.info("Numba warmup complete")
 
-    # ── Process strategies ──
-    log.info("Processing %d strategies", len(qualified))
-    all_results = []
+    # ── Checkpoint: load prior progress for --full --resume ──
+    CHECKPOINT_FILE = OUTPUTS_DIR / "full_pipeline_checkpoint.json"
+    checkpoint: dict = {}
+    if args.full and args.resume:
+        checkpoint = _load_checkpoint(CHECKPOINT_FILE)
+        n_already_done = len(checkpoint)
+        if n_already_done:
+            log.info("RESUME: %d strategies already completed in checkpoint, skipping them",
+                     n_already_done)
 
-    for idx, q in enumerate(qualified, 1):
+    # ── Process strategies ──
+    n_workers = max(1, args.parallel_strategies)
+    log.info("Processing %d strategies with %d worker thread(s)", len(qualified), n_workers)
+    all_results = []
+    results_lock = threading.Lock()
+    counter = {"done": 0}
+
+    def _run_one_strategy(q: dict) -> dict:
+        """Process one strategy (quick or full mode)."""
         name = q["name"]
-        log.info("[%d/%d] Processing %s", idx, len(qualified), name)
+
+        # ── Resume: skip already-completed strategies ──
+        if args.full and args.resume:
+            with results_lock:
+                already = checkpoint.get(name)
+            if already:
+                with results_lock:
+                    counter["done"] += 1
+                    idx = counter["done"]
+                log.info("[%d/%d] %s — SKIPPED (checkpoint)", idx, len(qualified), name)
+                return already
 
         strategy = _load_strategy_class(name)
         if strategy is None:
-            all_results.append({"name": name, "verdict": "FAILED_LOAD_ERROR"})
-            continue
+            return {"name": name, "verdict": "FAILED_LOAD_ERROR"}
 
-        # Determine which underlying data to use
-        underlying = strategy.underlying.upper()
-        if underlying in ("NIFTY", "NSE:NIFTY50-INDEX"):
-            spot_df = all_data["nifty_spot"]
-            option_df = all_data["nifty_options"]
-            lot_size = NIFTY_LOT
-        elif underlying in ("BANKNIFTY", "NSE:NIFTYBANK-INDEX"):
-            spot_df = all_data["banknifty_spot"]
-            option_df = all_data["banknifty_options"]
-            lot_size = BANKNIFTY_LOT
-        else:
-            # BOTH — run on NIFTY by default, can be extended
-            spot_df = all_data["nifty_spot"]
-            option_df = all_data["nifty_options"]
-            lot_size = NIFTY_LOT
-
+        spot_df, option_df, lot_size = _resolve_data(strategy, all_data)
         vix_df = all_data["vix"]
 
         if spot_df is None or option_df is None:
-            log.warning("No data for %s underlying=%s", name, underlying)
-            all_results.append({"name": name, "verdict": "FAILED_NO_DATA"})
-            continue
+            log.warning("No data for %s underlying=%s", name, strategy.underlying)
+            return {"name": name, "verdict": "FAILED_NO_DATA"}
 
         try:
-            # Run full backtest
-            default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
+            # ── Full pipeline mode ──
+            if args.full:
+                t0 = time.time()
+                result = _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size)
+
+                with results_lock:
+                    counter["done"] += 1
+                    idx = counter["done"]
+                    # Write checkpoint immediately after each strategy completes
+                    checkpoint[name] = result
+                    _save_checkpoint(CHECKPOINT_FILE, checkpoint)
+
+                elapsed_s = time.time() - t0
+                log.info(
+                    "[%d/%d] %s — %s | default_sr=%.2f opt_sr=%.2f "
+                    "cv=%s sens=%s saved=%d (%.0fs)",
+                    idx, len(qualified), name, result.get("verdict", "?"),
+                    result.get("default_sharpe", 0), result.get("optimized_sharpe", 0),
+                    result.get("cv_passed", "?"), result.get("sensitivity_verdict", "?"),
+                    result.get("total_runs_saved", 0), elapsed_s,
+                )
+                return result
+
+            # ── Quick mode (default params only) ──
             trades_df, metrics = backtest_strategy(
                 strategy, spot_df, option_df, vix_df, lot_size,
             )
-
             n_trades = metrics.get("total_trades", 0)
             sharpe = metrics.get("sharpe_annualized", 0.0)
             total_pnl = metrics.get("total_pnl", 0.0)
-            log.info("  Trades: %d, Sharpe: %.4f, Net PnL: INR %.0f",
-                     n_trades, sharpe, total_pnl)
+
+            with results_lock:
+                counter["done"] += 1
+                idx = counter["done"]
+            log.info("[%d/%d] %s — trades=%d sharpe=%.4f pnl=INR%.0f",
+                     idx, len(qualified), name, n_trades, sharpe, total_pnl)
 
             result_entry = {
                 "name": name,
                 "verdict": "BACKTEST_OK" if n_trades > 0 else "ZERO_TRADES",
-                "underlying": underlying,
+                "underlying": strategy.underlying.upper(),
                 "metrics": metrics,
             }
-            all_results.append(result_entry)
 
-            # ── Auto-save to ResultStore if --save flag is set ──
+            # Auto-save if --save flag
             if args.save and n_trades > 0:
+                default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
                 _save_strategy_run(
-                    strategy=strategy,
-                    trades_df=trades_df,
-                    metrics=metrics,
-                    spot_df=spot_df,
-                    option_df=option_df,
-                    vix_df=vix_df,
-                    lot_size=lot_size,
-                    params=default_params,
+                    strategy=strategy, trades_df=trades_df, metrics=metrics,
+                    spot_df=spot_df, option_df=option_df, vix_df=vix_df,
+                    lot_size=lot_size, params=default_params,
+                    notes="quick_default_params",
                 )
 
+            return result_entry
+
         except Exception as e:
-            log.error("  Error: %s", e)
-            all_results.append({
-                "name": name,
-                "verdict": "FAILED_COMPUTE_ERROR",
-                "error": str(e),
-            })
+            log.error("  [%s] Error: %s", name, e)
+            return {"name": name, "verdict": "FAILED_COMPUTE_ERROR", "error": str(e)}
+
+    if n_workers == 1:
+        for q in qualified:
+            all_results.append(_run_one_strategy(q))
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as pool:
+            futures = {pool.submit(_run_one_strategy, q): q["name"] for q in qualified}
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    all_results.append(future.result())
+                except Exception as e:
+                    name = futures[future]
+                    log.error("Unexpected thread error for %s: %s", name, e)
+                    all_results.append({"name": name, "verdict": "FAILED_THREAD_ERROR", "error": str(e)})
 
     # ── Summary ──
     elapsed = time.time() - start_time
     log.info("=" * 70)
-    log.info("Pipeline complete in %.1f seconds", elapsed)
+    log.info("Pipeline complete in %.1f seconds (%.1f minutes)", elapsed, elapsed / 60)
+
     verdict_counts = {}
     for r in all_results:
-        v = r["verdict"]
+        v = r.get("verdict", "UNKNOWN")
         verdict_counts[v] = verdict_counts.get(v, 0) + 1
     for verdict, count in sorted(verdict_counts.items()):
         log.info("  %s: %d", verdict, count)
+
+    if args.full:
+        total_saved = sum(r.get("total_runs_saved", 0) for r in all_results)
+        n_cv_passed = sum(1 for r in all_results if r.get("cv_passed") is True)
+        n_robust = sum(1 for r in all_results if r.get("sensitivity_verdict") == "ROBUST")
+        log.info("  Total runs saved to ResultStore: %d", total_saved)
+        log.info("  CV passed: %d / %d", n_cv_passed, len(all_results))
+        log.info("  Sensitivity ROBUST: %d / %d", n_robust, len(all_results))
+
     log.info("=" * 70)
 
     _save_json(OUTPUTS_DIR / "pipeline_log.json", {
+        "mode": "full" if args.full else ("save" if args.save else "quick"),
         "total_strategies": len(qualified),
-        "results": {r["name"]: r["verdict"] for r in all_results},
+        "results": {r.get("name", "?"): r.get("verdict", "?") for r in all_results},
         "verdict_counts": verdict_counts,
         "elapsed_seconds": round(elapsed, 1),
     })
+
+    if args.full:
+        # Save detailed full pipeline results
+        _save_json(OUTPUTS_DIR / "full_pipeline_results.json", {
+            "elapsed_seconds": round(elapsed, 1),
+            "strategies": all_results,
+        })
+        log.info("Detailed results saved to %s", OUTPUTS_DIR / "full_pipeline_results.json")
 
 
 if __name__ == "__main__":

@@ -95,6 +95,9 @@ def run_sensitivity(
     # ── Perturb each parameter ──────────────────────────────────────────────
     tp_bounds = {tp.name: (tp.low, tp.high) for tp in tp_list}
     param_results = {}
+    # Cache: (pname, direction) -> (perturbed_params, trades_df, metrics)
+    # Kept so the save hook reuses results instead of re-running backtests.
+    _run_cache: dict[tuple, tuple] = {}
     worst_degradation = 0.0
     worst_param = None
 
@@ -127,12 +130,14 @@ def run_sensitivity(
             perturbed_params[pname] = perturbed_val
 
             try:
-                _, perturbed_metrics = backtest_strategy(
+                perturbed_trades, perturbed_metrics = backtest_strategy(
                     strategy, spot_df, option_df, vix_df, lot_size,
                     perturbed_params, capital=capital,
                 )
                 p_sharpe = perturbed_metrics.get("sharpe_annualized", 0.0)
                 p_trades = perturbed_metrics.get("total_trades", 0)
+                # Cache for save hook — no re-running needed
+                _run_cache[(pname, direction)] = (perturbed_params, perturbed_trades, perturbed_metrics)
             except Exception as e:
                 log.warning("Sensitivity error for %s %s=%s: %s",
                             strategy.name, pname, perturbed_val, e)
@@ -172,10 +177,10 @@ def run_sensitivity(
     }
 
     # ── Save each perturbed run to the ResultStore ────────────────────────────
-    # Add save hook at output point only. Do not reimplement sensitivity logic.
+    # Pass the already-computed run cache so we never re-run backtests.
     _save_sensitivity_runs_to_store(
         strategy, spot_df, option_df, vix_df, lot_size,
-        params, param_results, capital=capital,
+        params, param_results, capital=capital, run_cache=_run_cache,
     )
 
     return result
@@ -190,11 +195,16 @@ def _save_sensitivity_runs_to_store(
     baseline_params: dict,
     param_results: dict,
     capital=None,
+    run_cache: dict | None = None,
 ):
     """Save each sensitivity perturbation run to the ResultStore.
 
     Called after run_sensitivity() computes results. Writes is_sensitivity_run=True
-    runs to the same schema as regular backtest runs. Does not rerun backtests.
+    runs to the same schema as regular backtest runs.
+
+    run_cache: dict keyed (pname, direction) -> (perturbed_params, trades_df, metrics)
+               from run_sensitivity(). When provided, backtests are NOT re-run — results
+               are read directly from the cache, cutting sensitivity compute time in half.
     """
     try:
         from pipeline.result_store import (
@@ -214,6 +224,7 @@ def _save_sensitivity_runs_to_store(
     total_days = spot_df["day_id"].n_unique() if (
         spot_df is not None and "day_id" in spot_df.columns
     ) else 12
+    _cache = run_cache or {}
 
     for pname, directions in param_results.items():
         for direction, info in directions.items():
@@ -222,18 +233,24 @@ def _save_sensitivity_runs_to_store(
             perturbed_value = info.get("value")
             if perturbed_value is None:
                 continue
-            perturbed_params = dict(baseline_params)
-            perturbed_params[pname] = perturbed_value
 
-            try:
-                trades_df, metrics = backtest_strategy(
-                    strategy, spot_df, option_df, vix_df, lot_size,
-                    perturbed_params, capital=capital,
-                )
-            except Exception as exc:
-                log.warning("Sensitivity save: backtest error for %s %s=%s: %s",
-                            strategy.name, pname, perturbed_value, exc)
-                continue
+            # ── Use pre-computed result from cache if available ──────────────
+            cache_key = (pname, direction)
+            if cache_key in _cache:
+                perturbed_params, trades_df, metrics = _cache[cache_key]
+            else:
+                # Fallback: re-run (only happens if called outside run_sensitivity)
+                perturbed_params = dict(baseline_params)
+                perturbed_params[pname] = perturbed_value
+                try:
+                    trades_df, metrics = backtest_strategy(
+                        strategy, spot_df, option_df, vix_df, lot_size,
+                        perturbed_params, capital=capital,
+                    )
+                except Exception as exc:
+                    log.warning("Sensitivity save: backtest error for %s %s=%s: %s",
+                                strategy.name, pname, perturbed_value, exc)
+                    continue
 
             run_record = build_run_record(
                 strategy_id=strategy.name,

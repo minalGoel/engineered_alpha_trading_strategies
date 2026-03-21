@@ -53,7 +53,10 @@ def make_optuna_save_callback(
     def _callback(study: optuna.Study, trial: optuna.trial.FrozenTrial) -> None:
         if trial.state != optuna.trial.TrialState.COMPLETE:
             return
-        if trial.value is None or trial.value < -900:
+        # Skip failed/degenerate trials (no trades) and clearly negative Sharpes.
+        # We only persist trials that have at least neutral performance — this prevents
+        # filling the ResultStore with garbage and halves save-callback overhead.
+        if trial.value is None or trial.value < 0.0:
             return
         try:
             params = trial.params
@@ -133,8 +136,12 @@ def run_leave_one_day_out_cv(
     option_df: pl.DataFrame,
     vix_df: pl.DataFrame,
     lot_size: int,
+    params: Optional[dict] = None,
 ) -> tuple[list[dict], bool]:
-    """Leave-one-day-out cross-validation with DEFAULT parameters.
+    """Leave-one-day-out cross-validation.
+
+    Args:
+        params: Parameter dict to use. If None, uses strategy defaults.
 
     Returns (day_results, passed_cv).
     Strategy must be profitable on >= MIN_PROFITABLE_DAYS of TOTAL_TRADING_DAYS.
@@ -143,7 +150,7 @@ def run_leave_one_day_out_cv(
     day_results = []
     days_profitable = 0
 
-    default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
+    default_params = params or {tp.name: tp.default for tp in strategy.tunable_params()}
 
     # Import backtest function for actual PnL computation
     from pipeline.run_all import backtest_strategy

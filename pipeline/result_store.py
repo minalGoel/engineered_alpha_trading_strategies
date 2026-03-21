@@ -508,6 +508,30 @@ class ResultStore:
             row = conn.execute("SELECT COUNT(*) FROM runs").fetchone()
             return int(row[0]) if row else 0
 
+    def strategy_run_count(self, strategy_id: str, notes_contains: str = "") -> int:
+        """Return number of stored runs for a strategy, optionally filtered by notes substring.
+
+        Used by the checkpoint/resume logic in run_all.py --full mode to decide whether
+        a strategy has already been fully processed.  A strategy is considered complete if
+        it has at least one run with notes='default_params_full'.
+
+        Example:
+            store.strategy_run_count("vwap_mean_reversion_v18", "default_params_full")
+            # → 1 if already processed, 0 if not
+        """
+        with self._connect() as conn:
+            if notes_contains:
+                row = conn.execute(
+                    "SELECT COUNT(*) FROM runs WHERE strategy_id=? AND notes LIKE ?",
+                    (strategy_id, f"%{notes_contains}%"),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT COUNT(*) FROM runs WHERE strategy_id=?",
+                    (strategy_id,),
+                ).fetchone()
+            return int(row[0]) if row else 0
+
     def get_all_return_series(self) -> dict[str, np.ndarray]:
         """Return {run_id: daily_return_array} for all stored runs.
 

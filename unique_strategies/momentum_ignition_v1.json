@@ -1,0 +1,128 @@
+{
+  "name": "momentum_ignition_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "breakout", "range", "volume_surge", "stop_cascade"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_29.json",
+  "original_name": "momentum_ignition_v1",
+  "mechanism": "When NIFTY consolidates for 15-20 minutes within a 20-40 spot point range, intraday bracket-order traders and mean-reversion algos accumulate positions near both boundaries with stops clustered just outside. A breakout bar with 2.5x+ volume surge vs the preceding 5-minute baseline signals large institutional order flow overwhelming the range ceiling or floor. This triggers sequential stop-loss cascades from trapped traders in the next 30-90 seconds, pushing NIFTY an additional 20-35 spot points beyond the breakout level. At 5-second resolution we enter on the ignition bar itself — before most momentum algos have confirmed and joined — capturing the first 15-20 spot points of the cascade.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:15 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "range_high_240",
+      "formula": "MAX(high, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute rolling range ceiling. Original used 30 1-min bars = 30 min; we use 20 min (240 x 5s) because NIFTY's higher liquidity means stop clusters build faster than on single stocks — 15-20 minutes of consolidation is sufficient for meaningful clustered stops. Our hold is 30-90s (not 10-30 min), so we trade the faster version of the same ignition."
+    },
+    {
+      "name": "range_low_240",
+      "formula": "MIN(low, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute rolling range floor, symmetric with range_high_240."
+    },
+    {
+      "name": "range_width_pct",
+      "formula": "(range_high_240 - range_low_240) / close * 100",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Range width as % of index level. NIFTY filter: 0.10%-0.40% (roughly 24-96 spot pts at NIFTY 24000). Below 0.10% the range is noise/tick-size artifact; above 0.40% risk per trade exceeds what 90-second hold can recover from a failed breakout."
+    },
+    {
+      "name": "vol_avg_60",
+      "formula": "SMA(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling volume baseline. Original used 20 1-min bars = 20 min; we use 60 x 5s = 5 min because NIFTY intraday volume patterns shift at hourly intervals and a 20-min baseline would be suppressed by low-volume early-morning candles, creating false surge signals. 5-min baseline captures the current activity regime."
+    },
+    {
+      "name": "vol_surge",
+      "formula": "volume / vol_avg_60",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Surge ratio. Threshold 2.5x (vs original 3.0x for stocks) because NIFTY volume is aggregated across many components — true institutional ignition appears at slightly lower multiples than single-stock breakouts."
+    },
+    {
+      "name": "close_position_in_bar",
+      "formula": "(close - low) / (high - low)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Where close sits within the current bar's range. Bull confirmation: >=0.70 (top 30% of bar). Bear confirmation: <=0.30 (bottom 30%). Filters 5-second spikes that briefly penetrate range but close back inside — genuine ignition bars close emphatically in the breakout direction."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > prev_range_high_240",
+        "vol_surge >= 2.5",
+        "range_width_pct between 0.10 and 0.40",
+        "close_position_in_bar >= 0.70 (strong bull close)",
+        "vix between 12 and 22"
+      ],
+      "confirmation": "Close must exceed the previous bar's 20-min range high (not current bar's, to avoid lookahead)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < prev_range_low_240",
+        "vol_surge >= 2.5",
+        "range_width_pct between 0.10 and 0.40",
+        "close_position_in_bar <= 0.30 (strong bear close)",
+        "vix between 12 and 22"
+      ],
+      "confirmation": "Close must break below the previous bar's 20-min range low"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 spot points at delta 0.5. NIFTY false breakouts typically retrace 8-15 spot pts back inside the range within 30 seconds; 5 pts catches failed ignitions while tolerating normal breakout volatility. Tighter than 5 pts would be stopped by single-tick noise on the index.",
+    "target_points": 8,
+    "target_rationale": "8 option pts = ~16 spot points at delta 0.5. Successful NIFTY momentum ignitions extend 20-35 spot pts beyond range in 30-90s; targeting 16 spot pts captures 50-65% of the expected extension at 1:1.6 risk-reward without overstaying into momentum exhaustion.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:15 IST — stop new entries at 15:15, no time stop exits create positions after 15:20"
+  },
+  "filters": {
+    "vix_filter": "12 < VIX < 22 — below 12 NIFTY range-bound all day (no breakouts), above 22 breakouts are gappy and slippage is higher even on limit orders",
+    "time_filter": "entries only 09:25-15:15 IST — skip first 10 minutes of high-volatility open noise where range has not yet formed",
+    "volume_filter": "vol_surge > 2.5 is the core entry condition",
+    "trend_filter": "no additional trend filter — strategy is directionally neutral, purely breakout-based",
+    "spread_filter": "not required — limit order execution eliminates spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.46,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.36,
+    "edge_decay_risk": "medium — breakout pattern is well-known and crowding risk from other algos could front-run the cascade. However, at 5s entry we are among the fastest; slower 1-min or 5-min breakout systems enter after us."
+  },
+  "adaptation_notes": "Original operated on a universe of top 30 FnO stocks at 1-min bars, holding 10-30 min. Key changes: (1) single liquid index instead of stock universe eliminates stock-selection noise; (2) range lookback compressed from 30 min to 20 min because NIFTY stop clusters form faster than single stocks due to higher liquidity; (3) volume surge threshold lowered from 3.0x to 2.5x because index volume aggregates many components; (4) hold time compressed from 10-30 min to 30-90s — we trade only the initial stop-cascade portion of the move, exiting before the secondary momentum traders enter. Stop/target calibrated to 30-90s NIFTY option move sizes, not the original stock-level risk sizing.",
+  "weaknesses": [
+    "20-minute range may not have formed early in the session — strategy is inactive first ~20 min of each day",
+    "NIFTY index volume is a noisy proxy for order-flow intensity; a high vol_surge can reflect index rebalancing rather than directional conviction",
+    "False breakouts are frequent (~54% lose) — profitability requires the 1:1.6 R:R to hold, which depends on stop placement being respected",
+    "Stop cascades are shorter-lived on a liquid index than on single stocks — the full 20-35 pt extension does not always materialize in 90 seconds"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_29.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 bars (10-30 min)",
+    "original_indicators": ["range_high_30", "range_low_30", "range_width", "vol_surge (SMA20)", "bars_in_range", "atr_20"],
+    "original_stop": "0.5 * range_width back inside range",
+    "original_target": "1.0 * range_width from breakout level"
+  }
+}

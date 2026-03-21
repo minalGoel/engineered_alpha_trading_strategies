@@ -1,0 +1,111 @@
+{
+  "name": "vwap_rsi_volume_hybrid_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean-reversion", "vwap", "rsi", "volume", "hybrid", "exhaustion"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_289.json",
+  "original_name": "vwap_rsi_volume_hybrid_v1",
+  "mechanism": "On NIFTY, when the index drops 20+ spot points below session VWAP with RSI(36) reading below 35 (3-minute oversold exhaustion) and volume spiking 1.5x the 20-minute average, VWAP-benchmarked institutional buy programs activate aggressively — they are filling significantly better than their intraday benchmark and are incentivized to accumulate at these levels. The volume surge distinguishes a genuine panic flush (where resting bid orders absorb aggressive selling) from a slow drift away from VWAP; only the former creates a sharp mean-reversion snap. At 5-second resolution we enter on the first uptick confirming selling exhaustion, capturing the initial 10-20 spot point bounce before 1-minute bar participants can react — an entry timing advantage unavailable at coarser timeframes.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "VWAP",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset daily",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative VWAP from 09:15 IST daily. No scaling needed — it is a session-cumulative measure. Provides the institutional benchmark price against which deviation is measured."
+    },
+    {
+      "name": "vwap_dist",
+      "formula": "close - VWAP (spot points)",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "NIFTY spot point deviation from VWAP. Original used 40 bps (≈96 NIFTY pts) on stock universe, which is too extreme to trigger frequently on NIFTY index. 20 spot pts captures moderate-to-strong intraday dislocations that occur 3-8 times per session and still trigger institutional VWAP accumulation."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36) — Wilder smoothing",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute RSI (36 bars × 5s). Original RSI(14) on 1-min bars = 14-minute lookback; since we hold 15-120s we need the trigger to detect exhaustion on a much shorter cycle. 36 bars (3 min) detects sharp micro-selloffs that create the reversion opportunity without being so short that it fires on every 1-2 bar wiggle. NOT 12x the original (which would be RSI(168) = 14 min), because we are trading the fast bounce, not the slow recovery."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume[i] / SMA(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Current bar's volume vs 20-minute rolling average (240 bars × 5s). The 20-minute window matches the original's SMA(20) on 1-min bars (same time duration). Kept at the same time length because the purpose is capturing the session's typical pace, not scaling to hold time. A ratio > 1.5 on NIFTY at 5s resolution typically signals program trades or stop-cascade activity rather than noise."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close - VWAP < -vwap_dev_pts (index below VWAP by threshold)",
+        "RSI(36) < rsi_oversold (3-min exhaustion below 35)",
+        "vol_ratio > vol_threshold (volume spike confirms institutional activity)",
+        "close > close[i-1] (first uptick — selling exhaustion started)"
+      ],
+      "confirmation": "Uptick on current 5s bar after all three conditions met simultaneously"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close - VWAP > +vwap_dev_pts (index above VWAP by threshold)",
+        "RSI(36) > rsi_overbought (3-min exhaustion above 65)",
+        "vol_ratio > vol_threshold (volume spike confirms distribution)",
+        "close < close[i-1] (first downtick — buying exhaustion started)"
+      ],
+      "confirmation": "Downtick on current 5s bar after all three conditions met simultaneously"
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 NIFTY spot pts at delta 0.5. If NIFTY continues past the exhaustion point by another 10 spots, the VWAP-reversion thesis is wrong (likely a trend day or macro shock). NIFTY 30s moves are 2-5 pts; a 5pt stop allows 2 failed bars before cutting.",
+    "target_points": 8,
+    "target_rationale": "8 option pts = ~16 NIFTY spot pts at delta 0.5. From a 20pt VWAP deviation, a partial reversion of 16 spot pts captures roughly 80% of the expected mean-reversion. NIFTY 2-min moves average 5-10 option pts; 8 pts is achievable within the 120s hold window while maintaining 1:1.6 R:R.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25 (avoid extreme tail-risk days where VWAP reversion breaks down)",
+    "time_filter": "09:20-15:20 IST; no entries in first 5 min (09:15-09:20) pre-open noise",
+    "volume_filter": "vol_ratio > 1.5 — embedded in signal conditions",
+    "trend_filter": "No additional trend filter; VWAP deviation itself acts as regime check",
+    "spread_filter": "Limit order execution — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Medium — VWAP+RSI combination is known but triple-confirmation at 5s resolution is more specific than typical retail VWAP strategies; institutional VWAP programs that create this signal are themselves the edge source."
+  },
+  "adaptation_notes": "Three core changes from original: (1) Universe from NIFTY Next 50 stocks to NIFTY index — the original's 'thin algo coverage' edge in mid-caps is replaced by the institutional VWAP program predictability on NIFTY. (2) VWAP distance threshold changed from 40 bps (≈96 NIFTY pts, stock-specific) to 20 spot pts (calibrated for NIFTY intraday range). (3) RSI lookback compressed from 14 bars on 1-min to 36 bars on 5s (same 3-min window conceptually, NOT 12x), because we target the fast initial bounce, not the slow recovery. Volume ratio SMA kept at same 20-min time duration as original. Uptick/downtick confirmation retained from original entry logic.",
+  "weaknesses": [
+    "VWAP reversion breaks down on macro-event trend days (RBI, budget) where NIFTY stays 40+ pts from VWAP for extended periods",
+    "RSI(36) at 5s can give spurious oversold readings during fast but shallow 2-3 bar dips with no real volume",
+    "Triple confirmation is restrictive — may generate only 2-4 signals per session; low trade count amplifies single-trade variance"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_289.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-45 min",
+    "original_indicators": ["VWAP (cumulative)", "RSI(14)", "Volume_Ratio (volume/SMA(20))", "VWAP_Distance (bps)"],
+    "original_stop": "0.4% from entry (40 bps hard stop)",
+    "original_target": "VWAP cross (VWAP_Distance crosses zero)"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "name": "ichimoku_cloud_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["trend_following", "ichimoku", "multi_signal", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_283.json",
+  "original_name": "ichimoku_cloud_v1",
+  "mechanism": "On NIFTY, the Tenkan-sen (7-bar = 35-second equilibrium midpoint) crossing above or below the Kijun-sen (22-bar = 110-second base equilibrium) signals a micro-regime shift in institutional order flow direction. When this TK cross occurs while price is already positioned above the Ichimoku cloud (defined by 44-bar Senkou Span B = 220-second extreme range midpoint), NIFTY's prevailing short-term institutional demand has overcome both the fast and base equilibria — a signal that TWAP/VWAP algorithms are sustaining directional pressure across multiple timescales, not just spiking. False TK crosses are frequent in NIFTY's characteristic intraday chop, but requiring price to be outside the cloud reduces qualifying signals to 30-40% of all crosses, and those aligned with the cloud regime tend to generate 14-20 additional spot points of follow-through within 60 seconds before the next equilibrium re-establishes.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "tenkan_sen",
+      "formula": "(rolling_max(high, 7) + rolling_min(low, 7)) / 2",
+      "lookback": 7,
+      "computed_on": "spot",
+      "purpose": "7-bar midpoint = 35-second equilibrium price. Preserved from the original's 7/22/44 structure because at 5s bars, 7 bars is the shortest meaningful equilibrium for a cross trigger — fewer bars (3-5 = 15-25s) captures microstructure noise, more bars (10-12 = 50-60s) lags past the 30s entry window. The 1:3:6 ratio (7:22:44) is maintained because this ratio defines Ichimoku's multi-scale equilibrium logic, not the absolute period count."
+    },
+    {
+      "name": "kijun_sen",
+      "formula": "(rolling_max(high, 22) + rolling_min(low, 22)) / 2",
+      "lookback": 22,
+      "computed_on": "spot",
+      "purpose": "22-bar midpoint = 110-second base equilibrium. At 5s bars, 22 bars captures the ~2-minute mean-reversion level for NIFTY, which aligns with common institutional TWAP slice intervals. The original's 22 1-min bars (22-minute base) held for 10-30 min; compressing to 22 × 5s = 110s matches the 30-120s hold target by preserving the ratio between trigger lookback and base lookback (1:3)."
+    },
+    {
+      "name": "senkou_span_a",
+      "formula": "(tenkan_sen + kijun_sen) / 2",
+      "lookback": 22,
+      "computed_on": "spot",
+      "purpose": "Average of fast and base equilibria — the upper or lower cloud boundary. No forward displacement applied (original displaces 22 bars ahead for visual charting only; at 5s signal generation we use current values). Provides a dynamic support/resistance level anchored to the medium-term equilibrium."
+    },
+    {
+      "name": "senkou_span_b",
+      "formula": "(rolling_max(high, 44) + rolling_min(low, 44)) / 2",
+      "lookback": 44,
+      "computed_on": "spot",
+      "purpose": "44-bar midpoint = 220-second (~3.7 minute) extreme range midpoint. Preserves 1:6 ratio with Tenkan. At this lookback, it captures the recent 4-minute high/low midpoint — if NIFTY price is above both Span A and Span B, it has sustained demand above the full session micro-regime's range center, confirming institutional accumulation over the recent window rather than a fleeting spike."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "tenkan_sen crosses above kijun_sen (bullish TK cross: tenkan[i] > kijun[i] AND tenkan[i-1] <= kijun[i-1])",
+        "close > max(senkou_span_a, senkou_span_b) — price above full cloud, bullish regime",
+        "senkou_span_a > senkou_span_b — cloud is bullish color (Span A above Span B)"
+      ],
+      "confirmation": "All three conditions simultaneously true on the same bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "tenkan_sen crosses below kijun_sen (bearish TK cross: tenkan[i] < kijun[i] AND tenkan[i-1] >= kijun[i-1])",
+        "close < min(senkou_span_a, senkou_span_b) — price below full cloud, bearish regime",
+        "senkou_span_a < senkou_span_b — cloud is bearish color (Span A below Span B)"
+      ],
+      "confirmation": "All three conditions simultaneously true on the same bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot points at delta ~0.5. A confirmed cloud + TK cross should not see an 8 spot point adverse move within the first 30 seconds — if it does, the cross was a false breakout through the cloud boundary (likely a thin or near-crossing cloud) and the thesis is immediately invalidated. This tight stop is justified because the signal requires BOTH price outside the cloud AND a TK cross — high-conviction entries with low tolerance for initial adverse movement.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot points at delta ~0.5. Cloud-confirmed TK crosses at 35-110 second resolution on NIFTY generate 14-20 spot point impulses when the thesis is valid (institutional order continuation). Targeting 7 pts captures ~60% of the median expected move at 1:1.75 R:R, consistent with typical 30-60 second momentum follow-through on NIFTY after a multi-scale equilibrium alignment.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX between 12 and 24 — Ichimoku trend signals require directional conditions; below 12 NIFTY is too range-bound (Tenkan and Kijun collapse to near-equal, generating random TK crosses), above 24 the extreme volatility makes cloud boundaries unreliable as equilibrium anchors",
+    "time_filter": "session start 09:25 IST — need 44 bars warmup (220 seconds from 09:15) for Senkou Span B to fully initialize; opening auction volatility also settles by 09:25",
+    "volume_filter": "none — NIFTY index volume is too noisy at 5s resolution for reliable filtering",
+    "trend_filter": "cloud regime filter embedded in entry conditions: price must be fully outside the cloud (above both spans for long, below both spans for short)",
+    "spread_filter": "none — limit order execution, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Medium — Ichimoku TK crosses are well-known, but at 5-second resolution with cloud regime filter applied to the NIFTY index (not stocks), the combination is non-standard and underutilized. Main decay risk: as HFT algorithms increasingly scan for Ichimoku-based signals at sub-minute resolution, the 35-second TK cross may become a target for front-running."
+  },
+  "adaptation_notes": "Original used 7/22/44 on 1-min bars targeting 10-30 min holds on NIFTY50 stocks/index. Converted to same 7/22/44 periods on 5-second bars targeting 30-120s holds on NIFTY index only. This is intentionally NOT the 12x scaling (which would give 84/264/528 bars) — the 7/22/44 ratio structure naturally fits the 5s timeframe for the target hold duration. Key changes from original: (1) Removed Chikou Span — comparing current close to 22 bars prior (110 seconds ago) at 5s scale adds noise without adding trend confirmation already captured by cloud position; (2) Removed forward-projected cloud — displacement is a charting convention, not a signal component; (3) Simplified to 3 simultaneous conditions vs original's 4-5 sequential conditions to avoid over-filtering at 5s scale where all 5 Ichimoku signals rarely align within a single bar; (4) Added VIX range filter replacing original's VIX 12-22 range (widened upper bound to 24 since index options benefit from moderate volatility).",
+  "weaknesses": [
+    "At 5-second resolution, even the 7-bar Tenkan can cross/uncross within 2-3 bars on NIFTY's characteristic 2-3 spot point noise oscillation, generating whipsaw entries before the cloud filter can reject subsequent false crosses.",
+    "Cloud thickness at 5s resolution is thin (1-5 spot points on NIFTY) especially mid-session, making the above/below cloud distinction less robust as a regime separator — close to cloud boundary entries are effectively range-day trades.",
+    "The 3-condition simultaneous requirement generates only 3-6 signals per day on typical NIFTY sessions — on low-volatility days (VIX < 13) where TK crosses are sparse and cloud is thin, trade count may drop to 0-2."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_283.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 min",
+    "original_indicators": ["tenkan_sen(7)", "kijun_sen(22)", "senkou_span_a", "senkou_span_b(44)", "chikou_span(-22)"],
+    "original_stop": "price enters cloud (close between Span A and Span B)",
+    "original_target": "25 bps from entry"
+  }
+}

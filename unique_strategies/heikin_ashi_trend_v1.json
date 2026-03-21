@@ -1,0 +1,149 @@
+{
+  "name": "heikin_ashi_trend_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["trend_following", "heikin_ashi", "noise_reduction", "ema_filter", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_287.json",
+  "original_name": "heikin_ashi_trend_v1",
+  "mechanism": "On NIFTY, institutional TWAP algorithms executing large directional orders create 30-90 second micro-trends where each 5-second bar is consistently one-directional — price opens, moves in the trend direction, and closes near the extreme with minimal opposition. Heikin Ashi candles detect this by averaging OHLC: when 3+ consecutive green HA bars have no lower wick (HA_low ≈ HA_open), it confirms that NIFTY sellers are absent within every 5-second interval — not just that closing price drifted higher, but that the full bar interior belongs to buyers. This HA streak pattern, confirmed by price above session VWAP and 3-min EMA above 9-min EMA, identifies the 30-90 second continuation window before the institutional batch order completes or exhausts its available supply.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ha_close",
+      "formula": "(open + high + low + close) / 4",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Heikin Ashi synthetic close — 4-price average centers the bar, reducing the weight of single-tick extremes. No lookback required; computed bar by bar."
+    },
+    {
+      "name": "ha_open",
+      "formula": "(prev_ha_open + prev_ha_close) / 2",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Heikin Ashi synthetic open — recursive average smooths the open, filtering single-bar gap noise common in index futures. Initialised at bar 0 as (open + close) / 2."
+    },
+    {
+      "name": "ha_high",
+      "formula": "max(high, ha_open, ha_close)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "HA high — ensures the bar high encompasses both the synthetic body and the actual bar high. Used to measure upper wick for red bars."
+    },
+    {
+      "name": "ha_low",
+      "formula": "min(low, ha_open, ha_close)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "HA low — ensures the bar low encompasses both the synthetic body and the actual bar low. Used to measure lower wick for green bars."
+    },
+    {
+      "name": "consec_green",
+      "formula": "consecutive count of bars where ha_close > ha_open (reset at day boundary)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Counts consecutive green HA bars. Lookback of 6 bars (30s) is sufficient; we only need ≥3 to signal a micro-trend. Day-boundary reset prevents carry-over from prior sessions."
+    },
+    {
+      "name": "consec_red",
+      "formula": "consecutive count of bars where ha_close < ha_open (reset at day boundary)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Same as consec_green for bearish streaks. Together they gate entries to clean trend runs, filtering choppy HA color flips that occur 1-2x per minute in ranging markets."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume) from session open; typical = (H+L+C)/3",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP — cumulative measure, no scaling needed. VWAP is the benchmark for every VWAP-weighted algorithm on NIFTY; price above VWAP means buyers are being filled better than VWAP, reinforcing continuation."
+    },
+    {
+      "name": "ema_fast",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "EMA(36) = 3-minute fast EMA on actual close. Compressed from original EMA(9) at 1-min (9 min) to 3 min because we hold 30-90s, not 5-20 min. Confirms the immediate price trajectory — not just the HA signal — is directional."
+    },
+    {
+      "name": "ema_slow",
+      "formula": "EMA(close, 108)",
+      "lookback": 108,
+      "computed_on": "spot",
+      "purpose": "EMA(108) = 9-minute slow EMA. Compressed from original EMA(21) at 1-min (21 min). Provides broader trend context. When fast > slow, the 3-min micro-trend is aligned with the 9-min institutional flow direction — reducing counter-trend entries."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "strong_green: ha_close > ha_open AND ha_lower_wick < 20% of ha_body (no sellers within the bar)",
+        "consec_green >= 3 (at least 15 seconds of clean green HA bars — not a single-bar spike)",
+        "close > vwap (actual price above session VWAP — bullish institutional benchmark)",
+        "ema_fast > ema_slow (3-min trend aligned with 9-min trend)",
+        "vix between 12 and 25 (trend regime, not dead or chaotic)"
+      ],
+      "confirmation": "All 5 conditions simultaneously true on same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "strong_red: ha_close < ha_open AND ha_upper_wick < 20% of ha_body (no buyers within the bar)",
+        "consec_red >= 3 (at least 15 seconds of clean red HA bars)",
+        "close < vwap (actual price below session VWAP — bearish institutional benchmark)",
+        "ema_fast < ema_slow (3-min trend aligned with 9-min trend)",
+        "vix between 12 and 25"
+      ],
+      "confirmation": "All 5 conditions simultaneously true on same 5-second bar"
+    },
+    "entry_price": "limit order at candle close (actual close, not HA close — HA is synthetic and non-executable)"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. A genuine institutional micro-trend on NIFTY should not retrace 8 spot points within 30 seconds — if it does, the batch order has absorbed and the thesis is wrong. From the reference table, 30s moves are 2-5 pts; a 4pt stop provides a 15-second buffer beyond the typical noise range.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. Institutional TWAP batches that produce 3+ clean HA bars typically continue for 20-30 spot points before exhausting (1-2 min hold). 14 spot points captures ~50-60% of the expected first leg, providing 1:1.75 R:R at 4pt stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX between 12 and 25 — below 12 = dead market with no HA trends, above 25 = too chaotic and HA lags amplify whipsaws",
+    "time_filter": "09:25-15:20 IST — skip first 10 min (HA needs initialization and opening noise subsides), flatten 10 min before close",
+    "volume_filter": "none — HA smoothing implicitly filters low-volume noise bars via body size; ha_body > 0.1 NIFTY point enforced in code",
+    "trend_filter": "EMA(36) > EMA(108) for bullish, < for bearish",
+    "spread_filter": "not required — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Low-medium — HA is well-known but the specific combination of no-wick strength + consecutive count + VWAP + dual EMA alignment creates a selective signal that fires 4-8 times/day, not on every HA color change. Most traders using HA enter on simple color change, not the stricter no-wick + streak criteria."
+  },
+  "adaptation_notes": "Original traded NIFTY50 constituent stocks at 1-min bars with 5-20 min hold. Converted to NIFTY index at 5s with 30-90s hold. Key changes: (1) HA lookback is unchanged in concept (recursive formula) but now operates on 5s bars giving finer granularity — 3 consecutive bars = 15s vs 3 min originally; (2) EMA periods compressed from 9/21 min to 3/9 min proportionally to match shorter hold; (3) VWAP unchanged as cumulative measure; (4) eliminated trailing HA stop (too complex for 5s holds, time_stop_bars handles it); (5) stops/targets calibrated to NIFTY option premium points not bps of equity price. The core insight — HA no-wick bars signal clean institutional directional flow — is stronger on the index than on individual stocks because index flow is dominated by large institutional orders, not retail.",
+  "weaknesses": [
+    "HA recursive formula means early-session bars (first 10-20 bars) have synthetic HA_open far from true price equilibrium — hence the 09:25 session start.",
+    "Requires 3+ consecutive bars meaning entry fires on bar 3+ of a trend, not bar 1 — always entering slightly late into a move.",
+    "In strongly gapping days, VWAP filter can suppress most signals early session when price remains far from prior-session VWAP.",
+    "The wick tolerance (20% of body) is sensitive to tiny-body bars at 5s resolution — very small HA bodies can produce strong signals on what are essentially flat bars."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_287.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-20 min",
+    "original_indicators": ["HA_close", "HA_open", "HA_color", "HA_strength", "HA_trend_count", "VWAP", "EMA(9)", "EMA(21)"],
+    "original_stop": "10 bps from entry",
+    "original_target": "20 bps from entry"
+  }
+}

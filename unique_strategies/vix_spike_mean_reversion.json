@@ -1,0 +1,111 @@
+{
+  "name": "vix_spike_mean_reversion",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "mean_reversion", "vix", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_355.json",
+  "original_name": "vix_spike_mean_reversion",
+  "mechanism": "On NIFTY, a rapid 5%+ surge in India VIX within 10 minutes forces options market makers to delta-hedge aggressively by selling NIFTY futures, simultaneously triggering stop-loss cascades on leveraged long positions — pushing NIFTY 20-50 spot points below session VWAP. India VIX is the 30-day implied vol of NIFTY itself, so once VIX stabilizes (stops making new highs), the delta-hedge selling pressure dissipates, and resting buy orders accumulated below VWAP absorb remaining supply in a sharp 30-90 second reversion. At 5-second resolution we can detect the moment VIX stops rising (prior 30-second VIX delta ≤ 0) while the 10-minute spike is still active, entering the very first bar of the mean reversion rather than waiting for a full 1-minute bar confirmation.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vix_spike_120",
+      "formula": "(vix_close - vix_close[120]) / vix_close[120]",
+      "lookback": 120,
+      "computed_on": "vix",
+      "purpose": "120 bars = 10 minutes, identical time window to original (FIXED TIME WINDOW, not scaled). VIX spike detection requires the full 10-minute context — a shorter window would fire on noise; longer would miss the sharp structural spikes that create exploitable oversells. This is the primary regime gating condition."
+    },
+    {
+      "name": "vix_stabilizing_6",
+      "formula": "vix_close <= vix_close[6]",
+      "lookback": 6,
+      "computed_on": "vix",
+      "purpose": "6 bars = 30 seconds. New to this 5s conversion: we don't want to enter while VIX is still surging (delta-hedging still accelerating). A 30-second plateau/drop signals the first wave of forced selling is exhausted. Original 1-min bars couldn't distinguish 'spike ongoing' vs 'spike peak' within the same bar — at 5s we can."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "36 bars = 3 minutes. Original was RSI(14) on 1-min bars = 14 minutes of data. Compressed to 3 minutes because we are targeting the FAST reversion (30-90s hold), not the slow recovery (15-45 min). A 3-min RSI dropping below 35 on NIFTY signals the acute oversold state driven by the VIX-spike selling wave, not a structural downtrend. Using 14-minute RSI at 5s resolution would be too slow to trigger during the fleeting reversion window."
+    },
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open — no lookback scaling needed. NIFTY spot below VWAP during a VIX spike confirms the institutional benchmark has been violated, making VWAP-benchmarked algorithms (dominant in NIFTY futures) net buyers as they accumulate at a discount to their benchmark."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vix_spike_120 >= vix_spike_threshold (default 0.05)",
+        "vix_stabilizing_6 == True (VIX not making new 30s highs)",
+        "rsi_36 < rsi_oversold (default 35)",
+        "close < vwap_session"
+      ],
+      "confirmation": "All four conditions true simultaneously on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vix_spike_120 >= vix_spike_threshold (default 0.05)",
+        "vix_stabilizing_6 == True",
+        "rsi_36 > rsi_overbought (default 65)",
+        "close > vwap_session"
+      ],
+      "confirmation": "Overbought on NIFTY during VIX spike — possible when VIX spike is fear-driven but NIFTY lags before reversing down; rarer but captures that scenario"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option points = ~10 NIFTY spot points at delta 0.5. If NIFTY moves 10 more spot points against us after VIX has stabilized, the spike is extending into a sustained trend (regime change), not a mean reversion — the thesis is invalidated. Based on 30s typical move of 2-5 pts: stop is roughly 1.5x typical adverse move before reversion.",
+    "target_points": 8,
+    "target_rationale": "8 option points = ~16 NIFTY spot points. VIX-spike-driven NIFTY overshoots typically retrace 20-35 spot points in the first reversion leg; capturing 16 pts (~50% of the lower bound) at 1:1.6 R:R. Calibrated to 60-90 second hold where 1-min typical move is 3-7 pts — 8 is at the upper end, justified by the above-average directional impulse following VIX stabilization.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "Embedded in entry — vix_spike_120 >= 0.05 is the primary filter; baseline VIX level irrelevant, only the spike magnitude matters",
+    "time_filter": "09:25-15:20 IST; 09:25 start ensures 10-min VIX lookback is populated before signals fire",
+    "volume_filter": "none — NIFTY index volume is structural noise; VIX spike is the cleanest volume proxy",
+    "trend_filter": "vwap position acts as trend filter: below VWAP required for long, above VWAP for short",
+    "spread_filter": "none — limit order execution at candle close, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 32,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.1,
+    "edge_decay_risk": "medium — structural microstructure constraint tied to VIX regime; survives as long as NIFTY options market makers delta-hedge via futures"
+  },
+  "adaptation_notes": "Three core changes from original: (1) Universe shifted from 50 NIFTY stocks to the NIFTY index itself — actually strengthens the mechanism since VIX IS NIFTY's IV, making the delta-hedge link direct rather than indirect. (2) RSI period compressed from 14min to 3min (36 bars) to catch the fast oversold at 5s resolution; we're targeting the first 30-90s reversion, not the 15-45min recovery. (3) Added vix_stabilizing_6 indicator (not in original) — the 5s resolution enables us to detect the VIX spike peak within 30 seconds, entering the reversion at the optimal moment rather than waiting for a full 1-min confirmation bar. VWAP reference and VIX spike threshold (5% over 10 min) kept identical to original.",
+  "weaknesses": [
+    "VIX spikes preceding sustained crashes (2020 COVID, 2008) will result in multiple stop-outs before the signal quiets — max_trades_per_day=4 limits damage",
+    "India VIX at 5-second resolution may have stale prints during low-liquidity periods, producing false stabilization signals",
+    "Rare event: 2-4 qualifying signals per day on average; strategy may have long drawdown periods with zero trades"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_355.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 bars (15-45 minutes)",
+    "original_indicators": ["vix_spike_10bar", "rsi_14", "vwap"],
+    "original_stop": "0.3% from entry",
+    "original_target": "fixed 0.6%"
+  }
+}

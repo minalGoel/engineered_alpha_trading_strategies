@@ -1,0 +1,102 @@
+{
+  "name": "prev_day_hl_reversal",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "level_fade", "liquidity_hunt", "support_resistance"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_356.json",
+  "original_name": "prev_day_hl_reversal",
+  "mechanism": "On NIFTY, the Previous Day High (PDH) and Previous Day Low (PDL) are watched by every algorithmic participant as primary reference levels. Retail stop orders cluster above PDH (breakout entries and short stop-losses) and below PDL (long stop-losses). When NIFTY briefly pierces PDH within a 5-second bar (high > PDH) but closes back below it (close < PDH), the stop-order cluster above has been absorbed while leaving breakout buyers trapped at the worst price. Institutional algos pre-positioned to fade the liquidity grab activate their sell orders, and the resulting order-book imbalance — trapped longs unwinding, no fresh demand above the level — pushes NIFTY down 15-25 spot points toward session VWAP within 30-90 seconds. The mirror mechanism applies at PDL: a false breakdown flushes long stops, absorbs resting sell orders, then resting buy orders above the level initiate a quick 15-25 pt bounce as panicked shorts cover.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "pdh",
+      "formula": "max(high) over previous session (day_id - 1)",
+      "lookback": 4500,
+      "computed_on": "spot",
+      "purpose": "Previous day's high is a FIXED REFERENCE LEVEL derived from the full prior session (375 min × 12 bars/min = 4500 bars). No scaling applies — it is always yesterday's full session high regardless of bar size. Lookback of 4500 bars is stated for completeness; in practice this is computed via day_id grouping, not a rolling window."
+    },
+    {
+      "name": "pdl",
+      "formula": "min(low) over previous session (day_id - 1)",
+      "lookback": 4500,
+      "computed_on": "spot",
+      "purpose": "Previous day's low — same rationale as PDH. A fixed level from yesterday's full session, not a rolling lookback. No scaling needed."
+    },
+    {
+      "name": "rsi_24",
+      "formula": "Wilder RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute RSI (24 × 5s bars) as directional confirmation. At a PDH probe, RSI > 65 confirms recent buying pressure drove price to the level (not a random spike). At a PDL probe, RSI < 35 confirms recent selling pressure. Scaled from original's 14-bar 1-min RSI (14 min) DOWN to 2 min because we are trading the FAST reversal (30-90s hold) — we need the RSI to reflect momentum from the last 2 minutes, not the last 14. A 14-min RSI at 5s bars (168 bars) would be too slow and lag the actual reversal setup."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "low < pdl — price probed below previous day low (stop hunt triggered)",
+        "close > pdl — price rejected and closed back above the level",
+        "rsi_24 < rsi_oversold (default 35) — recent selling pressure confirmed the probe was a momentum flush"
+      ],
+      "confirmation": "All three conditions on the same 5-second bar; signal fires at that bar's close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "high > pdh — price probed above previous day high (stop hunt triggered)",
+        "close < pdh — price rejected and closed back below the level",
+        "rsi_24 > rsi_overbought (default 65) — recent buying pressure confirmed the probe was a momentum overshoot"
+      ],
+      "confirmation": "All three conditions on the same 5-second bar; signal fires at that bar's close"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts ≈ 10 NIFTY spot pts at delta 0.5. If NIFTY extends 10 pts further beyond PDH/PDL after entry, the liquidity-grab-and-reverse thesis is wrong — the move is a genuine breakout, not a false probe. NIFTY 90s directional extensions beyond 20 spot pts from a major level are genuine trend initiations.",
+    "target_points": 8,
+    "target_rationale": "8 option pts ≈ 16 NIFTY spot pts. Successful PDH/PDL fades recover 15-25 spot pts toward session VWAP within 30-90 seconds as trapped positions unwind. Targeting 16 pts captures ~65% of the expected 25-pt first-leg reversion — conservative and achievable within the 90s hold window (1:1.6 R:R).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — PDH/PDL reversal is a structural level-fade that works across vol regimes",
+    "time_filter": "09:20-15:20 IST — avoid first 5 min of pre-open noise and final 10 min before close",
+    "volume_filter": "none — NIFTY index volume cannot be filtered the same way as individual stocks",
+    "trend_filter": "none — fade is independent of daily trend direction",
+    "spread_filter": "none — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "medium — PDH/PDL levels are publicly known; crowded fading may reduce the reversal amplitude over time as fewer stops get trapped"
+  },
+  "adaptation_notes": "Original trades Nifty100 stocks on 1-min bars using RSI(14) extremes at PDH/PDL. Converted to NIFTY index because the mechanism (stop-order cluster at prior levels, institutional fade) applies directly and even more cleanly to an index — NIFTY's PDH/PDL receives aggregated stop flow from all constituent stocks and is watched by every index algo. RSI period compressed from 14-min (14 × 1-min) to 2-min (24 × 5s) because we trade the FAST reversal beginning (30-90s), not the 20-50 min recovery. RSI threshold relaxed from 30/70 to 35/65 because 5-second RSI is more volatile and extremes are shallower but equally informative as confirmation. PDH/PDL computation unchanged conceptually (full prior session high/low) but implemented via day_id grouping. Original's 'VWAP touch' target replaced with a fixed 8-pt option target because at 5s resolution we capture only the first leg of the reversion.",
+  "weaknesses": [
+    "On strong trending days (e.g., large gap up with sustained institutional buying), PDH breaks are genuine and repeated fades fail",
+    "NIFTY PDH/PDL probes aggregate across 50 components — the 'false probe' pattern may be less crisp than on individual stocks where a single large order creates a clean wick",
+    "RSI(24) at 5-second frequency is noisy; choppy sessions produce RSI oscillations that generate false confirmations"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_356.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "20-50 bars (20-50 min)",
+    "original_indicators": ["pdh (prev_day_high)", "pdl (prev_day_low)", "rsi(14)"],
+    "original_stop": "0.4% from entry",
+    "original_target": "vwap touch"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "name": "multi_ema_ribbon_squeeze",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "trend_following", "breakout", "ema_ribbon"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_354.json",
+  "original_name": "multi_ema_ribbon_squeeze",
+  "mechanism": "On NIFTY, when the 60s, 3-min, and 5-min EMAs compress into a band tighter than ~0.06% of index level (~13 spot points at 22000), all near-term participants — scalpers, momentum algos, and institutional TWAP bots — are simultaneously in equilibrium with no directional edge. When price breaks decisively through this compressed ribbon on above-average volume, it signals that a directional institutional order has started absorbing the resting supply (bullish) or demand (bearish). At 5-second resolution, we enter within the first 15-30 seconds of the expansion, before the 1-minute bar closes and slower systems react, capturing the initial 15-25 spot point thrust.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "60-second fast EMA — NOT 9×12=108 (blind scale). At 5s bars, 12 bars is the shortest window that smooths sub-minute tick noise on NIFTY while still being responsive to short-term direction. This is the squeeze trigger: when ema_12 converges with the slower EMAs, scalpers have no edge."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute medium EMA — represents the primary timeframe that intraday algo strategies and momentum traders reference. When ema_36 aligns with ema_12 and ema_60, it confirms multi-timescale equilibrium, not just tick noise. This is the most important context filter."
+    },
+    {
+      "name": "ema_60",
+      "formula": "EMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute slow EMA — NIFTY's dominant intraday trend is visible at 5-min resolution. Used as the slow anchor of the ribbon. NOT 50×12=600 bars (50-min EMA, too slow for 30-90s holds). 5-min is the longest context meaningful for a 90-second trade."
+    },
+    {
+      "name": "ribbon_squeeze",
+      "formula": "(max(ema_12, ema_36, ema_60) - min(ema_12, ema_36, ema_60)) / min(ema_12, ema_36, ema_60) < squeeze_threshold",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Detects multi-EMA compression phase. Threshold of ~0.06% corresponds to ~13 spot points at NIFTY 22000 — a genuinely narrow range where all three timescales agree on price level."
+    },
+    {
+      "name": "vol_sma_20",
+      "formula": "SMA(volume, 20)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20-bar (100s) volume baseline. Breakout volume must exceed this baseline to confirm institutional participation, not a random noise break."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ribbon_squeeze was True on previous bar (squeeze just ended)",
+        "close > max(ema_12, ema_36, ema_60) — price breaks above ribbon",
+        "volume > vol_ratio_min * vol_sma_20 — above-average volume on breakout"
+      ],
+      "confirmation": "Squeeze must have been present on the prior bar; same-bar squeeze+breakout is filtered as instantaneous noise"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ribbon_squeeze was True on previous bar (squeeze just ended)",
+        "close < min(ema_12, ema_36, ema_60) — price breaks below ribbon",
+        "volume > vol_ratio_min * vol_sma_20 — above-average volume on breakdown"
+      ],
+      "confirmation": "Same one-bar lag applied to ensure genuine break, not a momentary wick through the ribbon"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts = ~8 spot pts move against position. When NIFTY breaks a tight EMA ribbon, a valid expansion should not retrace 8 spot pts within 30 seconds — if it does, the breakout is a fakeout and the squeeze will re-establish. Tighter than 4 pts risks noise stops; wider than 4 pts allows too much adverse drift on a 30-90s thesis.",
+    "target_points": 7.0,
+    "target_rationale": "7 option pts = ~14 spot pts, which is roughly 50-60% of the first expansion leg after an EMA squeeze on NIFTY (typical first thrust: 20-30 spot pts over 60-90 seconds). This gives 1:1.75 risk-reward and is achievable within the 90-second time stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "none — EMA ribbon squeeze works in both trending and range regimes",
+    "time_filter": "09:20-15:20 IST; skip first 5 minutes of opening noise",
+    "volume_filter": "rel_vol > vol_ratio_min (default 1.1) on breakout bar",
+    "trend_filter": "none — strategy is self-contained; the ribbon alignment is the trend filter",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.89,
+    "edge_decay_risk": "moderate — if more algos detect the same squeeze pattern, signal frequency drops but surviving signals remain valid"
+  },
+  "adaptation_notes": "Original used 9/21/50 EMAs on 1-min equity bars with 30-100 bar holds (30-100 min). Converted to 12/36/60 EMAs on 5s index bars with 18-bar (90s) holds. Lookbacks NOT blindly 12x scaled — instead chosen to represent 60s/3min/5min timescales meaningful for a 90-second trade. The 5-min EMA (60 bars) replaces the 50-min (original ema_50 on 1-min) because we need a slow context filter for our hold time, not the full trend anchor relevant to 30-100 minute holds. Volume filter retained but threshold relaxed (1.1× vs implied 1.2× original) because index volume is smoother than single-stock volume. ATR-based stop replaced by fixed 4pt option premium stop consistent with 5-second bar calibration.",
+  "weaknesses": [
+    "Squeeze can persist for many bars (5-30 minutes) before resolving, generating few signals",
+    "EMA ribbon fakeouts common in low-liquidity NIFTY sessions (post 14:30)",
+    "On expiry days, NIFTY moves are larger and faster — 4pt stop may trigger early on valid breakouts"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_354.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-100 bars (30-100 min)",
+    "original_indicators": ["EMA(9)", "EMA(21)", "EMA(50)", "squeeze ratio", "volume SMA(20)"],
+    "original_stop": "ema_50 dynamic + ema_21 trailing",
+    "original_target": "3 × ATR(20) from entry"
+  }
+}

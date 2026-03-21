@@ -289,10 +289,22 @@ def _load_strategy_class(strategy_name: str):
 
 
 def _get_qualified_strategies() -> list[dict]:
-    """Load qualified strategy list from triage output."""
-    triage_path = OUTPUTS_DIR / "strategy_triage.json"
-    if not triage_path.exists():
-        log.error("No strategy_triage.json found. Run Phase 1 first.")
+    """Load qualified strategy list from retriage output.
+
+    Reads strategy_retriage.json (291 entries, post-codegen) which has
+    fields: name, source_file, underlying, tags, reason.
+    Falls back to strategy_triage.json for legacy compatibility.
+    """
+    retriage_path = OUTPUTS_DIR / "strategy_retriage.json"
+    legacy_path = OUTPUTS_DIR / "strategy_triage.json"
+
+    if retriage_path.exists():
+        triage_path = retriage_path
+    elif legacy_path.exists():
+        log.warning("strategy_retriage.json not found, falling back to strategy_triage.json")
+        triage_path = legacy_path
+    else:
+        log.error("No strategy triage file found in outputs/")
         return []
 
     triage = orjson.loads(triage_path.read_bytes())

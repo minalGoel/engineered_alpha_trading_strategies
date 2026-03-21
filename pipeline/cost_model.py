@@ -42,7 +42,7 @@ IPFT_RATE = 0.000005             # ₹0.50/lakh on premium turnover (both sides)
 GST_RATE = 0.18                  # 18% on (brokerage + exchange txn + IPFT)
 
 # ── Capital deployment ───────────────────────────────────────────────────
-CAPITAL_PER_ENTRY = 100_000      # ₹1 lakh per strategy entry (modifiable at backtest time)
+CAPITAL_PER_ENTRY = 500_000      # ₹5 lakh per strategy entry (modifiable at backtest time)
 
 
 def get_lot_size(underlying: str) -> int:

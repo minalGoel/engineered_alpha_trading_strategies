@@ -3,14 +3,14 @@
   "option_file": "/Users/minalgoel/Coding_Projects/engineered_alpha_trading_strategies/5second_data/option_candles.parquet",
   "spot_exists": true,
   "option_exists": true,
-  "spot_rows": 162000,
+  "spot_rows": 922500,
   "spot_symbols": [
+    "NSE:NIFTYBANK-INDEX",
     "NSE:INDIAVIX-INDEX",
-    "NSE:NIFTY50-INDEX",
-    "NSE:NIFTYBANK-INDEX"
+    "NSE:NIFTY50-INDEX"
   ],
   "spot_date_range": [
-    "2026-03-04",
+    "2025-12-01",
     "2026-03-19"
   ],
   "option_rows": 2671248,

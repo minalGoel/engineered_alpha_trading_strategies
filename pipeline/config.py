@@ -50,7 +50,7 @@ BANKNIFTY_LOT = 30
 STT_RATE = 0.0015             # 0.15% on sell-side premium (from 1 Apr 2025)
 BROKERAGE_PER_ORDER = 20      # INR flat per order
 EXCHANGE_TXN_RATE = 0.0003553 # 0.03553% on premium turnover (both sides, NSE Mar 2026)
-CAPITAL_PER_ENTRY = 100_000   # ₹1 lakh per strategy entry order
+CAPITAL_PER_ENTRY = 500_000   # ₹5 lakh per strategy entry order
 MIN_POINTS_VIABLE = 1.5       # minimum premium move per trade to be viable
 
 # ── Optimization ────────────────────────────────────────────────────────

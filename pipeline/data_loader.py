@@ -157,8 +157,55 @@ def load_option_data(
     return df
 
 
+def _intersect_spot_to_options(
+    spot_df: Optional[pl.DataFrame],
+    option_df: Optional[pl.DataFrame],
+) -> Optional[pl.DataFrame]:
+    """Filter spot data to only dates present in option data.
+
+    Required when spot_candles.parquet has been updated with more history
+    than option_candles.parquet. Silently leaving the extra spot days in
+    would produce a zero-premium grid for those days, causing the state
+    machine to fire signals with no valid option premiums.
+
+    After filtering, day_id is re-numbered so it stays contiguous (0, 1, ...).
+    """
+    if spot_df is None or option_df is None:
+        return spot_df
+
+    opt_dates = set(option_df["session_date"].unique().to_list())
+    filtered = spot_df.filter(pl.col("session_date").is_in(list(opt_dates)))
+
+    if len(filtered) == len(spot_df):
+        return spot_df  # Nothing to trim
+
+    n_dropped = spot_df["session_date"].n_unique() - filtered["session_date"].n_unique()
+    log.info(
+        "Spot data trimmed: dropped %d days without option coverage "
+        "(%d → %d trading days)",
+        n_dropped,
+        spot_df["session_date"].n_unique(),
+        filtered["session_date"].n_unique(),
+    )
+
+    # Re-number day_id so it stays contiguous after filtering
+    dates = filtered["session_date"].unique().sort()
+    date_map = {d: i for i, d in enumerate(dates.to_list())}
+    filtered = filtered.with_columns(
+        pl.col("session_date")
+        .replace_strict(date_map, default=-1)
+        .cast(pl.Int32)
+        .alias("day_id")
+    )
+    return filtered
+
+
 def load_all_data() -> dict:
     """Load all 5-second data, split by symbol.
+
+    Spot data is intersected with option data dates — if spot_candles.parquet
+    has more history than option_candles.parquet, the extra spot days are
+    dropped so the premium grid never has silent zero-filled bars.
 
     Returns dict with keys:
         nifty_spot, banknifty_spot, vix,
@@ -171,7 +218,14 @@ def load_all_data() -> dict:
     nifty_options = load_option_data(NIFTY_SYMBOL)
     banknifty_options = load_option_data(BANKNIFTY_SYMBOL)
 
-    # Count trading days
+    # Trim spot to only dates covered by options
+    nifty_spot = _intersect_spot_to_options(nifty_spot, nifty_options)
+    banknifty_spot = _intersect_spot_to_options(banknifty_spot, banknifty_options)
+    # VIX trimmed to match NIFTY spot (same session dates)
+    if vix is not None and nifty_spot is not None:
+        vix = _intersect_spot_to_options(vix, nifty_options)
+
+    # Count trading days (options-covered only)
     trading_days = 0
     if nifty_spot is not None:
         trading_days = nifty_spot["day_id"].n_unique()

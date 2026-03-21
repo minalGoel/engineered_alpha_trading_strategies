@@ -1,0 +1,121 @@
+{
+  "name": "orb_5min_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "opening_range", "orb", "gap", "5min", "institutional_flow"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_224.json",
+  "original_name": "orb_5min_v1",
+  "mechanism": "NIFTY's 5-minute opening range (09:15-09:20, 60 bars at 5s) is formed exclusively by the most aggressive overnight-positioned participants — those with strong pre-open FII futures signals, macro catalysts, or large gap convictions who cannot wait for the broader 20-minute institutional window. When NIFTY's close breaks above this tight range with volume exceeding 1.5x the early session average, the aggressive buyer has overwhelmed early morning supply, forcing resting sellers to lift their offers; this triggers a chain of conditional algo entries and delta-hedging adjustments that creates a 10-20 spot point continuation burst within 30-90 seconds. The 5-minute range is narrower than the 20-minute ORB (typically 15-30 pts vs 30-55 pts), so the breakout signal is only meaningful when the range itself was sufficiently formed (not too narrow or too wide), filtering noise from low-conviction or already-exhausted opens. The edge is strictly early-session: by 09:35 the signal decays as the full 20-minute institutional absorption window takes over.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-09:35 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "orb_high",
+      "formula": "MAX(high, bars where time_minutes in [555, 560))",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Fixed 5-minute time window (09:15-09:20 = 60 bars at 5s). NOT scaled — the ORB is defined by a real-time clock window, not a rolling lookback. The 5 minutes is preserved from the original because it captures the pre-institutional discovery phase before the full 20-min window."
+    },
+    {
+      "name": "orb_low",
+      "formula": "MIN(low, bars where time_minutes in [555, 560))",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Same fixed 5-minute window as orb_high. Used for bearish breakdown detection."
+    },
+    {
+      "name": "orb_range",
+      "formula": "orb_high - orb_low",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Raw range filter: if range > 80 pts the gap has already moved aggressively and breakout buying at this level likely chases exhaustion rather than continuation. If too small (<5 pts), the range is noise and any tick triggers a false breakout."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from session open, grouped by day_id",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative intraday VWAP — no lookback scaling needed. Used as directional confirmation: breakout above ORB_high is only traded if close is also above VWAP (consistent institutional demand). This filters breakouts that occur when price is below its session average (potential bear trap)."
+    },
+    {
+      "name": "vol_ratio_60",
+      "formula": "volume / rolling_mean(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60-bar (5-minute) rolling volume ratio. This replaces the original's 20-bar 1-minute SMA — at 5s bars, a 60-bar window covers the same 5-minute lookback period and captures the 'current session pace' rather than a stale historical average. Volume surge > 1.5x confirms institutional participation behind the breakout."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes in [560, 575) — breakout window 09:20-09:35 only",
+        "orb_range <= orb_range_max (default 80 pts) and orb_range > 5 — range formed cleanly",
+        "close > orb_high — confirmed breakout above 5-min range",
+        "close > vwap — price above session VWAP, consistent directional demand",
+        "vol_ratio_60 > volume_ratio_min (default 1.5) — institutional volume surge"
+      ],
+      "confirmation": "Close of 5s bar above ORB_high with VWAP and volume conditions met"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes in [560, 575) — breakout window 09:20-09:35 only",
+        "orb_range <= orb_range_max (default 80 pts) and orb_range > 5 — range formed cleanly",
+        "close < orb_low — confirmed breakdown below 5-min range",
+        "close < vwap — price below session VWAP, consistent directional supply",
+        "vol_ratio_60 > volume_ratio_min (default 1.5) — institutional volume surge"
+      ],
+      "confirmation": "Close of 5s bar below ORB_low with VWAP and volume conditions met"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option points (~6 NIFTY spot pts at delta 0.5): if NIFTY re-enters the 5-minute range within seconds of the breakout the aggressive buyer has been absorbed and the move is false — a 6 spot point reversal puts price back inside the narrow 5-min range, confirming thesis failure. Tight stop is warranted because the continuation is fast (30-60s) or does not happen at all.",
+    "target_points": 6.0,
+    "target_rationale": "6 option points (~12 NIFTY spot pts at delta 0.5): the aggressive institution initiating the 5-min ORB break is typically 40-60% filled on the burst and drives price 12-20 spot pts beyond the ORB high/low before slowing. Targeting the lower end (12 pts) gives a 1:2 risk-reward while remaining achievable within 30-90 seconds.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "none — VIX level does not materially affect the 5-min ORB mechanism on intraday horizon",
+    "time_filter": "09:20-09:35 IST (560-575 minutes); entries after 09:35 not taken as signal decays once 20-min ORB window begins",
+    "volume_filter": "vol_ratio_60 > 1.5 (tunable) — institutional breakout volume required",
+    "trend_filter": "VWAP directional confirmation (close > vwap for CE, close < vwap for PE)",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.50,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.67,
+    "edge_decay_risk": "moderate — 5-min ORB is well-known; edge comes from speed of 5s execution vs 1-min bar participants. Risk: increasingly crowded as algo traders adopt 5s feeds."
+  },
+  "adaptation_notes": "Original trades NIFTY50 constituent STOCKS; converted to NIFTY INDEX itself. Hold time compressed from 15-120 minutes to 30-90 seconds — the index absorbs information faster and individual stock ORBs depend on firm-specific order flow that doesn't apply to the index. VWAP retained as directional confirmation (cumulative, no lookback). Volume ratio lookback changed from 20-bar 1-min (=20 min lookback) to 60-bar 5s (=5 min lookback) to match the session pace at 5s resolution. ATR-based ORB_range filter replaced with absolute point threshold (80 pts) since daily ATR isn't available intraday at 5s. Breakout window narrowed from 09:20-09:45 (original) to 09:20-09:35 because at 5s resolution the continuation burst completes within 60-90s and late entries risk chasing. Max trades/day set to 4 (same as original's 4).",
+  "weaknesses": [
+    "5-minute range is very narrow on low-volatility days, making nearly any tick a 'breakout'; the orb_range > 5 filter mitigates but doesn't eliminate this",
+    "Only 4-6 signal opportunities per day (09:20-09:35 window); low trade frequency means high variance in daily outcomes",
+    "On strong trend days the continuation can overshoot target quickly leaving 6-pt target unexecuted; opposite, on choppy opens false breakouts with re-entry hit stop repeatedly",
+    "VWAP at 09:20 has only 5 minutes of data and may not be representative of the day's institutional anchor"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_224.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-120 mins",
+    "original_indicators": ["ORB_high (09:15-09:20 high)", "ORB_low (09:15-09:20 low)", "ORB_range", "ORB_range_vs_ATR", "volume_ratio (20-bar SMA)", "VWAP", "ATR_14_daily"],
+    "original_stop": "close re-enters ORB range",
+    "original_target": "1.5 * ORB_range from ORB_high/ORB_low"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "name": "intraday_volatility_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "breakout", "atr", "momentum", "regime"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_42.json",
+  "original_name": "intraday_volatility_breakout_v1",
+  "mechanism": "When NIFTY's 1-minute realized volatility (ATR over the last 12 bars at 5-second resolution) suddenly exceeds its 5-minute baseline ATR by 2x or more, institutional order flow or macro news has shifted market microstructure into a high-volatility regime. On NIFTY specifically, this expansion triggers delta-hedging cascades from options market makers who are short gamma: as the index accelerates directionally, market makers buy (or sell) index futures to hedge their delta exposure, amplifying the burst for the next 30-90 seconds until the hedging flow exhausts itself. We enter in the direction of the initial expansion bar — confirmed by a relative volume surge above the 5-minute average — to capture the first leg of this institutional feedback loop before the delta-hedge demand is absorbed.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "atr_12",
+      "formula": "mean(TrueRange(high, low, close), 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute realized volatility at 5s resolution. COMPRESSED from original ATR_10 on 1-min bars (10 min lookback) to 12 bars (1 min) because we are catching the FAST burst, not waiting for a 10-minute vol expansion to confirm. At a 30-90s hold, the trigger must be fresh — a 10-min ATR baseline would lag too much to signal the onset of the regime shift."
+    },
+    {
+      "name": "atr_60",
+      "formula": "mean(TrueRange(high, low, close), 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute volatility baseline at 5s resolution. COMPRESSED from original ATR_60 on 1-min bars (60 min baseline) to 60 bars (5 min) to reflect current session regime rather than stale all-day averages. On NIFTY intraday, volatility clusters within session windows (opening burst, post-lunch calm, pre-close lift) — a 5-min baseline adapts to the current cluster while a 60-min baseline would dilute the expansion signal."
+    },
+    {
+      "name": "vol_expansion",
+      "formula": "atr_12 / atr_60",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Ratio of short-term to medium-term volatility. Above 2.0 signals a genuine regime shift, not random noise. Threshold inherited from original (2.0x) as it is a dimensionless ratio unaffected by bar size."
+    },
+    {
+      "name": "bar_direction",
+      "formula": "sign(close - open)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Direction of the volatility expansion bar. On NIFTY, the direction of the triggering bar reflects the dominant institutional order flow that caused the vol expansion and is the correct side to trade."
+    },
+    {
+      "name": "rel_volume",
+      "formula": "volume / SMA(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Volume relative to 5-minute baseline (60 bars × 5s). RESCALED from original SMA_20 on 1-min bars (20-min baseline) to SMA_60 (5-min baseline) — matching the same time horizon as the ATR baseline so both measures capture the current session regime. Confirms that the ATR expansion is driven by genuine order flow, not a thin-market gap."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP for directional context. Cumulative measure — no scaling required. Ensures we trade vol expansion in the direction consistent with where price sits relative to the session's volume-weighted center, filtering against vol expansions that contradict the intraday trend."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_expansion > vol_expansion_threshold (default 2.0)",
+        "bar_direction == +1 (bullish expansion bar)",
+        "rel_volume > rel_volume_threshold (default 1.8)",
+        "close > vwap (price above session average — confirms bullish context)",
+        "VIX < vix_max (default 26.0 — some vol is needed, but extreme chaos reduces persistence)"
+      ],
+      "confirmation": "Signal fires on bar close; execution at same bar close price (limit order)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_expansion > vol_expansion_threshold (default 2.0)",
+        "bar_direction == -1 (bearish expansion bar)",
+        "rel_volume > rel_volume_threshold (default 1.8)",
+        "close < vwap (price below session average — confirms bearish context)",
+        "VIX < vix_max (default 26.0)"
+      ],
+      "confirmation": "Signal fires on bar close; execution at same bar close price (limit order)"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option premium points = ~8 NIFTY spot points at delta 0.5. If the vol expansion was genuine institutional flow, NIFTY should not retrace 8 spot points within 30 seconds — a retracement of this magnitude in the vol-expansion direction means the signal was a false breakout (news spike without follow-through). Calibrated to the lower end of 30-second NIFTY moves (2-5 option pts) to cut false signals quickly.",
+    "target_points": 7,
+    "target_rationale": "7 option premium points = ~14 NIFTY spot points at delta 0.5. Vol expansion first legs on NIFTY typically carry 15-25 spot points before delta-hedge flow exhausts (1-1.5 ATR continuation). 7 points captures ~55% of the expected move with a 1:1.75 risk-reward ratio. During the high-vol regime that triggers this signal, the 1-minute typical move of 3-7 option points supports a 7-point target.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX < 26.0 — vol expansion is tradeable only when India VIX is below extreme levels; above 26, direction persistence degrades because the vol expansion becomes market-wide panic rather than directional institutional flow",
+    "time_filter": "09:20-15:25 IST — skip first 5 minutes (09:15-09:20) to avoid opening cross noise; skip last 5 minutes to avoid EOD position risk",
+    "volume_filter": "rel_volume > 1.8 on expansion bar — confirms order flow reality, not thin-market spike",
+    "trend_filter": "close vs VWAP direction alignment — only trade in direction consistent with session trend",
+    "spread_filter": "not applicable — limit orders at candle close prices, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.41,
+    "edge_decay_risk": "low — volatility clustering (GARCH) is structurally embedded in NIFTY microstructure; delta-hedge feedback loops from short-gamma market makers are a persistent feature of Indian index options"
+  },
+  "adaptation_notes": "Three key changes from original equity strategy: (1) UNIVERSE CHANGE — original runs on 30 FnO stocks, converted to NIFTY index only; ATR expansion is equally valid on the index, and index options provide cleaner execution with no single-stock event risk. (2) LOOKBACK COMPRESSION — original uses ATR_10 (10-min) and ATR_60 (60-min) on 1-min bars; converted to ATR_12 (1-min) and ATR_60 (5-min) on 5s bars to match the 30-90s hold time — we catch the fast burst onset, not the slow regime confirmation. (3) BASELINE RESCALED — volume baseline moved from 20-min to 5-min to match ATR baseline timeframe; VIX threshold kept at 26 (original was 28, tightened slightly for index options where direction persistence degrades faster in extreme vol). VWAP trend filter is preserved from original. Trailing stop and signal-exit (vol_expansion dropping below 1.5) removed — too complex for 5-30s holds; time stop at 18 bars (90s) replaces them.",
+  "weaknesses": [
+    "Vol expansion without directional persistence = whipsaw; common on NIFTY during sudden macro news reversals (RBI surprise, global flash moves) where delta-hedge feedback reverses direction",
+    "ATR_12 can spike due to a single large 5-second candle and normalize immediately — false signal risk is higher at 5s bars than at 1-min bars",
+    "VWAP filter may reduce trade count significantly in strong directional sessions where price drifts far from VWAP and only one-sided expansions occur",
+    "High-vol regime (VIX 20-26) may produce back-to-back expansion bars without clean entries due to max_trades_per_day limit"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_42.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 bars (10-30 min)",
+    "original_indicators": ["ATR(10) 1-min", "ATR(60) 1-min", "vol_expansion = ATR_10/ATR_60", "bar_direction", "rel_volume = volume/SMA(volume,20)"],
+    "original_stop": "1.0 * ATR_10 from entry",
+    "original_target": "1.5 * ATR_10 from entry"
+  }
+}

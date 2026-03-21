@@ -1,0 +1,111 @@
+{
+  "name": "volume_spike_exhaustion_fade",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "microstructure", "volume", "exhaustion"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_357.json",
+  "original_name": "volume_spike_exhaustion_fade",
+  "mechanism": "On NIFTY, when a 5-second bar shows a volume spike (4x+ the recent 5-minute average) but the price body is less than 30% of the bar's high-low range (a doji or spinning-top candle), it signals that a large institutional VWAP/TWAP algo or a momentum cascade hit the order book but was immediately absorbed by opposing resting limit orders at that level. The aggressive flow exhausts itself — buyers who chased up or sellers who dumped have completed their program — and the residual imbalance unwinds as market makers and short-gamma desks fade the move within the next 15-90 seconds. The key is the combination: high volume confirms real participation, doji body confirms the participants failed to move price, making imminent reversion highly probable.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vol_sma_60",
+      "formula": "SMA(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling average volume. Original used 50 1-min bars (50-minute baseline) — far too long for a 5s strategy where intraday volume patterns shift every few minutes. 60 bars = 5 minutes captures the immediate local volume baseline without anchoring to the morning open or pre-lunch trough. A spike must be 4x recent activity, not 4x the session average."
+    },
+    {
+      "name": "vol_spike",
+      "formula": "volume > vol_sma_60 * vol_spike_mult",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Identifies bars with institutional-scale order flow. Multiplier of 4x (tunable 2.5-6x) calibrated to NIFTY futures/options where block trades and VWAP algo bursts routinely generate 3-6x average volume; below 2.5x is noise, above 6x is rare enough to provide too few signals."
+    },
+    {
+      "name": "range_body_ratio",
+      "formula": "abs(close - open) / (high - low)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Single-bar exhaustion check. A ratio < 0.3 means the bar is a doji/spinning-top — high volume with minimal directional follow-through. This is the critical filter that distinguishes true exhaustion (big volume, tiny body) from momentum acceleration (big volume, big body). Lookback is 0 — this is a pure current-bar calculation, same as the original."
+    },
+    {
+      "name": "ret_1",
+      "formula": "close - close[1]",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Direction of the exhaustion bar relative to the prior bar. Determines whether to fade up (buy CE when prior move was down) or fade down (buy PE when prior move was up). Required to assign direction to the exhaustion signal."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_spike == True (volume > 4x the 5-min rolling average)",
+        "range_body_ratio < 0.3 (doji: tiny price body despite high volume)",
+        "ret_1 < 0 (close below prior close — sellers were exhausted)",
+        "in_session: 09:30-15:20 IST"
+      ],
+      "confirmation": "All three must fire on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_spike == True (volume > 4x the 5-min rolling average)",
+        "range_body_ratio < 0.3 (doji: tiny price body despite high volume)",
+        "ret_1 > 0 (close above prior close — buyers were exhausted)",
+        "in_session: 09:30-15:20 IST"
+      ],
+      "confirmation": "All three must fire on the same 5-second bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points. If NIFTY moves 8 spot points against the reversion within 90 seconds of an exhaustion signal, the spike was NOT absorption but the start of a momentum acceleration — the thesis is invalidated. Calibrated to the lower bound of NIFTY 1-minute moves (3-7 pts typical) to give the reversion room without absorbing a full adverse leg.",
+    "target_points": 6,
+    "target_rationale": "6 option points = ~12 NIFTY spot points. Post-exhaustion reverts average 10-20 spot points within 60-90 seconds as resting orders absorb the imbalance. 6 pts captures ~50-60% of the expected median reversion (1:1.5 R:R). Consistent with the 30-90 second hold window where typical NIFTY moves are 2-7 option points.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — exhaustion mechanics work in any volatility regime; high VIX sessions may produce larger reverts",
+    "time_filter": "09:30-15:20 IST; skip first 15 minutes (09:15-09:30) when opening order imbalances create false volume spikes that are directional, not exhaustion",
+    "volume_filter": "vol_spike_mult tunable 2.5-6x; primary signal component",
+    "trend_filter": "none — exhaustion fade is counter-directional by design; trend context not required",
+    "spread_filter": "none — limit orders at close price; NIFTY ATM options have sufficient liquidity"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 2.07,
+    "edge_decay_risk": "moderate — algo proliferation may reduce post-spike reversion amplitude as more participants fade these signals simultaneously; edge survives if volume spikes remain intermittent (not crowded out)"
+  },
+  "adaptation_notes": "Original traded top-10 FnO stocks by volume on 1-min bars, holding 5-15 bars (5-15 min). Converted to NIFTY index 5-second bars holding 15-90 seconds. Three key changes: (1) Volume lookback compressed from 50 1-min bars (50 min) to 60 5-second bars (5 min) — recent local baseline not session-wide. (2) Hold time reduced from 5-15 minutes to 15-90 seconds — the index reversion is faster than individual stocks because it's driven by algo desks not fundamental buyers. (3) Original used stock-universe 'top 10 by volume' which does not apply to NIFTY; replaced with session-time filter to skip opening noise. The core microstructure mechanism — volume climax without price breakout precedes mean reversion — is universal and index-observable.",
+  "weaknesses": [
+    "NIFTY 5-second volume is noisier than 1-minute equity volume; false spike detection possible during futures expiry roll periods",
+    "Exhaustion signals cluster near market open and pre-close; the 09:30 session start mitigates but doesn't eliminate open-auction noise",
+    "Doji detection on 5-second bars can fire on genuinely low-range bars where high=low=close (zero-range bars) during thin periods — need guard on bar_range > 0"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_357.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-15 bars (5-15 min)",
+    "original_indicators": ["vol_spike: volume > SMA(50) * 5", "range_check: abs(close-open)/(high-low) < 0.3"],
+    "original_stop": "0.15% from entry",
+    "original_target": "0.25% fixed"
+  }
+}

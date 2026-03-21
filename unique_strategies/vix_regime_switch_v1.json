@@ -2,17 +2,17 @@
   "name": "vix_regime_switch_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "vix", "regime", "adaptive", "mean_reversion", "momentum", "nifty"],
-  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_209.json",
+  "tags": ["volatility", "vix", "regime", "mean_reversion"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_41.json",
   "original_name": "vix_regime_switch_v1",
-  "mechanism": "India VIX directly governs NIFTY's intraday microstructure regime. When VIX < 14, market makers dominate with tight two-way liquidity, NIFTY oscillates ±10-20 spot points around its 20-minute Bollinger midline, and every large deviation is faded by institutional algorithms benchmarked to VWAP. When VIX > 18, directional institutional and FII flows dominate: each 5-second bar during a trend has follow-through as delta-hedging by option market makers amplifies the move. By detecting VIX regime at 5-second resolution and deploying BB-reversal logic in low-VIX vs. EMA-crossover momentum logic in elevated-VIX, we match entry logic to the microstructure actually operating — avoiding whipsaw entries in trending conditions and fade entries in ranging conditions.",
+  "mechanism": "On NIFTY, when India VIX is elevated above its 60-minute session rolling mean by more than 1.5 standard deviations and begins declining (negative 60-second VIX slope), market makers and institutional hedgers start unwinding their defensive put positions — this unwind creates aggressive spot buying that drives 30-50 NIFTY point bounces over the next 30-90 seconds. The inverse holds: when VIX is depressed below session baseline and starts rising, fresh hedging demand enters the options market, and dealers delta-hedge by selling NIFTY futures, pushing spot down. VIX re-prices faster than spot (it is derived from option bid-ask midpoints), giving a 5-10 second lead on directional moves in the index.",
   "universe": "NIFTY",
   "timeframe": "5s",
-  "session": "09:20-15:20 IST",
-  "hold_time_seconds": [30, 90],
-  "max_hold_bars": 18,
-  "trades_per_day": "3-8",
-  "max_trades_per_day": 8,
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
   "data": {
     "ohlcv_5s": true,
     "option_chain": true,
@@ -23,123 +23,80 @@
   },
   "indicators": [
     {
-      "name": "vix_close",
-      "formula": "India VIX 5-second close, joined asof to spot bars",
-      "lookback": 1,
+      "name": "vix_zscore",
+      "formula": "(vix_close - rolling_mean(vix_close, 720)) / rolling_std(vix_close, 720)",
+      "lookback": 720,
       "computed_on": "vix",
-      "purpose": "Instantaneous VIX level determines which sub-strategy fires. No lookback needed — regime is assessed bar-by-bar."
+      "purpose": "720 bars = 60 minutes captures the intraday session VIX baseline. The original used 20-day daily BB which requires EOD data. For intraday 5s bars, 60 minutes is the right context window — it captures the current session's volatility regime without contaminating with the previous day's VIX level. Shorter windows (e.g., 10 min / 120 bars) are too noisy; longer windows (e.g., 3h) are too slow to update when regime changes mid-session."
     },
     {
-      "name": "vix_std_360",
-      "formula": "rolling_std(vix_close, 360)",
-      "lookback": 360,
+      "name": "vix_slope_12",
+      "formula": "(vix_close - vix_close[12]) / vix_close[12]",
+      "lookback": 12,
       "computed_on": "vix",
-      "purpose": "30-minute VIX volatility-of-volatility filter. If VIX itself has been volatile (std > 1.5), we're near a regime boundary and signals are unreliable (original spec: 'VIX stable in current regime for > 30 min'). 360 bars = 30 min × 12 bars/min."
+      "purpose": "12 bars = 60 seconds detects VIX turning direction at the precision needed for a 30-120s hold. The original used vix_change_60 on 1-min bars (= 60-minute VIX change) which is far too slow for our hold time. At 5s resolution, a 60-second VIX slope is the minimum reliable slope estimate — shorter (e.g., 3 bars / 15s) is too noisy as VIX ticks irregularly."
     },
     {
-      "name": "bb_upper_240",
-      "formula": "SMA(close, 240) + 2 * rolling_std(close, 240)",
-      "lookback": 240,
+      "name": "ret_6",
+      "formula": "(close - close[6]) / close[6]",
+      "lookback": 6,
       "computed_on": "spot",
-      "purpose": "20-minute upper Bollinger Band. Matches the original 20-bar 1-minute BB exactly in calendar time. In low-VIX mean-reversion mode, a close above this band with RSI overbought is the short trigger. 240 bars = 20 min at 5s resolution."
-    },
-    {
-      "name": "bb_lower_240",
-      "formula": "SMA(close, 240) - 2 * rolling_std(close, 240)",
-      "lookback": 240,
-      "computed_on": "spot",
-      "purpose": "20-minute lower Bollinger Band. Companion to bb_upper. A close below this band with RSI oversold in low-VIX environment signals a mean-reversion buy — NIFTY has been pushed to the 2-sigma edge of its 20-minute range."
-    },
-    {
-      "name": "rsi_36",
-      "formula": "RSI(close, 36)",
-      "lookback": 36,
-      "computed_on": "spot",
-      "purpose": "3-minute RSI as entry confirmation for mean-reversion. Original used RSI(14) on 1-min = 14-minute window. We compress to 36 bars (3 min) because we're targeting the fast reversion from the BB extreme, not the slow oscillator cycle. A 3-min RSI reaching <35 or >65 at a BB extreme confirms localized exhaustion on NIFTY."
-    },
-    {
-      "name": "adx_60",
-      "formula": "ADX(high, low, close, 60)",
-      "lookback": 60,
-      "computed_on": "spot",
-      "purpose": "5-minute ADX as regime-confirmation for both sub-strategies. In mean-reversion mode: ADX < 25 confirms NIFTY is ranging. In momentum mode: ADX > 25 confirms a real trend is underway. 60 bars = 5 min, matches original 14-period 1-min bar = 14 min. Compressed to 5 min because trend/range distinction at NIFTY's 5-second scale is confirmed faster than in single-stock equity."
-    },
-    {
-      "name": "ema_36",
-      "formula": "EMA(close, 36)",
-      "lookback": 36,
-      "computed_on": "spot",
-      "purpose": "3-minute fast EMA for momentum crossover. Original EMA_9 on 1-min = 9-minute horizon. Compressed from 9 to 3 minutes because we hold 30-90 seconds — the fast EMA must respond to moves within the hold window, not moves from an hour ago. At 5-second bars, EMA(36) tracks the last 3 minutes of price action accurately."
-    },
-    {
-      "name": "ema_120",
-      "formula": "EMA(close, 120)",
-      "lookback": 120,
-      "computed_on": "spot",
-      "purpose": "10-minute slow EMA as trend-direction context. Original EMA_21 on 1-min = 21-minute horizon. We use 120 bars (10 min) — not a blind scaling of 21 × 12 = 252, but a deliberate choice: 10 minutes captures the primary intraday trend direction for institutional TWAP/VWAP flow, which is the driver in elevated-VIX environments on NIFTY."
-    },
-    {
-      "name": "ema36_slope_3",
-      "formula": "ema_36[i] - ema_36[i-3]",
-      "lookback": 3,
-      "computed_on": "spot",
-      "purpose": "15-second EMA acceleration. Replaces original '3-bar slope confirmation'. At 5-second bars, 3 bars = 15 seconds. A positive EMA slope over 15 seconds confirms the momentum is active right now, not just that the crossover happened bars ago."
+      "purpose": "30-second NIFTY return as directional guard. Replaces the original's nifty_return_60 (60-min bars x 60 = 60-minute return). For a 30-120s trade, we need confirmation that the index is not already in a violent one-directional move when the VIX signal fires — 30s return is sufficient to detect this without being so long that it becomes redundant with the VIX signal itself."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "MODE A (low VIX): vix_close < vix_low_threshold (default 14.0) AND close < bb_lower_240 AND rsi_36 < rsi_oversold (default 35) AND adx_60 < adx_trend_threshold (default 25)",
-        "MODE B (elevated VIX): vix_close >= vix_high_threshold (default 18.0) AND vix_close < 25.0 AND ema_36 > ema_120 AND ema36_slope_3 > 0 AND adx_60 > adx_trend_threshold (default 25)"
+        "vix_zscore > vix_zscore_high (VIX is elevated vs session mean — fear regime active)",
+        "vix_slope_12 < -vix_slope_thresh (VIX turning down — hedgers starting to unwind puts)",
+        "ret_6 > -0.002 (NIFTY not in freefall — guards against genuine crash where VIX dip is a false start)"
       ],
-      "confirmation": "vix_std_360 < 1.5 (regime is stable, not flip-flopping at a boundary)"
+      "confirmation": "All three conditions simultaneously: elevated VIX context + VIX directional turn + NIFTY not already crashing"
     },
     "buy_pe": {
       "conditions": [
-        "MODE A (low VIX): vix_close < vix_low_threshold AND close > bb_upper_240 AND rsi_36 > rsi_overbought (default 65) AND adx_60 < adx_trend_threshold",
-        "MODE B (elevated VIX): vix_close >= vix_high_threshold AND vix_close < 25.0 AND ema_36 < ema_120 AND ema36_slope_3 < 0 AND adx_60 > adx_trend_threshold"
+        "vix_zscore < -vix_zscore_low (VIX below session mean — complacency regime)",
+        "vix_slope_12 > vix_slope_thresh (VIX starting to rise — fresh hedging demand building)",
+        "ret_6 < 0.002 (NIFTY not in melt-up — guards against continuation gaps where VIX rise is brief)"
       ],
-      "confirmation": "vix_std_360 < 1.5 (regime is stable)"
+      "confirmation": "All three conditions simultaneously: depressed VIX context + VIX starting to climb + NIFTY not already surging"
     },
-    "entry_price": "limit at candle close"
+    "entry_price": "limit at bar close"
   },
   "exit": {
-    "stop_points_mean_rev": 3.0,
-    "stop_points_momentum": 5.0,
-    "stop_rationale": "Mean-rev stop 3 pts: in low-VIX ranging NIFTY, a close beyond the BB by >6 spot points (~3 option pts at delta 0.5) means the deviation is widening not reverting — thesis is broken. Momentum stop 5 pts: NIFTY in elevated-VIX should not retrace more than 10 spot points (~5 option pts) within 30 seconds on a valid trend continuation entry.",
-    "target_points_mean_rev": 5.0,
-    "target_points_momentum": 8.0,
-    "target_rationale": "Mean-rev target 5 pts: reversion from BB extreme to SMA midline typically covers 15-25 spot points (~7-12 option pts); capturing 5 option pts = ~50% of median move (conservative, 1:1.67 R:R). Momentum target 8 pts: first momentum leg in elevated-VIX NIFTY moves 20-30 spot points; 8 option pts captures ~40% of expected move (1:1.6 R:R).",
-    "time_stop_bars": 18,
-    "eod_rule": "flatten at 15:20 IST"
+    "stop_points": 4,
+    "stop_rationale": "NIFTY VIX-driven bounces average 30-50 spot points over 60-90 seconds (~4-7 option pts at delta 0.5). A 4-point stop means the trade fails if NIFTY moves 8 spot points against the thesis within the hold window — if VIX truly turned but NIFTY continues against, the regime read was wrong and cutting fast preserves capital.",
+    "target_points": 7,
+    "target_rationale": "7 option points corresponds to ~14 spot points on NIFTY at delta 0.5. VIX-driven directional unwinding on NIFTY typically produces 30-50 spot point moves in the first 60-90 seconds; 14 spot points is ~40% of the median expected move, giving 1:1.75 R:R while staying within a realistic 2-minute hold window.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "Core filter — VIX regime determines sub-strategy; crisis regime (VIX >= 25) = no new entries; VIX std_360 >= 1.5 = skip (regime transition in progress)",
-    "time_filter": "09:20-15:20 IST; both modes active throughout session",
-    "volume_filter": "None — NIFTY index volume is structurally noisy at 5s; regime/indicator signals sufficient",
-    "trend_filter": "ADX < 25 enforces ranging context for mean-rev mode; ADX > 25 enforces trending context for momentum mode",
-    "spread_filter": "Not applicable — limit order execution at candle close"
+    "vix_filter": "core to strategy — VIX z-score threshold defines the regime; 720-bar session rolling window",
+    "time_filter": "09:30-15:20 IST — skip first 15 minutes (VIX stabilizes after pre-open noise) and last 10 minutes",
+    "volume_filter": "none — NIFTY index volume is noisy at 5s; VIX slope is the primary filter",
+    "trend_filter": "ret_6 directional guard prevents entries into existing strong moves",
+    "spread_filter": "N/A — limit orders at candle close, no spread cost"
   },
   "edge": {
-    "expected_bps": 18,
-    "win_rate_estimate": 0.56,
-    "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.9,
-    "edge_decay_risk": "Medium — VIX boundary thresholds (14, 18) may drift as Indian market matures; thresholds are tunable via Optuna"
+    "expected_bps": 35,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.6,
+    "edge_decay_risk": "low — VIX mean reversion is structural; option dealer delta-hedging mechanics are persistent and not easily arbed away at 5s granularity"
   },
-  "adaptation_notes": "Original traded NIFTY50 constituent equities (top 20 by liquidity), which acted as proxies for the index direction. We remove the equity-universe entirely and trade NIFTY index options directly. The regime-switching logic is preserved intact: BB+RSI in low-VIX, EMA-crossover+ADX in elevated-VIX. Three changes: (1) All lookbacks compressed/recalibrated for 5-second bars as documented in indicator purpose fields; (2) Stop/target now expressed in option premium points with regime-conditional values (3 pts / 5 pts stop, 5 pts / 8 pts target); (3) Added VIX stability filter (30-min VIX std) to prevent trading at regime transitions where both sub-strategies would misfire.",
+  "adaptation_notes": "Three major changes from original: (1) Universe shifted from high-beta Nifty50 stocks to NIFTY index options — eliminates stock-specific execution risk and spread issues; all the VIX thesis is really about index dynamics anyway. (2) 20-day daily Bollinger Band replaced by 60-minute intraday rolling z-score — the original's 20-day BB requires EOD data and is too slow to update intraday; 60-minute session context captures VIX regime shifts that actually occur intraday. (3) Hold time compressed from 60-180 minutes to 30-120 seconds — the first leg of a VIX-driven NIFTY bounce/fall happens in the first 30-90 seconds as the fastest participants (market makers, gamma hedgers) react; we only need to capture this initial leg, not the full recovery which the original held for.",
   "weaknesses": [
-    "VIX boundary thresholds (14, 18) are tunable defaults but still have threshold risk — signals near 14 and 18 may generate frequent whipsaws if VIX oscillates around these levels intraday",
-    "ADX at 5-second frequency on an index can lag; rapid regime changes (e.g., news spike) may see ADX confirm trend only after the best entry has passed",
-    "In normal-VIX environments (14-18), neither sub-strategy fires — this dead zone represents 30-40% of intraday time when VIX is in its most common range",
-    "Mean-reversion BB signals require 240-bar (20-min) warmup before first trade, limiting utility in the opening 20 minutes"
+    "VIX z-score requires 60-minute warmup (720 bars) — no signals in first hour of session",
+    "VIX can turn briefly without NIFTY following — short-term VIX wiggles on noise generate false signals during low-vol sessions",
+    "During genuine crises (VIX spiking continuously), the turning-down signal may fire repeatedly as VIX makes lower highs but overall continues climbing — multiple whipsaw losses possible"
   ],
   "_source": {
-    "original_file": "trading_strategies/unique_strategies_all/Strategy_209.json",
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_41.json",
     "original_timeframe": "1min",
-    "original_hold_time": "15-120 mins (depends on regime)",
-    "original_indicators": ["BB(20)", "RSI(14)", "ADX(14)", "EMA(9)", "EMA(21)", "ATR(14)", "India VIX current"],
-    "original_stop": "mean_rev: 0.3 * ATR14 beyond BB; momentum: 0.8 * ATR14",
-    "original_target": "mean_rev: SMA midline; momentum: 1.5 * ATR14"
+    "original_hold_time": "60-180 bars (60-180 minutes)",
+    "original_indicators": ["vix_bb_upper (20-day SMA+2SD)", "vix_bb_lower (20-day SMA-2SD)", "vix_change_60 (60-bar VIX change)", "nifty_return_60", "atr_20"],
+    "original_stop": "0.4% from entry",
+    "original_target": "0.6% from entry"
   }
 }

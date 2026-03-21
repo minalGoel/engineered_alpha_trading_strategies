@@ -1,0 +1,118 @@
+{
+  "name": "price_impact_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["microstructure", "price_impact", "mean_reversion", "volume_spike", "vwap"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_243.json",
+  "original_name": "price_impact_reversion_v1",
+  "mechanism": "On NIFTY, institutional block executions and algorithmic basket orders occasionally concentrate their fills into single 5-second windows, creating 8-20 spot point directional bars with 2.5-4x the 5-minute average volume. These concentrated sweeps push NIFTY away from session VWAP — the VWAP deviation confirms the bar is an overshoot rather than the start of a sustained directional move. VWAP-benchmarked institutional algorithms, market makers delta-hedging option positions, and statistical-arbitrage programs respond immediately by trading against the overshoot, causing a 40-60% partial reversion within 30-90 seconds as the swept resting orders are replenished.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:15 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vol_mean_60",
+      "formula": "rolling_mean(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling mean volume (60 bars at 5s = 5 min). This is the intraday baseline against which spikes are measured. Shorter than original's 60-minute median because intraday volume patterns change across the session (morning rush vs afternoon lull); 5-min rolling mean tracks the current regime without being contaminated by the opening burst."
+    },
+    {
+      "name": "vol_spike",
+      "formula": "volume / vol_mean_60",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Volume spike ratio. Replaces the original's per-trade max_qty / median_qty signal. At 5s bar resolution we cannot see individual trade sizes, but a 2.5x+ volume spike in a single bar is a reliable proxy for an unusual concentration of order flow that created price impact."
+    },
+    {
+      "name": "bar_return_bps",
+      "formula": "(close - open) / open * 10000",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Single-bar return in basis points. Replaces impact_bps from original. A 5-second bar with ±15 bps on NIFTY (~±3.5 spot pts on 22000 index) represents a sharp sweep. Computed on open-to-close of the same bar to capture the within-bar price impact directionally."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative_sum(typical_price * volume) / cumulative_sum(volume), reset each session",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP from 09:15. No scaling — cumulative measure has no lookback. Used to determine if the impact bar's close is an overshoot from fair value. The original used VWAP_dev_bps as the key filter to distinguish informed from uninformed large trades."
+    },
+    {
+      "name": "vwap_dev_bps",
+      "formula": "(close - vwap) / vwap * 10000",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "VWAP deviation in basis points. The key filter: a volume-spike bar that ends ±12 bps from VWAP has pushed price to an overextended level relative to the session fair value anchor. At NIFTY 22000, ±12 bps = ±26 spot pts, which triggers VWAP-benchmarked algorithm response."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_spike >= vol_spike_threshold (default 2.5) — volume 2.5x above 5-min average",
+        "bar_return_bps <= -impact_bps_threshold (default -15.0) — sharp 5s sell bar",
+        "vwap_dev_bps <= -vwap_dev_threshold (default -12.0) — pushed below session VWAP",
+        "vix_close < vix_max (default 22.0) — avoid high-VIX regime where impacts are informed"
+      ],
+      "confirmation": "Entry at close of impact bar — the reversion typically starts in the very next bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_spike >= vol_spike_threshold (default 2.5) — volume 2.5x above 5-min average",
+        "bar_return_bps >= +impact_bps_threshold (default +15.0) — sharp 5s buy bar",
+        "vwap_dev_bps >= +vwap_dev_threshold (default +12.0) — pushed above session VWAP",
+        "vix_close < vix_max (default 22.0) — avoid high-VIX regime"
+      ],
+      "confirmation": "Entry at close of impact bar — fade the overshoot"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts = ~8 spot pts at delta 0.5. If the impact bar is followed by another 8 spot pt move in the same direction, the 'overshoot' was actually informed institutional flow continuing — the reversion thesis is wrong and we exit. A typical NIFTY 30-second move is 2-5 pts; 4 pts is just outside the noise band.",
+    "target_points": 6.0,
+    "target_rationale": "6 option pts = ~12 spot pts at delta 0.5. Empirically, price impact on NIFTY from institutional sweeps ranges 8-20 spot pts; targeting 50% reversion gives 4-10 pts. We target the conservative end at 6 pts (12 spot pts) for a 1:1.5 R:R that captures even partial reversions from smaller impacts.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:15 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22.0. Original used VIX < 25; tighter at 22 because on NIFTY in high-VIX regimes large volume bars tend to be informed macro flow (FII sell/buy programs) with directional follow-through rather than uninformed impact that reverts.",
+    "time_filter": "09:25-15:15 IST. Skip first 10 minutes of session (opening auction creates unusual volume patterns that inflate vol_spike ratio). End 15 minutes before close to avoid EOD illiquidity.",
+    "volume_filter": "vol_spike >= threshold implicitly filters for bars with anomalous volume — no separate bar volume filter needed",
+    "trend_filter": "VWAP deviation filter acts as implicit counter-trend filter — entries when price has moved away from VWAP",
+    "spread_filter": "none — limit order execution at close prices, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.28,
+    "edge_decay_risk": "Medium — NIFTY market structure is evolving as co-location algos proliferate and response to volume spikes becomes faster. The reversion window could compress from 30-90s to 10-30s over time. Also, as NIFTY options market deepens, gamma hedging flows respond faster to index dislocations."
+  },
+  "adaptation_notes": "Original strategy uses per-trade tick data (max_trade_qty_in_bar > 5× median) to identify large individual trades — a signal unavailable in 5-second OHLCV bars. The adaptation replaces this with (volume / rolling_mean_volume) as a proxy: a 5-second bar where aggregate volume is 2.5x the recent average implies an unusually concentrated execution that functions similarly to a large single trade. The VWAP deviation filter is preserved directly (translated from bps threshold to same threshold on spot). The VIX filter is tightened from 25 to 22 because NIFTY is more sensitive to global macro flow (which IS informed) versus the original's thin mid-cap equities where large trades were more likely to be liquidity-driven. Hold time compressed from 2-5 minutes to 30-90 seconds because NIFTY market microstructure is far more efficient than mid-cap stocks and the reversion is absorbed faster.",
+  "weaknesses": [
+    "Volume spike ratio conflates multiple sources of high volume: genuine single-trade impact, high-frequency scalping activity, options expiry delta-hedging flows, and macro data release reactions. Not all volume spikes cause reversible price impact.",
+    "NIFTY is 10-20x more liquid than original target stocks (ranked 51-100 NIFTY 100 constituents). The single-trade price impact thesis is weaker at index level — no single participant can move NIFTY meaningfully except in highly illiquid pre/post-market windows.",
+    "VWAP deviation threshold of 12 bps on NIFTY (~26 spot pts) is a fairly common intraday move — more false signals expected than original's stock-level 20 bps threshold in thin names."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_243.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "2-5 min",
+    "original_indicators": ["large_trade_flag (tick data)", "impact_bps", "VWAP_dev_bps", "spread_to_normal"],
+    "original_stop": "impact extends by 50% (dynamic, bps-based)",
+    "original_target": "reversion to 50% of impact (dynamic, bps-based)"
+  }
+}

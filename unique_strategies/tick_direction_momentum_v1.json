@@ -1,0 +1,111 @@
+{
+  "name": "tick_direction_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["microstructure", "order_flow", "momentum", "tick_direction", "short_term"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_241.json",
+  "original_name": "tick_direction_momentum_v1",
+  "mechanism": "On NIFTY/BANKNIFTY, institutional TWAP and momentum algorithms execute directional orders over multiple 5-second bars, imprinting a persistent bias in bar-by-bar close direction. When >62% of the last 3 minutes of 5-second bars close higher (tick_dir_ratio > 0.62) and this ratio is accelerating, large buy-side flow is continuously absorbing sell-side liquidity — market makers short gamma via ATM options must delta-hedge by buying the index in the same direction, compounding the upward pressure. We enter 30-60 seconds into this dominance phase, before the signal becomes visible on 1-minute charts, and ride the institutional order completion window (30-90 seconds). The converse applies for persistent downtick dominance signaling sell-side absorption.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "5-15",
+  "max_trades_per_day": 15,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "tick_dir_ratio_36",
+      "formula": "rolling_mean(close > prev_close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "Fraction of 5s bars closing up over 3 minutes (36 bars). Chosen at 3 min because it captures a meaningful institutional TWAP slice — long enough to distinguish sustained order flow from noise (18+ up-bars out of 36 is statistically significant), but short enough to lead our 30-90s hold time by the needed 1-2 minutes. The original used 1-min tick_ratio feeding into EMA(5) = ~5-min effective lookback on 1-min bars with 2-5 min hold; we compress proportionally to 3 min for our shorter hold."
+    },
+    {
+      "name": "tick_dir_momentum_24",
+      "formula": "tick_dir_ratio_36[t] - tick_dir_ratio_36[t-24]",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Acceleration of tick direction ratio: change in the rolling ratio over the past 2 minutes (24 bars). The original computed tick_ratio_ema[t] - tick_ratio_ema[t-3] on 1-min bars (3-min lookback). We use a 2-min lag (24 bars) on our already-smoothed 36-bar ratio — this detects the phase where uptick dominance is building, not just sustained, giving earlier entry into the institutional order flow window."
+    },
+    {
+      "name": "price_roc_12",
+      "formula": "(close - close[12]) / close[12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute price rate of change to confirm NIFTY is actually moving in the direction of the tick signal. Scaled from original's 3-bar ROC on 1-min bars (3 min) to 1 min (12 bars) because with a 30-90s hold, we need price confirmation at the same 1-min timescale, not 3-min. This filters cases where tick ratio is elevated but price is flat (range-bound noise)."
+    },
+    {
+      "name": "session_vwap",
+      "formula": "cumulative(typical_price * volume) / cumulative(volume), reset daily",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as a trend filter: buy CE only when NIFTY is above VWAP (institutions net buying since open), buy PE only when below. No scaling needed — cumulative measure from session open. Direct translation of original's VWAP filter (close > VWAP for longs, < VWAP for shorts)."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "tick_dir_ratio_36 > tick_ratio_threshold (default 0.62)",
+        "tick_dir_momentum_24 > tick_momentum_threshold (default 0.08)",
+        "price_roc_12 > price_roc_threshold (default 0.0003, i.e. +3 bps in 1 min)",
+        "close > session_vwap"
+      ],
+      "confirmation": "All four conditions met on current 5s bar; uptick dominance is sustained and accelerating with price confirming"
+    },
+    "buy_pe": {
+      "conditions": [
+        "tick_dir_ratio_36 < (1 - tick_ratio_threshold) (default 0.38)",
+        "tick_dir_momentum_24 < -tick_momentum_threshold (default -0.08)",
+        "price_roc_12 < -price_roc_threshold (default -0.0003)",
+        "close < session_vwap"
+      ],
+      "confirmation": "All four conditions met on current 5s bar; downtick dominance is sustained and accelerating with price confirming"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY reverses 8 spot points within 30-90s, the tick direction signal has definitively failed — institutional order flow has reversed or completed. Typical 30s NIFTY move is 2-5 option pts, so 4 pts stop sits at the upper end of typical noise, preventing stop-hunting while exiting genuine reversals.",
+    "target_points": 6,
+    "target_rationale": "6 option points (~12 NIFTY spot points). A sustained tick direction signal with institutional flow behind it typically drives 10-20 spot point moves within 1-2 min; 6 option pts captures ~50% of the lower end of that range. Gives 1:1.5 R:R with 4-pt stop — viable with 55%+ win rate.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "none (VIX not used — tick direction works across vol regimes; high VIX actually improves signal as institutional hedging is more directional)",
+    "time_filter": "09:20-15:25 IST; skip first 5 minutes of session (09:15-09:20) to avoid opening auction noise",
+    "volume_filter": "price_roc_12 > threshold acts as implicit volume/momentum filter",
+    "trend_filter": "session VWAP alignment (close vs VWAP) ensures trade direction matches broader intraday trend",
+    "spread_filter": "none — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Medium — bar-direction approximation of tick ratio is a proxy that degrades if 5s bars become noisier or if algo diversity increases. Core order-flow imbalance thesis remains valid on NIFTY as long as institutional TWAP participation is high."
+  },
+  "adaptation_notes": "Original tracked actual uptick/downtick counts from trade tape on NIFTY50 constituent stocks. At index level on 5-second bars, each bar's close direction (close > prev_close) serves as a tick direction proxy — at 5s resolution each bar represents ~50-200 actual ticks, making the direction of close a reliable aggregated tick signal. The EMA smoothing of 1-min tick ratios (original's EMA-5 on 1-min bars) is replaced by a rolling 36-bar fraction on raw 5s bars — equivalent information, higher temporal resolution. VWAP filter, price ROC confirmation, and momentum acceleration checks are preserved semantically. Hold time compressed 2-5x (from 2-5 min to 30-90s) by removing multi-minute persistence requirement that was needed on noisy equity stocks but is unnecessary on the liquid NIFTY index.",
+  "weaknesses": [
+    "Bar close direction is a noisy proxy for true tick direction — a single large print can change a bar's close without reflecting the underlying order flow majority",
+    "NIFTY index volume is less informative than individual stock volume; the implicit volume filter (price_roc_12) may miss high-tick-count low-price-move bars",
+    "No VIX regime filter means strategy fires in both trending and volatile sessions; performance will vary significantly across regime types"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_241.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "2-5 min",
+    "original_indicators": ["tick_ratio (uptick/total)", "tick_ratio_ema(5)", "tick_momentum (ema diff 3 bars)", "price_roc(3)", "vwap"],
+    "original_stop": "8 bps from entry",
+    "original_target": "15 bps from entry"
+  }
+}

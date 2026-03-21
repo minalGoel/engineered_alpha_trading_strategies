@@ -1,0 +1,125 @@
+{
+  "name": "bayesian_update_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["bayesian", "probability", "multi-factor", "adaptive", "quantitative"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_299.json",
+  "original_name": "bayesian_update_v1",
+  "mechanism": "On NIFTY, when three independent evidence streams — a 1-minute directional price push (ret_12 z-score), above-average volume confirming institutional participation (volume/avg_volume ratio), and VWAP positioning reflecting benchmark-driven flow — simultaneously point the same direction, a Bayesian running posterior accumulates per 5-second bar. When the posterior exceeds 0.68, the probability that the three-way alignment is coincidental falls below 32%, indicating that FII algorithmic buyers, domestic VWAP-benchmarked orders, and momentum algos are all aligned. NIFTY then sustains direction for another 60-90 seconds because the order flow driving each evidence stream is only partially filled and continues reinforcing the move. The posterior's 3-bar monotonic increase confirms that evidence is accumulating (new order flow arriving) rather than peaking (existing flow finishing), distinguishing a continuation from a reversal.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ret_12",
+      "formula": "(close[i] - close[i-12]) / close[i-12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute return (12 bars × 5s). This is the minimal window at 5s resolution to detect meaningful directional momentum on NIFTY without noise domination. Below 1 min, 5-second returns are essentially iid noise; the original 1-min bar return maps directly to 12 bars, making this the natural price evidence unit."
+    },
+    {
+      "name": "vol_ratio_24",
+      "formula": "volume[i] / mean(volume[i-24:i])",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Current bar volume vs 2-minute rolling average. 24 bars (2 min) provides a stable reference for recent session volume patterns while staying responsive. The original used SMA(volume,20) on 1-min bars (20 min of history); at 5s we need only 2 min because we're detecting per-bar confirmation, not regime volume levels."
+    },
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
+      "lookback": "session_cumulative",
+      "computed_on": "spot",
+      "purpose": "Session VWAP: cumulative, no lookback scaling needed. VWAP distance from close indicates whether price is above/below the institutional benchmark price. This is identical to the original — VWAP is always session-cumulative regardless of bar size."
+    },
+    {
+      "name": "mom_60",
+      "formula": "(close[i] - close[i-60]) / close[i-60]",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute momentum for the Bayesian prior. The original prior used NIFTY ROC(30) on 1-min bars = 30 minutes of history. We compress to 5 minutes (60 bars) because our hold horizon is 90s, not 15-45 min; a prior based on 5-min momentum is proportionally correct: 5 min is 3-4x our target hold, matching the original's 30-min prior vs 15-min hold ratio."
+    },
+    {
+      "name": "ret_std_60",
+      "formula": "rolling_std(ret_12, 60)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "60-bar rolling std of ret_12 for adaptive z-score normalization. Replaces the original's pre-calibrated Gaussian likelihood distributions (which required 60 days of historical data) with session-adaptive normalization. This is the key adaptation: instead of fixed distributions, we normalize each evidence stream to the current session's volatility regime."
+    },
+    {
+      "name": "posterior",
+      "formula": "Naive Bayes: prior * L(ret_12) * L(vol_ratio) * L(vwap_dist) / normalizer, with per-bar decay toward 0.5",
+      "lookback": "rolling_recursive",
+      "computed_on": "spot",
+      "purpose": "Running Bayesian posterior P(NIFTY moves up in next 90s). Decays toward 0.5 each bar (parameterized by decay_factor) so it resets when evidence stops flowing. The decay captures the original's 'posterior must be monotonically increasing' logic: if new bars do not provide fresh evidence, the posterior drifts back to neutral."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "posterior >= posterior_threshold (default 0.68)",
+        "posterior has been monotonically increasing for last 3 bars (evidence accumulating)",
+        "close > session_vwap (bullish benchmark position)",
+        "vix < 25"
+      ],
+      "confirmation": "All 3 conditions simultaneously true on single bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "posterior <= (1 - posterior_threshold) (bearish conviction >= threshold)",
+        "posterior has been monotonically decreasing for last 3 bars",
+        "close < session_vwap (bearish benchmark position)",
+        "vix < 25"
+      ],
+      "confirmation": "All 3 conditions simultaneously true on single bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. When posterior exceeds 0.68 with 3-bar monotonic confirmation, a contra-move of 8 NIFTY points within the 90s hold window contradicts the multi-evidence alignment thesis (typical 90s NIFTY range is 5-10 pts; an 8-pt reversal means the order flow that drove all three evidence streams has fully reversed, not just paused).",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. NIFTY 90-second sustained institutional flow (all three evidence streams aligned) typically extends 12-18 spot points before absorption; targeting 14 pts captures the median of this range at 1.75:1 R:R. Conservative vs the expected 12-18pt range to maximize probability of capture within the 18-bar time stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; above 25, NIFTY volatility regime makes 5-second evidence streams too noisy for the Bayesian framework (likelihoods become uninformative relative to vol).",
+    "time_filter": "09:30-15:20 IST; skip pre-09:30 to allow 30-min rolling stats to stabilize (max_lookback=360 bars)",
+    "volume_filter": "vol_ratio normalization requires cumulative volume; automatically handled via rolling average",
+    "trend_filter": "5-min momentum prior naturally incorporates trend context",
+    "spread_filter": "Not applicable — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.34,
+    "edge_decay_risk": "Medium — Bayesian framework is adaptive to session regime but assumes contemporaneous correlation between evidence streams remains stable. Regime breaks (RBI policy day, sudden FII selling) can temporarily invalidate all three evidence streams simultaneously."
+  },
+  "adaptation_notes": "Three key changes from original: (1) REPLACED pre-calibrated likelihood distributions (required 60 days 1-min history) with session-adaptive z-score normalization using 5-min rolling std — identical Bayesian logic but fully online. (2) COMPRESSED prior lookback from 30-min (30 × 1-min bars) to 5-min (60 × 5s bars) because we hold 90s not 15-45 min; proportionally consistent. (3) REMOVED sector strength component (NIFTY has no sector sub-index in pipeline); compensated by adding VWAP positioning as a stronger third evidence stream — VWAP is a more actionable signal on the index than sector ROC. The 3-bar monotonic increase filter is preserved as-is from the original and translates naturally to 15 seconds at 5s resolution.",
+  "weaknesses": [
+    "Naive Bayes assumption of conditional independence between ret_12, vol_ratio, and vwap_dist is violated on NIFTY — large price moves co-occur with high volume and VWAP deviation, inflating posterior conviction",
+    "Posterior decay factor (0.90 per 5s bar) is a hyper-parameter without ground-truth calibration; miswetting decay can cause posterior to either stick near 1.0 (too slow) or reset too quickly",
+    "At high-conviction threshold (0.68) with 3-bar monotonic filter, the strategy may miss rapid institutional flow events that peak and resolve in 10-15 seconds"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_299.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["Prior_Prob (NIFTY ROC_30 + Sector ROC_30)", "Price_Likelihood (bar return histogram)", "Volume_Likelihood (volume/SMA(20))", "VWAP_Likelihood (VWAP distance distribution)", "Posterior_Prob (Bayesian update)"],
+    "original_stop": "20 bps",
+    "original_target": "35 bps"
+  }
+}

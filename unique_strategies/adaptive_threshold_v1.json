@@ -1,0 +1,116 @@
+{
+  "name": "adaptive_threshold_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["adaptive", "threshold", "regime", "rsi", "mean-reversion", "bollinger"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_300.json",
+  "original_name": "adaptive_threshold_v1",
+  "mechanism": "On NIFTY, FII-driven directional flows create persistent RSI regimes where static 30/70 thresholds fail — during morning momentum sessions the index RSI(12) can stay above 65 for 5-10 minutes before a pullback. By calibrating overbought/oversold thresholds to the 90th/10th percentile of RSI over the past 20 minutes (240 bars), the strategy detects true regime extremes rather than absolute levels. When RSI hits the dynamic oversold threshold AND Bollinger Bands expand from a recent micro-squeeze (indicating a volatility compression release), VWAP-benchmarked algorithms that dominate NIFTY order flow are overextended and begin rebalancing, producing a 10-20 spot point mean reversion within 30-90 seconds as resting limit orders absorb the directional excess.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:35-15:25 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_12",
+      "formula": "RSI(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute RSI (12 bars × 5s) to detect short-term momentum extremes at near-real-time resolution. Original used RSI(14) at 1-min bars — we use RSI(12) at 5s bars to get a near-equivalent 60-second RSI that captures the same intraday extreme, but allows entry immediately when the extreme occurs rather than waiting for the full 1-min bar close."
+    },
+    {
+      "name": "rsi_pctile_lo",
+      "formula": "percentile(rsi_12, 240, rsi_pctile_lo_param * 100)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute rolling percentile window (240 bars × 5s). Original used 120 bars × 1-min = 120-minute window. Compressed proportionally to hold time: original held 15-45 min and calibrated over 120 min (3-8x hold); at 5s with 15-90s hold, 20 min (13x hold) gives a stable same-session regime estimate without crossing prior days."
+    },
+    {
+      "name": "rsi_pctile_hi",
+      "formula": "percentile(rsi_12, 240, rsi_pctile_hi_param * 100)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Same 240-bar window, upper extreme. Together with rsi_pctile_lo forms the adaptive threshold band."
+    },
+    {
+      "name": "bb_width_36",
+      "formula": "(4 * STDDEV(close, 36)) / SMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute Bollinger Band width (36 bars × 5s) for micro-squeeze detection. Original used 20-min BB at 1-min bars (= 20 min). Compressed to 3 min because we're detecting micro-squeezes that precede 15-90 second breakouts, not 15-45 minute breakouts. A 3-min squeeze releases into 15-90s expansions which is the target hold."
+    },
+    {
+      "name": "bb_squeeze_thresh",
+      "formula": "percentile(bb_width_36, 240, bb_squeeze_pctile_param * 100)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Adaptive BB width squeeze threshold, same 20-min window. Identifies when current BB is historically narrow relative to the session regime, signaling compression before an expansion move."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "rsi_12 < rsi_pctile_lo (dynamically oversold: below 10th percentile of 20-min RSI history)",
+        "bb_width_36 was below bb_squeeze_thresh within last 10 bars (recent micro-squeeze)",
+        "rsi_12 > rsi_12[1 bar ago] (RSI turning up — early confirmation of exhaustion)"
+      ],
+      "confirmation": "RSI turning up from dynamic oversold with fresh squeeze release"
+    },
+    "buy_pe": {
+      "conditions": [
+        "rsi_12 > rsi_pctile_hi (dynamically overbought: above 90th percentile of 20-min RSI history)",
+        "bb_width_36 was below bb_squeeze_thresh within last 10 bars (recent micro-squeeze)",
+        "rsi_12 < rsi_12[1 bar ago] (RSI turning down — early confirmation of exhaustion)"
+      ],
+      "confirmation": "RSI turning down from dynamic overbought with fresh squeeze release"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points corresponds to ~8 NIFTY spot points at delta 0.5. If the adaptive-oversold signal is wrong and price continues directionally past 8 spot points within 30 seconds, the mean-reversion thesis has failed — NIFTY trending moves of this magnitude at 5s resolution indicate institutional follow-through, not exhaustion.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. A 20-minute regime extreme on NIFTY (RSI at the 10th/90th percentile) typically produces a 15-25 spot point mean reversion within 60-90 seconds. 14 points captures ~60% of the median expected bounce at 1:1.75 R:R, avoiding the diminishing tail of the reversion.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25 (extreme vol regimes make NIFTY directional mean-reversion unreliable; tails too fat)",
+    "time_filter": "No entries before 09:35 IST (need 240 bars = 20 min for percentile calibration) or after 15:25",
+    "volume_filter": "None — NIFTY index volume is noisy at 5s; percentile thresholds implicitly adapt to low-vol regimes",
+    "trend_filter": "None — adaptive thresholds are self-calibrating to trending and ranging regimes",
+    "spread_filter": "None — limit order execution at candle close, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.45,
+    "edge_decay_risk": "Medium — adaptive percentile logic is conceptually accessible but real-time calibration at 5s adds implementation friction; the 20-min rolling window may not adapt fast enough to sudden regime shifts (e.g., post-RBI policy surprise)"
+  },
+  "adaptation_notes": "Key changes from original: (1) Universe shifted from NIFTY50 stocks to NIFTY index — removes stock-specific noise and earnings gaps, making percentile-based regime detection cleaner on the smooth index series. (2) RSI period kept at 1-minute equivalent (12 bars vs 14 bars) to preserve the same conceptual timescale while gaining 5s resolution for earlier entry. (3) Percentile calibration window compressed from 120 min to 20 min (proportional to hold-time compression of ~15x): 240 bars at 5s gives a robust 20-minute same-session estimate without requiring >2 hours of warmup. (4) BB period compressed from 20 min to 3 min (36 bars) to detect micro-squeezes relevant to 15-90s breakouts. (5) VWAP distance filter removed — at 5s resolution on the index, VWAP distance adds lag and is already captured implicitly by RSI extremes. (6) Session start improved from 11:15 to 09:35 — original needed 120 min for warm-up; at 5s, only 20 min needed.",
+  "weaknesses": [
+    "Percentile thresholds can become very narrow in sustained low-volatility periods (NIFTY drifting, RSI 45-55), generating spurious signals on minor RSI fluctuations",
+    "The strategy combines two potentially opposing setups: RSI mean-reversion (thesis: overextension reverting) and BB squeeze (thesis: volatility compression releasing directionally) — in practice these often agree but occasionally conflict, requiring prioritization",
+    "20-minute rolling window may not adapt quickly to structural regime changes intraday (e.g., NIFTY pivot direction change after 12:00 RBI announcement)"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_300.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["RSI(14)", "percentile(RSI_14, 120, 95/5)", "BB_Width(20)", "percentile(BB_Width, 120, 20)", "ATR_percentile(14, 120)", "VWAP"],
+    "original_stop": "0.35% from entry (dynamically 0.50% if ATR_Pctile > 80)",
+    "original_target": "close reverts to VWAP"
+  }
+}

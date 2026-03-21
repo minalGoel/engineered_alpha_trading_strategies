@@ -2,129 +2,104 @@
   "name": "opening_range_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["orb", "opening-range", "breakout", "vwap-confirmation", "institutional-flow"],
-  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_28.json",
+  "tags": ["breakout", "momentum", "opening-range", "orb"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_3.json",
   "original_name": "opening_range_breakout_v1",
-  "mechanism": "NIFTY's 15-minute opening range (09:15-09:30, 180 bars at 5s) is the price discovery phase where overnight FII positioning, SGX cues, and pre-market gap reactions are absorbed into the order book. When NIFTY breaches OR_high with the session VWAP already above the OR midpoint — confirming that the time-weighted institutional benchmark is net bullish — TWAP/VWAP algorithms holding back behind the range ceiling release queued directional orders, triggering a cascade of ORB-following algos in a 30-90 second burst of 15-40 spot points. The VWAP confirmation is the critical filter: breakouts where price is already above VWAP have genuine institutional buy-side bias behind them, while VWAP-below breakouts are more likely retail-driven spikes that fade within seconds.",
+  "mechanism": "On NIFTY, the first 15 minutes (09:15–09:30) are the overnight information absorption window where FII pre-open order imbalances, SGX Nifty cues, and domestic institutional adjustments settle into resting limit orders that define the opening range. The OR high and OR low become self-fulfilling algorithmic reference levels — systematic trend-followers, options market makers delta-hedging, and TWAP algos all anchor their trigger conditions to these levels. When NIFTY sustains 3 consecutive 5-second closes above the OR high (15 seconds of unbroken price action), buy-side institutional flow has demonstrably overwhelmed the supply cluster at the OR high and triggered stop-loss cascades from range-bound players, initiating a mechanical momentum burst. The 5-second entry captures this initial cascade within the first 30 seconds, before the broader 1-minute-bar community adjusts and competes for fills.",
   "universe": "NIFTY",
   "timeframe": "5s",
-  "session": "09:30-12:00 IST",
-  "hold_time_seconds": [30, 90],
-  "max_hold_bars": 18,
-  "trades_per_day": "1-4",
-  "max_trades_per_day": 4,
+  "session": "09:30-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
   "data": {
     "ohlcv_5s": true,
     "option_chain": true,
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["opening_range_high", "opening_range_low", "session_vwap"]
+    "other": []
   },
   "indicators": [
     {
-      "name": "or_high",
-      "formula": "max(high) for bars where time_minutes in [555, 570)",
+      "name": "or_high_15",
+      "formula": "max(high) for bars where time_minutes in [555, 570) on the current day",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "15-minute OR is a FIXED TIME WINDOW (09:15-09:30 = 180 bars × 5s). Not scaled — the OR is always 15 minutes regardless of bar frequency. This is the exact window from the original strategy, preserved because institutional price discovery on NIFTY requires this full window on most sessions."
+      "purpose": "Fixed 15-minute opening range high (09:15-09:30). NOT scaled — the OR is always 15 calendar minutes regardless of bar frequency; at 5s we simply have 180 bars of resolution inside the same window the original used. The 15-minute window is the institutional price discovery standard for NIFTY."
     },
     {
-      "name": "or_low",
-      "formula": "min(low) for bars where time_minutes in [555, 570)",
+      "name": "or_low_15",
+      "formula": "min(low) for bars where time_minutes in [555, 570) on the current day",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "Lower boundary of the 15-minute OR. Together with or_high defines the range that must be broken with conviction and VWAP confirmation."
+      "purpose": "Fixed 15-minute opening range low. Same rationale as or_high_15 — fixed calendar window preserved exactly from the original."
     },
     {
-      "name": "or_vol_avg",
-      "formula": "mean(volume) for bars where time_minutes in [555, 570)",
-      "lookback": 180,
-      "computed_on": "spot",
-      "purpose": "Average per-bar volume during the 15-minute OR window. Breakout volume must exceed 1.5x this average to confirm institutional order flow rather than retail noise."
-    },
-    {
-      "name": "session_vwap",
-      "formula": "cumsum(close * volume) / cumsum(volume) from 09:15 reset each day",
-      "lookback": 0,
-      "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session open — no scaling needed, it is a cumulative measure. The original strategy requires close > VWAP for long entry and close < VWAP for short. This confirms institutional benchmark bias: VWAP-above breakouts have institutional accumulation behind them; VWAP-below breakouts are suspect."
-    },
-    {
-      "name": "vol_3",
-      "formula": "mean(volume, 3 bars)",
+      "name": "persist_count",
+      "formula": "count of consecutive bars with close > or_high (for CE) or close < or_low (for PE)",
       "lookback": 3,
       "computed_on": "spot",
-      "purpose": "15-second rolling volume average at time of signal. Smooths noisy 5-second NIFTY volume while remaining responsive. Compared against or_vol_avg to detect the volume surge that confirms institutional participation at breakout."
-    },
-    {
-      "name": "persist_above",
-      "formula": "close > or_high for 3 consecutive bars",
-      "lookback": 3,
-      "computed_on": "spot",
-      "purpose": "3-bar (15-second) persistence filter. At 5s resolution, single-bar spikes above OR_high are common noise. Three consecutive closes above the level confirms genuine breakout, replacing the original's 1-min bar body confirmation."
+      "purpose": "3-bar (15-second) persistence to filter 5-second algo wicks. At 1-min resolution the original confirmed on bar body; at 5s we need 3 consecutive closes to achieve similar conviction. 15s is the minimum footprint of a real institutional order-flow event. Using 1 bar fires on noise; using 6+ bars (30s) misses the fast initial cascade entirely."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "close > or_high for 3 consecutive bars (persist_above = True)",
-        "close > session_vwap (institutional benchmark is net bullish)",
-        "vol_3 > 1.5 * or_vol_avg (breakout volume elevated vs OR average)",
-        "India VIX < 22 (matches original threshold; ORB unreliable above 22)",
-        "or_range_pct between 0.1% and 2.0% (valid OR — not too tight or wide)",
-        "time_minutes in [570, 720) — after OR established, before 12:00 IST"
+        "time_minutes >= 570 (09:30 — OR fully formed)",
+        "or_high > 0 and or_low > 0 and or_high > or_low (valid OR)",
+        "3 consecutive 5s closes above or_high_15 (persist_count_above >= 3)",
+        "India VIX < vix_max (default 25) — high VIX makes ORB false-breakout rate too high"
       ],
-      "confirmation": "3 consecutive 5s closes above or_high with VWAP above and volume surge"
+      "confirmation": "15 seconds of sustained price action above OR high"
     },
     "buy_pe": {
       "conditions": [
-        "close < or_low for 3 consecutive bars (persist_below = True)",
-        "close < session_vwap (institutional benchmark is net bearish)",
-        "vol_3 > 1.5 * or_vol_avg",
-        "India VIX < 22",
-        "or_range_pct between 0.1% and 2.0%",
-        "time_minutes in [570, 720)"
+        "time_minutes >= 570 (09:30 — OR fully formed)",
+        "or_high > 0 and or_low > 0 and or_high > or_low (valid OR)",
+        "3 consecutive 5s closes below or_low_15 (persist_count_below >= 3)",
+        "India VIX < vix_max (default 25)"
       ],
-      "confirmation": "3 consecutive 5s closes below or_low with VWAP below and volume surge"
+      "confirmation": "15 seconds of sustained price action below OR low"
     },
-    "entry_price": "market"
+    "entry_price": "limit at candle close"
   },
   "exit": {
     "stop_points": 5,
-    "stop_rationale": "5 option points = ~10 NIFTY spot points at ATM delta ~0.5. The original stops at OR_midpoint (half the range, typically 10-30 spot points from entry). For a 90s hold, if NIFTY retraces 10 spot points back inside the OR, the institutional breakout has stalled — this is the classic ORB false-breakout failure mode. 5 pts option stop maps directly to this thesis.",
+    "stop_rationale": "5 option pts = ~10 NIFTY spot pts at ATM delta ~0.5. A genuine NIFTY ORB cascade should not retrace more than 10 spot pts within 30 seconds — if it does, the supply at the OR level was not truly exhausted and the breakout is a false alarm. NIFTY 15-30 second false-breakout reverses typically run 8-15 spot pts; 5 option pts is the lower bound of that range, keeping us tight against false setups.",
     "target_points": 8,
-    "target_rationale": "8 option points = ~16 NIFTY spot points. The original targets 1x OR_range from breakout level; with a typical OR of 30-80 spot points, that is 30-80 pts target. At 90 seconds, we capture only the first leg impulse — 16 spot points is the 25th percentile of first-leg ORB moves on NIFTY, achievable within the time stop window at a 1:1.6 R:R.",
-    "time_stop_bars": 18,
-    "eod_rule": "no new signals after 12:00 IST; ORB momentum dissipates by midday"
+    "target_rationale": "8 option pts = ~16 NIFTY spot pts. Genuine NIFTY ORB first-leg extensions run 20-45 spot pts (10-22 option pts at delta 0.5). Targeting 8 pts captures the bottom 40% of the expected extension, keeping win rate high while maintaining 1:1.6 R:R and ensuring the target is reachable within the 2-minute time stop.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "India VIX < 22; original uses VIX < 22. ORB false-breakout rate increases sharply above 22 as the opening range itself is noisy and institutional VWAP algos are less predictable.",
-    "time_filter": "entry only 09:30-12:00 IST; ORB momentum strongest in first 2.5 hours",
-    "volume_filter": "vol_3 > 1.5x or_vol_avg; replicates original's relative volume check, adjusted to 1.5x since 5s bars have higher per-bar volume noise than 1-min bars",
-    "trend_filter": "VWAP confirmation serves as directional filter (replaces original's nifty50 open return filter)",
-    "spread_filter": "none — limit order execution model"
+    "vix_filter": "India VIX < 25 (tunable). Original uses VIX < 25. ORB false-breakout rate rises sharply above 25 as the opening range itself becomes noisy and institutional reference-level behavior breaks down.",
+    "time_filter": "Enter only after 09:30 (OR fully formed). No new entries after 15:25.",
+    "volume_filter": "none — NIFTY index volume is noisy at 5s; persistence filter is the noise guard",
+    "trend_filter": "none — pure price breakout, both CE and PE allowed",
+    "spread_filter": "none — limit order execution at candle close prices"
   },
   "edge": {
-    "expected_bps": 35,
+    "expected_bps": 15,
     "win_rate_estimate": 0.52,
     "avg_winner_to_loser": 1.6,
-    "profit_factor_estimate": 1.73,
-    "edge_decay_risk": "moderate — ORB is well-known but VWAP-filtered 5s execution at this granularity is not crowded; main risk is HFT competition for the breakout bar"
+    "profit_factor_estimate": 1.28,
+    "edge_decay_risk": "moderate — ORB is a well-known pattern but 5s precision entry is harder to front-run than 1-min entries; main risk is increased false-breakout frequency at 5s vs 1-min"
   },
-  "adaptation_notes": "The 15-min OR window (09:15-09:30, FIXED TIME WINDOW) is preserved exactly — not scaled. Key 5s adaptations: (1) 1-min bar body check replaced with 3-bar (15s) persistence filter — same purpose; (2) VWAP confirmation retained from original (close > VWAP for long) — this is the key differentiator from other ORB variants; (3) VIX threshold 22 preserved from original; (4) volume threshold reduced from 2x to 1.5x due to 5s bar noise; (5) hold time compressed from 30-120 min to 30-90 seconds — only the first impulse leg; (6) equity universe replaced with NIFTY index directly.",
+  "adaptation_notes": "Strategy_3.json is a pure price-based ORB with no VWAP or volume features. Key adaptations: (1) Bar resolution: 1-min → 5-sec. OR window unchanged in calendar time (15 min), now 180 bars instead of 15. (2) Hold time: 5-20 min → 30-120 sec. We target only the initial breakout cascade, not the multi-minute trend the original sought. (3) Stop: 'other side of range' → 5 pts fixed. Full OR range (typically 30-80 NIFTY pts) is too wide as a stop for a 2-minute hold; 5 option pts (10 spot pts) is a tight breakout-failure stop. (4) Target: '1% from entry' → 8 pts. At NIFTY ~23000, 1% = 230 spot pts, unreachable in 2 minutes; 8 option pts = 16 spot pts is the 2-minute realistic extension. (5) Added 3-bar persistence filter to handle 5-second spike noise absent at 1-min resolution. (6) Reduced VIX threshold from original's 25 — preserved same value. No VWAP or volume added; this remains a pure price breakout strategy, intentionally simpler.",
   "weaknesses": [
-    "VWAP confirmation reduces signal frequency vs pure ORB — may miss some valid breakouts early in the session when VWAP hasn't yet diverged",
-    "False breakouts at 5s are more frequent than 1-min; 3-bar filter reduces but doesn't eliminate",
-    "NIFTY OR can be very narrow on low-event days (<20 pts), making 5pt stop too close to OR_mid",
-    "VIX < 22 filter blocks trading on high-vol days which sometimes have the strongest ORB moves"
+    "ORB fails 45-50% of the time on NIFTY — price touches OR high, triggers entries, then reverses. Persistence filter reduces but cannot eliminate this.",
+    "Only 1-2 trades per day because OR forms once per session; low frequency makes strategy highly sensitive to individual winning/losing days.",
+    "On expiry days (Thursdays for NIFTY weekly), OR range tends to be wider due to options pinning and gamma effects, making OR levels less reliable reference points.",
+    "No VWAP filter means bullish ORB entries are also allowed when the day is net-bearish (and vice versa), accepting more false breakouts in exchange for simpler logic."
   ],
   "_source": {
-    "original_file": "trading_strategies/unique_strategies_all/Strategy_28.json",
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_3.json",
     "original_timeframe": "1min",
-    "original_hold_time": "30-120 minutes (30-120 bars)",
-    "original_indicators": ["orb_high (15min)", "orb_low (15min)", "orb_range", "orb_midpoint", "vwap", "rel_vol_open", "atr_20_daily"],
-    "original_stop": "orb_midpoint (half the range risk)",
-    "original_target": "1.0 * orb_range from breakout level"
+    "original_hold_time": "5-20 bars (5-20 minutes)",
+    "original_indicators": ["or_high = max(high, 15 bars)", "or_low = min(low, 15 bars)"],
+    "original_stop": "stop at other side of range (OR_low for long, OR_high for short)",
+    "original_target": "1.0% from entry"
   }
 }

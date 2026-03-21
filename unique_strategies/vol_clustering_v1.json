@@ -1,0 +1,142 @@
+{
+  "name": "vol_clustering_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "garch", "clustering", "breakout", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_213.json",
+  "original_name": "vol_clustering_v1",
+  "mechanism": "On NIFTY, GARCH-style volatility clustering is especially pronounced at 5-second resolution because institutional TWAP/VWAP algorithms submit bursts of child orders when executing large directional trades — each burst creates a high-vol bar which triggers further algorithmic participation, compounding volatility for 15-45 consecutive seconds. When a GARCH(1,1) conditional sigma rank exceeds the 75th percentile for 3+ consecutive 5-second bars AND price simultaneously breaks above/below the prior 100 seconds of closes, the order flow imbalance is almost certainly driven by a large institutional order still executing — not a noise spike. The EMA alignment (8-bar over 21-bar = 40s over 105s) confirms multi-scale momentum, reducing the probability of fading a transient spike. The result is a 30-90 second directional edge as the institutional order continues absorbing liquidity.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ret_5s",
+      "formula": "log(close / close[1])",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "5-second log returns as input to GARCH(1,1). No scaling needed — GARCH operates on whatever return frequency is available."
+    },
+    {
+      "name": "garch_sigma",
+      "formula": "GARCH(1,1) with omega=1e-6, alpha=0.10, beta=0.85",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Conditional volatility forecast. Warmup of 60 bars (5 min) allows sigma to converge from initial conditions. Parameters alpha=0.10, beta=0.85 match original calibration — these are standard for equity indices and known to be stable at intraday frequencies. The GARCH process, not the raw bar range, is used because GARCH filters out mean-reversion in squared returns that would cause false cluster signals."
+    },
+    {
+      "name": "vol_pct_60",
+      "formula": "rolling percentile rank of garch_sigma over 60 bars",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60-bar (5-min) window normalizes sigma to [0,100] within the current intraday session regime. 5 minutes is chosen as the context window because: (1) NIFTY intraday vol regimes change roughly every 5-30 minutes, and a shorter window captures whether THIS minute is high-vol relative to the surrounding 5 minutes; (2) too long a window (e.g., 240 bars = 20 min) would fail to detect vol bursts in the first hour. NOT scaled from original's 120-bar lookback — different logic applies at 5s."
+    },
+    {
+      "name": "high_vol_cluster",
+      "formula": "consecutive bars with vol_pct_60 > vol_pct_threshold (default 75)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Require 3+ consecutive bars (15 seconds) above the 75th percentile. The 3-bar minimum filters single-spike noise while still being responsive — at 5s, a 15-second sustained elevation distinguishes an ongoing institutional burst from a one-off print. The original required 5 consecutive 1-min bars (5 minutes of high vol); at 5s our 15-second requirement is proportionally tighter but appropriate for the shorter hold time."
+    },
+    {
+      "name": "ema_8",
+      "formula": "EMA(close, 8)",
+      "lookback": 8,
+      "computed_on": "spot",
+      "purpose": "40-second fast trend direction. Chosen because at 30-90s hold times, the fast EMA must be shorter than the hold — 8 bars (40s) is the minimum reliable signal for trend direction without being too noisy. Original used EMA(8) on 1-min bars; we use EMA(8) on 5s bars = 40s which matches the fast intraday trigger."
+    },
+    {
+      "name": "ema_21",
+      "formula": "EMA(close, 21)",
+      "lookback": 21,
+      "computed_on": "spot",
+      "purpose": "105-second (~1.75 min) slow trend context. The 21-bar EMA on 5s bars corresponds to roughly 1.75 minutes — a meaningful intermediate trend window that distinguishes a 30-second spike from a genuine 1-2 minute directional move. Original used EMA(21) on 1-min bars; we keep the bar count the same but compress time, because at 5s resolution we are trading the FAST directional phase, not the slow continuation."
+    },
+    {
+      "name": "roll_high_20",
+      "formula": "max(close, 20 bars)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20-bar (100-second) rolling close high for breakout detection. 100 seconds defines a local range that the price must exceed to confirm directional conviction. Too short (5 bars) fires on noise; too long (60 bars = 5 min) misses short intraday moves. Matches original's 20-bar lookback applied to 5s rather than 1-min bars — the relative lookback is intentionally compressed because we are trading the breakout of a 100-second range, not a 20-minute range."
+    },
+    {
+      "name": "roll_low_20",
+      "formula": "min(close, 20 bars)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20-bar (100-second) rolling close low for breakout detection — symmetric to roll_high_20."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "high_vol_cluster == True (vol_pct_60 > 75 for 3+ consecutive bars)",
+        "close > ema_8 AND ema_8 > ema_21 (bullish 40s/105s alignment)",
+        "close >= roll_high_20[prev] (new 100-second high — breakout confirmation)",
+        "India VIX >= 13 (baseline vol required for GARCH clustering to be meaningful)",
+        "time_minutes in [560, 925) (09:20-15:25 IST)"
+      ],
+      "confirmation": "Price is simultaneously in a vol cluster AND making a directional breakout with multi-scale EMA alignment — all three conditions must be true at the same bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "high_vol_cluster == True",
+        "close < ema_8 AND ema_8 < ema_21 (bearish 40s/105s alignment)",
+        "close <= roll_low_20[prev] (new 100-second low — breakdown confirmation)",
+        "India VIX >= 13",
+        "time_minutes in [560, 925)"
+      ],
+      "confirmation": "Symmetric to buy_ce — vol cluster with directional breakdown"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option pts = ~6 NIFTY spot pts reversal. A genuine vol-cluster breakout on NIFTY should not retrace 6 spot pts within 30 seconds — if it does, either the cluster is ending (vol_pct dropping) or the breakout was a false signal. At delta ~0.5, 3 option pts = 6 spot pts, which is the typical range of a 5-15 second consolidation. Going beyond 3 pts against us within the hold period implies the institutional flow has reversed.",
+    "target_points": 6.0,
+    "target_rationale": "6 option pts = ~12 NIFTY spot pts. During high-vol clusters on NIFTY, the first directional leg of a breakout typically covers 15-25 spot pts in 30-60 seconds. At delta 0.5, capturing 12 spot pts = 6 option pts represents approximately 50% of the expected move — leaving room to not over-stay. Risk:reward 1:2.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX >= 13 (baseline vol required — clustering is statistically weak below VIX=13 because absolute vol is too low for meaningful GARCH effects)",
+    "time_filter": "09:20-15:25 IST; best clusters at 09:20-10:30 and 14:00-15:15",
+    "volume_filter": "None explicitly — GARCH sigma implicitly captures vol-cluster periods including high-volume bursts",
+    "trend_filter": "EMA alignment (ema_8 vs ema_21) serves as the directional trend filter",
+    "spread_filter": "Not applicable — limit order execution at candle close prices"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.4,
+    "edge_decay_risk": "low — GARCH vol clustering is a structural statistical property of financial returns, not a crowded strategy; the specific NIFTY breakout filter adds directional edge on top"
+  },
+  "adaptation_notes": "Original traded top-15 NIFTY stocks on 1-min bars with 10-40 min holds. Key changes: (1) Universe changed from individual stocks to NIFTY index — the GARCH clustering thesis applies equally to the index, which actually shows stronger autocorrelation in squared returns than individual stocks due to institutional flow aggregation. (2) Hold time compressed from 10-40 min to 30-90 seconds — we trade the first directional impulse of the vol cluster, not the full continuation. (3) Vol percentile window compressed from 120-bar (2h) to 60-bar (5 min) — at 5s resolution we need a window that's sensitive to the CURRENT session regime. (4) High-vol cluster requirement: original needed 5 consecutive 1-min bars = 5 min of high vol; we use 3 × 5s = 15 seconds — proportionally tighter but appropriate for the shorter hold. (5) EMA periods kept at 8/21 bars (same bar count, different time = 40s/105s) because we're capturing the FAST directional phase. (6) Stops/targets in option premium points (3/6) rather than ATR-based sigma multiples.",
+  "weaknesses": [
+    "GARCH(1,1) with fixed parameters (alpha=0.10, beta=0.85) may not be optimal for NIFTY 5-second data — parameters ideally would be recalibrated monthly from recent intraday data",
+    "Vol clusters triggered by macro news events (RBI announcements, US CPI) often have random short-term direction — the EMA filter helps but cannot fully screen news-driven noise",
+    "The 5-bar consensus (3-bar cluster) means the signal fires ~15 seconds into the cluster; the first 3-bar move may already be largely done for short holds",
+    "NIFTY volatility clustering at 5s resolution may have lower autocorrelation persistence than at 1-min (original timeframe), reducing the predictive power of vol clusters beyond 30s"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_213.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-40 min",
+    "original_indicators": ["GARCH(1,1) sigma", "vol_percentile_120", "EMA(8)", "EMA(21)", "ATR(14)", "bar_range_ratio", "momentum(10)"],
+    "original_stop": "1.0 * sigma_forecast * close (ATR-sigma based, ~0.3%)",
+    "original_target": "2.0 * sigma_forecast * close (~0.6%)"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "name": "low_vol_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility_regime", "momentum", "low_vol_anomaly", "ema_crossover"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_215.json",
+  "original_name": "low_vol_momentum_v1",
+  "mechanism": "When NIFTY's 5-minute realized vol is below 80% of its 20-minute baseline, institutional TWAP/VWAP algorithms are executing patient directional orders rather than reacting to episodic news events. In this quiet regime, EMA alignment across 1-minute and 5-minute windows reflects sustained buy-side or sell-side absorption — not noise spikes. We enter in the EMA direction on a confirming 5-second bar and capture the next 45-90 second continuation of this institutional flow before vol re-expands.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rvol_60",
+      "formula": "rolling_std(log_returns, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute realized vol — captures the current noise level at the same timescale as our hold horizon. The original used 20-day realized vol per stock; we scale to ~5 intraday minutes because the 'low-vol regime' exists at multiple timescales, and 5 min is the closest match to our 30-90s hold: enough bars for a stable estimate, recent enough to reflect the current market microstructure."
+    },
+    {
+      "name": "rvol_240",
+      "formula": "rolling_std(log_returns, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute baseline vol — the recent average against which we measure the current regime. 20 min captures the session's characteristic vol level without going stale, analogous to the original's 20-day cross-sectional baseline. Not scaled by 12x; instead chosen independently to represent a meaningful intraday baseline window."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "rvol_60 / rvol_240",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Relative vol indicator — when below 0.80, NIFTY is in a quiet regime where TWAP flows dominate over episodic news flows. Directly analogous to the original's bottom-tercile vol ranking (bottom third ≈ below 67th percentile of recent vol)."
+    },
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute fast EMA — captures the current 60-second trend direction. The original used EMA(9) on 1-min bars (9-min span); compressed to 1-min (12 bars at 5s) because our hold is 30-90s, not 60-240 min. Fast enough to detect real-time EMA crossovers that resolve within our trade window."
+    },
+    {
+      "name": "ema_60",
+      "formula": "EMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute slow EMA — trend context filter. Compresses from original's EMA(21) on 1-min (21-min span) to 5 min because our hold horizon is 30-90s; the slow EMA only needs to confirm intraday trend direction (bull/bear), not multi-hour drift."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vol_ratio < vol_ratio_threshold (default 0.80) — low-vol regime active",
+        "ema_12 > ema_60 — bullish EMA alignment on 1-min vs 5-min",
+        "ret_1 > 0 — confirming 5-second bar in upward direction"
+      ],
+      "confirmation": "All three conditions true simultaneously within session window"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vol_ratio < vol_ratio_threshold (default 0.80) — low-vol regime active",
+        "ema_12 < ema_60 — bearish EMA alignment on 1-min vs 5-min",
+        "ret_1 < 0 — confirming 5-second bar in downward direction"
+      ],
+      "confirmation": "All three conditions true simultaneously within session window"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "In a low-vol regime, NIFTY typically moves 5-10 spot pts in 30-60s; a 3-option-pt loss (~6 spot pts at delta 0.5) means the quiet regime has broken and the directional thesis is invalid — the instantaneous vol has spiked past where TWAP dominates.",
+    "target_points": 5,
+    "target_rationale": "Low-vol NIFTY momentum typically extends 10-15 spot pts within 60s; 5 option pts captures ~50% of that expected move, giving 1:1.67 risk-reward. Consistent with the 1-minute typical range of 3-7 pts from the calibration table.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — strategy uses internal vol_ratio as regime filter, which is more responsive than daily VIX",
+    "time_filter": "09:30-15:20 IST; skip first 15 min of session to let overnight gap vol dissipate before applying low-vol regime test",
+    "volume_filter": "none — NIFTY index volume is structurally consistent intraday",
+    "trend_filter": "EMA alignment (ema_12 vs ema_60) acts as inline trend confirmation",
+    "spread_filter": "none — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.55,
+    "edge_decay_risk": "low — TWAP/VWAP dominance in quiet vol regimes is a structural feature of institutional execution on NIFTY; unlikely to arbitrage away at 5-second resolution"
+  },
+  "adaptation_notes": "The original cross-sectional strategy (rank NIFTY50 stocks by 20-day vol, long low-vol / short high-vol) is adapted to a single-index version by replacing cross-stock vol ranking with a NIFTY time-series vol regime test. Both capture the same phenomenon: in low-vol environments, systematic institutional flows dominate speculative flows and momentum signals become more reliable. Key changes: (1) 20-day cross-stock vol ranking replaced by 5-min vs 20-min rolling vol ratio on NIFTY spot; (2) 60-240 min hold compresses to 30-90 seconds; (3) pair trade structure eliminated — single direction entry (CE or PE) based on EMA alignment rather than long-short stock spread; (4) relative 30bps target replaced with absolute 5-pt option premium target.",
+  "weaknesses": [
+    "Low-vol anomaly is primarily a multi-day cross-sectional effect; intraday single-index version may not capture the exact same institutional preference dynamics",
+    "In strongly trending sessions, vol_ratio may stay elevated above threshold for extended periods, reducing trade frequency",
+    "EMA crossover with confirming 5s bar may generate false signals at vol regime boundaries (just before vol expands from low to high)"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_215.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "60-240 mins",
+    "original_indicators": ["realized_vol_20d", "vol_rank (percentile)", "EMA(9)", "EMA(21)", "VWAP", "ATR(14)"],
+    "original_stop": "25bps relative (long underperforms short by 25bps)",
+    "original_target": "30bps relative outperformance (long vs short leg)"
+  }
+}

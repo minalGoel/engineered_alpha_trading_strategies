@@ -1,0 +1,126 @@
+{
+  "name": "vol_adjusted_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "adaptive", "volatility", "z_score", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_216.json",
+  "original_name": "vol_adjusted_reversion_v1",
+  "mechanism": "On NIFTY, when the 5-minute realized volatility (last 60 bars) is compressing relative to the 30-minute baseline (last 360 bars), the dominant flow shifts from momentum algos and stop-cascade sellers to VWAP-benchmarked institutional accumulators who continuously pull price back toward their benchmark. In this regime, even a 1.5-sigma deviation from the 10-minute rolling mean becomes statistically meaningful and rapidly reverts. The adaptive threshold (wider in turbulent periods, tighter in calm) prevents entering during trending vol-expansion events where NIFTY deviations extend rather than revert. When RSI confirms oversold/overbought in a vol-compressing regime, institutional TWAP replenishment kicks in within 30-60 seconds creating the snap-back.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "price_z",
+      "formula": "(close - SMA(close, 120)) / rolling_std(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute rolling z-score (120 bars × 5s). At 5s bars holding 30-90s, the 10-min window defines 'where the mean is right now' — long enough to smooth noise, short enough to be current. The original used 60 1-min bars (60 min window) which was the context for 10-60 min holds; we compress to 10 min because we're trading the fast reversion, not the slow drift."
+    },
+    {
+      "name": "vol_fast",
+      "formula": "rolling_std(log_returns, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute realized volatility (60 bars). Fast component of vol ratio. Maps to original's 30-bar vol on 1-min bars (30 min), but compressed to 5 min because we need to detect vol compression at a timescale relevant to our 30-90s hold — if vol has been expanding in the last 5 min, our entry is premature."
+    },
+    {
+      "name": "vol_slow",
+      "formula": "rolling_std(log_returns, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-minute realized volatility (360 bars). Slow context for the vol ratio. Maps directly from original's 120-bar vol on 1-min bars (120 min) — compressed 4x to 30 min because intraday vol regime shifts are faster on an index than on individual stocks."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "vol_fast / vol_slow",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Ratio of 5-min vol to 30-min vol. When < 1.0 vol is compressing (calm regime, reversion works well). When > 1.5, vol is expanding (trending/momentum regime, avoid mean-reversion). This is the adaptive scaling mechanism ported directly from original."
+    },
+    {
+      "name": "adaptive_threshold",
+      "formula": "thresh_base + thresh_scale * vol_ratio",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Dynamic z-score entry threshold: tight (~1.5) in calm periods, wide (~2.3) in turbulent periods. Prevents entering against momentum moves disguised as mean-reversion setups."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute RSI (36 bars × 5s) for directional confirmation. Original used RSI(14) on 1-min = 14-min RSI. Compressed to 3 min because we're catching the fast oversold/overbought extreme, not a slow trend exhaustion. 36 bars is long enough to form a meaningful oscillator at 5s frequency without aliasing noise."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "price_z < -adaptive_threshold (price below vol-adjusted mean by enough sigma)",
+        "rsi_36 < rsi_extreme (oversold at 3-min scale confirms selling pressure exhausted)",
+        "vol_ratio < vol_ratio_limit (vol is not wildly expanding — mean reversion regime)",
+        "in_session: 09:25-15:20 IST"
+      ],
+      "confirmation": "price_z turns up from the extreme (cross above threshold - 0.2)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "price_z > adaptive_threshold (price above vol-adjusted mean by enough sigma)",
+        "rsi_36 > (100 - rsi_extreme) (overbought at 3-min scale)",
+        "vol_ratio < vol_ratio_limit",
+        "in_session: 09:25-15:20 IST"
+      ],
+      "confirmation": "price_z turns down from the extreme"
+    },
+    "entry_price": "market (limit order at candle close)"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. For a 30-90s mean-reversion trade, if NIFTY extends 8 spot points further away from the mean (rather than reverting), the z-score has deepened another 0.5+ sigma and the institutional replenishment thesis has failed. Consistent with 2-minute typical NIFTY move of 5-10 pts — we exit before the 90th percentile adverse move.",
+    "target_points": 6,
+    "target_rationale": "6 option points = ~12 NIFTY spot points at delta 0.5. A 1.5-2.5 sigma deviation from a 10-min mean on NIFTY typically represents 15-25 spot points; capturing 12 points (50-60% of the overshoot) within 90 seconds is the median first-leg reversion. Consistent with the 1-minute typical NIFTY move of 3-7 option pts, targeting the upper end given the adaptive filter selects only high-quality setups.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22 (high-VIX environments have trending deviations that don't revert at 30-90s scale)",
+    "time_filter": "09:25-15:20 IST; skip first 10 min (vol_ratio unstable, insufficient lookback for 360-bar slow vol)",
+    "volume_filter": "none (NIFTY index is always liquid)",
+    "trend_filter": "vol_ratio < 1.5 (same as ADX < 30 equivalent — rejects trending environments)",
+    "spread_filter": "not applicable (limit orders at close price)"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 2.07,
+    "edge_decay_risk": "low — adaptive threshold is a structural improvement over static z-scores; NIFTY TWAP institutional flow is persistent"
+  },
+  "adaptation_notes": "Original was on NIFTY50 individual stocks with 1-min bars holding 10-60 min. Key changes: (1) Lookbacks compressed from 60-min/30-min/120-min to 10-min/5-min/30-min because we hold 30-90s instead of 10-60 min — the z-score must be computed over a window relevant to our hold time. (2) RSI compressed from 14-min to 3-min to detect fast extremes. (3) Universe changed from 20-stock filtered universe to NIFTY index itself — no stock-specific filters (delivery %, spread, earnings skip) needed. (4) Vol_ratio limit retained at 1.5 for regime filter. (5) VWAP removed (available on spot_df as a computable indicator but redundant given price_z from SMA captures the same deviation). (6) Stops/targets set in option points calibrated to 30-90s NIFTY move sizes.",
+  "weaknesses": [
+    "At 5s bars, rolling_std computation is noisier than at 1-min bars — the vol_ratio threshold may be less reliable",
+    "In NIFTY, mean-reversion at 30-90s can be overridden by sudden macro news (Fed, RBI) causing deviations to extend rather than revert",
+    "The adaptive_threshold formula (1.5 + 0.8 * vol_ratio) preserves the original's ad-hoc coefficients; these may need calibration for 5s NIFTY dynamics specifically",
+    "Requires 360 bars (30 min) warmup — no trades in the first 30 min of session"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_216.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-60 mins",
+    "original_indicators": ["price_z (SMA60)", "vol_30", "vol_120", "vol_ratio", "RSI_14", "vwap_dev", "BB_pct"],
+    "original_stop": "price_z exceeds 1.5 * adaptive_threshold OR loss > 0.4%",
+    "original_target": "price_z crosses 0 (return to mean)"
+  }
+}

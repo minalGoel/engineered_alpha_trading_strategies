@@ -1,115 +1,55 @@
 # ACTIVE_THREADS.md — Current Project State
 
-## Last Updated
-2026-03-20 evening IST
+## Last Updated: 2026-03-21
 
-## Repository
-`~/Coding_Projects/engineered_alpha_trading_strategies/`
+## What We Are
+Pre-seed quant fund. ₹50L deployed capital, pledged scale to ₹10Cr by Year 2. Strong tech team (concurrency, infra). No co-location Year 1 — everything else in scope.
 
-## Current State: Strategy Re-Conversion Pipeline BLOCKED
+## Capital Trajectory
+| Month | Capital | Gate |
+|---|---|---|
+| 0-3 | ₹50L | Build + validate all strategies live |
+| 4 | ₹1 Cr | Pass 30% annualized run-rate |
+| 4-6 | ₹1 Cr | Validate at scale |
+| 7 | ₹5 Cr | Pass 30% gate at ₹1 Cr |
+| 7-12 | ₹5 Cr | Validate at scale |
+| 13 | ₹10 Cr | Year 2 begins |
 
-### What Was Happening
-Running `auto_one_by_one.sh` — one Opus session per strategy to convert, implement, backtest, and verify each strategy for the 5-second NIFTY/BANKNIFTY options regime.
+**Year 1 target: 30% minimum.** Benchmark: Capitalmind 30.2% CAGR with momentum alone. We run 5-7 uncorrelated strategies with a tech team. 30% is the floor.
 
-### The Block
-The script's source file lookup is broken. Strategy names in `outputs/strategy_retriage.json` (e.g., `vwap_mean_reversion_v1`) don't match filenames in `trading_strategies/unique_strategies_all/` (e.g., `Strategy_1.json`). All 291 strategies failed with "SOURCE NOT FOUND."
+## The Portfolio
 
-### Fix Needed
-The retriage JSON should have a `source_file` field per strategy. The script should use that field directly instead of searching by name. If `source_file` doesn't exist, build a mapping from JSON "name" field → filepath.
+| # | Strategy | Instrument | Hold Time | Trades/Day | Capital % | Exp. Sharpe |
+|---|---|---|---|---|---|---|
+| 1 | 30-min ORB (sell opposite) | NIFTY monthly options | 45-180 min | 1-3 | 20% | 0.8-1.2 |
+| 2 | Overnight gap capture | NIFTY futures | Overnight | 1 | 15% | 1.0-1.5 |
+| 3 | VWAP mean reversion | NIFTY futures/options | 15-90 min | 2-5 | 15% | 0.6-1.0 |
+| 4 | Cross-sectional momentum | NIFTY200 equities | Monthly rebal | ~10/mo | 20% | 0.8-1.2 |
+| 5 | Expiry day structures | NIFTY weekly options | Expiry (Tue) | 2-5 | 10% | 0.5-1.0 |
+| 6 | Vol premium (iron condors) | NIFTY monthly options | 3-7 days | 2-4/wk | 15% | 0.8-1.5 |
+| 7 | Pairs / stat arb | Top NSE futures pairs | 5-20 days | 2-4 | 5% | 0.5-1.0 |
 
-A prompt was given to Claude Code to fix this but hasn't been executed yet.
+Portfolio Sharpe target: 1.5-2.0. ERC allocation, vol targeting 15% annualized.
 
-### Current File State
-- `trading_strategies/unique_strategies_all/` — 358 original strategy JSONs (Strategy_1.json format). READ ONLY archive.
-- `unique_strategies/` — 30 JSONs from the Opus gold-standard session (first 30 conversions). These are high quality.
-- `pipeline/strategies/` — 19 Python implementations + base.py + CONVENTIONS.md
-- `outputs/strategy_retriage.json` — 291 qualified, 67 discarded
-- `logs/completed_strategies.txt` — 291 entries (all marked "completed" as failures — needs clearing)
-- `logs/failed_strategies.txt` — 291 entries
+## Infrastructure
+| Component | Choice | Status |
+|---|---|---|
+| Data feed | Fyers TBT (50-level DOM) | Pending account |
+| Primary execution | Dhan (25 OPS, 200-depth) | Pending account + static IP |
+| Secondary execution | Upstox (50 OPS, HFT endpoint) | Existing |
+| Backup | Angel One | Pending |
+| Compute | AWS ap-south-1 | Ready |
+| Multi-broker router | OpenAlgo or custom | Build Week 2 |
 
-### To Resume
-1. Fix the source file lookup in `auto_one_by_one.sh` (use `source_file` field from retriage JSON or build name→file mapping)
-2. Clear `logs/completed_strategies.txt` and `logs/failed_strategies.txt`
-3. Rerun the script
+## 90-Day Sprint
+- **Week 1-2:** Infra — accounts, static IPs, monitoring, data pull, tick recording
+- **Week 2-4:** Backtest all 7 strategies, kill anything with after-cost Sharpe < 0.5
+- **Week 4-6:** Paper trade survivors, measure signal degradation vs backtest
+- **Week 6-12:** Live at ₹50L, scale up strategy by strategy, weekly risk reviews
+- **Month 4:** Scale gate → ₹1 Cr if 30% run-rate achieved
 
----
-
-## Completed Work
-
-### Equity Pipeline (Complete, Parked)
-- 358 strategies generated, deduplicated, implemented, and audited
-- Pipeline built: Polars + Numba + Optuna + walk-forward CV
-- 29 bugs fixed across 3 audit passes
-- Data: 206 stocks × 3 years of 1-min OHLCV
-- All committed to git, pushed to origin
-
-### Options Pipeline Refactor (Complete, Working)
-- Pipeline refactored for 5-second options: state machine, cost model, strike locking
-- 2D premium grid architecture (replaces broken 1D ATM array)
-- 14 additional bugs fixed during options audit
-- Strike locking verified against raw parquet
-- Upstox cost model integrated
-
-### Strategy Triage (Complete)
-- First triage (wrong frame): 6 survivors, 0 profitable
-- Second triage (correct frame): 291 qualified
-- Correct framing established: "spot direction prediction, options as instrument"
-
-### Gold Standard Conversions (Partial — 30 of 291)
-- 30 strategies converted with unique mechanisms, reasoned lookbacks, individual stop rationales
-- CONVENTIONS.md updated with conversion principles and examples
-- These are the quality reference for the batch conversion
-
----
-
-## Open Decisions
-
-### 1. Model Choice for Batch Conversion
-**Options**: Opus ($$$, highest quality) vs Sonnet ($, adequate with fresh-session architecture)
-**Analysis done**: Fresh sessions neutralize Sonnet's drift weakness. Sonnet will kill fewer marginal strategies (~10-15% vs Opus ~20-30%). The extra survivors cost ~2 hours of backtest compute but save ~15 hours of Opus time.
-**Recommendation**: Sonnet for bulk, Opus audit on the 30-50 winners after backtesting.
-**Decision**: User chose Opus for diamond standard. Script configured for Opus.
-
-### 2. How Much Historical Data to Buy
-- Current: 12 trading days (insufficient for statistical validation)
-- Minimum: 6 months (~125 days) — 25 expiry days, 2+ VIX regimes, 1000+ trades per strategy
-- Ideal: 12 months (~250 days) — seasonal coverage, 50 expiry days
-- Cost: ₹5-15K from data vendors (TrueData, Global Datafeeds, NSE TBT data)
-**Decision**: Pending. Build pipeline on 12 days, buy more data for real validation.
-
-### 3. Execution Infrastructure for Live Trading
-- Current: Upstox broker API
-- Concern: Upstox/Zerodha latency (~200-500ms) may be too slow for 5-second scalping
-- Options: Symphony Fintech (<50ms colo), Dhan (~200ms), direct NSE colo
-- SEBI algo trading circular requires exchange approval for automated strategies
-**Decision**: Not yet addressed. Comes after backtesting proves edge exists.
-
----
-
-## Next Steps (In Order)
-
-1. **Fix the source file lookup bug** in `auto_one_by_one.sh`
-2. **Clear tracker files** and restart the batch conversion
-3. **Let the batch run** — 261 remaining strategies × ~5 min each ≈ 22 hours
-4. **Opus audit** on mechanism uniqueness, stop/target distribution, quality spot-check
-5. **Run `prompt_4_backtest.md`** — train/test split, optimization, OOS validation
-6. **Assess results honestly** — how many strategies show gross edge? How many survive costs?
-7. **Buy 6 months of data** if any strategies show promise
-8. **Real validation** on 6 months of out-of-sample data
-
----
-
-## Key Files Reference
-
-| File | Purpose |
-|------|---------|
-| `outputs/strategy_retriage.json` | Which 291 strategies qualified |
-| `outputs/conversion_kills.json` | Strategies killed during conversion |
-| `pipeline/strategies/CONVENTIONS.md` | The quality standard for implementations |
-| `pipeline/strategies/base.py` | OptionSignals interface |
-| `pipeline/cost_model.py` | Upstox cost calculations |
-| `pipeline/state_machine.py` | Numba state machine with 2D premium grid |
-| `5second_data/SCHEMA.md` | Data schema reference |
-| `scripts/auto_one_by_one.sh` | Batch automation script (needs source file fix) |
-| `logs/one_by_one_runner.log` | Runner log |
-| `logs/per_strategy/*.log` | Per-strategy Opus session logs |
+## What's Dead
+- 5-second microstructure on options
+- Spread=0 model for live trading
+- 291 codegen strategies
+- Anything requiring co-location in Year 1

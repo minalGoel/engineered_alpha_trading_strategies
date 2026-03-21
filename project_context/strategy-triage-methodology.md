@@ -22,14 +22,14 @@ How to classify an existing strategy library for a new trading regime. Two triag
 - The option-specific mispricing is ₹1-2 per trade. Costs are ₹3-4 per trade. No room.
 
 ### Why It Failed
-The mispricing edge in option premiums at 5-second frequency is tiny — measured in fractions of a point. Transaction costs (spread + STT + brokerage) are ₹3-4 points minimum. There's no mathematical way for ₹1-2 of edge to overcome ₹3-4 of costs.
+The mispricing edge in option premiums at 5-second frequency is tiny — measured in fractions of a point. With the correct cost model (STT=0.15%, spread=0, ₹1L capital), breakeven is ~0.14-0.86 pts — but the option-chain mispricing signal itself is still unreliable at 5-second resolution and produced no consistent directional edge.
 
 ## The Correct Triage: Spot Direction Prediction
 
 ### Framing
 "We're predicting which direction NIFTY/BANKNIFTY spot will move in the next 15-60 seconds. The option is a leveraged directional bet, not the signal source."
 
-A 10-point NIFTY spot move → ~5 point ATM option move (delta 0.5) → ₹325 gross per lot. Costs ~₹180. Net ~₹145. This is viable with 55-58% directional accuracy.
+A 10-point NIFTY spot move → ~5 point ATM option move (delta 0.5) → ₹325 gross per lot (65 units × 5 pts). At ₹1L capital (~5 lots at ₹300 entry), costs ~₹65/lot (STT=0.15%, spread=0, brokerage diluted). Net ~₹260/lot. This is viable with ~53-55% directional accuracy.
 
 ### Criteria
 **QUALIFY** — Any strategy that predicts price direction on a single instrument:

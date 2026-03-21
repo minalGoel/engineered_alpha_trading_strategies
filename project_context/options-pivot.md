@@ -11,10 +11,10 @@ The project pivoted from 1-minute OHLCV bars on 206 NSE equity stocks (using spo
 | Timeframe | 1-minute bars | 5-second bars (12x density) |
 | Trade execution | Spot signal → option bought externally | Buy CE/PE directly |
 | PnL source | Spot price movement | Option premium change |
-| Cost model | Excluded (irrelevant for spot signals) | Included (spread + STT + brokerage) |
+| Cost model | Excluded (irrelevant for spot signals) | Included (STT + brokerage + exchange; spread = 0) |
 | Hold time | 2-60 minutes | 5-120 seconds |
 | Data | OHLCV per stock | Spot + full option chain + VIX |
-| Lot sizes | N/A | NIFTY=75, BANKNIFTY=15 |
+| Lot sizes | N/A | NIFTY=65, BANKNIFTY=30 |
 | Expiry handling | None | Track per position, force close |
 | Greeks | None | Delta affects expected option move |
 
@@ -45,7 +45,7 @@ This produced 6 survivors: IV-RV spread, put-call skew, vol surface, vol pattern
 ### Correct Frame: "Spot Direction Prediction"
 The actual goal: **predict which direction NIFTY/BANKNIFTY spot will move in the next 15-60 seconds**, then trade ATM options as leveraged directional bets.
 
-A 10-point NIFTY move → ~5 point ATM CE/PE move (delta 0.5) → ₹325 gross per lot. Costs ~₹180. Net ~₹145. This is viable with 55-58% directional accuracy.
+A 10-point NIFTY move → ~5 point ATM CE/PE move (delta 0.5) → ₹325 gross per lot (65 units × 5 pts). Costs ~₹65/lot (at 5 lots, ₹1L capital, spread=0, STT=0.15%). Net ~₹260/lot. This is viable with ~53-55% directional accuracy.
 
 Under this frame, any strategy that predicts price direction on a single instrument qualifies: momentum, mean reversion, RSI, Bollinger, breakout, volume spike, VWAP, etc. The 352 "discarded" equity strategies came back into play.
 
@@ -69,8 +69,11 @@ The 5-second dataset spans only 12 trading days (2026-03-04 to 2026-03-19). This
 ## Decisions Made
 - Direct option trading (buy CE/PE) — no option writing/selling
 - Cost model is ON for all option trades
+- **Spread = 0**: Candle-to-candle execution (enter at candle close, exit at subsequent candle close, ≤120 seconds / ≤24 bars)
+- **STT = 0.15%** on sell side (from 1 Apr 2025). This is the dominant per-trade cost.
+- **Capital per entry = ₹1,00,000**; lots computed dynamically from actual entry premium
 - Leave-one-day-out CV for 12-day dataset (acknowledged as insufficient)
-- Strategy must clear ~₹4 option points per trade after costs to be viable
+- Breakeven is ~0.14-0.86 option points per trade depending on premium level (NOT ~4 pts — that was the old spread-included number)
 - The mechanism field is mandatory — forces structural thinking about WHY
 - 30-50 strategies target for new regime (quality over quantity)
 
@@ -79,5 +82,8 @@ The 5-second dataset spans only 12 trading days (2026-03-04 to 2026-03-19). This
 - ~~Cost model excluded (as in equity)~~ → Cost model mandatory (direct option trading, costs matter)
 - ~~vol_surface_signal had Sharpe +7.17~~ → Entirely phantom from the strike-switching bug. After fix: Sharpe deeply negative.
 - ~~All 6 vol/IV strategies had edge~~ → 0 of 6 are net profitable after corrected strike locking and costs
-- ~~NIFTY lot size = 75~~ → Corrected to 65 in recent audit (lot sizes change periodically — verify current values)
-- ~~BANKNIFTY lot size = 15~~ → Corrected to 30 in recent audit
+- ~~NIFTY lot size = 75~~ → Corrected to **65** (lot sizes change periodically — verify current values)
+- ~~BANKNIFTY lot size = 15~~ → Corrected to **30**
+- ~~Spread = ₹1.0/side included in cost model~~ → **Spread = 0**. Candle-to-candle execution at close prices. Prior cost model was fundamentally wrong.
+- ~~Strategy must clear ~₹4 pts after costs~~ → **Breakeven ~0.14-0.86 pts** at ₹1L capital (depends on entry premium). 4 pts was the old spread-inflated threshold.
+- ~~STT = 0.0625% / 0.1%~~ → **STT = 0.15%** from 1 Apr 2025

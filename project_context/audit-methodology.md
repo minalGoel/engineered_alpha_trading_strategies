@@ -82,23 +82,40 @@ For each trade, verify entry and exit premiums come from the SAME strike:
 - Exit: spot=24374.6 (ATM shifted to 24350), CE premium of 24400 = 308.45 (not 344.65 from 24350)
 
 ### Cost Model Verification
-Compute one trade's costs by hand:
+Compute one trade's costs by hand using the correct model (spread=0, STT=0.15%, ₹1L capital):
 ```
-NIFTY 24000 CE: entry ₹300, exit ₹303, 1 lot (75 units)
-Gross: (303-300) × 75 = ₹225
-Spread: 1.0 × 2 × 75 = ₹150
-STT: 303 × 0.000625 × 75 = ₹14.20
-Brokerage: 20 × 2 = ₹40
-Exchange: 5 × 2 = ₹10
-Net: 225 - 150 - 14.20 - 40 - 10 = ₹10.80
+NIFTY 24000 CE: entry ₹300, exit ₹303, ₹1L capital
+lots     = floor(100000 / (300 × 65))     = 5
+qty      = 325
+entry_tv = 300 × 325                       = ₹97,500
+exit_tv  = 303 × 325                       = ₹98,475
+
+Gross:        (303-300) × 325              = ₹975.00
+STT (sell):   98,475 × 0.0015             = ₹147.71
+Exchange:    (97,500+98,475) × 0.00053    = ₹103.89
+SEBI:         195,975 × 0.000001          =   ₹0.20
+Stamp (buy):  97,500 × 0.00003            =   ₹2.93
+Brokerage:    20 × 2                      =  ₹40.00
+GST 18%:      0.18 × (40+103.89+0.20)     =  ₹25.94
+              ---------------------------------
+Total costs:                               = ₹320.67
+Net PnL:      975 − 320.67                = ₹654.33
 ```
 Compare against pipeline output. Must match within ₹0.01.
+
+**What to check**:
+- No spread component in costs
+- STT on EXIT turnover only (not entry)
+- GST on brokerage + exchange + SEBI (not on STT or stamp)
+- Lots computed from actual entry premium (not hardcoded)
 
 ### Cross-Module Consistency
 grep for critical constants across the entire codebase:
 - `"IST"`, `"UTC"`, `"convert_time_zone"` — timezone handling
-- `"lot_size"`, `"75"`, `"15"` — NIFTY/BANKNIFTY lot sizes
-- `"0.000625"`, `"0.0625"`, `"STT"` — tax rates
+- `"lot_size"`, `"65"`, `"30"` — NIFTY/BANKNIFTY lot sizes (NOT 75 or 15)
+- `"0.0015"`, `"STT"` — tax rate must be 0.0015 (0.15%). Flag any `"0.000625"` or `"0.001"` as bugs.
+- `"spread"` — should be 0 or absent. Any non-zero spread in cost calculation is a bug.
+- `"capital"`, `"100000"` — capital per entry
 - Signal codes: `BUY_CE=1`, `SELL_CE=2`, `BUY_PE=3`, `SELL_PE=4`
 
 ## Decisions Made

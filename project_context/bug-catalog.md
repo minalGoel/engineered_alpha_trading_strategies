@@ -1,7 +1,7 @@
 # Bug Catalog
 
 ## Summary
-33+ bugs discovered across 4 audit passes on the equity pipeline, plus 14 bugs on the options pipeline refactor, plus the critical strike-locking architecture flaw. Organized by category and severity. Every bug here was actually encountered and caused wrong results, crashes, or silent data corruption.
+33+ bugs discovered across 4 audit passes on the equity pipeline, plus 14 bugs on the options pipeline refactor, plus the critical strike-locking architecture flaw, plus a fundamental cost model error (spread-based model applied to a candle-to-candle execution regime). Organized by category and severity. Every bug here was actually encountered and caused wrong results, crashes, or silent data corruption.
 
 ## Timestamp & Timezone Bugs
 
@@ -130,6 +130,26 @@
 **What**: Expected vol computed from ALL data including future bars.
 **Fix**: Use only prior-day data for expected vol estimates.
 
+## Cost Model Bugs
+
+### Spread-Based Cost Model (CRITICAL — Fundamental Design Error)
+**Scope**: All strategy implementations before March 2026 overhaul
+**What**: Cost model included bid-ask spread (₹1.0/side) as a per-unit cost. Training logs showed "Upstox 1pt/side spread" in every strategy's output.
+**Why it's wrong**: Strategies trade candle-to-candle — entry at candle close, exit at subsequent candle close, ≤120 seconds. This is limit-order execution; there is no bid-ask spread cost. The spread model was measuring an intra-candle cost that doesn't apply to this execution regime.
+**Impact**: Breakeven inflated from ~0.5 pts to ~4 pts. Most strategies appeared unprofitable under the wrong model. ALL prior strategy results are invalid.
+**Fix**: Spread = 0. Costs = STT (0.15% sell side) + brokerage (₹40 RT flat) + exchange + SEBI + stamp + GST.
+**Lesson**: The execution regime defines the cost model. "We trade options" ≠ "we pay bid-ask spread." We enter at one candle close and exit at the next — no spread.
+
+### STT Rate Wrong (HIGH — 3 separate occurrences)
+**Files**: `cost_model.py`, strategy logs, CONVENTIONS.md
+**What**: STT coded as 0.0625% (pre-2024), then as 0.1% (Oct 2024 rate), while actual rate from Apr 2025 is 0.15%.
+**Fix**: All references changed to 0.0015 (0.15%).
+
+### Lot Sizes Wrong (HIGH)
+**Files**: Multiple
+**What**: NIFTY lot size coded as 75 (old). BANKNIFTY coded as 15 (old).
+**Fix**: NIFTY = 65, BANKNIFTY = 30. Lot sizes change periodically — verify current values before any major backtest run.
+
 ## Options-Specific Bugs (Refactored Pipeline)
 
 ### Pipeline Never Actually Backtested (CRITICAL)
@@ -158,4 +178,5 @@
 **Fix**: Rewrote all tests for current option pipeline.
 
 ## Corrections Log
-- The bug catalog grew from 8 (audit 1) → 25 (audit 2) → 29 (audit 3) → 33+ (audit 4) → 47+ (options refactor). Each pass found bugs the previous ones missed, primarily because each pass used a different methodology.
+- The bug catalog grew from 8 (audit 1) → 25 (audit 2) → 29 (audit 3) → 33+ (audit 4) → 47+ (options refactor) → 50+ (cost model overhaul). Each pass found bugs the previous ones missed, primarily because each pass used a different methodology.
+- The spread-based cost model survived multiple audits because the execution regime wasn't explicitly documented. The fix: document the execution model first (candle-to-candle, limit orders at close), then derive the cost model from it.

@@ -1,0 +1,31 @@
+{
+  "spot_file": "/Users/minalgoel/Coding_Projects/engineered_alpha_trading_strategies/5second_data/spot_candles.parquet",
+  "option_file": "/Users/minalgoel/Coding_Projects/engineered_alpha_trading_strategies/5second_data/option_candles.parquet",
+  "spot_exists": true,
+  "option_exists": true,
+  "spot_rows": 162000,
+  "spot_symbols": [
+    "NSE:INDIAVIX-INDEX",
+    "NSE:NIFTY50-INDEX",
+    "NSE:NIFTYBANK-INDEX"
+  ],
+  "spot_date_range": [
+    "2026-03-04",
+    "2026-03-19"
+  ],
+  "option_rows": 2671248,
+  "option_underlyings": [
+    "NSE:NIFTY50-INDEX",
+    "NSE:NIFTYBANK-INDEX"
+  ],
+  "option_expiries": [
+    "2026-03-10",
+    "2026-03-17",
+    "2026-03-24",
+    "2026-03-26"
+  ],
+  "option_types": [
+    "CE",
+    "PE"
+  ]
+}

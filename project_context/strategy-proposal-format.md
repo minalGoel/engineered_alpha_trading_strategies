@@ -165,9 +165,11 @@ When the project pivoted to 5-second NIFTY/BANKNIFTY options, the schema changed
     },
 
     "cost_model": {
-        "spread_per_side": 1.0,
+        "spread_per_side": 0,
         "broker": "upstox",
-        "min_edge_points_after_costs": 4
+        "capital_per_entry": 100000,
+        "stt_pct": 0.15,
+        "note": "Limit orders at candle close. Spread=0. Lots computed dynamically from capital/entry_premium. Breakeven ~0.14-0.86 pts depending on premium level."
     },
 
     "tunable_params": [
@@ -202,3 +204,6 @@ When the project pivoted to 5-second NIFTY/BANKNIFTY options, the schema changed
 - ~~Equity format had no `mechanism` field~~ → Added `mechanism` as mandatory quality gate in the options format after the first triage produced 291 strategies with zero mechanism failures (proving the gate was fake)
 - ~~Cost model was excluded from equity backtesting~~ → Cost exclusion was correct for equity (spot signals triggering option buys externally) but costs MUST be included for direct option trading
 - ~~`computed_on` field didn't exist~~ → Added to distinguish which data source each indicator uses (critical when you have spot, option chain, and VIX data)
+- ~~`cost_model.spread_per_side = 1.0`~~ → **Corrected to 0**. Trades execute at candle close (limit orders), not on bid-ask spread.
+- ~~`cost_model.min_edge_points_after_costs = 4`~~ → **Removed**. Breakeven is now dynamic (~0.14-0.86 pts at ₹1L capital) and computed per-trade. 4 pts was the old spread-inflated number.
+- Added `capital_per_entry` and `stt_pct` to cost_model for clarity.

@@ -101,6 +101,31 @@
       "name": "premarket_range_breakout_v1",
       "source_file": "trading_strategies/unique_strategies_all/Strategy_185.json",
       "reason": "Requires NSE pre-market call auction data (09:00-09:08 IST) which is stock-specific and does not exist for NIFTY/BANKNIFTY index. Strategy trades NIFTY 100 constituent stocks and depends on equity-only data (per-stock premarket_high/low from call auction, GIFT Nifty direction filter). Any index-adapted version collapses into the standard ORB thesis, already converted as orb_momentum_v22 and killed four more times for the same reason."
+    },
+    {
+      "name": "index_arb_nifty_components_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_192.json",
+      "reason": "Pure index arbitrage requiring individual component stock prices (RELIANCE, TCS, HDFCBANK, INFY, ICICIBANK, etc.) and NIFTY futures fair value to compute synthetic_index = sum(component_close[i] * weight[i]) vs nifty_fair basis. Our pipeline only provides the NIFTY index itself (spot_df), option_df, and vix_df — no individual equity feeds, no futures data. Without component prices, the basis signal does not exist. Collapsing to NIFTY index alone eliminates the arbitrage thesis entirely since you cannot measure component-vs-index divergence from index data alone. Explicit kill: requires cross-sectional universe of equity stocks."
+    },
+    {
+      "name": "etf_nav_arbitrage_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_193.json",
+      "reason": "ETF NAV arbitrage requires (1) real-time iNAV computed from all 50 NIFTY component prices — cross-sectional equity data not in the pipeline, (2) NIFTYBEES ETF price feed — no ETF data in pipeline, (3) order book data for the ETF, and (4) ETF short-selling mechanics. The entire edge is about NIFTYBEES ETF price converging to its indicative NAV — this is not a NIFTY spot direction signal. Stripping away the ETF and iNAV leaves no strategy at all. Explicit kill: depends on ETF-specific data and equity component prices unavailable in the 5-second NIFTY/BANKNIFTY options pipeline."
+    },
+    {
+      "name": "beta_neutral_stat_arb_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_195.json",
+      "reason": "Pure cross-sectional equity pair trade between TATAMOTORS (high-beta) and HINDUNILVR (low-beta). The entire edge requires individual stock price feeds for both equities to compute rolling per-stock betas vs NIFTY, residual returns for each stock, and an alpha spread between the two stocks. Our pipeline provides only the NIFTY/BANKNIFTY index (spot_df), option chain (option_df), and VIX (vix_df) — no individual equity feeds exist. Without TATAMOTORS and HINDUNILVR prices, the beta computation, alpha spread, and entry signals are impossible. There is no index-equivalent of this strategy: a beta-neutral pair trade between two different equities cannot be replicated from a single index time series. Collapsing to NIFTY vs BANKNIFTY is a completely different strategy and already represents a distinct thesis. Explicit kill: requires cross-sectional universe of equity stocks with individual price feeds."
+    },
+    {
+      "name": "correlation_breakdown_arb_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_197.json",
+      "reason": "Pure cross-sectional equity pair trade between RELIANCE and ONGC (energy sector). The strategy's entire thesis is monitoring rolling intraday correlation between two specific stocks and trading the spread when correlation breaks down. It requires individual price feeds for both equities, rolling cross-stock correlation, beta-adjusted spread computation, and crude oil as an external filter. Our pipeline provides only the NIFTY/BANKNIFTY index (spot_df), option chain (option_df), and VIX (vix_df) — no individual equity feeds or commodity data exist. Without RELIANCE and ONGC prices, no correlation can be computed. There is no NIFTY-equivalent: RELIANCE-ONGC correlation breakdown does not predict NIFTY index direction at 5-second resolution — the signal is about idiosyncratic equity spread, not broad market direction. Explicit kill: requires cross-sectional universe of equity stocks with individual price feeds."
+    },
+    {
+      "name": "cross_listed_arb_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_198.json",
+      "reason": "NSE-BSE cross-listing arbitrage for mid-cap equity stocks. The entire thesis is about transient price divergences between the same stock on NSE vs BSE due to differential HFT participation and order flow. This fundamentally requires: (1) a universe of mid-cap stocks dual-listed on both NSE and BSE, (2) order book data from both exchanges simultaneously, (3) simultaneous execution on two different exchanges. NIFTY/BANKNIFTY index is not cross-listed — it trades exclusively on NSE; there is no BSE equivalent of the NIFTY or BANKNIFTY index. Without NSE-BSE dual listing, the entire arbitrage mechanism does not exist. There is no directional NIFTY/BANKNIFTY signal derivable from this thesis. Explicit kill: requires cross-sectional universe of dual-listed equity stocks with per-stock order book data from both exchanges."
     }
   ]
 }

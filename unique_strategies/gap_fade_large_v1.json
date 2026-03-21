@@ -1,0 +1,120 @@
+{
+  "name": "gap_fade_large_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "fade", "contrarian", "morning", "mean-reversion"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_201.json",
+  "original_name": "gap_fade_large_v1",
+  "mechanism": "On NIFTY, large overnight gaps (>0.3%) driven by SGX Nifty futures and US equity moves cause retail market-on-open orders to push the index further in the gap direction during the first 30-90 seconds of trading, extending price beyond the fair open implied by pre-market futures. Institutional market makers — who have already hedged their overnight gamma exposure — absorb this directional retail flow and gradually fade the intra-session extension back toward session VWAP. At 5-second resolution, we detect the stall of this extension: RSI(12) reaches short-term extremes in the gap direction while 30-second momentum turns against the extension, signaling the handoff from retail-driven momentum to institutional fading. We enter the first 15-90 second leg of the reversal, capturing the initial snap-back rather than the full 30-150 minute fade the original equity strategy targeted.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:15-10:30 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "0-3 (only on gap days, morning only)",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_close", "day_open"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(day_open - prev_close) / prev_close",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Scalar daily gap. No scaling — this is a session-level measure computed once per day from the first bar's open vs previous day's last close. The 0.3% threshold for NIFTY (vs 1.5% for individual stocks) is calibrated to index volatility: a 0.3% NIFTY gap is approximately 60+ spot points, which creates measurable intraday extension pressure."
+    },
+    {
+      "name": "extension_from_open",
+      "formula": "(close - day_open) / day_open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Measures how far price has moved intra-session from the day's open in the gap direction. On a gap-up day, positive extension means price is moving further from prev_close — this is what we fade. Replaces the original's 'excess_gap' (stock vs index) because on the index itself there is no reference instrument to compute excess against; the session extension from day_open serves the same role of detecting over-extension."
+    },
+    {
+      "name": "rsi_12",
+      "formula": "RSI(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 60 seconds of RSI. The original used RSI(14) on 1-minute bars (14 minutes of data). We deliberately match the SAME TIME WINDOW (1 minute) rather than the same bar count, because the exhaustion threshold is time-based: retail over-extension at open typically peaks within 60 seconds. RSI > 70 on a gap-up day extension signals overbought exhaustion; RSI < 30 on gap-down extension signals oversold exhaustion."
+    },
+    {
+      "name": "mom_6",
+      "formula": "(close[i] - close[i-6]) / close[i-6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6 bars = 30 seconds of momentum. Detects the turning of the intra-session extension: when momentum shifts against the gap direction (mom_6 turns negative on a gap-up extension day), institutional fading has begun. Replaces the original's MACD cross on 1-minute bars — MACD requires 35 bars warmup (29+9-min equivalent) which would span 2.5 minutes; at 5s bars we need a faster signal to catch the early fade."
+    },
+    {
+      "name": "vix_close",
+      "formula": "India VIX close, joined asof to spot bars",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Filter: VIX < 25 (same as original). When VIX > 25, large gaps are often driven by structural/fundamental events (e.g., budget, RBI policy), not behavioral overreaction — the gap does not fade."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct < -gap_threshold (large gap down, e.g., -0.3%)",
+        "extension_from_open < -ext_threshold (price extended further below open, e.g., -0.05%)",
+        "rsi_12 < 30 (short-term oversold: extension exhausted)",
+        "mom_6 > 0 (30s momentum turning upward: fade starting)",
+        "time_minutes in [555, 630) (09:15-10:30 IST morning window only)"
+      ],
+      "confirmation": "All conditions true simultaneously on same 5-second bar. Fade the gap-down extension: buy CE."
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct > gap_threshold (large gap up, e.g., +0.3%)",
+        "extension_from_open > ext_threshold (price extended further above open, e.g., +0.05%)",
+        "rsi_12 > 70 (short-term overbought: extension exhausted)",
+        "mom_6 < 0 (30s momentum turning downward: fade starting)",
+        "time_minutes in [555, 630) (09:15-10:30 IST morning window only)"
+      ],
+      "confirmation": "All conditions true simultaneously on same 5-second bar. Fade the gap-up extension: buy PE."
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If the gap extension deepens by 8+ spot points after entry, institutional flow is joining (not fading) the gap — the behavioral thesis is wrong and we cut. NIFTY 30-second typical move is 2-5 option pts; 4 pts is a tight stop calibrated to the very short hold.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. The initial fade leg from an over-extended gap typically covers 15-25 spot points in the first 60-90 seconds as institutional fading absorbs the retail flow. We target 7 pts (conservative 50% capture of the median first leg) for 1:1.75 R:R, appropriate for a contrarian fade with ~55% win rate.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten by 10:30 IST (630 minutes) — gap fades beyond this window are no longer behavioral but structural"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; above 25 large gaps are structural events, not behavioral overreactions",
+    "time_filter": "09:15-10:30 IST only; gap fade setups after 10:30 have lower win rate as price discovery completes",
+    "volume_filter": "none — index volume at 5s bars is noisy; session-level gap and RSI exhaustion are primary signals",
+    "trend_filter": "gap_pct must exceed gap_threshold in magnitude; small gaps (<0.3%) are intraday drift, not behavioral over-reaction events",
+    "spread_filter": "none — limit order execution at close prices, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.65,
+    "edge_decay_risk": "moderate — gap fade is behavioral (retail FOMO/fear at open) and structurally persistent, but as options markets mature and algo participation increases the initial over-extension may compress"
+  },
+  "adaptation_notes": "Three key changes from original: (1) Universe collapsed from NIFTY 50 stocks to NIFTY index itself — the same behavioral thesis (overnight emotional over-reaction fades) applies to the index, with gap_threshold lowered from 1.5% to 0.3% to match index volatility. (2) Hold time compressed from 30-150 minutes to 15-90 seconds — we target the FIRST leg of the fade at 5s resolution, not the full recovery. This required replacing MACD (too slow at 5s) with 30-second momentum (mom_6). (3) 'excess_gap' (stock vs index) dropped — on the index itself, extension_from_open (how far price moved intra-session from the day's opening print) replaces it, detecting the same over-extension concept without requiring a reference instrument.",
+  "weaknesses": [
+    "Gap fades on NIFTY index are less reliable than on individual stocks because index gaps are typically smaller (<0.5%) and driven by pre-market futures adjustment — the 'over-extension' window is shorter and noisier",
+    "Morning session only (09:15-10:30): very few signals per day (0-2 average); requires monitoring for large gap days which occur only 10-15% of trading sessions",
+    "Structural gap-and-go risk: budget announcements, RBI rate decisions, FII sell-off days can create gaps that never fade — VIX filter helps but does not eliminate this"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_201.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-150 mins",
+    "original_indicators": ["gap_pct", "excess_gap (stock vs index)", "RSI_14", "MACD_line", "MACD_signal", "volume_climax", "ATR_14"],
+    "original_stop": "gap extends 0.5% further OR 0.7 * ATR_14",
+    "original_target": "40% reversion of excess_gap"
+  }
+}

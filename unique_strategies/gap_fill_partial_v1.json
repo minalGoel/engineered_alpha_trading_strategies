@@ -1,0 +1,115 @@
+{
+  "name": "gap_fill_partial_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "gap_fill", "mean_reversion", "opening", "ema", "partial_fill"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_200.json",
+  "original_name": "gap_fill_partial_v1",
+  "mechanism": "On NIFTY gap-up or gap-down days of 0.4–1.2% (roughly 36–108 spot points), short-term gap traders who positioned at the open begin profit-taking as price approaches the half-gap level — the exact midpoint between today's open and yesterday's close. This midpoint acts as an intraday support/resistance magnet because retail and semi-algorithmic traders anchor their 'give back 50%' exit rules there, clustering limit orders at that price. At 5-second resolution, the first EMA(12) cross of EMA(36) in the fill direction — before the half-gap is reached — marks the onset of this profit-taking flow and offers a 15–90 second directional window of 8–12 NIFTY spot points. This is DISTINCT from the VWAP-cross signal (gap_fill_full_v1): we enter earlier, before price has even reached VWAP, targeting only the first momentum leg toward the midpoint rather than the full institutional gap-fill cycle.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-09:50 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_close"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(today_open - prev_day_close) / prev_day_close",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Day-level gap magnitude. No lookback — computed from the first bar's open vs previous session's last close. Filtered to 0.4–1.2% (tighter than gap_fill_full_v1's 0.3–1.0%). Below 0.4% the profit-taking anchor at the half-gap is too weak; above 1.2% the gap is likely structural (news-driven) and the half-gap gravity collapses."
+    },
+    {
+      "name": "half_gap",
+      "formula": "(today_open + prev_day_close) / 2",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The 50% fill level — midpoint between open and previous close. This is the sole target boundary; we do not trade beyond it. No lookback needed — a day-level scalar broadcast to all bars of that day. Replaces the VWAP cross from gap_fill_full_v1 as the target reference level."
+    },
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12-bar EMA = 1-minute fast momentum at 5s frequency. This is the TRIGGER line. 12 bars chosen because the original's EMA(9) on 1-min bars represents ~9 minutes of signal memory; we want a faster trigger for the 15-90s hold — 1 min (12 bars) is responsive without being trivially noisy. The cross of EMA12/EMA36 at 5s detects momentum shifts 3x faster than any 1-min bar confirmation."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "36-bar EMA = 3-minute confirmation line. The original used EMA(21) on 1-min bars = 21-minute memory; we compress to 3 min because at 5s bars we need a confirmation window that still matters for a 15-90s hold without being so long it's stale. 3 min (36 bars) provides enough smoothing to reject single-bar noise while remaining responsive to the opening 10-20 minute window dynamics."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct between -1.2% and -0.4% (gap-down day: NIFTY opened below prev close)",
+        "ema_12 crosses above ema_36 on this bar (bullish momentum reversal — filling the gap)",
+        "close < half_gap (price still below the 50% fill level — room remains to trade toward it)",
+        "time_minutes in [560, 590] (09:20–09:50 IST: partial fills happen early in the opening volatility window)",
+        "vix_close between 11.0 and 20.0 (too-calm VIX <11 implies tiny overnight range gaps; VIX >20 implies macro shock gaps that extend rather than fill)"
+      ],
+      "confirmation": "EMA(12) closes above EMA(36) on this 5-second bar, with price below the half_gap threshold"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct between +0.4% and +1.2% (gap-up day: NIFTY opened above prev close)",
+        "ema_12 crosses below ema_36 on this bar (bearish momentum — filling the gap)",
+        "close > half_gap (price still above the 50% fill level — room remains to fall toward it)",
+        "time_minutes in [560, 590] (09:20–09:50 IST)",
+        "vix_close between 11.0 and 20.0"
+      ],
+      "confirmation": "EMA(12) closes below EMA(36) on this 5-second bar, with price above the half_gap threshold"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option pts (~6 NIFTY spot pts at delta 0.5). Once the EMA cross fires, if NIFTY moves 6 spot points AGAINST the fill direction within 90 seconds, the gap is extending not filling — the profit-taking anchor at the half-gap has failed. At 30-second timescales, 6 spot pts is already 1-2 standard deviations of move (typical 30s NIFTY move: 2-5 pts), so 3 option pts is a tight but correctly calibrated stop for this fast thesis.",
+    "target_points": 5,
+    "stop_rationale_detail": "Tighter than gap_fill_full_v1's 4 pts because we enter earlier in the fill sequence with less confirmation; the thesis must resolve quickly or it's wrong.",
+    "target_points_rationale": "5 option pts (~10 NIFTY spot pts at delta 0.5). The first EMA-confirmed momentum leg in a partial gap fill covers 8-14 spot points before momentum naturally pauses or reverses. 10 spot pts = ~45-60% of way to half_gap on a typical 0.5% gap. R:R 1:1.67. Does not target the full half-gap — that is gap_fill_full_v1's job.",
+    "target_rationale": "5 option pts = ~10 NIFTY spot pts. For a 0.5% gap (~110 pts), the half-gap is ~55 pts away. The first EMA-momentum leg covers 15-25% of that distance (8-14 pts) before institutional flow takes over. We target this fast first leg only.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "11.0 ≤ India VIX < 20.0. Below 11: overnight range too narrow for 0.4% gaps to form reliably. Above 20: macro shock regime where gaps are structural and extend rather than fill within 30 minutes.",
+    "time_filter": "09:20–09:50 IST only. Partial fills complete within the opening volatility window; crosses after 09:50 are from a second-wave dynamic not captured by this thesis.",
+    "volume_filter": "none — index volume is noisy at 5s; EMA cross implicitly captures price-momentum participation",
+    "trend_filter": "none — gap fill is inherently counter-trend to the gap direction",
+    "spread_filter": "none — limit order execution at candle close, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 2.50,
+    "edge_decay_risk": "low — the half-gap profit-taking pattern is structural (short-term traders anchoring at the open-to-close midpoint) and distinct from the institutional VWAP flow exploited by gap_fill_full_v1"
+  },
+  "adaptation_notes": "Original traded NIFTY50 constituent stocks targeting 50% individual stock gap fills over 15-90 minutes. Key changes: (1) Universe collapsed to NIFTY index itself — the 'gap' is now the index overnight gap, not individual stock gaps; (2) Entry trigger changed from EMA(9)/EMA(21) cross on 1-min bars to EMA(12)/EMA(36) cross on 5s bars — same conceptual 1-min vs 3-min momentum comparison but at sub-minute resolution, catching the fill 2-5 minutes earlier than the original; (3) half_gap level explicitly tracked as the target ceiling/floor rather than just being the 'exit target' — we do NOT enter if price has already passed the half_gap; (4) hold time compressed from 15-90 min to 15-90 sec — we capture only the first EMA-momentum leg, not the full fill journey; (5) stop calibrated to 3 option pts (vs original's 0.4*ATR) because at 5s on NIFTY the ATR concept doesn't apply; (6) all equity-specific filters removed (earnings, corporate actions, per-stock spread, delivery volume); (7) VIX floor added at 11 (original's lower bound was also 11 — preserved); (8) DIFFERENTIATED from gap_fill_full_v1: different trigger (EMA cross vs VWAP cross), different mechanism (profit-taking anchor vs institutional VWAP benchmarking), narrower time window (30 min vs 70 min), tighter stops (3 vs 4 pts), smaller target (5 vs 7 pts), higher frequency.",
+  "weaknesses": [
+    "EMA(12)/EMA(36) cross on 5s bars can fire multiple times in the 09:20-09:50 window; max_trades_per_day=4 limits churn but cannot prevent whipsaws in choppy openings",
+    "The half_gap boundary condition prevents entry if a fast gap fill has already reached the midpoint before a cross fires — on fast-moving days this strategy will generate fewer signals",
+    "VIX filter (11-20) works on gap-regime classification but cannot distinguish between sentiment gaps (high fill probability) and structural news gaps (low fill probability) on the same VIX reading"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_200.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-90 mins",
+    "original_indicators": ["gap_pct", "half_gap_target", "EMA_9", "EMA_21", "volume_ratio", "ATR_10"],
+    "original_stop": "price extends 30% beyond gap open in gap direction OR 0.4 * ATR_10",
+    "original_target": "price reaches half_gap_target (50% gap fill)"
+  }
+}

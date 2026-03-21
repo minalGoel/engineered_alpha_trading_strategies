@@ -1,0 +1,118 @@
+{
+  "name": "autocorrelation_regime_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["autocorrelation", "regime", "serial-correlation", "momentum-reversion", "quantitative", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_309.json",
+  "original_name": "autocorrelation_regime_v1",
+  "mechanism": "On NIFTY, the 5-minute rolling lag-1 autocorrelation of 5-second returns quantifies two competing microstructure forces simultaneously present in the index order book. Positive autocorrelation (> 0.20) signals institutional TWAP/VWAP algorithms executing large directional mandates whose resting orders persist across dozens of 5-second bars, creating momentum that lasts 30-90 seconds; we follow the prevailing 1-minute impulse. Negative autocorrelation (< -0.20) signals short-gamma market makers delta-hedging options books dominating the tape — they reflexively fade each 5-second tick with the opposite side, so every 1-minute move becomes self-correcting; we fade back toward VWAP. The 5-second bar resolution lets us classify and react to regime transitions 12× faster than the original 1-minute formulation, entering at the regime's onset rather than after confirmation.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ret_1",
+      "formula": "(close - close.shift(1)) / close.shift(1)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "1-bar 5-second return — the raw material for autocorrelation. At 5s bars this is the finest tradeable return series available."
+    },
+    {
+      "name": "autocorr_60",
+      "formula": "pearson_corr(ret_1[i-60:i-1], ret_1[i-59:i], lag=1)",
+      "lookback": 61,
+      "computed_on": "spot",
+      "purpose": "Rolling 5-minute lag-1 autocorrelation. 60 bars chosen because: (1) SE of Pearson r with 60 observations ≈ 0.13, making ±0.20 thresholds statistically meaningful; (2) 5 minutes captures the tenure of a typical institutional TWAP slice or a market-maker hedging cycle — short enough to detect regime transitions intraday. The original used 30 bars of 1-min data (30 minutes of history); at 5s resolution we use 60 bars (5 minutes) because we are predicting the NEXT 30-90 seconds, not the next 10-30 minutes — the relevant regime window compresses proportionally with hold time."
+    },
+    {
+      "name": "ret_12",
+      "formula": "(close - close.shift(12)) / close.shift(12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute directional impulse for entry timing. In momentum regime, confirms an established direction before joining; in reversion regime, measures the size of the move to fade. 12 bars (1 min) is the minimum meaningful impulse at 5s resolution — shorter would pick up noise, longer would miss entry timing."
+    },
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute EMA for price-vs-trend confirmation in momentum regime. Aligned with ret_12 so both measure the same 1-minute trend horizon."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset at session open",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session-cumulative VWAP as mean-reversion anchor. In reversion regime, VWAP distance determines which direction to fade and validates that the move being faded is a genuine excursion. No scaling needed — VWAP is cumulative, not lookback-based."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "MOMENTUM: autocorr_60 > 0.20 AND ret_12 > 0.0012 (12bp 1-min move) AND close > ema_12 (price above 1-min trend)",
+        "REVERSION: autocorr_60 < -0.20 AND ret_12 < -0.0015 (15bp down-impulse to fade) AND close < vwap (below VWAP confirms mean-reversion candidate)"
+      ],
+      "confirmation": "Signal fires on same bar — no additional confirmation bar (5s bars already slow enough)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "MOMENTUM: autocorr_60 > 0.20 AND ret_12 < -0.0012 AND close < ema_12",
+        "REVERSION: autocorr_60 < -0.20 AND ret_12 > 0.0015 AND close > vwap"
+      ],
+      "confirmation": "Signal fires on same bar"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points_momentum": 3,
+    "stop_rationale": "Momentum regime: 3 option points. If the institutional TWAP order sustaining momentum has reversed a 6 spot-point retracement (≈3 option pts at delta 0.5) within 30s, the order flow thesis has broken — exit before further damage. NIFTY 30s typical move is 2-5 pts; a 3pt stop is hit only on a genuine reversal.",
+    "target_points_momentum": 5,
+    "target_rationale": "Momentum regime: 5 option points. A healthy institutional TWAP continuation moves NIFTY 10-15 spot pts in 30-90s (≈5-7 option pts). 5 pts is the conservative capture of the first leg — this regime can run longer but 5pt target locks in profit before the TWAP mandate completes.",
+    "stop_points_reversion": 4,
+    "stop_rationale_reversion": "Reversion regime: 4 option points. Reversion from VWAP excursion can see a final flush extending another 8 spot pts (≈4 option pts) before snapping back — need wider stop than momentum. If price extends 8+ pts further from VWAP (total move > 23bp on the 1-min), market-maker hedging is overwhelmed by one-sided flow and reversion thesis is wrong.",
+    "target_points_reversion": 7,
+    "target_rationale": "Reversion regime: 7 option points. A VWAP excursion of 15bp+ reverts at minimum 40-50% in 60-90s (≈7 option pts). Market makers fully cover their delta within 2-3 minutes, so the reversion is fast and typically overshoots slightly — 7pts captures the core reversion without overstaying.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "None — VIX regime does not change autocorrelation signal logic at 5s scale",
+    "time_filter": "09:30-15:20 IST — needs 60-bar (5-min) warmup after 09:20 open for first stable autocorrelation estimate; 15:20 EOD flatten",
+    "volume_filter": "None — index volume at 5s bars is too noisy for filtering",
+    "trend_filter": "Regime itself (autocorr threshold) acts as the filter — neutral zone (-0.20 to +0.20) means no trades",
+    "spread_filter": "Not applicable — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.45,
+    "profit_factor_estimate": 1.28,
+    "edge_decay_risk": "Medium — autocorrelation regimes on NIFTY are driven by structural participants (institutions with TWAP mandates, short-gamma market makers) whose behavior is persistent; however, as HFT proliferates on NSE, the momentum autocorrelation signal may compress over time"
+  },
+  "adaptation_notes": "Key changes from original: (1) Lookback compressed from 30×1min (30 min) to 60×5s (5 min) because hold time is 30-90s vs 10-30min — the regime window must be proportional to the trading horizon; (2) Universe changed from NIFTY50 constituents to NIFTY index itself — index autocorrelation is cleaner and free of bid-ask bounce contamination that the original noted as a weakness for individual stocks; (3) Two separate stop/target levels for momentum vs reversion sub-strategies, calibrated to their different risk profiles; (4) Removed trailing stop (too complex for 30-90s holds); (5) VIX filter removed — VIX doesn't affect the autocorrelation regime classification at 5s scale",
+  "weaknesses": [
+    "At 60 observations, SE of Pearson r ≈ 0.13 — threshold of ±0.20 leaves modest statistical separation; measured autocorr can be in regime but true autocorr neutral, generating spurious signals",
+    "NIFTY index at 5s bars still has discretization noise — individual derivative legs crossing prices can create apparent autocorrelation that is not a tradeable institutional signal",
+    "Two sub-strategies (momentum + reversion) with different stops mean the realized R:R distribution is bimodal — may require separate Optuna tuning passes"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_309.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 min",
+    "original_indicators": ["Returns_1min", "Autocorr_30 (lag=1, window=30)", "EMA_5", "VWAP_Distance"],
+    "original_stop": "MOMENTUM: 18bps; REVERSION: 12bps",
+    "original_target": "MOMENTUM: 30bps; REVERSION: 20bps"
+  }
+}

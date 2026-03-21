@@ -1,0 +1,138 @@
+{
+  "name": "vix_bucket_strategy_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vix", "regime", "volatility", "mean-reversion", "momentum", "trend-following", "adaptive"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_308.json",
+  "original_name": "vix_bucket_strategy_v1",
+  "mechanism": "India VIX is constructed from NIFTY option implied volatilities and reflects institutional hedging demand in real time. In Calm regimes (VIX < 13), NIFTY's tight intraday range means market makers aggressively fade 3-minute Bollinger Band excursions — they are collecting spread in low-vol, and any 10-15 spot point deviation from VWAP is absorbed within 30-60 seconds. In Normal regimes (VIX 13-18), large TWAP algorithms run directional orders lasting minutes; an EMA(9-min) crossing above EMA(21-min) on NIFTY signals a fresh wave of institutional buying that typically sustains for 45-90 seconds. In Elevated regimes (VIX 18-24), delta-hedging by options dealers creates self-reinforcing momentum: dealers short gamma who hedge must buy rising and sell falling NIFTY, extending Supertrend-confirmed directional moves for 60-120 seconds. Crisis regimes (VIX > 24) are excluded as two-way flow becomes unpredictable.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:10 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "CALM: 4-8; NORMAL: 2-4; ELEVATED: 1-3; total 8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vix_bucket",
+      "formula": "CALM if VIX < 13; NORMAL if 13 <= VIX < 18; ELEVATED if 18 <= VIX < 24; CRISIS if VIX >= 24",
+      "lookback": 1,
+      "computed_on": "vix",
+      "purpose": "Real-time VIX level from vix_df is the primary regime switch. No lookback needed — the current level is the signal. India VIX is a 30-day forward vol forecast, not a lagging indicator."
+    },
+    {
+      "name": "bb_36",
+      "formula": "SMA(close, 36) ± 1.5 * STDDEV(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute Bollinger Bands (36 bars × 5s) for Calm regime mean-reversion. Original used 15-bar 1-min BB = 15 minutes; we compress to 3 minutes because at 5-second resolution we trade the FAST reversion (30-60s), not the slow drift back over 15 minutes. Market makers fade Calm-regime deviations within seconds, so a longer window misses the entry timing."
+    },
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute RSI (24 bars × 5s) to confirm exhaustion in Calm regime. Original used RSI(10) on 1-min = 10-minute RSI. Compressed to 2 minutes (24 bars) because in calm conditions, short-term selling exhaustion shows up within 2 minutes; a 10-minute RSI is too slow to detect the fast bounce we are trading."
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP(cumulative from session open)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative daily VWAP as directional context filter across all regimes. No period scaling needed — VWAP is cumulative from market open regardless of bar size. Acts as the fairness anchor: deviations below VWAP in Calm support CE buys, deviations above support PE buys."
+    },
+    {
+      "name": "ema_108",
+      "formula": "EMA(close, 108)",
+      "lookback": 108,
+      "computed_on": "spot",
+      "purpose": "9-minute fast EMA (108 bars × 5s) for Normal regime crossover. Original used EMA(9) on 1-min = 9 minutes. Same calendar time is correct because institutional TWAP momentum plays last for minutes, not seconds — the 9-minute EMA captures the same order flow persistence as the original, just at higher resolution."
+    },
+    {
+      "name": "ema_252",
+      "formula": "EMA(close, 252)",
+      "lookback": 252,
+      "computed_on": "spot",
+      "purpose": "21-minute slow EMA (252 bars × 5s) for Normal regime crossover anchor. Original used EMA(21) on 1-min = 21 minutes. Same calendar time preserves the 9/21 crossover characteristic — the slow EMA represents the dominant intraday trend backdrop that institutional orders must clear before the fast EMA crossover is meaningful."
+    },
+    {
+      "name": "supertrend_120_2.5",
+      "formula": "Supertrend(ATR_period=120, multiplier=2.5)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute Supertrend (120 bars × 5s) for Elevated regime trend-following. Original used ATR(10) on 1-min = 10 minutes. Same ATR time window, but multiplier reduced from 4.0 to 2.5 because at 5-second resolution the true range per bar is much smaller — a 4.0 multiplier on 5s ATR would produce bands so wide they never flip direction. 2.5 at 5s is approximately equivalent sensitivity to 4.0 at 1-min."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "CALM: close < BB_lower_36 AND close < VWAP AND RSI(24) < rsi_oversold AND close > close[-1] (uptick confirmation)",
+        "NORMAL: EMA(108) crosses above EMA(252) AND close > VWAP",
+        "ELEVATED: Supertrend(120, 2.5) is bullish AND close > VWAP AND volume > 1.5 * SMA(volume, 20)"
+      ],
+      "confirmation": "Single-bar uptick for CALM; crossover bar for NORMAL; Supertrend flip bar + volume for ELEVATED"
+    },
+    "buy_pe": {
+      "conditions": [
+        "CALM: close > BB_upper_36 AND close > VWAP AND RSI(24) > rsi_overbought AND close < close[-1] (downtick confirmation)",
+        "NORMAL: EMA(108) crosses below EMA(252) AND close < VWAP",
+        "ELEVATED: Supertrend(120, 2.5) is bearish AND close < VWAP AND volume > 1.5 * SMA(volume, 20)"
+      ],
+      "confirmation": "Single-bar downtick for CALM; crossover bar for NORMAL; Supertrend flip bar + volume for ELEVATED"
+    },
+    "entry_price": "limit order at bar close"
+  },
+  "exit": {
+    "stop_points": {
+      "calm": 3.0,
+      "normal": 4.0,
+      "elevated": 6.0
+    },
+    "stop_rationale": "Calm: 3 pts — NIFTY moves 1-3 option pts in 30s in calm conditions; if we lose 3 pts on a mean-reversion trade, the BB deviation is deepening rather than reverting. Normal: 4 pts — EMA crossover momentum should not retrace more than 8 spot pts (4 option pts at delta 0.5) within 60s if the institutional flow is genuine. Elevated: 6 pts — elevated vol causes 12-15 spot pt whipsaws; need room before confirming trend failure.",
+    "target_points": {
+      "calm": 4.0,
+      "normal": 6.0,
+      "elevated": 9.0
+    },
+    "target_rationale": "Calm: 4 pts — successful BB bounce captures 8-10 spot pts at delta 0.5; targeting conservative 4 pts (1:1.33 R:R at tight stop). Normal: 6 pts — EMA crossover momentum extends 12-15 spot pts post-crossover on NIFTY; capturing 60% of typical move (1:1.5 R:R). Elevated: 9 pts — VIX 18-24 momentum moves extend 18-25 spot pts via dealer delta-hedging; targeting 45% of expected move (1:1.5 R:R).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:10 IST"
+  },
+  "filters": {
+    "vix_filter": "Primary regime gate: CRISIS (VIX >= 24) suppresses all signals; each regime activates its own sub-strategy",
+    "time_filter": "No entries before 09:25 IST (565 min) — opening 10 minutes have erratic VIX readings; no entries after 15:10 IST (910 min)",
+    "volume_filter": "ELEVATED only: volume > 1.5x 20-bar rolling average confirms institutional participation behind trend",
+    "trend_filter": "VWAP acts as universal trend filter across all regimes — buy CE only below VWAP in Calm, above VWAP in Normal/Elevated",
+    "spread_filter": "N/A — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.35,
+    "profit_factor_estimate": 1.71,
+    "edge_decay_risk": "Medium — VIX bucket thresholds (13, 18, 24) may drift as structural vol changes. EMA crossover signals in Normal regime are rare events (2-4/day) which limits overfitting but also reduces daily P&L consistency."
+  },
+  "adaptation_notes": "Three major changes from original: (1) BB lookback compressed 15-min→3-min to trade the fast 30-60s reversion rather than slow 15-min drift; (2) Supertrend multiplier reduced 4.0→2.5 because 5-second ATR is much smaller than 1-minute ATR — same sensitivity requires a smaller multiplier; (3) Volume threshold reduced to 1.5x (from 2x) for elevated regime because 5-second volume is noisier and 2x would filter too many valid trend bars. EMA periods kept at same calendar time (9-min/21-min) because institutional momentum thesis operates on clock time not bar count.",
+  "weaknesses": [
+    "EMA(9-min)/EMA(21-min) crossovers on NIFTY happen only 3-6 times per day in Normal regime — very low trade frequency means high sensitivity to individual trade outcomes",
+    "VIX bucket can oscillate near thresholds (e.g., 17.8-18.2) causing rapid regime switches mid-trade, invalidating the sub-strategy thesis",
+    "Supertrend in Elevated regime may lag fast NIFTY reversals; entering on a Supertrend flip at 5s resolution means 10-minute momentum may already be exhausted"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_308.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "CALM: 10-20 min; NORMAL: 20-45 min; ELEVATED: 30-90 min",
+    "original_indicators": ["BB(15, 1.5)", "RSI(10)", "EMA(9)", "EMA(21)", "Supertrend(10, 4.0)", "VWAP"],
+    "original_stop": "CALM: 12 bps; NORMAL: 20 bps; ELEVATED: 35 bps",
+    "original_target": "CALM: 20 bps; NORMAL: 35 bps; ELEVATED: 60 bps"
+  }
+}

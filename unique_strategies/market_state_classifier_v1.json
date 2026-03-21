@@ -1,0 +1,144 @@
+{
+  "name": "market_state_classifier_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["classifier", "market-state", "trending", "ranging", "volatile", "regime", "adx", "bollinger"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_307.json",
+  "original_name": "market_state_classifier_v1",
+  "mechanism": "NIFTY's intraday order flow alternates between institutional TWAP/VWAP-driven trending phases (persistent directional imbalance visible as rising 2-minute ADX) and market-maker-driven ranging phases (tight oscillation as gamma-hedgers quote both sides within a narrow band). When NIFTY ADX(24) rises above 22 with contained ATR acceleration, it signals institutional directional programs are active — a short EMA crossover (EMA12 crossing EMA36) aligned with VWAP confirms the next 30-50 spot point leg has begun, exploitable with a 30-90 second options hold. Conversely, when ADX(24) falls below 18 and Bollinger Band width sits in the bottom 40th percentile of its 5-minute history, market makers are the marginal price-setters — price touching the outer band immediately encounters their resting contra-side hedging flow, producing reliable 15-25 spot point mean-reversion within 30-60 seconds.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "adx_24",
+      "formula": "ADX(high, low, close, 24) via Wilder's smoothing",
+      "lookback": 48,
+      "computed_on": "spot",
+      "purpose": "2-minute ADX (24 × 5s bars) to classify NIFTY micro-regime into trending vs ranging. Original used ADX(14) on 1-min bars (14-minute window). We compress to 2-minutes because our hold time is 30-90s — a 14-minute ADX would flag as 'trending' well after the institutional leg has already run. 2-minute ADX detects whether the MOST RECENT 2 minutes of NIFTY price action shows directional progress vs oscillation, which is exactly the right resolution for 30-90s entry timing."
+    },
+    {
+      "name": "bb_width_60",
+      "formula": "(4 * STDDEV(close, 60)) / SMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute Bollinger Band normalized width. Original used BB(20) on 1-min bars = 20-minute window. At 5-second resolution, 60 bars = 5 minutes, capturing the current trading session micro-regime without historical contamination. Normalized by midline so NIFTY's absolute price level doesn't inflate the width measure."
+    },
+    {
+      "name": "bb_width_pctile",
+      "formula": "percentile_rank(bb_width_60, 60-bar rolling window)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Percentile rank of current BB width within the last 60 bars (5 minutes of history). A low percentile (below 40th) means the current range is tighter than 60% of recent 5-minute bars — a genuine squeeze. Adapted from original's BB_Width_Pctile(20, 60-bar window) which used 1-min bars; same 5-minute history window but now evaluated at 5-second granularity."
+    },
+    {
+      "name": "atr_acceleration",
+      "formula": "ATR(12)[i] / ATR(12)[i-12] - 1",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "1-minute ATR acceleration: current 1-min ATR (ATR over 12 × 5s bars) divided by the same metric from 12 bars (60 seconds) ago. A value > 0.6 means ATR has expanded 60% in 60 seconds — a sudden volatility spike from news, stop-run, or macro event on NIFTY. Adapted from original's ATR(14)[bar] / ATR(14)[10 bars back] on 1-min charts; same concept at 5s granularity. This blocks entries during explosive moves where neither trend nor range thesis holds."
+    },
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "1-minute fast EMA (12 × 5s). Compressed from EMA(9) on 1-min bars in the original. At 5-second resolution, 12 bars = 1 minute, giving a fast trigger line responsive enough to detect the start of new institutional legs on NIFTY without being noise-driven."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 72,
+      "computed_on": "spot",
+      "purpose": "3-minute slow EMA (36 × 5s). Compressed from EMA(21) on 1-min bars (21 minutes in original → 3 minutes here). Ratio EMA_fast/EMA_slow is preserved: original was 9/21 ≈ 0.43; here 12/36 = 0.33, slightly more separation given we're holding 30-90s not 20-60 min. The 3-min EMA captures the current short-term trend context on NIFTY."
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP(cumulative from session open at 09:15 IST)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as intraday directional bias filter. No scaling needed — cumulative from open. Same role as original: trending entries must align with the dominant intraday VWAP direction to avoid fading institutional flow. VWAP above price = institutions net sellers intraday; below = net buyers."
+    },
+    {
+      "name": "bb_upper_60",
+      "formula": "SMA(close, 60) + 2.0 * STDDEV(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute upper Bollinger Band. Used in RANGING state for bearish entry (buy PE). Price tagging the upper band during a confirmed squeeze signals market-maker contra flow is about to push NIFTY back toward the midline."
+    },
+    {
+      "name": "bb_lower_60",
+      "formula": "SMA(close, 60) - 2.0 * STDDEV(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute lower Bollinger Band. Used in RANGING state for bullish entry (buy CE). Price touching the lower band in confirmed squeeze conditions signals resting buy orders from market-maker hedges will absorb the dip and push NIFTY back up."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "TRENDING: adx_24 > 22 AND atr_acceleration < 0.6 AND ema_12 crosses above ema_36 AND close > vwap",
+        "RANGING: adx_24 < 18 AND bb_width_pctile < 40 AND close <= bb_lower_60 AND close < vwap"
+      ],
+      "confirmation": "In session (09:30-15:20 IST) AND VIX < 25"
+    },
+    "buy_pe": {
+      "conditions": [
+        "TRENDING: adx_24 > 22 AND atr_acceleration < 0.6 AND ema_12 crosses below ema_36 AND close < vwap",
+        "RANGING: adx_24 < 18 AND bb_width_pctile < 40 AND close >= bb_upper_60 AND close > vwap"
+      ],
+      "confirmation": "In session (09:30-15:20 IST) AND VIX < 25"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "TRENDING entries use 5 option pts (≈10 NIFTY spot pts at ATM delta ~0.5). A confirmed institutional leg on NIFTY that reverses 10 spot pts within 30s means the TWAP flow has finished or reversed — thesis is broken. RANGING entries use 3 option pts (≈6 spot pts); a squeezed NIFTY that moves 6 pts against the mean-reversion direction has broken the range (BB band penetration) and will not revert quickly. The two-tier approach matches the different edge sizes per state.",
+    "target_points": 8,
+    "target_rationale": "TRENDING entries target 8 option pts (≈16 NIFTY spot pts). Institutional micro-legs on NIFTY extend 20-40 spot pts from EMA crossover confirmation; 8 pts captures roughly the first 40-50% of the expected move (1:1.6 R:R). RANGING entries target 5 option pts (≈10 spot pts); a 5-min BB extreme to midline mean-reversion on NIFTY averages 15-25 spot pts, capturing 40-65% at 5 pts (1:1.67 R:R).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25; ATR acceleration > 0.6 forces VOLATILE classification (no entries regardless of ADX or BB state)",
+    "time_filter": "No entries before 09:30 IST (opening range absorption period) or after 15:20 IST (expiry day flatten)",
+    "volume_filter": "None explicit — index volume in 5-second bars is too noisy; ADX regime classification is the quality gate",
+    "trend_filter": "TRENDING entries require close > VWAP (for CE) or close < VWAP (for PE) to align with the dominant intraday direction",
+    "spread_filter": "None — limit order execution at candle close, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.38,
+    "edge_decay_risk": "Medium — ADX/BB state classification is robust but specific thresholds (ADX=22, ADX=18, BB_pctile=40) may require periodic recalibration as NIFTY intraday volatility regime shifts across market cycles"
+  },
+  "adaptation_notes": "Original operated on NIFTY50 individual constituents at 1-min resolution (universe-level operation). Converted to the NIFTY index itself with 5-second bars and 30-90s holds. Key changes: (1) Universe collapsed from 50 stocks to the single NIFTY index — the state classification now describes the INDEX's own regime, not individual stocks. This actually improves signal quality because individual stocks have idiosyncratic noise; the index is smoother and more reliably ADX-classifiable. (2) ADX(14 min) compressed to ADX(2 min): at 5-second resolution, a 14-minute ADX would perpetually lag the micro-regime transitions relevant to 30-90s holds. (3) BB(20 min) compressed to BB(5 min): same reasoning — current range conditions matter, not conditions from 20 minutes ago. (4) EMA(9)/EMA(21) on 1-min bars → EMA(12)/EMA(36) on 5-second bars = EMA(1 min)/EMA(3 min). The fast/slow ratio is preserved. (5) Added normalized BB width (divided by midline) to handle NIFTY's absolute level changes. (6) Eliminated per-stock earnings and delivery% filters — not applicable to index. (7) VOLATILE state (atr_accel > 0.6) now suppresses entries for that bar; the time_stop_bars=18 mechanism handles exits. (8) Dropped trailing stop and signal-exit-on-state-change from original — both incompatible with 5-second bars and the pipeline's binary option structure.",
+  "weaknesses": [
+    "2-minute ADX on NIFTY will oscillate around thresholds during macro-driven choppy days (high volume but no sustained direction) — generating false TRENDING entries",
+    "EMA(12)/EMA(36) crossovers fire frequently on NIFTY's 5-second bars; the ADX filter is critical but during trending periods, multiple crossovers will fire per trend leg, potentially entering late",
+    "BB width percentile rank requires 120 bars (10 min of warmup) before it becomes reliable; early session ranging signals (09:30-09:40 IST) may have biased percentile ranks",
+    "ADX 'dead zone' between 18 and 22 generates no trades — NIFTY frequently operates in this intermediate-trend state which represents missed opportunity",
+    "The state is classified per bar independently; a genuine state transition (trending → ranging) will still generate a new trending entry on the first bar of the new bar if indicators haven't updated yet"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_307.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "TRENDING: 20-60 min; RANGING: 10-30 min",
+    "original_indicators": ["ADX(14)", "BB_Width_Pctile(20, 60-bar window)", "ATR_Acceleration(14, 10-lag)", "EMA(9)", "EMA(21)", "BB(20,2)", "VWAP"],
+    "original_stop": "TRENDING: 25 bps; RANGING: 15 bps",
+    "original_target": "TRENDING: 45 bps; RANGING: 25 bps"
+  }
+}

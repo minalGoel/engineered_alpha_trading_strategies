@@ -2,14 +2,24 @@
   "name": "microstructure_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "order-flow", "imbalance", "mean-reversion", "intraday", "vwap"],
+  "tags": [
+    "microstructure",
+    "order-flow",
+    "imbalance",
+    "mean_reversion",
+    "intraday",
+    "vwap"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_155.json",
   "original_name": "microstructure_reversion_v1",
-  "mechanism": "On NIFTY, each 5-second bar's close location value (CLV) — how close the bar's close is to its high relative to the bar's range — approximates intra-bar buying vs selling pressure. When 20 consecutive 5-second bars (100 seconds) show more than 68% buy-side volume dominance and NIFTY has simultaneously risen 0.15%+ above where it was 100 seconds ago, institutional market-order buyers have systematically absorbed available limit-sell orders from the book. The moment the rolling buy imbalance fraction begins declining (sellers returning to quote), aggressive accumulation has exhausted near-side supply and NIFTY reverts toward session VWAP as one-sided institutional flow subsides. The same mechanism applies symmetrically for sell exhaustion below VWAP. Entries timed at the imbalance inflection point capture the first 10-20 NIFTY spot points of reversion before the next directional wave.",
+  "mechanism": "On NIFTY, each 5-second bar's close location value (CLV) \u2014 how close the bar's close is to its high relative to the bar's range \u2014 approximates intra-bar buying vs selling pressure. When 20 consecutive 5-second bars (100 seconds) show more than 68% buy-side volume dominance and NIFTY has simultaneously risen 0.15%+ above where it was 100 seconds ago, institutional market-order buyers have systematically absorbed available limit-sell orders from the book. The moment the rolling buy imbalance fraction begins declining (sellers returning to quote), aggressive accumulation has exhausted near-side supply and NIFTY reverts toward session VWAP as one-sided institutional flow subsides. The same mechanism applies symmetrically for sell exhaustion below VWAP. Entries timed at the imbalance inflection point capture the first 10-20 NIFTY spot points of reversion before the next directional wave.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -19,7 +29,9 @@
     "vix": false,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["session_vwap"]
+    "other": [
+      "session_vwap"
+    ]
   },
   "indicators": [
     {
@@ -27,28 +39,28 @@
       "formula": "volume * (close - low) / (high - low) where high != low, else volume * 0.5",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "CLV-based approximation of buying pressure within each 5-second bar. Same formula as original — the OHLCV-based buy/sell split is inherently per-bar and needs no time scaling. On NIFTY this is noisier than on individual stocks (index aggregates dozens of stocks) but averaged over 20 bars the signal stabilises."
+      "purpose": "CLV-based approximation of buying pressure within each 5-second bar. Same formula as original \u2014 the OHLCV-based buy/sell split is inherently per-bar and needs no time scaling. On NIFTY this is noisier than on individual stocks (index aggregates dozens of stocks) but averaged over 20 bars the signal stabilises."
     },
     {
       "name": "buy_imbalance_20",
       "formula": "SUM(buy_vol_5s, 20) / SUM(volume, 20)",
       "lookback": 20,
       "computed_on": "spot",
-      "purpose": "20-bar (100-second, ~1.7 min) rolling buy volume fraction. Original used 10 bars on 1-minute = 10 minutes of accumulated imbalance — far too long for a 30-90s option hold. Compressed to 100 seconds: long enough to confirm genuine sustained imbalance (not a single-bar spike), short enough that the exhausted liquidity has not already naturally reverted by the time we enter. This is the TRIGGER indicator, so it must be compressed to match hold time per the lookback decision framework."
+      "purpose": "20-bar (100-second, ~1.7 min) rolling buy volume fraction. Original used 10 bars on 1-minute = 10 minutes of accumulated imbalance \u2014 far too long for a 30-90s option hold. Compressed to 100 seconds: long enough to confirm genuine sustained imbalance (not a single-bar spike), short enough that the exhausted liquidity has not already naturally reverted by the time we enter. This is the TRIGGER indicator, so it must be compressed to match hold time per the lookback decision framework."
     },
     {
       "name": "price_change_20",
       "formula": "(close[t] - close[t-20]) / close[t-20]",
       "lookback": 20,
       "computed_on": "spot",
-      "purpose": "20-bar price change (same window as imbalance). Confirms that the imbalance actually moved price — without this, a sustained imbalance with flat price suggests the flow was absorbed by deep book liquidity and there is no dislocation to revert from."
+      "purpose": "20-bar price change (same window as imbalance). Confirms that the imbalance actually moved price \u2014 without this, a sustained imbalance with flat price suggests the flow was absorbed by deep book liquidity and there is no dislocation to revert from."
     },
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume) from session open, per day",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP as fair-value anchor — cumulative from 09:15 each day. No lookback scaling needed (cumulative by definition). Ensures we only take reversion trades when price has genuinely deviated from fair value, not during flat consolidation."
+      "purpose": "Session VWAP as fair-value anchor \u2014 cumulative from 09:15 each day. No lookback scaling needed (cumulative by definition). Ensures we only take reversion trades when price has genuinely deviated from fair value, not during flat consolidation."
     }
   ],
   "entry": {
@@ -56,57 +68,63 @@
       "conditions": [
         "buy_imbalance_20 < 0.32 (sell-side dominated: aggressive sellers absorbed available bids)",
         "price_change_20 < -0.15% (NIFTY has been pushed down over the last 100 seconds)",
-        "close < vwap (below session fair value — reversion target exists)",
+        "close < vwap (below session fair value \u2014 reversion target exists)",
         "buy_imbalance_20[t] > buy_imbalance_20[t-1] (imbalance inflecting up: selling exhausted, buyers returning)"
       ],
-      "confirmation": "All four conditions simultaneously true — imbalance turn is the final trigger after the other three conditions set up the dislocation context"
+      "confirmation": "All four conditions simultaneously true \u2014 imbalance turn is the final trigger after the other three conditions set up the dislocation context"
     },
     "buy_pe": {
       "conditions": [
         "buy_imbalance_20 > 0.68 (buy-side dominated: aggressive buyers absorbed available offers)",
         "price_change_20 > +0.15% (NIFTY has been pushed up over the last 100 seconds)",
-        "close > vwap (above session fair value — reversion target exists)",
+        "close > vwap (above session fair value \u2014 reversion target exists)",
         "buy_imbalance_20[t] < buy_imbalance_20[t-1] (imbalance inflecting down: buying exhausted, sellers returning)"
       ],
-      "confirmation": "All four conditions simultaneously true — imbalance turn is the final trigger"
+      "confirmation": "All four conditions simultaneously true \u2014 imbalance turn is the final trigger"
     },
     "entry_price": "limit at candle close"
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5): if NIFTY extends 8 more spot points against us after the imbalance turn signal fires, the exhaustion thesis is wrong and we are likely in the middle of a trend, not a reversion. For a 30-90s hold, 8 spot points adverse move means the imbalance did not actually exhaust — typical NIFTY 30-60s reversion moves are 10-20 spot points so a 4pt option stop is tight enough to be protective without being triggered by normal microstructure noise.",
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5): if NIFTY extends 8 more spot points against us after the imbalance turn signal fires, the exhaustion thesis is wrong and we are likely in the middle of a trend, not a reversion. For a 30-90s hold, 8 spot points adverse move means the imbalance did not actually exhaust \u2014 typical NIFTY 30-60s reversion moves are 10-20 spot points so a 4pt option stop is tight enough to be protective without being triggered by normal microstructure noise.",
     "target_points": 6,
     "target_rationale": "6 option points (~12 NIFTY spot points at delta 0.5): CLV-based exhaustion reversions on NIFTY typically cover 12-20 spot points back toward VWAP within 60-90 seconds; 6 option points captures the conservative lower bound of this range, giving 1:1.5 risk-reward while remaining achievable within the 90-second time stop on most valid signals.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — CLV imbalance signal works across volatility regimes; higher VIX means larger moves but also stronger imbalance signals",
+    "vix_filter": "none \u2014 CLV imbalance signal works across volatility regimes; higher VIX means larger moves but also stronger imbalance signals",
     "time_filter": "no entries before 09:25 (allow 10 min for VWAP and imbalance to accumulate meaningful history) or after 15:20 (EOD flatten)",
-    "volume_filter": "implicit — bars with high == low (zero range) use volume * 0.5 fallback for buy_vol; strategy functions correctly on zero-range bars",
-    "trend_filter": "VWAP position acts as trend anchor — only take reversion when price has deviated from VWAP",
-    "spread_filter": "n/a — limit order execution at candle close prices, no spread"
+    "volume_filter": "implicit \u2014 bars with high == low (zero range) use volume * 0.5 fallback for buy_vol; strategy functions correctly on zero-range bars",
+    "trend_filter": "VWAP position acts as trend anchor \u2014 only take reversion when price has deviated from VWAP",
+    "spread_filter": "n/a \u2014 limit order execution at candle close prices, no spread"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.55,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 1.83,
-    "edge_decay_risk": "medium — CLV imbalance is a well-known approximation (Chaikin, VPIN); edge persists because the signal is noisy and the index version is noisier than single-stock. Better execution (not faster signal) degrades this edge slowest."
+    "edge_decay_risk": "medium \u2014 CLV imbalance is a well-known approximation (Chaikin, VPIN); edge persists because the signal is noisy and the index version is noisier than single-stock. Better execution (not faster signal) degrades this edge slowest."
   },
-  "adaptation_notes": "Original applied CLV-based buy/sell volume split to NIFTY 100 individual stocks on 1-minute bars, holding 5-20 minutes. Key changes: (1) Universe replaced with NIFTY index itself — the same CLV math applied to index OHLCV measures aggregate institutional order flow, not stock-specific microstructure. (2) Lookback compressed from 10 bars (10 min) to 20 bars (100s ≈ 1.7 min) to match our 30-90s hold time — we are targeting the FAST exhaustion reversion, not the slow mean reversion back to equilibrium. (3) Stops/targets converted from 0.2% equity stops to option premium points calibrated to NIFTY move magnitudes at 30-90s timescales. (4) Cost structure is completely different: original noted the strategy is -9 bps net at equity spot costs; our limit-order options pipeline has ~0.6 pt breakeven, making marginal directional signals viable. (5) Volume filter (0.8x SMA) dropped — NIFTY index volume does not have the same meaning as single-stock volume and the CLV signal at the index level already averages across all constituent trades.",
+  "adaptation_notes": "Original applied CLV-based buy/sell volume split to NIFTY 100 individual stocks on 1-minute bars, holding 5-20 minutes. Key changes: (1) Universe replaced with NIFTY index itself \u2014 the same CLV math applied to index OHLCV measures aggregate institutional order flow, not stock-specific microstructure. (2) Lookback compressed from 10 bars (10 min) to 20 bars (100s \u2248 1.7 min) to match our 30-90s hold time \u2014 we are targeting the FAST exhaustion reversion, not the slow mean reversion back to equilibrium. (3) Stops/targets converted from 0.2% equity stops to option premium points calibrated to NIFTY move magnitudes at 30-90s timescales. (4) Cost structure is completely different: original noted the strategy is -9 bps net at equity spot costs; our limit-order options pipeline has ~0.6 pt breakeven, making marginal directional signals viable. (5) Volume filter (0.8x SMA) dropped \u2014 NIFTY index volume does not have the same meaning as single-stock volume and the CLV signal at the index level already averages across all constituent trades.",
   "weaknesses": [
-    "CLV-based buy/sell approximation on the index is noisier than on individual stocks — NIFTY aggregates 50 stocks, so bar-level close location reflects the net of 50 different microstructure events",
-    "VWAP as fair value anchor can lag during strong trending sessions — repeated signals will be generated against the trend, creating drawdown risk on trending days",
-    "20-bar window may produce stale signals if the imbalance turned 10 bars ago but conditions persist — the entry fires at each bar where all conditions are met, not just the first bar of the turn",
-    "No VIX filter — in very high volatility regimes (VIX > 25), individual 5-second NIFTY moves can exceed the 8-spot-point stop threshold by chance, increasing stop-outs"
+    "CLV-based buy/sell approximation on the index is noisier than on individual stocks \u2014 NIFTY aggregates 50 stocks, so bar-level close location reflects the net of 50 different microstructure events",
+    "VWAP as fair value anchor can lag during strong trending sessions \u2014 repeated signals will be generated against the trend, creating drawdown risk on trending days",
+    "20-bar window may produce stale signals if the imbalance turned 10 bars ago but conditions persist \u2014 the entry fires at each bar where all conditions are met, not just the first bar of the turn",
+    "No VIX filter \u2014 in very high volatility regimes (VIX > 25), individual 5-second NIFTY moves can exceed the 8-spot-point stop threshold by chance, increasing stop-outs"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_155.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-20 minutes",
-    "original_indicators": ["buy_imbalance_10 (10-bar CLV-based)", "price_change_10", "ATR_10", "VWAP"],
+    "original_indicators": [
+      "buy_imbalance_10 (10-bar CLV-based)",
+      "price_change_10",
+      "ATR_10",
+      "VWAP"
+    ],
     "original_stop": "0.2% from entry",
     "original_target": "0.2% from entry OR imbalance crosses 0.50"
-  }
+  },
+  "vix_agnostic": true
 }

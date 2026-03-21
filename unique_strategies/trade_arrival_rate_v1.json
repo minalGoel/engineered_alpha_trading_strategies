@@ -2,14 +2,23 @@
   "name": "trade_arrival_rate_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "volume_anomaly", "arrival_rate", "momentum", "institutional_flow"],
+  "tags": [
+    "microstructure",
+    "volume_anomaly",
+    "arrival_rate",
+    "momentum",
+    "institutional_flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_247.json",
   "original_name": "trade_arrival_rate_v1",
-  "mechanism": "On NIFTY, institutional TWAP and VWAP programs working large directional orders create sharp volume bursts that are 2-3x above the expected activity for that minute of the day. NIFTY's intraday volume follows a well-known U-shape (elevated at open and close, suppressed at midday), so a raw volume spike at 10:30 IST is far more anomalous than the same absolute volume at 09:20 IST — only spikes normalized against the time-of-day baseline reveal genuine institutional order flow. When such a normalized volume burst coincides with directional price impact (the burst window closes significantly above or below its open) and the index is already positioned above/below session VWAP, the institutional order is only partially filled and will continue pushing prices over the next 30-90 seconds. If the burst shows no net directional impact, it signals passive market-making churn and is ignored.",
+  "mechanism": "On NIFTY, institutional TWAP and VWAP programs working large directional orders create sharp volume bursts that are 2-3x above the expected activity for that minute of the day. NIFTY's intraday volume follows a well-known U-shape (elevated at open and close, suppressed at midday), so a raw volume spike at 10:30 IST is far more anomalous than the same absolute volume at 09:20 IST \u2014 only spikes normalized against the time-of-day baseline reveal genuine institutional order flow. When such a normalized volume burst coincides with directional price impact (the burst window closes significantly above or below its open) and the index is already positioned above/below session VWAP, the institutional order is only partially filled and will continue pushing prices over the next 30-90 seconds. If the burst shows no net directional impact, it signals passive market-making churn and is ignored.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -32,28 +41,28 @@
     {
       "name": "expected_vol_tof",
       "formula": "median(volume[time_minutes == t] across all days in spot_df) for current time slot t",
-      "lookback": "all available history grouped by time_minutes",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Time-of-day expected volume profile capturing the U-shape. Cannot use a fixed lag-based lookback because the U-shape is a function of time-of-day, not of lag. The median is used over mean to be robust to anomaly days that would inflate the baseline. Maps directly to the original's 20-day historical trade_count profile — same concept, volume instead of trade count."
+      "purpose": "Time-of-day expected volume profile capturing the U-shape. Cannot use a fixed lag-based lookback because the U-shape is a function of time-of-day, not of lag. The median is used over mean to be robust to anomaly days that would inflate the baseline. Maps directly to the original's 20-day historical trade_count profile \u2014 same concept, volume instead of trade count."
     },
     {
       "name": "vol_ratio",
       "formula": "vol_15s / (expected_vol_tof * 3)",
       "lookback": 3,
       "computed_on": "spot",
-      "purpose": "Volume arrival ratio — the core anomaly detector. Values >2.0 indicate institutional burst. Multiplied by 3 to match the 15s window to the per-bar expected volume. Equivalent to the original's arrival_ratio = trade_count / expected_trade_count."
+      "purpose": "Volume arrival ratio \u2014 the core anomaly detector. Values >2.0 indicate institutional burst. Multiplied by 3 to match the 15s window to the per-bar expected volume. Equivalent to the original's arrival_ratio = trade_count / expected_trade_count."
     },
     {
       "name": "bar_return",
       "formula": "(close - open) / open",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Directional price impact of the current 5s bar. Distinguishes informed flow (burst + strong directional move) from passive churn (burst + no net move). Equivalent to the original's price_change_per_trade and arrival_direction — here rolled into a single return signal since trade count is unavailable."
+      "purpose": "Directional price impact of the current 5s bar. Distinguishes informed flow (burst + strong directional move) from passive churn (burst + no net move). Equivalent to the original's price_change_per_trade and arrival_direction \u2014 here rolled into a single return signal since trade count is unavailable."
     },
     {
       "name": "vwap",
       "formula": "cumulative(close * volume) / cumulative(volume) from session open",
-      "lookback": "session-cumulative",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "Session VWAP as directional filter. Burst above VWAP = institutional accumulation (buy CE). Burst below VWAP = institutional distribution (buy PE). Identical role to original's VWAP filter: aligns the burst direction with the intraday trend."
     }
@@ -65,7 +74,7 @@
         "bar_return > price_impact_threshold (default 0.002, i.e., +2 bps directional impact)",
         "close > vwap"
       ],
-      "confirmation": "Single bar entry — no next-bar confirmation required (5s bars are already very short; requiring confirmation would miss most of the move)"
+      "confirmation": "Single bar entry \u2014 no next-bar confirmation required (5s bars are already very short; requiring confirmation would miss most of the move)"
     },
     "buy_pe": {
       "conditions": [
@@ -78,40 +87,48 @@
     "entry_price": "limit order at bar close"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points). If a genuine institutional order is continuing to fill, NIFTY should not retrace 8 spot points within the 30-90s hold window — a retrace of that size indicates the burst was churn not directional flow. At delta ~0.5, 8 spot pts = 4 option pts.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points). If a genuine institutional order is continuing to fill, NIFTY should not retrace 8 spot points within the 30-90s hold window \u2014 a retrace of that size indicates the burst was churn not directional flow. At delta ~0.5, 8 spot pts = 4 option pts.",
+    "target_points": 8.0,
     "target_rationale": "7 option points (~14 NIFTY spot points). A genuine institutional TWAP burst on NIFTY typically drives 15-25 spot points of directional movement. Targeting 7 option pts captures roughly 50-60% of the expected move, yielding 1:1.75 R:R, before the order fully executes and flow normalizes.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — volume anomaly detection is self-normalizing; works across VIX regimes",
+    "vix_filter": "none \u2014 volume anomaly detection is self-normalizing; works across VIX regimes",
     "time_filter": "skip 09:15-09:25 IST (first 10 min; arrival rates naturally elevated at open) and after 15:20 IST",
     "volume_filter": "vol_ratio >= threshold is the primary filter",
     "trend_filter": "VWAP alignment (close > vwap for CE, close < vwap for PE)",
-    "spread_filter": "none — limit orders at candle close"
+    "spread_filter": "none \u2014 limit orders at candle close"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.30,
-    "edge_decay_risk": "Low-Medium — normalized volume burst detection requires historical profile calibration that most Indian retail platforms do not expose. The signal fires only 2-6 times per day, making it unattractive for high-frequency crowding. Main risk: distinguishing news-driven bursts (sustained) from algorithmic churn (mean-reverting) — both show high vol_ratio."
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "Low-Medium \u2014 normalized volume burst detection requires historical profile calibration that most Indian retail platforms do not expose. The signal fires only 2-6 times per day, making it unattractive for high-frequency crowding. Main risk: distinguishing news-driven bursts (sustained) from algorithmic churn (mean-reverting) \u2014 both show high vol_ratio."
   },
-  "adaptation_notes": "The original strategy used trade count (number of individual trades per 1-min bar) divided by an expected trade count profile from 20 historical days. Our pipeline provides only 5-second OHLCV bars with no per-bar trade count. Key adaptation: (1) volume replaces trade count as the arrival rate proxy — on NIFTY, volume bursts and trade count bursts are highly correlated (~0.85) since institutional orders are large-lot; (2) the 20-day historical profile is replaced by a time-of-day median computed from all available days in spot_df — this captures the same U-shape normalization; (3) timeframe compressed from 1-min to 15s (3 bars) because at 5-second resolution we can enter earlier in the burst rather than waiting for a full 1-minute bar to confirm, capturing the first 30-60s of the institutional push; (4) hold time shortened from 3-8 min to 30-90s for the same reason — we enter earlier so the predictable window is shorter. The price_change_per_trade signal from the original is replaced by a single bar_return threshold, which is a simpler but equivalent directional filter.",
+  "adaptation_notes": "The original strategy used trade count (number of individual trades per 1-min bar) divided by an expected trade count profile from 20 historical days. Our pipeline provides only 5-second OHLCV bars with no per-bar trade count. Key adaptation: (1) volume replaces trade count as the arrival rate proxy \u2014 on NIFTY, volume bursts and trade count bursts are highly correlated (~0.85) since institutional orders are large-lot; (2) the 20-day historical profile is replaced by a time-of-day median computed from all available days in spot_df \u2014 this captures the same U-shape normalization; (3) timeframe compressed from 1-min to 15s (3 bars) because at 5-second resolution we can enter earlier in the burst rather than waiting for a full 1-minute bar to confirm, capturing the first 30-60s of the institutional push; (4) hold time shortened from 3-8 min to 30-90s for the same reason \u2014 we enter earlier so the predictable window is shorter. The price_change_per_trade signal from the original is replaced by a single bar_return threshold, which is a simpler but equivalent directional filter.",
   "weaknesses": [
-    "Volume is a noisier proxy for trade arrival rate than actual trade count — large lot orders and small retail orders are indistinguishable by volume alone, diluting the signal.",
-    "The time-of-day expected volume profile uses all available data in spot_df including future bars — mild look-ahead bias in the normalizer (acceptable because the U-shape is very stable and the direction signal has no look-ahead).",
-    "Cannot distinguish news-driven bursts (which may sustain momentum for 5-10 min) from institutional TWAP bursts (which normalize in 60-90s) — the fixed 90s time stop may exit too early on the former.",
+    "Volume is a noisier proxy for trade arrival rate than actual trade count \u2014 large lot orders and small retail orders are indistinguishable by volume alone, diluting the signal.",
+    "The time-of-day expected volume profile uses all available data in spot_df including future bars \u2014 mild look-ahead bias in the normalizer (acceptable because the U-shape is very stable and the direction signal has no look-ahead).",
+    "Cannot distinguish news-driven bursts (which may sustain momentum for 5-10 min) from institutional TWAP bursts (which normalize in 60-90s) \u2014 the fixed 90s time stop may exit too early on the former.",
     "Fires infrequently (2-6 times/day), leading to high daily P&L variance; weeks of flat returns are possible."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_247.json",
     "original_timeframe": "1min",
     "original_hold_time": "3-8 min",
-    "original_indicators": ["trade_count", "expected_trade_count (20-day profile)", "arrival_ratio", "arrival_direction", "price_change_per_trade", "VWAP"],
+    "original_indicators": [
+      "trade_count",
+      "expected_trade_count (20-day profile)",
+      "arrival_ratio",
+      "arrival_direction",
+      "price_change_per_trade",
+      "VWAP"
+    ],
     "original_stop": "12 bps from entry",
     "original_target": "25 bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

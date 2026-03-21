@@ -200,9 +200,9 @@ class Strategy(BaseStrategy):
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
             # stop=4 pts: ~8 NIFTY spot pts; if retraced this far, Supertrend thesis failed
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 5),
             # target=7 pts: ~14 NIFTY spot pts; captures ~50% of expected 1-2 min trend move
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=24,          # 120s max hold
             max_trades_per_day=self.max_trades_per_day,

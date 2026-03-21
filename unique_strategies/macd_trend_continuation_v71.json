@@ -2,14 +2,22 @@
   "name": "macd_trend_continuation_v71",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["trend_following", "momentum", "pullback", "macd"],
+  "tags": [
+    "trend_following",
+    "momentum",
+    "pullback",
+    "macd"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_111.json",
   "original_name": "macd_trend_continuation_v71",
-  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing multi-minute directional orders create persistent 3-8 minute micro-trends visible via EMA(60) slope. Within these micro-trends, 20-40 second pullbacks cause the 5s MACD to dip briefly negative. When the MACD histogram crosses back above its signal line while still negative, it marks the moment institutional buying has resumed before the full momentum re-accelerates — resting buy orders just absorbed the pullback supply, and the directional order flow is restarting. At 5-second resolution we enter this resumption point 10-20 seconds before it becomes visible on 1-minute bars, capturing the first 10-15 NIFTY spot points of continuation (5-7 option pts at delta ~0.5).",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing multi-minute directional orders create persistent 3-8 minute micro-trends visible via EMA(60) slope. Within these micro-trends, 20-40 second pullbacks cause the 5s MACD to dip briefly negative. When the MACD histogram crosses back above its signal line while still negative, it marks the moment institutional buying has resumed before the full momentum re-accelerates \u2014 resting buy orders just absorbed the pullback supply, and the directional order flow is restarting. At 5-second resolution we enter this resumption point 10-20 seconds before it becomes visible on 1-minute bars, capturing the first 10-15 NIFTY spot points of continuation (5-7 option pts at delta ~0.5).",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,14 +35,14 @@
       "formula": "EMA(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "12-bar (1-minute) fast EMA. Same 12/26/9 proportions as the original 15-min MACD — preserved because we want the same fast/slow ratio to detect the same momentum signal at compressed timescale. At 5s, 12 bars = 60s lookback, appropriate for a 30-120s hold."
+      "purpose": "12-bar (1-minute) fast EMA. Same 12/26/9 proportions as the original 15-min MACD \u2014 preserved because we want the same fast/slow ratio to detect the same momentum signal at compressed timescale. At 5s, 12 bars = 60s lookback, appropriate for a 30-120s hold."
     },
     {
       "name": "ema_slow",
       "formula": "EMA(close, 26)",
       "lookback": 26,
       "computed_on": "spot",
-      "purpose": "26-bar (2.2-minute) slow EMA. Preserves the 12/26 ratio from the original. At 5s bars this creates a MACD that turns negative after ~15-20 second pullbacks — exactly the pullback depth we want to detect before resumption."
+      "purpose": "26-bar (2.2-minute) slow EMA. Preserves the 12/26 ratio from the original. At 5s bars this creates a MACD that turns negative after ~15-20 second pullbacks \u2014 exactly the pullback depth we want to detect before resumption."
     },
     {
       "name": "macd_line",
@@ -55,14 +63,14 @@
       "formula": "EMA(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "60-bar (5-minute) trend filter. Replaces original EMA(50) at 15-min (which was a 750-min / 12.5-hour filter). We compress to 5 minutes because we are trading a 30-120s move — the relevant trend context is 3-6 minutes, not hours. Ensures we only enter pullback resumptions when the broader 5-min micro-trend is intact."
+      "purpose": "60-bar (5-minute) trend filter. Replaces original EMA(50) at 15-min (which was a 750-min / 12.5-hour filter). We compress to 5 minutes because we are trading a 30-120s move \u2014 the relevant trend context is 3-6 minutes, not hours. Ensures we only enter pullback resumptions when the broader 5-min micro-trend is intact."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "close > ema_trend (price above 5-min trend)",
-        "CROSSOVER(macd_hist, 0) — histogram turns from negative to positive (pullback resuming up)",
+        "CROSSOVER(macd_hist, 0) \u2014 histogram turns from negative to positive (pullback resuming up)",
         "macd_line < 0 at crossover (still in pullback phase, not chasing a completed move)",
         "in session 09:25-15:20"
       ],
@@ -71,7 +79,7 @@
     "buy_pe": {
       "conditions": [
         "close < ema_trend (price below 5-min trend)",
-        "CROSSUNDER(macd_hist, 0) — histogram turns from positive to negative (bounce resuming down)",
+        "CROSSUNDER(macd_hist, 0) \u2014 histogram turns from positive to negative (bounce resuming down)",
         "macd_line > 0 at crossover (still in bounce phase)",
         "in session 09:25-15:20"
       ],
@@ -81,39 +89,43 @@
   },
   "exit": {
     "stop_points": 3,
-    "stop_rationale": "3 option pts = ~6 NIFTY spot pts at delta 0.5. If NIFTY moves 6+ pts against us after a pullback resumption signal, the pullback is deepening (not resuming) and the 5-min trend is at risk of breaking — typical 5-min EMA support holds within 4-5 spot pts on NIFTY in normal conditions.",
+    "stop_rationale": "3 option pts = ~6 NIFTY spot pts at delta 0.5. If NIFTY moves 6+ pts against us after a pullback resumption signal, the pullback is deepening (not resuming) and the 5-min trend is at risk of breaking \u2014 typical 5-min EMA support holds within 4-5 spot pts on NIFTY in normal conditions.",
     "target_points": 5,
     "target_rationale": "5 option pts = ~10 NIFTY spot pts, which is a typical 30-90 second continuation leg after pullback exhaustion on NIFTY. Institutional TWAP flow resumes for 10-20 pts before the next micro-pause. Gives 1:1.67 R:R at stop=3.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — VIX not used; pullback/resumption pattern works across vol regimes",
+    "vix_filter": "none \u2014 VIX not used; pullback/resumption pattern works across vol regimes",
     "time_filter": "09:25-15:20 IST; skip first 10 minutes (pre-open noise) and last 10 minutes",
-    "volume_filter": "none — NIFTY volume is continuous; index volume unreliable at 5s",
-    "trend_filter": "EMA(60) directional filter — only trade in trend direction",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "volume_filter": "none \u2014 NIFTY volume is continuous; index volume unreliable at 5s",
+    "trend_filter": "EMA(60) directional filter \u2014 only trade in trend direction",
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 15,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.67,
     "profit_factor_estimate": 1.9,
-    "edge_decay_risk": "medium — MACD patterns are widely traded; edge relies on 5s resolution advantage over 1-min traders"
+    "edge_decay_risk": "medium \u2014 MACD patterns are widely traded; edge relies on 5s resolution advantage over 1-min traders"
   },
-  "adaptation_notes": "Original used EMA(50) as trend filter on 15-min bars (= 750-min context) — compressed to EMA(60) at 5s (= 5-min context) because our 30-120s hold requires a proportionally shorter trend window. Original's MACD 12/26/9 proportions PRESERVED because the fast/slow ratio determines what counts as a 'pullback' vs 'trend', and we want the same relative structure at 5s scale. The critical insight: original's entry condition `macd_line < 0` on longs is retained — this is the key differentiator that catches pullback resumption rather than late-entry chasing. Hold time compressed from 5-15 bars × 15min (75-225 min) to 6-24 bars × 5s (30-120s).",
+  "adaptation_notes": "Original used EMA(50) as trend filter on 15-min bars (= 750-min context) \u2014 compressed to EMA(60) at 5s (= 5-min context) because our 30-120s hold requires a proportionally shorter trend window. Original's MACD 12/26/9 proportions PRESERVED because the fast/slow ratio determines what counts as a 'pullback' vs 'trend', and we want the same relative structure at 5s scale. The critical insight: original's entry condition `macd_line < 0` on longs is retained \u2014 this is the key differentiator that catches pullback resumption rather than late-entry chasing. Hold time compressed from 5-15 bars \u00d7 15min (75-225 min) to 6-24 bars \u00d7 5s (30-120s).",
   "weaknesses": [
-    "MACD at 5s is very noisy — many false crossovers in choppy NIFTY conditions",
+    "MACD at 5s is very noisy \u2014 many false crossovers in choppy NIFTY conditions",
     "EMA(60) trend filter can be stale during intraday trend reversals",
-    "At 5s bars, MACD crossovers happen every few minutes — max_trades_per_day cap is critical",
+    "At 5s bars, MACD crossovers happen every few minutes \u2014 max_trades_per_day cap is critical",
     "The macd_line < 0 filter may over-restrict entries when NIFTY is in a strong sustained trend"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_111.json",
     "original_timeframe": "15min",
     "original_hold_time": "5-15 bars (75-225 min)",
-    "original_indicators": ["EMA(50)", "MACD(12,26,9)"],
-    "original_stop": "1.5 × ATR(14)",
-    "original_target": "21 × ATR(14)"
-  }
+    "original_indicators": [
+      "EMA(50)",
+      "MACD(12,26,9)"
+    ],
+    "original_stop": "1.5 \u00d7 ATR(14)",
+    "original_target": "21 \u00d7 ATR(14)"
+  },
+  "vix_agnostic": true
 }

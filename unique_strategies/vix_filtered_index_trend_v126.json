@@ -2,14 +2,22 @@
   "name": "vix_filtered_index_trend_v126",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["trend_following", "vix_regime", "ema_crossover", "vwap"],
+  "tags": [
+    "trend_following",
+    "vix_regime",
+    "ema_crossover",
+    "vwap"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_118.json",
   "original_name": "vix_filtered_index_trend_v126",
-  "mechanism": "On NIFTY, when India VIX is in the 12-22 range, institutional algorithmic desks run directional TWAP/VWAP programs that create persistent micro-trends detectable via EMA structure. A fresh bullish EMA crossover (3-min EMA crossing above 9-min EMA) while NIFTY trades above session VWAP signals that buy-side algo flow is gaining momentum — not a random spike, but sustained accumulation that typically extends 20-30 spot points over the next 30-90 seconds. The VIX band filter is critical: below 12, the market is too calm and crossovers are noise with no follow-through; above 22, volatile chop destroys EMA signal fidelity and whipsaws dominate.",
+  "mechanism": "On NIFTY, when India VIX is in the 12-22 range, institutional algorithmic desks run directional TWAP/VWAP programs that create persistent micro-trends detectable via EMA structure. A fresh bullish EMA crossover (3-min EMA crossing above 9-min EMA) while NIFTY trades above session VWAP signals that buy-side algo flow is gaining momentum \u2014 not a random spike, but sustained accumulation that typically extends 20-30 spot points over the next 30-90 seconds. The VIX band filter is critical: below 12, the market is too calm and crossovers are noise with no follow-through; above 22, volatile chop destroys EMA signal fidelity and whipsaws dominate.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:20 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,21 +35,21 @@
       "formula": "EMA(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute fast EMA captures momentum shift at the timescale we hold (30-120s). NOT blindly scaled from 9 (9*12=108 would give 9-min, matching original but too slow for our 30s trade trigger). 36 bars detects fresh acceleration in NIFTY's 5s price structure — a fresh cross above the slow EMA within 3 minutes is the signal, not the 9-minute version."
+      "purpose": "3-minute fast EMA captures momentum shift at the timescale we hold (30-120s). NOT blindly scaled from 9 (9*12=108 would give 9-min, matching original but too slow for our 30s trade trigger). 36 bars detects fresh acceleration in NIFTY's 5s price structure \u2014 a fresh cross above the slow EMA within 3 minutes is the signal, not the 9-minute version."
     },
     {
       "name": "ema_slow_108",
       "formula": "EMA(close, 108)",
       "lookback": 108,
       "computed_on": "spot",
-      "purpose": "9-minute slow EMA provides medium-term trend context. This IS 9*12 (9 bars on 1-min = 108 bars at 5s), which is appropriate here because the slow EMA is a CONTEXT FILTER (not a trade trigger) and should represent roughly the same intraday trend direction window as the original's 21-bar slow EMA on 1-min (21 min ≈ 108 bars at 5s gives 9 min, close enough for filtering)."
+      "purpose": "9-minute slow EMA provides medium-term trend context. This IS 9*12 (9 bars on 1-min = 108 bars at 5s), which is appropriate here because the slow EMA is a CONTEXT FILTER (not a trade trigger) and should represent roughly the same intraday trend direction window as the original's 21-bar slow EMA on 1-min (21 min \u2248 108 bars at 5s gives 9 min, close enough for filtering)."
     },
     {
       "name": "vwap_session",
       "formula": "VWAP(close, volume) from session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative session VWAP, no scaling needed — it resets daily and accumulates from 09:15 regardless of bar size. Filters direction: buy CE only when NIFTY is above VWAP (buy-side in control), buy PE only below VWAP."
+      "purpose": "Cumulative session VWAP, no scaling needed \u2014 it resets daily and accumulates from 09:15 regardless of bar size. Filters direction: buy CE only when NIFTY is above VWAP (buy-side in control), buy PE only below VWAP."
     },
     {
       "name": "india_vix",
@@ -71,28 +79,28 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot pts. If a fresh EMA crossover with VWAP alignment is genuine, NIFTY should not retrace 8 spot points within the 30-120s hold window — that would indicate the crossover was a false break, and the thesis is wrong.",
-    "target_points": 7,
-    "target_rationale": "7 option pts = ~14 NIFTY spot pts. The first impulse leg after an EMA crossover in a VIX 12-22 regime typically extends 20-30 spot pts; capturing 14 pts (first 50-70%) at delta ~0.5 gives 7 option pts — achievable at the 1-2 min timescale where institutional TWAP flow sustains direction.",
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts. If a fresh EMA crossover with VWAP alignment is genuine, NIFTY should not retrace 8 spot points within the 30-120s hold window \u2014 that would indicate the crossover was a false break, and the thesis is wrong.",
+    "target_points": 8.0,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts. The first impulse leg after an EMA crossover in a VIX 12-22 regime typically extends 20-30 spot pts; capturing 14 pts (first 50-70%) at delta ~0.5 gives 7 option pts \u2014 achievable at the 1-2 min timescale where institutional TWAP flow sustains direction.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "VIX between vix_low (default 12) and vix_high (default 22) — inherited directly from original, ensures signal fidelity",
+    "vix_filter": "VIX between vix_low (default 12) and vix_high (default 22) \u2014 inherited directly from original, ensures signal fidelity",
     "time_filter": "09:20-15:20 IST (skip pre-open noise, flatten before EOD)",
-    "volume_filter": "none — index volume is noisy at 5s resolution",
+    "volume_filter": "none \u2014 index volume is noisy at 5s resolution",
     "trend_filter": "VWAP direction (close > vwap for CE, close < vwap for PE)",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "medium — VIX regime shifts can render signal ineffective; EMA crossover signals decay as HFT adapts"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "medium \u2014 VIX regime shifts can render signal ineffective; EMA crossover signals decay as HFT adapts"
   },
-  "adaptation_notes": "Original traded nifty200 stocks with EMA(9)/EMA(21) on 1-min bars. Conversion: (1) Universe collapses to NIFTY index directly — no stock selection needed; (2) Fast EMA compressed from 9-min equivalent to 3-min (36 bars) because we're trading the 30-90s impulse, not the 9-min one; (3) Slow EMA kept at ~9-min (108 bars) as context filter; (4) VWAP retained as direction confirmation — cumulative, no scaling; (5) VIX 12-22 band retained as-is — this is index-native and directly applicable; (6) Stop/target converted from ATR-based % to option premium points calibrated to expected 30-120s NIFTY move magnitudes.",
+  "adaptation_notes": "Original traded nifty200 stocks with EMA(9)/EMA(21) on 1-min bars. Conversion: (1) Universe collapses to NIFTY index directly \u2014 no stock selection needed; (2) Fast EMA compressed from 9-min equivalent to 3-min (36 bars) because we're trading the 30-90s impulse, not the 9-min one; (3) Slow EMA kept at ~9-min (108 bars) as context filter; (4) VWAP retained as direction confirmation \u2014 cumulative, no scaling; (5) VIX 12-22 band retained as-is \u2014 this is index-native and directly applicable; (6) Stop/target converted from ATR-based % to option premium points calibrated to expected 30-120s NIFTY move magnitudes.",
   "weaknesses": [
     "EMA crossovers at 5s resolution can be noisy even with the gap threshold filter",
     "VIX lag of 1-5 seconds may miss sudden volatility spikes that invalidate the regime filter",
@@ -102,7 +110,12 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_118.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 bars (10-30 min)",
-    "original_indicators": ["EMA(9)", "EMA(21)", "VWAP", "India VIX"],
+    "original_indicators": [
+      "EMA(9)",
+      "EMA(21)",
+      "VWAP",
+      "India VIX"
+    ],
     "original_stop": "1.5 * ATR(14)",
     "original_target": "30 * ATR(14)"
   }

@@ -2,14 +2,22 @@
   "name": "order_flow_imbalance_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "order_flow", "volume_delta", "momentum"],
+  "tags": [
+    "microstructure",
+    "order_flow",
+    "volume_delta",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_53.json",
   "original_name": "order_flow_imbalance_v1",
-  "mechanism": "On NIFTY, when institutional algorithms are working large directional orders via TWAP/VWAP execution, each 5-second bar exhibits a measurable volume tilt: heavier volume on uptick bars (close > open) than downtick bars during accumulation, and the reverse during distribution. Cumulating this volume-weighted bar_delta (volume × sign(close − open)) over a 1-minute window and z-scoring it against a 5-minute rolling baseline captures abnormal buy/sell pressure before it fully manifests in price. When this z-score exceeds ±1.5 and price confirms direction relative to session VWAP, the unexecuted tail of the institutional order typically pushes NIFTY a further 10-20 spot points within 30-90 seconds — unlike the unweighted direction proxy, high-volume bars carry proportionally more signal weight, making the z-score more sensitive to genuine institutional size rather than routine tick noise.",
+  "mechanism": "On NIFTY, when institutional algorithms are working large directional orders via TWAP/VWAP execution, each 5-second bar exhibits a measurable volume tilt: heavier volume on uptick bars (close > open) than downtick bars during accumulation, and the reverse during distribution. Cumulating this volume-weighted bar_delta (volume \u00d7 sign(close \u2212 open)) over a 1-minute window and z-scoring it against a 5-minute rolling baseline captures abnormal buy/sell pressure before it fully manifests in price. When this z-score exceeds \u00b11.5 and price confirms direction relative to session VWAP, the unexecuted tail of the institutional order typically pushes NIFTY a further 10-20 spot points within 30-90 seconds \u2014 unlike the unweighted direction proxy, high-volume bars carry proportionally more signal weight, making the z-score more sensitive to genuine institutional size rather than routine tick noise.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -34,14 +42,14 @@
       "formula": "SUM(bar_delta, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute (12 × 5s) cumulative volume delta — the trigger-level imbalance accumulation window. NOT 10×12=120 bars. Original used 10-min cumulative for a 5-15 min hold; we hold 15-90s so 1-minute is the right window: long enough to filter individual-bar noise, short enough to remain predictive for a sub-2-minute hold."
+      "purpose": "1-minute (12 \u00d7 5s) cumulative volume delta \u2014 the trigger-level imbalance accumulation window. NOT 10\u00d712=120 bars. Original used 10-min cumulative for a 5-15 min hold; we hold 15-90s so 1-minute is the right window: long enough to filter individual-bar noise, short enough to remain predictive for a sub-2-minute hold."
     },
     {
       "name": "delta_zscore",
       "formula": "(cum_delta_12 - SMA(cum_delta_12, 60)) / STDDEV(cum_delta_12, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Normalize 1-min cumulative delta against a 5-minute (60 × 5s) rolling window. Original normalized over 60-min bars (60 minutes). Compressed to 5 min because NIFTY intraday vol regimes shift session-to-session — morning gap dynamics differ from afternoon drift; 5-min context captures the current regime without diluting with stale pre-noon data during afternoon entries."
+      "purpose": "Normalize 1-min cumulative delta against a 5-minute (60 \u00d7 5s) rolling window. Original normalized over 60-min bars (60 minutes). Compressed to 5 min because NIFTY intraday vol regimes shift session-to-session \u2014 morning gap dynamics differ from afternoon drift; 5-min context captures the current regime without diluting with stale pre-noon data during afternoon entries."
     },
     {
       "name": "vwap",
@@ -54,45 +62,45 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "delta_zscore > 1.5 — 1-min volume-weighted buy imbalance is 1.5 std above recent norm",
-        "close > vwap — price confirming bullish regime relative to session benchmark"
+        "delta_zscore > 1.5 \u2014 1-min volume-weighted buy imbalance is 1.5 std above recent norm",
+        "close > vwap \u2014 price confirming bullish regime relative to session benchmark"
       ],
       "confirmation": "fire on same bar close"
     },
     "buy_pe": {
       "conditions": [
-        "delta_zscore < -1.5 — 1-min volume-weighted sell imbalance is 1.5 std below recent norm",
-        "close < vwap — price confirming bearish regime relative to session benchmark"
+        "delta_zscore < -1.5 \u2014 1-min volume-weighted sell imbalance is 1.5 std below recent norm",
+        "close < vwap \u2014 price confirming bearish regime relative to session benchmark"
       ],
       "confirmation": "fire on same bar close"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). If confirmed volume-delta imbalance reverses by 8 spot pts within 30s, the institutional order that drove the abnormal z-score has completed or been absorbed by opposing flow — the thesis is broken. Consistent with 15-second typical NIFTY option move of 1-3 pts; stop triggers after approximately 2 adverse bars.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). If confirmed volume-delta imbalance reverses by 8 spot pts within 30s, the institutional order that drove the abnormal z-score has completed or been absorbed by opposing flow \u2014 the thesis is broken. Consistent with 15-second typical NIFTY option move of 1-3 pts; stop triggers after approximately 2 adverse bars.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts (~14 NIFTY spot pts). Institutional TWAP slices on NIFTY typically push 15-25 spot pts per burst before pause; 14 pts captures ~60-70% of the lower-bound expectation at a 1:1.75 R:R. Even at a 56% win rate (the original equity backtest estimate), this R:R is strongly profitable after costs.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — volume-weighted delta works across vol regimes; the z-score normalization self-adjusts to current session volatility",
+    "vix_filter": "none \u2014 volume-weighted delta works across vol regimes; the z-score normalization self-adjusts to current session volatility",
     "time_filter": "no trades first 10 min (09:15-09:25 IST) to skip pre-open auction volume noise; no new entries after 15:20",
-    "volume_filter": "implicit — bar_delta is zero on zero-volume bars, so halts/gaps auto-excluded",
+    "volume_filter": "implicit \u2014 bar_delta is zero on zero-volume bars, so halts/gaps auto-excluded",
     "trend_filter": "VWAP alignment: buy CE only above VWAP, buy PE only below VWAP",
-    "spread_filter": "none — limit order execution at candle close prices"
+    "spread_filter": "none \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.56,
-    "avg_winner_to_loser": 1.3,
-    "profit_factor_estimate": 1.4,
-    "edge_decay_risk": "medium — volume delta on 5s OHLCV bars is a noisy proxy for true tick-level order flow; signal is most reliable during high-volume institutional TWAP windows (10:00-11:30, 13:30-15:00 IST)"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.04,
+    "edge_decay_risk": "medium \u2014 volume delta on 5s OHLCV bars is a noisy proxy for true tick-level order flow; signal is most reliable during high-volume institutional TWAP windows (10:00-11:30, 13:30-15:00 IST)"
   },
-  "adaptation_notes": "Original traded Nifty50 constituent stocks (top 20 by turnover) at 1-min bars with 10-min cumulative volume delta and 60-min z-score normalization. Changes: (1) universe collapsed to NIFTY index directly — aggregate constituent volume on the index captures the same institutional flow that drives individual stock deltas; (2) cumulative window compressed 10 min → 1 min (12 bars) matching the shorter hold time; (3) normalization window compressed 60 min → 5 min (60 bars) to track current session vol regime; (4) z-score threshold lowered from 2.0 to 1.5 because 5s bars are noisier and need a lower threshold to fire with sufficient frequency; (5) VWAP filter retained unchanged; (6) volume-weighting preserved — this is the key differentiator vs unweighted direction strategies.",
+  "adaptation_notes": "Original traded Nifty50 constituent stocks (top 20 by turnover) at 1-min bars with 10-min cumulative volume delta and 60-min z-score normalization. Changes: (1) universe collapsed to NIFTY index directly \u2014 aggregate constituent volume on the index captures the same institutional flow that drives individual stock deltas; (2) cumulative window compressed 10 min \u2192 1 min (12 bars) matching the shorter hold time; (3) normalization window compressed 60 min \u2192 5 min (60 bars) to track current session vol regime; (4) z-score threshold lowered from 2.0 to 1.5 because 5s bars are noisier and need a lower threshold to fire with sufficient frequency; (5) VWAP filter retained unchanged; (6) volume-weighting preserved \u2014 this is the key differentiator vs unweighted direction strategies.",
   "weaknesses": [
-    "bar_delta using close vs open misclassifies doji bars (close ≈ open with high activity) — these score near-zero delta even if two-sided institutional activity was high",
+    "bar_delta using close vs open misclassifies doji bars (close \u2248 open with high activity) \u2014 these score near-zero delta even if two-sided institutional activity was high",
     "NIFTY index volume aggregates all constituent trades; high-volume downtick on one component can cancel a high-volume uptick on another, producing misleading delta",
     "Z-score normalization breaks during very-low-volume periods (lunch lull 12:30-13:00) where rolling STDDEV collapses toward zero"
   ],
@@ -100,8 +108,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_53.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-15 bars (5-15 min)",
-    "original_indicators": ["bar_delta (volume*sign(close-open))", "cum_delta_10", "delta_zscore (SMA/STDDEV over 60 bars)", "atr_20"],
+    "original_indicators": [
+      "bar_delta (volume*sign(close-open))",
+      "cum_delta_10",
+      "delta_zscore (SMA/STDDEV over 60 bars)",
+      "atr_20"
+    ],
     "original_stop": "0.15% from entry",
     "original_target": "0.2% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

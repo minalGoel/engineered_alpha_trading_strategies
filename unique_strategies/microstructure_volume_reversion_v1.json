@@ -2,14 +2,22 @@
   "name": "microstructure_volume_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "volume", "absorption", "mean_reversion"],
+  "tags": [
+    "microstructure",
+    "volume",
+    "absorption",
+    "mean_reversion"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_27.json",
   "original_name": "microstructure_volume_reversion_v1",
-  "mechanism": "On NIFTY, when a 5-second bar prints with volume exceeding 3x the prior 5-minute rolling average but the bar range stays below 0.03% of spot (~7 pts at NIFTY 24,000), a large institutional VWAP or TWAP program order is being absorbed — two-sided matching or contra-flow liquidity suppresses price movement while the order is filled. The bar's direction (close > open = buy-side absorption, close < open = sell-side absorption) reveals which side is winning. Once the program order completes, market makers who were absorbing it delta-hedge and momentum algos pile in, generating a directional move of 6-12 NIFTY spot points within the next 30-90 seconds.",
+  "mechanism": "On NIFTY, when a 5-second bar prints with volume exceeding 3x the prior 5-minute rolling average but the bar range stays below 0.03% of spot (~7 pts at NIFTY 24,000), a large institutional VWAP or TWAP program order is being absorbed \u2014 two-sided matching or contra-flow liquidity suppresses price movement while the order is filled. The bar's direction (close > open = buy-side absorption, close < open = sell-side absorption) reveals which side is winning. Once the program order completes, market makers who were absorbing it delta-hedge and momentum algos pile in, generating a directional move of 6-12 NIFTY spot points within the next 30-90 seconds.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-6",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "SMA(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute rolling mean volume. NOT blindly scaled from original's 20-bar 1-min window (which would give 240 bars = 20 min). At 5-second frequency, intraday volume regimes shift every few minutes — a 5-minute baseline (60 bars) captures the current activity level without smoothing over session structure changes. We need a local reference, not a session-wide one."
+      "purpose": "5-minute rolling mean volume. NOT blindly scaled from original's 20-bar 1-min window (which would give 240 bars = 20 min). At 5-second frequency, intraday volume regimes shift every few minutes \u2014 a 5-minute baseline (60 bars) captures the current activity level without smoothing over session structure changes. We need a local reference, not a session-wide one."
     },
     {
       "name": "vol_ratio",
@@ -41,7 +49,7 @@
       "formula": "abs(close - open) / open * 100",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Bar range as % of open price. Threshold 0.03% (~7 pts at NIFTY 24,000) identifies bars where price barely moved despite high volume — the defining signature of order absorption. Original used 0.15% on 1-min bars; scaling proportionally to 5-second bars (which have 1/12 the typical range) gives ~0.013% but we use 0.03% to accommodate some noise in the bar open/close."
+      "purpose": "Bar range as % of open price. Threshold 0.03% (~7 pts at NIFTY 24,000) identifies bars where price barely moved despite high volume \u2014 the defining signature of order absorption. Original used 0.15% on 1-min bars; scaling proportionally to 5-second bars (which have 1/12 the typical range) gives ~0.013% but we use 0.03% to accommodate some noise in the bar open/close."
     },
     {
       "name": "bar_direction",
@@ -55,8 +63,8 @@
     "buy_ce": {
       "conditions": [
         "vol_ratio > 3.0 (current 5s volume > 3x 5-min mean)",
-        "bar_range_pct < 0.03 (range < 7 NIFTY points — absorption, not a directional move)",
-        "bar_direction == +1 (close > open — buy-side is absorbing supply)",
+        "bar_range_pct < 0.03 (range < 7 NIFTY points \u2014 absorption, not a directional move)",
+        "bar_direction == +1 (close > open \u2014 buy-side is absorbing supply)",
         "VIX < 25 (avoid extreme volatility regime where absorption signals are noise)",
         "time between 09:25 and 15:20 IST (skip opening noise and near EOD)"
       ],
@@ -66,7 +74,7 @@
       "conditions": [
         "vol_ratio > 3.0",
         "bar_range_pct < 0.03",
-        "bar_direction == -1 (close < open — sell-side is absorbing demand)",
+        "bar_direction == -1 (close < open \u2014 sell-side is absorbing demand)",
         "VIX < 25",
         "time between 09:25 and 15:20 IST"
       ],
@@ -76,38 +84,43 @@
   },
   "exit": {
     "stop_points": 3.0,
-    "stop_rationale": "3 option pts (≈6 NIFTY spot pts at delta 0.5). NIFTY absorption resolutions should begin within 1-2 bars; if price moves 6 spot pts against us, the absorption thesis is wrong and we are in a directional move against our position. At 30-90 second holds, a 6 spot pt adverse move is already 1-2 standard deviations of the expected session move.",
+    "stop_rationale": "3 option pts (\u22486 NIFTY spot pts at delta 0.5). NIFTY absorption resolutions should begin within 1-2 bars; if price moves 6 spot pts against us, the absorption thesis is wrong and we are in a directional move against our position. At 30-90 second holds, a 6 spot pt adverse move is already 1-2 standard deviations of the expected session move.",
     "target_points": 5.0,
-    "target_rationale": "5 option pts (≈10 NIFTY spot pts at delta 0.5). Post-absorption directional resolutions on NIFTY typically extend 8-14 spot pts in 30-90 seconds as market makers delta-hedge and momentum algos confirm. Targeting 10 pts captures the lower half of the expected resolution range, giving 1:1.67 risk-reward with a tight stop.",
+    "target_rationale": "5 option pts (\u224810 NIFTY spot pts at delta 0.5). Post-absorption directional resolutions on NIFTY typically extend 8-14 spot pts in 30-90 seconds as market makers delta-hedge and momentum algos confirm. Targeting 10 pts captures the lower half of the expected resolution range, giving 1:1.67 risk-reward with a tight stop.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "VIX < 25 — above this, index volume patterns are dominated by macro panic and absorption signals are unreliable",
-    "time_filter": "09:25-15:20 IST — skip first 10 min (opening volume is structurally elevated; 5x spikes are routine and not absorption) and last 10 min before expiry flatten",
+    "vix_filter": "VIX < 25 \u2014 above this, index volume patterns are dominated by macro panic and absorption signals are unreliable",
+    "time_filter": "09:25-15:20 IST \u2014 skip first 10 min (opening volume is structurally elevated; 5x spikes are routine and not absorption) and last 10 min before expiry flatten",
     "volume_filter": "vol_ratio > 3.0 is the core filter",
-    "trend_filter": "none — absorption is a microstructure event, can occur in any trend regime",
-    "spread_filter": "none — NIFTY index volume proxied by futures has consistent tick quality"
+    "trend_filter": "none \u2014 absorption is a microstructure event, can occur in any trend regime",
+    "spread_filter": "none \u2014 NIFTY index volume proxied by futures has consistent tick quality"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.67,
-    "profit_factor_estimate": 1.45,
-    "edge_decay_risk": "low — institutional block trading via VWAP/TWAP is standard practice and slow to change; however, signal frequency is low (2-6 trades/day) limiting daily P&L"
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low \u2014 institutional block trading via VWAP/TWAP is standard practice and slow to change; however, signal frequency is low (2-6 trades/day) limiting daily P&L"
   },
-  "adaptation_notes": "Original: volume spike >5x on NIFTY50 individual stocks with range <0.15% on 1-min bars, hold 5-20 min. Converted changes: (1) Universe from individual stocks to NIFTY index — same absorption thesis but operating on aggregate institutional flow rather than single-stock block trades; (2) vol_threshold lowered from 5x to 3x because 5-second bars are noisier, the same statistical significance is achieved at a lower multiplier; (3) range_pct_threshold lowered from 0.15% to 0.03% because 5-second NIFTY bars have 1/12 the typical range of 1-minute bars; (4) Volume lookback from 20×1-min (20 min) to 60×5s (5 min) because at 5-second frequency the relevant volume baseline is very local — 20-minute smoothing misses rapid intraday volume regime shifts; (5) Hold time compressed from 5-20 min to 30-90 seconds — we enter earlier (at the absorption bar itself, not the next bar open) and exit on the first-leg resolution rather than the full recovery.",
+  "adaptation_notes": "Original: volume spike >5x on NIFTY50 individual stocks with range <0.15% on 1-min bars, hold 5-20 min. Converted changes: (1) Universe from individual stocks to NIFTY index \u2014 same absorption thesis but operating on aggregate institutional flow rather than single-stock block trades; (2) vol_threshold lowered from 5x to 3x because 5-second bars are noisier, the same statistical significance is achieved at a lower multiplier; (3) range_pct_threshold lowered from 0.15% to 0.03% because 5-second NIFTY bars have 1/12 the typical range of 1-minute bars; (4) Volume lookback from 20\u00d71-min (20 min) to 60\u00d75s (5 min) because at 5-second frequency the relevant volume baseline is very local \u2014 20-minute smoothing misses rapid intraday volume regime shifts; (5) Hold time compressed from 5-20 min to 30-90 seconds \u2014 we enter earlier (at the absorption bar itself, not the next bar open) and exit on the first-leg resolution rather than the full recovery.",
   "weaknesses": [
-    "NIFTY index volume (spot) may not perfectly reflect futures volume — absorption signals may be weaker than on individual high-liquidity stocks",
-    "Low signal frequency (2-6 trades/day) — statistically limited edge demonstration in 12-day backtest",
+    "NIFTY index volume (spot) may not perfectly reflect futures volume \u2014 absorption signals may be weaker than on individual high-liquidity stocks",
+    "Low signal frequency (2-6 trades/day) \u2014 statistically limited edge demonstration in 12-day backtest",
     "3x volume spike with 0.03% range can be triggered by scheduled equity index rebalancing flows, which are more predictable (and thus already arbed) than institutional directional programs",
-    "No confirmation that the absorption is complete before entry — entering mid-absorption risks riding the rest of the absorption rather than the resolution"
+    "No confirmation that the absorption is complete before entry \u2014 entering mid-absorption risks riding the rest of the absorption rather than the resolution"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_27.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-20 bars (5-20 min)",
-    "original_indicators": ["vol_ratio (volume/SMA(volume,20))", "bar_range_pct", "bar_direction", "atr_20"],
+    "original_indicators": [
+      "vol_ratio (volume/SMA(volume,20))",
+      "bar_range_pct",
+      "bar_direction",
+      "atr_20"
+    ],
     "original_stop": "0.25% of stock price",
     "original_target": "0.3% of stock price"
   }

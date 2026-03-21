@@ -2,14 +2,23 @@
   "name": "vwap_mean_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "vwap", "rsi", "dual_confirmation", "intraday"],
+  "tags": [
+    "mean_reversion",
+    "vwap",
+    "rsi",
+    "dual_confirmation",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_68.json",
   "original_name": "vwap_mean_reversion_v1",
-  "mechanism": "On NIFTY, when the index deviates more than 1.5 rolling standard deviations below session VWAP AND RSI(36) simultaneously confirms oversold conditions (RSI < 38), two independent signals of short-term exhaustion align. The VWAP z-score catches the statistical magnitude of dislocation — at z=-1.5 with 10-min rolling std, this is approximately 15-25 spot points below the institutional benchmark price, triggering VWAP-benchmarked algorithms to begin accumulating. The RSI exhaustion filter removes false positives where VWAP is stretched but price momentum is still negative (indicating continued selling pressure), keeping only entries where both the deviation depth AND the velocity of selling have abated. This dual-confirmation is the specific differentiator from v18 (which uses pure deviation momentum without RSI) and v19 (which uses range contraction microstructure): here the RSI acts as a sell-flow exhaustion gate, distinct from either magnitude-based or range-based filtering.",
+  "mechanism": "On NIFTY, when the index deviates more than 1.5 rolling standard deviations below session VWAP AND RSI(36) simultaneously confirms oversold conditions (RSI < 38), two independent signals of short-term exhaustion align. The VWAP z-score catches the statistical magnitude of dislocation \u2014 at z=-1.5 with 10-min rolling std, this is approximately 15-25 spot points below the institutional benchmark price, triggering VWAP-benchmarked algorithms to begin accumulating. The RSI exhaustion filter removes false positives where VWAP is stretched but price momentum is still negative (indicating continued selling pressure), keeping only entries where both the deviation depth AND the velocity of selling have abated. This dual-confirmation is the specific differentiator from v18 (which uses pure deviation momentum without RSI) and v19 (which uses range contraction microstructure): here the RSI acts as a sell-flow exhaustion gate, distinct from either magnitude-based or range-based filtering.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-5",
   "max_trades_per_day": 6,
@@ -24,10 +33,10 @@
   "indicators": [
     {
       "name": "vwap",
-      "formula": "cumsum(close * volume) / cumsum(volume) — reset each session",
+      "formula": "cumsum(close * volume) / cumsum(volume) \u2014 reset each session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative from session open — no scaling applies. VWAP is a running statistic, not a windowed lookback. Institutional VWAP benchmarking is the core structural driver of reversion."
+      "purpose": "Cumulative from session open \u2014 no scaling applies. VWAP is a running statistic, not a windowed lookback. Institutional VWAP benchmarking is the core structural driver of reversion."
     },
     {
       "name": "close_std_120",
@@ -48,7 +57,7 @@
       "formula": "RSI(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute RSI on 5-second bars. Scaled from original RSI(14) on 1-min to RSI(36) on 5s: 14 × 1min = 14 min total lookback, which is too slow for our 15-90s hold. RSI(36) = 3 minutes captures recent momentum velocity exhaustion at the timescale of our trade. RSI(14) at 5s would be only 70 seconds — too noisy. This is the primary entry gate: RSI must also be oversold/overbought to confirm sell/buy flow exhaustion before VWAP algorithms step in."
+      "purpose": "3-minute RSI on 5-second bars. Scaled from original RSI(14) on 1-min to RSI(36) on 5s: 14 \u00d7 1min = 14 min total lookback, which is too slow for our 15-90s hold. RSI(36) = 3 minutes captures recent momentum velocity exhaustion at the timescale of our trade. RSI(14) at 5s would be only 70 seconds \u2014 too noisy. This is the primary entry gate: RSI must also be oversold/overbought to confirm sell/buy flow exhaustion before VWAP algorithms step in."
     },
     {
       "name": "vix_close",
@@ -65,7 +74,7 @@
         "rsi_36 < rsi_low_threshold (default 38)",
         "vix_close < vix_max (default 20.0)"
       ],
-      "confirmation": "All conditions on same 5-second bar. No multi-bar confirmation — RSI exhaustion on a 3-min window is sufficient gate."
+      "confirmation": "All conditions on same 5-second bar. No multi-bar confirmation \u2014 RSI exhaustion on a 3-min window is sufficient gate."
     },
     "buy_pe": {
       "conditions": [
@@ -78,39 +87,44 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 3.0,
     "stop_rationale": "4 points because dual-confirmation entries (VWAP z-score + RSI) target 15-25 NIFTY spot pt deviations; if price moves another 8 spot pts against us (4 option pts at delta 0.5) after both signals fired, the thesis is clearly wrong. Slightly wider than v19 (4 pts) because the RSI gate means we may enter slightly before the absolute bottom of the deviation.",
-    "target_points": 7,
+    "target_points": 6.0,
     "target_rationale": "7 points captures ~50% of the expected reversion from z=-1.5 toward z=0. At 10-min rolling std of ~15-20 NIFTY spot pts, a z=-1.5 deviation is ~22-30 spot pts; reversion from z=-1.5 to z=-0.5 is ~15-20 spot pts = 7-10 option pts at delta 0.5. Targeting 7 pts (50% of typical reversion) gives R:R of 1:1.75.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "vix_close < 20.0 — carried from original; high VIX destroys VWAP reversion as institutional flows become directional",
+    "vix_filter": "vix_close < 20.0 \u2014 carried from original; high VIX destroys VWAP reversion as institutional flows become directional",
     "time_filter": "09:20-15:25 IST; RSI and rolling std need 120 bars (10 min) warmup before first signal",
-    "volume_filter": "none — RSI + VWAP z-score combination implicitly filters low-activity bars",
-    "trend_filter": "none — RSI exhaustion filter implicitly avoids strong trend entries",
-    "spread_filter": "none — limit order execution at candle close, no spread cost"
+    "volume_filter": "none \u2014 RSI + VWAP z-score combination implicitly filters low-activity bars",
+    "trend_filter": "none \u2014 RSI exhaustion filter implicitly avoids strong trend entries",
+    "spread_filter": "none \u2014 limit order execution at candle close, no spread cost"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.56,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.63,
-    "edge_decay_risk": "low-medium — structural VWAP benchmarking is persistent; RSI exhaustion is a stable behavioral pattern at the 3-min timescale"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.55,
+    "edge_decay_risk": "low-medium \u2014 structural VWAP benchmarking is persistent; RSI exhaustion is a stable behavioral pattern at the 3-min timescale"
   },
-  "adaptation_notes": "Original traded Nifty50 individual stocks at 1-min resolution with RSI(14), volume surge, and ATR-based stops. Key changes: (1) Universe changed from stock basket to NIFTY index — index VWAP is more institutionally anchored; (2) RSI(14) on 1-min compressed to RSI(36) on 5s (3-min equivalent) to match our 15-90s hold time; (3) Rolling std window changed from 60 bars × 1 min (60 min) to 120 bars × 5s (10 min) for current-regime sensitivity; (4) VIX filter kept at VIX < 20 (same threshold, different data source); (5) ATR-based stops replaced with fixed option premium points (4 stop / 7 target) calibrated to NIFTY ATM delta ~0.5; (6) Volume surge indicator dropped — RSI exhaustion is a cleaner filter at 5s frequency than volume ratio; (7) Hold time compressed from 10-60 min to 15-90s.",
+  "adaptation_notes": "Original traded Nifty50 individual stocks at 1-min resolution with RSI(14), volume surge, and ATR-based stops. Key changes: (1) Universe changed from stock basket to NIFTY index \u2014 index VWAP is more institutionally anchored; (2) RSI(14) on 1-min compressed to RSI(36) on 5s (3-min equivalent) to match our 15-90s hold time; (3) Rolling std window changed from 60 bars \u00d7 1 min (60 min) to 120 bars \u00d7 5s (10 min) for current-regime sensitivity; (4) VIX filter kept at VIX < 20 (same threshold, different data source); (5) ATR-based stops replaced with fixed option premium points (4 stop / 7 target) calibrated to NIFTY ATM delta ~0.5; (6) Volume surge indicator dropped \u2014 RSI exhaustion is a cleaner filter at 5s frequency than volume ratio; (7) Hold time compressed from 10-60 min to 15-90s.",
   "weaknesses": [
-    "RSI(36) on 5s bars can still be noisy near session open — warmup filter at 09:20 helps but may not fully prevent early false signals",
+    "RSI(36) on 5s bars can still be noisy near session open \u2014 warmup filter at 09:20 helps but may not fully prevent early false signals",
     "VIX filter (< 20) reduces opportunity set significantly on high-volatility days that might otherwise have excellent mean reversion",
-    "Dual-confirmation requirement (both z-score AND RSI must fire) reduces trade frequency vs v18/v19 — may produce too few trades on range-bound low-vol days",
-    "VWAP z-score may fire near day lows/highs that are structural breakouts rather than overshoots — no explicit day-range filter"
+    "Dual-confirmation requirement (both z-score AND RSI must fire) reduces trade frequency vs v18/v19 \u2014 may produce too few trades on range-bound low-vol days",
+    "VWAP z-score may fire near day lows/highs that are structural breakouts rather than overshoots \u2014 no explicit day-range filter"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_68.json",
     "original_timeframe": "1-minute bars",
     "original_hold_time": "10-60 bars (10-60 minutes)",
-    "original_indicators": ["vwap_zscore (60-bar rolling std)", "rel_volume (SMA 20)", "rsi_14", "atr_20"],
+    "original_indicators": [
+      "vwap_zscore (60-bar rolling std)",
+      "rel_volume (SMA 20)",
+      "rsi_14",
+      "atr_20"
+    ],
     "original_stop": "1.5 * ATR(20) from entry",
     "original_target": "VWAP touch (z-score crosses 0)"
   }

@@ -170,11 +170,11 @@ class Strategy(BaseStrategy):
             # Stop: 4 option pts = ~8 NIFTY spot pts at delta ~0.5
             # If NIFTY moves 8 more pts against us after VIX began reverting,
             # the thesis is invalidated for this bar.
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 3),
             # Target: 7 option pts = ~14 NIFTY spot pts
             # Captures ~50% of the typical 20-35 spot pt recovery following
             # a 3%-from-open VIX spike reversion (1:1.75 R:R).
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 6),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=24,          # 120 seconds maximum hold
             max_trades_per_day=self.max_trades_per_day,

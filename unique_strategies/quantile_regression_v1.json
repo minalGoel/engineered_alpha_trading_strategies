@@ -2,14 +2,23 @@
   "name": "quantile_regression_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["quantile-regression", "composite-signal", "distribution-shift", "momentum", "vwap"],
+  "tags": [
+    "quantile-regression",
+    "composite-signal",
+    "distribution-shift",
+    "momentum",
+    "vwap"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_329.json",
   "original_name": "quantile_regression_v1",
-  "mechanism": "On NIFTY, when VWAP deviation, volume surge, and 1-minute momentum all simultaneously reach extreme levels in the same direction, the joint conditional distribution of the next 30-60 second return is so heavily skewed that even the pessimistic 10th quantile is positive. This three-way alignment signals that VWAP-benchmarked institutional algorithms are actively accumulating (above-VWAP price forces them to buy at benchmark), confirmed by real order flow (1.3x volume surge) and sustained directional commitment (positive 1-min return). Rather than fitting a full quantile regression model, we approximate the QR_P10 > 0 condition by requiring all three predictors to simultaneously hit extreme composite territory — trading only when the full distribution is shifted, not just the mean.",
+  "mechanism": "On NIFTY, when VWAP deviation, volume surge, and 1-minute momentum all simultaneously reach extreme levels in the same direction, the joint conditional distribution of the next 30-60 second return is so heavily skewed that even the pessimistic 10th quantile is positive. This three-way alignment signals that VWAP-benchmarked institutional algorithms are actively accumulating (above-VWAP price forces them to buy at benchmark), confirmed by real order flow (1.3x volume surge) and sustained directional commitment (positive 1-min return). Rather than fitting a full quantile regression model, we approximate the QR_P10 > 0 condition by requiring all three predictors to simultaneously hit extreme composite territory \u2014 trading only when the full distribution is shifted, not just the mean.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:25 IST",
-  "hold_time_seconds": [30, 60],
+  "hold_time_seconds": [
+    30,
+    60
+  ],
   "max_hold_bars": 12,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -25,9 +34,9 @@
     {
       "name": "vwap_dist",
       "formula": "(close - session_vwap) / session_vwap * 10000",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session open — no scaling needed, this is an anchor reference not a rolling lookback. Measures how far NIFTY has deviated from the institutional benchmark, in bps. VWAP-benchmarked funds face pressure to buy when below VWAP (getting better fills) and to sell when above (getting worse fills), creating a systematic flow bias."
+      "purpose": "Cumulative VWAP from session open \u2014 no scaling needed, this is an anchor reference not a rolling lookback. Measures how far NIFTY has deviated from the institutional benchmark, in bps. VWAP-benchmarked funds face pressure to buy when below VWAP (getting better fills) and to sell when above (getting worse fills), creating a systematic flow bias."
     },
     {
       "name": "vol_ratio",
@@ -41,14 +50,14 @@
       "formula": "(close - close[i-12]) / close[i-12] * 10000",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "12 bars = 60 seconds (1 min) return in bps. Compressed from original's 30-min ROC on 1-min bars: we hold 30-60s, so the momentum context should match our hold timescale. A 1-min return detects the immediate directional impulse that has sustained for at least one full minute — enough to distinguish trend from 5-second noise."
+      "purpose": "12 bars = 60 seconds (1 min) return in bps. Compressed from original's 30-min ROC on 1-min bars: we hold 30-60s, so the momentum context should match our hold timescale. A 1-min return detects the immediate directional impulse that has sustained for at least one full minute \u2014 enough to distinguish trend from 5-second noise."
     },
     {
       "name": "composite_score",
       "formula": "0.5 * (vwap_dist / rolling_std(vwap_dist, 120)) + 0.5 * (ret_12 / rolling_std(ret_12, 120))",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "120 bars = 10 min for normalization. Equal-weight z-score combination of VWAP deviation and 1-min momentum, normalized by recent volatility so that high-volatility regimes don't dominate. Approximates the quantile regression predictor composite — when this score is extreme, the return distribution is shifted."
+      "purpose": "120 bars = 10 min for normalization. Equal-weight z-score combination of VWAP deviation and 1-min momentum, normalized by recent volatility so that high-volatility regimes don't dominate. Approximates the quantile regression predictor composite \u2014 when this score is extreme, the return distribution is shifted."
     },
     {
       "name": "score_pct_high",
@@ -66,7 +75,7 @@
         "vol_ratio > vol_ratio_threshold (volume surge confirms institutional activity)",
         "ret_12 > 0 (1-min momentum aligned bullish)"
       ],
-      "confirmation": "All four conditions must hold simultaneously — this is the quantile-shift condition where the full return distribution is bullish"
+      "confirmation": "All four conditions must hold simultaneously \u2014 this is the quantile-shift condition where the full return distribution is bullish"
     },
     "buy_pe": {
       "conditions": [
@@ -75,20 +84,20 @@
         "vol_ratio > vol_ratio_threshold (volume surge confirms institutional activity)",
         "ret_12 < 0 (1-min momentum aligned bearish)"
       ],
-      "confirmation": "All four conditions must hold simultaneously — the full return distribution is bearish"
+      "confirmation": "All four conditions must hold simultaneously \u2014 the full return distribution is bearish"
     },
     "entry_price": "limit at candle close"
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot pts. High-confidence multi-predictor signals should not retrace 8 spot pts within 30-60 seconds if the distribution shift thesis is valid — NIFTY 30s typical range is 2-5 pts, so 4-pt stop allows normal bar noise while exiting when the distribution read was clearly wrong.",
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts. High-confidence multi-predictor signals should not retrace 8 spot pts within 30-60 seconds if the distribution shift thesis is valid \u2014 NIFTY 30s typical range is 2-5 pts, so 4-pt stop allows normal bar noise while exiting when the distribution read was clearly wrong.",
     "target_points": 6,
-    "target_rationale": "6 option pts = ~12 NIFTY spot pts. When three aligned predictors create a full distribution shift, the expected 1-minute move for NIFTY is 3-7 pts; 6 pts targets the upper half of this range at 1:1.5 R:R. The distribution-shift edge is strongest at the front of the move — capturing 50% of the expected 1-min move before the signal decays.",
+    "target_rationale": "6 option pts = ~12 NIFTY spot pts. When three aligned predictors create a full distribution shift, the expected 1-minute move for NIFTY is 3-7 pts; 6 pts targets the upper half of this range at 1:1.5 R:R. The distribution-shift edge is strongest at the front of the move \u2014 capturing 50% of the expected 1-min move before the signal decays.",
     "time_stop_bars": 12,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "none — VIX is not used; quantile distribution shift applies across volatility regimes",
+    "vix_filter": "none \u2014 VIX is not used; quantile distribution shift applies across volatility regimes",
     "time_filter": "09:30-15:25 IST; skip first 15 min for VWAP and indicator warmup",
     "volume_filter": "vol_ratio > vol_ratio_threshold built into entry conditions",
     "trend_filter": "ret_12 and vwap_dist provide implicit trend filter",
@@ -99,20 +108,26 @@
     "win_rate_estimate": 0.57,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 1.98,
-    "edge_decay_risk": "Medium — composite percentile thresholds adapt to intraday regime, but sustained trending days may generate fewer signals as VWAP divergence grows and distributions shift persistently."
+    "edge_decay_risk": "Medium \u2014 composite percentile thresholds adapt to intraday regime, but sustained trending days may generate fewer signals as VWAP divergence grows and distributions shift persistently."
   },
-  "adaptation_notes": "Original strategy applied quantile regression on individual NIFTY 50 stocks using a fitted model on 5 days of historical data. Converted to NIFTY index by: (1) applying the same three predictors (VWAP distance, volume ratio, return) to the index itself rather than stocks; (2) replacing the fitted QR model with a rolling composite percentile — this approximates QR_P10 > 0 (trade only when even the worst case is positive) by requiring the composite signal to be in extreme territory; (3) compressing return lookback from 30 min to 1 min since we hold 30-60s not 15-45 min; (4) volume ratio window chosen as 5 min (60 bars) rather than 20-min original because 5s bars at 5-min avg give stable but responsive normalization.",
+  "adaptation_notes": "Original strategy applied quantile regression on individual NIFTY 50 stocks using a fitted model on 5 days of historical data. Converted to NIFTY index by: (1) applying the same three predictors (VWAP distance, volume ratio, return) to the index itself rather than stocks; (2) replacing the fitted QR model with a rolling composite percentile \u2014 this approximates QR_P10 > 0 (trade only when even the worst case is positive) by requiring the composite signal to be in extreme territory; (3) compressing return lookback from 30 min to 1 min since we hold 30-60s not 15-45 min; (4) volume ratio window chosen as 5 min (60 bars) rather than 20-min original because 5s bars at 5-min avg give stable but responsive normalization.",
   "weaknesses": [
-    "Rolling percentile approximation is coarser than true quantile regression — the original's fitted model captures nonlinear relationships that the composite z-score misses",
+    "Rolling percentile approximation is coarser than true quantile regression \u2014 the original's fitted model captures nonlinear relationships that the composite z-score misses",
     "NIFTY volume is noisier than individual stock volume at 5s, making vol_ratio signals less reliable; the 60-bar average smooths this but extreme individual 5s spikes can trigger false positives",
-    "In strong trending sessions, VWAP deviation can grow monotonically and vol_ratio stays elevated all session, increasing false signal frequency — no regime filter to suppress this"
+    "In strong trending sessions, VWAP deviation can grow monotonically and vol_ratio stays elevated all session, increasing false signal frequency \u2014 no regime filter to suppress this"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_329.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-45 min",
-    "original_indicators": ["VWAP distance (bps)", "volume ratio SMA(20)", "NIFTY ROC(30)", "QR_P10/P50/P90 fitted on 5d history"],
+    "original_indicators": [
+      "VWAP distance (bps)",
+      "volume ratio SMA(20)",
+      "NIFTY ROC(30)",
+      "QR_P10/P50/P90 fitted on 5d history"
+    ],
     "original_stop": "abs(QR_P10) bps for longs",
     "original_target": "QR_Median bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

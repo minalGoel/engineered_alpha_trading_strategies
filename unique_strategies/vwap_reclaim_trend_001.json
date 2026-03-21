@@ -2,14 +2,23 @@
   "name": "vwap_reclaim_trend_001",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["vwap", "trend_following", "momentum", "continuation", "reclaim"],
+  "tags": [
+    "vwap",
+    "trend_following",
+    "momentum",
+    "continuation",
+    "reclaim"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_138.json",
   "original_name": "vwap_reclaim_trend_001",
-  "mechanism": "On NIFTY, when the index has been trading below session VWAP for most of a 3-minute window, every VWAP-benchmarked institutional algorithm is accumulating passively at better-than-benchmark prices. The moment price reclaims VWAP with the 3-minute EMA crossing back above the 15-minute EMA, those accumulated long positions shift from passive absorption to active continuation — algo systems now need to fill the remainder of their order at or above VWAP, creating a 20-35 spot point continuation burst over the next 30-90 seconds. The bearish mirror applies when sustained above-VWAP drift reverses through VWAP with EMA structure turning negative, as benchmark algos unwind longs and delta-hedging flows accelerate the move.",
+  "mechanism": "On NIFTY, when the index has been trading below session VWAP for most of a 3-minute window, every VWAP-benchmarked institutional algorithm is accumulating passively at better-than-benchmark prices. The moment price reclaims VWAP with the 3-minute EMA crossing back above the 15-minute EMA, those accumulated long positions shift from passive absorption to active continuation \u2014 algo systems now need to fill the remainder of their order at or above VWAP, creating a 20-35 spot point continuation burst over the next 30-90 seconds. The bearish mirror applies when sustained above-VWAP drift reverses through VWAP with EMA structure turning negative, as benchmark algos unwind longs and delta-hedging flows accelerate the move.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:35-13:30 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-4",
   "max_trades_per_day": 4,
@@ -27,7 +36,7 @@
       "formula": "VWAP() = cumsum(typical_price * volume) / cumsum(volume), reset each session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative session VWAP — no scaling needed. It's a fixed-start-of-session anchor regardless of bar size. Same concept as original but now computed on 5s bars, giving finer resolution of the reclaim level."
+      "purpose": "Cumulative session VWAP \u2014 no scaling needed. It's a fixed-start-of-session anchor regardless of bar size. Same concept as original but now computed on 5s bars, giving finer resolution of the reclaim level."
     },
     {
       "name": "below_vwap_count_36",
@@ -55,7 +64,7 @@
       "formula": "EMA(close, 180)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "15-minute EMA. Original used EMA(21) at 1-min = 21-min. Kept near this timeframe (15 vs 21 min) as session trend context filter. At 5s, this is 180 bars — broad enough to reflect the intraday institutional trend direction without lagging too much."
+      "purpose": "15-minute EMA. Original used EMA(21) at 1-min = 21-min. Kept near this timeframe (15 vs 21 min) as session trend context filter. At 5s, this is 180 bars \u2014 broad enough to reflect the intraday institutional trend direction without lagging too much."
     }
   ],
   "entry": {
@@ -65,7 +74,7 @@
         "current close crosses above vwap (prev_close < vwap AND close >= vwap)",
         "ema_fast > ema_slow: 3-min EMA above 15-min EMA confirms bullish structure"
       ],
-      "confirmation": "Actual VWAP cross (prev bar below, current bar above) — filters premature entries mid-dislocation"
+      "confirmation": "Actual VWAP cross (prev bar below, current bar above) \u2014 filters premature entries mid-dislocation"
     },
     "buy_pe": {
       "conditions": [
@@ -78,39 +87,50 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 spot points. A genuine VWAP reclaim on NIFTY should not retrace 8 spot points back through VWAP within seconds — if it does, the reclaim failed and accumulated longs are dumping. At delta ~0.5, 8 spot pts = 4 option pts; this is the minimum adverse move that unambiguously invalidates the thesis.",
-    "target_points": 7,
-    "target_rationale": "7 option points = ~14 spot points. VWAP reclaim continuations on NIFTY — where algo buyers switch from passive to active — typically carry 20-35 spot points in the first 60-90 seconds. 14 spot pts captures the conservative lower end (40-50% of the move), giving 1:1.75 R:R.",
+    "stop_points": 5.0,
+    "stop_rationale": "4 option points = ~8 spot points. A genuine VWAP reclaim on NIFTY should not retrace 8 spot points back through VWAP within seconds \u2014 if it does, the reclaim failed and accumulated longs are dumping. At delta ~0.5, 8 spot pts = 4 option pts; this is the minimum adverse move that unambiguously invalidates the thesis.",
+    "target_points": 8.0,
+    "target_rationale": "7 option points = ~14 spot points. VWAP reclaim continuations on NIFTY \u2014 where algo buyers switch from passive to active \u2014 typically carry 20-35 spot points in the first 60-90 seconds. 14 spot pts captures the conservative lower end (40-50% of the move), giving 1:1.75 R:R.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 13:30 IST (session_end_minutes = 810)"
   },
   "filters": {
-    "vix_filter": "none — VWAP reclaim works across VIX regimes since the mechanism is institutional benchmark flow, not sentiment",
-    "time_filter": "09:35-13:30 IST — avoids opening range noise and afternoon choppy session when VWAP reclaims are less trustworthy",
-    "volume_filter": "implicit — NIFTY index volume is always sufficient; no additional volume gate needed",
+    "vix_filter": "none \u2014 VWAP reclaim works across VIX regimes since the mechanism is institutional benchmark flow, not sentiment",
+    "time_filter": "09:35-13:30 IST \u2014 avoids opening range noise and afternoon choppy session when VWAP reclaims are less trustworthy",
+    "volume_filter": "implicit \u2014 NIFTY index volume is always sufficient; no additional volume gate needed",
     "trend_filter": "EMA alignment (ema_fast vs ema_slow) serves as the trend structure filter",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.46,
-    "edge_decay_risk": "medium — EMA/VWAP reclaim is well-known; crowding risk on obvious setups"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "medium \u2014 EMA/VWAP reclaim is well-known; crowding risk on obvious setups"
   },
-  "adaptation_notes": "Original traded Nifty200 stocks at 1-min on 8-24 bar holds with relative volume filter and ADX. Key changes: (1) Universe is now NIFTY index — no stock selection needed. (2) Relative volume filter dropped — NIFTY index volume is structurally sufficient and noisier at 5s; replaced by EMA alignment as the trend filter. (3) ADX replaced by EMA_fast vs EMA_slow crossover structure — ADX at 5s is too noisy; EMA alignment gives cleaner directional bias. (4) Dislocation window: 6-of-8 1-min bars → 27-of-36 5s bars (same 75% threshold, compressed to 3 min because we trade the fast reclaim leg). (5) ATR-based stop dropped — replaced by fixed option premium points calibrated to NIFTY's typical 30-90s spot move range.",
+  "adaptation_notes": "Original traded Nifty200 stocks at 1-min on 8-24 bar holds with relative volume filter and ADX. Key changes: (1) Universe is now NIFTY index \u2014 no stock selection needed. (2) Relative volume filter dropped \u2014 NIFTY index volume is structurally sufficient and noisier at 5s; replaced by EMA alignment as the trend filter. (3) ADX replaced by EMA_fast vs EMA_slow crossover structure \u2014 ADX at 5s is too noisy; EMA alignment gives cleaner directional bias. (4) Dislocation window: 6-of-8 1-min bars \u2192 27-of-36 5s bars (same 75% threshold, compressed to 3 min because we trade the fast reclaim leg). (5) ATR-based stop dropped \u2014 replaced by fixed option premium points calibrated to NIFTY's typical 30-90s spot move range.",
   "weaknesses": [
     "VWAP reclaim signals are most common in morning session (09:35-11:30); afternoon reclaims post-13:00 are less reliable",
     "On trend days when NIFTY spends most of the session above or below VWAP, there are few reclaim opportunities",
-    "EMA crossover confirmation adds lag — in fast-moving markets the entry may be late by 15-30 seconds"
+    "EMA crossover confirmation adds lag \u2014 in fast-moving markets the entry may be late by 15-30 seconds"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_138.json",
     "original_timeframe": "1min",
     "original_hold_time": "8-24 bars (8-24 minutes)",
-    "original_indicators": ["vwap", "atr_14", "rel_volume_20", "ema_9", "ema_21", "adx_14", "below_vwap_count_8", "above_vwap_count_8", "index_vwap_dev"],
+    "original_indicators": [
+      "vwap",
+      "atr_14",
+      "rel_volume_20",
+      "ema_9",
+      "ema_21",
+      "adx_14",
+      "below_vwap_count_8",
+      "above_vwap_count_8",
+      "index_vwap_dev"
+    ],
     "original_stop": "0.8 * ATR(14)",
     "original_target": "2R fixed"
-  }
+  },
+  "vix_agnostic": true
 }

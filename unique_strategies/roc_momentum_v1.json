@@ -2,14 +2,24 @@
   "name": "roc_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["momentum", "rate-of-change", "roc", "zscore", "continuation", "intraday"],
+  "tags": [
+    "momentum",
+    "rate-of-change",
+    "roc",
+    "zscore",
+    "continuation",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_162.json",
   "original_name": "roc_momentum_v1",
-  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing large directional mandates compress their order flow into 1-2 minute windows, creating 1-minute ROC readings that rank in the top or bottom decile of the index's own intraday ROC distribution. Unlike single-stock momentum spikes (news, block deals), NIFTY's ROC extremes are driven by multi-participant flow — FII, prop desks, and index arb simultaneously — that requires 30-90 additional seconds to fully absorb. We detect these bursts by z-scoring the current 1-minute ROC against a rolling 20-minute baseline (adapting to the session's volatility regime), then entering in the direction of the burst only when the index is already on the correct side of session VWAP and volume is elevated, confirming genuine institutional activity rather than illiquid drift.",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing large directional mandates compress their order flow into 1-2 minute windows, creating 1-minute ROC readings that rank in the top or bottom decile of the index's own intraday ROC distribution. Unlike single-stock momentum spikes (news, block deals), NIFTY's ROC extremes are driven by multi-participant flow \u2014 FII, prop desks, and index arb simultaneously \u2014 that requires 30-90 additional seconds to fully absorb. We detect these bursts by z-scoring the current 1-minute ROC against a rolling 20-minute baseline (adapting to the session's volatility regime), then entering in the direction of the burst only when the index is already on the correct side of session VWAP and volume is elevated, confirming genuine institutional activity rather than illiquid drift.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,7 +37,7 @@
       "formula": "(close[t] - close[t-12]) / close[t-12] * 100",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute ROC (12 bars × 5s = 60s) is the TRIGGER timeframe matching our 30-90s hold. The original used 20-bar ROC on 1-min (= 20-min window) because the hold was 15-30 min. We compress to 1-min because we are catching the FIRST continuation candle of the burst, not the tail end of a 20-minute trend. The 1-min window exactly matches our entry horizon."
+      "purpose": "1-minute ROC (12 bars \u00d7 5s = 60s) is the TRIGGER timeframe matching our 30-90s hold. The original used 20-bar ROC on 1-min (= 20-min window) because the hold was 15-30 min. We compress to 1-min because we are catching the FIRST continuation candle of the burst, not the tail end of a 20-minute trend. The 1-min window exactly matches our entry horizon."
     },
     {
       "name": "roc_zscore_240",
@@ -39,16 +49,16 @@
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume) from session open per day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP (no scaling — cumulative measure) provides directional bias. NIFTY above VWAP means VWAP-benchmarked algorithms have buy targets above market; their resting demand supports momentum continuation. Required by original as well."
+      "purpose": "Session VWAP (no scaling \u2014 cumulative measure) provides directional bias. NIFTY above VWAP means VWAP-benchmarked algorithms have buy targets above market; their resting demand supports momentum continuation. Required by original as well."
     },
     {
       "name": "volume_ratio_60",
       "formula": "volume[t] / mean(volume[t-60:t])",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "60-bar (5-min) volume baseline detects genuine flow surges. Shorter windows (12-bar) are too noisy at 5s resolution — a single large tick distorts them. 5-min baseline filters noise while still being reactive to intraday regime shifts. Threshold 1.5x (vs original's 2.0x) because index volume is smoother and less prone to single-tick outliers than individual stocks."
+      "purpose": "60-bar (5-min) volume baseline detects genuine flow surges. Shorter windows (12-bar) are too noisy at 5s resolution \u2014 a single large tick distorts them. 5-min baseline filters noise while still being reactive to intraday regime shifts. Threshold 1.5x (vs original's 2.0x) because index volume is smoother and less prone to single-tick outliers than individual stocks."
     }
   ],
   "entry": {
@@ -74,38 +84,45 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 spot pts retracement. A NIFTY momentum burst that reverses 8 spot pts within the first 30s has failed — this exceeds the 95th percentile of adverse 30-second excursions following a confirmed ROC burst. Tight stop because high-conviction institutional flow thesis: if it reverses immediately, we are wrong and should cut fast.",
+    "stop_rationale": "4 option pts = ~8 spot pts retracement. A NIFTY momentum burst that reverses 8 spot pts within the first 30s has failed \u2014 this exceeds the 95th percentile of adverse 30-second excursions following a confirmed ROC burst. Tight stop because high-conviction institutional flow thesis: if it reverses immediately, we are wrong and should cut fast.",
     "target_points": 6,
-    "target_rationale": "6 option pts = ~12 spot pts. A 1-minute institutional momentum continuation on NIFTY typically covers 12-18 spot points (median 15 pts). 12 pts captures the lower end — conservative enough to hit frequently while still delivering 1:1.5 R:R. At 55% win rate: 0.55 × 6 − 0.45 × 4 = 1.5 pts gross per trade.",
+    "target_rationale": "6 option pts = ~12 spot pts. A 1-minute institutional momentum continuation on NIFTY typically covers 12-18 spot points (median 15 pts). 12 pts captures the lower end \u2014 conservative enough to hit frequently while still delivering 1:1.5 R:R. At 55% win rate: 0.55 \u00d7 6 \u2212 0.45 \u00d7 4 = 1.5 pts gross per trade.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — extreme ROC momentum occurs in all VIX regimes as it detects the burst relative to the same-session baseline",
-    "time_filter": "09:25-15:20 IST — skip first 10 min of chaotic opening price discovery; no entries after 15:20",
-    "volume_filter": "volume_ratio > 1.5x 5-minute baseline — ensures genuine institutional participation",
+    "vix_filter": "none \u2014 extreme ROC momentum occurs in all VIX regimes as it detects the burst relative to the same-session baseline",
+    "time_filter": "09:25-15:20 IST \u2014 skip first 10 min of chaotic opening price discovery; no entries after 15:20",
+    "volume_filter": "volume_ratio > 1.5x 5-minute baseline \u2014 ensures genuine institutional participation",
     "trend_filter": "VWAP alignment required (close > vwap for CE, close < vwap for PE)",
-    "spread_filter": "limit order execution — no spread cost"
+    "spread_filter": "limit order execution \u2014 no spread cost"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 1.75,
-    "edge_decay_risk": "moderate — if algo momentum clustering behavior changes (circuit breakers, market structure changes), the 30-90s continuation window may compress"
+    "edge_decay_risk": "moderate \u2014 if algo momentum clustering behavior changes (circuit breakers, market structure changes), the 30-90s continuation window may compress"
   },
-  "adaptation_notes": "Three key changes from original: (1) Universe collapsed from 200 stocks to NIFTY index — this removes stock-specific noise and focuses on market-wide institutional flow. (2) ROC window compressed from 20-min (original) to 1-min (roc_12) because we hold 30-90s not 15-30 min; the 20-min percentile window is preserved as the normalization baseline via z-score. (3) Volume threshold relaxed from 2.0x to 1.5x because NIFTY volume is smoother than individual stocks and a 2.0x surge is rarer (would reduce trade count excessively). ROC percentile concept replaced with z-score (equivalent but simpler to compute without maintaining 5 days of intraday data).",
+  "adaptation_notes": "Three key changes from original: (1) Universe collapsed from 200 stocks to NIFTY index \u2014 this removes stock-specific noise and focuses on market-wide institutional flow. (2) ROC window compressed from 20-min (original) to 1-min (roc_12) because we hold 30-90s not 15-30 min; the 20-min percentile window is preserved as the normalization baseline via z-score. (3) Volume threshold relaxed from 2.0x to 1.5x because NIFTY volume is smoother than individual stocks and a 2.0x surge is rarer (would reduce trade count excessively). ROC percentile concept replaced with z-score (equivalent but simpler to compute without maintaining 5 days of intraday data).",
   "weaknesses": [
-    "NIFTY ROC bursts at 5s resolution include microstructure noise — a single large print can trigger the z-score without genuine institutional intent",
+    "NIFTY ROC bursts at 5s resolution include microstructure noise \u2014 a single large print can trigger the z-score without genuine institutional intent",
     "The 240-bar z-score window may be insufficient during regime transitions (e.g., morning vs afternoon volatility shift within the same session)",
-    "Volume ratio on NIFTY index has synthetic construction issues — it is not order-book volume but derived/approximated, reducing the signal quality of the volume filter"
+    "Volume ratio on NIFTY index has synthetic construction issues \u2014 it is not order-book volume but derived/approximated, reducing the signal quality of the volume filter"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_162.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-30 minutes",
-    "original_indicators": ["ROC_20", "ROC_percentile_5d", "volume_ratio_20", "VWAP", "ATR_14"],
+    "original_indicators": [
+      "ROC_20",
+      "ROC_percentile_5d",
+      "volume_ratio_20",
+      "VWAP",
+      "ATR_14"
+    ],
     "original_stop": "0.2% from entry",
     "original_target": "0.5% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

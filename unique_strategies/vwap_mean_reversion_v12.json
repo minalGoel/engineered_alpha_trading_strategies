@@ -2,14 +2,22 @@
   "name": "vwap_mean_reversion_v12",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "vwap", "volume_exhaustion", "capitulation"],
+  "tags": [
+    "mean_reversion",
+    "vwap",
+    "volume_exhaustion",
+    "capitulation"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_97.json",
   "original_name": "vwap_mean_reversion_v12",
-  "mechanism": "On NIFTY, when a high-volume flush pushes price 1.5+ z-score deviations below session VWAP (typically 10-20 spot points), it signals forced selling by VWAP-benchmarked participants who are liquidating to reduce their benchmark slippage. The volume surge (rel_vol > 1.3x the 1-minute average) is the capitulation marker — it represents the tail of the sell wave, not the start of a new trend. Once this volume spike clears the book, resting limit buy orders sitting below VWAP absorb remaining supply and price snaps back within 30-75 seconds. The reverse holds for high-volume runs above VWAP triggering short-side fade.",
+  "mechanism": "On NIFTY, when a high-volume flush pushes price 1.5+ z-score deviations below session VWAP (typically 10-20 spot points), it signals forced selling by VWAP-benchmarked participants who are liquidating to reduce their benchmark slippage. The volume surge (rel_vol > 1.3x the 1-minute average) is the capitulation marker \u2014 it represents the tail of the sell wave, not the start of a new trend. Once this volume spike clears the book, resting limit buy orders sitting below VWAP absorb remaining supply and price snaps back within 30-75 seconds. The reverse holds for high-volume runs above VWAP triggering short-side fade.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,7 +35,7 @@
       "formula": "VWAP = cumsum(close * volume) / cumsum(volume), reset each session",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Session benchmark — cumulative, no scaling needed. On NIFTY, every institutional TWAP/VWAP algo resets at 09:15 and benchmarks intraday fills against the running VWAP."
+      "purpose": "Session benchmark \u2014 cumulative, no scaling needed. On NIFTY, every institutional TWAP/VWAP algo resets at 09:15 and benchmarks intraday fills against the running VWAP."
     },
     {
       "name": "vwap_zscore_36",
@@ -41,14 +49,14 @@
       "formula": "volume / SMA(volume, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute (12-bar at 5s) rolling volume average. Original uses 20-bar SMA on 1-min = 20-minute context. At 5s we shrink to 1 minute because we are detecting INTRABAR volume spikes — the relevant comparison is whether THIS bar's volume is elevated versus the last minute of activity, not the last 20 minutes. A 1-minute window reacts quickly to session volume pace changes and identifies capitulation spikes with high precision."
+      "purpose": "1-minute (12-bar at 5s) rolling volume average. Original uses 20-bar SMA on 1-min = 20-minute context. At 5s we shrink to 1 minute because we are detecting INTRABAR volume spikes \u2014 the relevant comparison is whether THIS bar's volume is elevated versus the last minute of activity, not the last 20 minutes. A 1-minute window reacts quickly to session volume pace changes and identifies capitulation spikes with high precision."
     },
     {
       "name": "bar_return_1",
       "formula": "(close - prev_close) / prev_close",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Single-bar 5-second return. Confirms that the current bar is MOVING in the expected direction (flush still ongoing) rather than already reversing. Ensures we enter while the volume spike is fresh and selling is still active — not after it has already turned."
+      "purpose": "Single-bar 5-second return. Confirms that the current bar is MOVING in the expected direction (flush still ongoing) rather than already reversing. Ensures we enter while the volume spike is fresh and selling is still active \u2014 not after it has already turned."
     }
   ],
   "entry": {
@@ -56,17 +64,17 @@
       "conditions": [
         "vwap_zscore_36 < -zscore_threshold (price below VWAP by threshold z-score)",
         "rel_vol_12 > vol_ratio_threshold (volume surge above 1-min average)",
-        "bar_return_1 < 0 (current 5s bar is still declining — flush ongoing)",
+        "bar_return_1 < 0 (current 5s bar is still declining \u2014 flush ongoing)",
         "VIX < 28 (avoid entering in extreme chaos where reversion is unreliable)",
         "time_minutes in [560, 920) (09:20 to 15:20 IST)"
       ],
-      "confirmation": "All three conditions simultaneous — z-score captures magnitude, rel_vol captures the capitulation spike, bar_return confirms the flush is live"
+      "confirmation": "All three conditions simultaneous \u2014 z-score captures magnitude, rel_vol captures the capitulation spike, bar_return confirms the flush is live"
     },
     "buy_pe": {
       "conditions": [
         "vwap_zscore_36 > zscore_threshold (price above VWAP by threshold z-score)",
         "rel_vol_12 > vol_ratio_threshold (volume surge above 1-min average)",
-        "bar_return_1 > 0 (current 5s bar is still rising — run-up ongoing)",
+        "bar_return_1 > 0 (current 5s bar is still rising \u2014 run-up ongoing)",
         "VIX < 28",
         "time_minutes in [560, 920) (09:20 to 15:20 IST)"
       ],
@@ -75,39 +83,43 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot points against position. A z-score of -1.5 deviations implies the price is ~10-18 spot points below VWAP. If after entry the spot moves an additional 8 pts further away, the selling is accelerating — not exhausting — and the capitulation thesis is wrong. 4 pts matches the 15-second typical NIFTY move (1-3 pts) with a 30-second buffer before stopping.",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot points against position. A z-score of -1.5 deviations implies the price is ~10-18 spot points below VWAP. If after entry the spot moves an additional 8 pts further away, the selling is accelerating \u2014 not exhausting \u2014 and the capitulation thesis is wrong. 4 pts matches the 15-second typical NIFTY move (1-3 pts) with a 30-second buffer before stopping.",
+    "target_points": 6.0,
     "target_rationale": "7 option pts = ~14 NIFTY spot points, capturing ~70-80% of the typical reversion from a z-score < -1.5 deviation. A 1.5-sigma VWAP deviation on NIFTY implies 12-20 spot points below VWAP; partial reversion (70%) back toward VWAP typically occurs within 45-90 seconds per the volume-exhaustion pattern. At ATM delta ~0.5, a 14-spot-point move = 7 option pts (1:1.75 R:R).",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST (920 minutes)"
   },
   "filters": {
-    "vix_filter": "VIX < 28 — above 28, institutional VWAP algorithms widen their deviation tolerance and reversion takes 5-10 minutes rather than 30-90 seconds",
-    "time_filter": "09:20 to 15:20 IST — skip first 5 min (noisy pre-open auction prints skew VWAP), flatten 10 min before close",
-    "volume_filter": "rel_vol_12 > 1.3 — only enter on genuine volume surges, not on thin ticks",
-    "trend_filter": "none — VWAP reversion is inherently counter-trend; adding trend filter would eliminate most signals",
-    "spread_filter": "none — limit orders, no spread cost"
+    "vix_filter": "VIX < 28 \u2014 above 28, institutional VWAP algorithms widen their deviation tolerance and reversion takes 5-10 minutes rather than 30-90 seconds",
+    "time_filter": "09:20 to 15:20 IST \u2014 skip first 5 min (noisy pre-open auction prints skew VWAP), flatten 10 min before close",
+    "volume_filter": "rel_vol_12 > 1.3 \u2014 only enter on genuine volume surges, not on thin ticks",
+    "trend_filter": "none \u2014 VWAP reversion is inherently counter-trend; adding trend filter would eliminate most signals",
+    "spread_filter": "none \u2014 limit orders, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.57,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.32,
-    "edge_decay_risk": "medium — behavioral (retail panic) component may decay as algos adapt; volume-exhaustion microstructure component is more durable"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.65,
+    "edge_decay_risk": "medium \u2014 behavioral (retail panic) component may decay as algos adapt; volume-exhaustion microstructure component is more durable"
   },
-  "adaptation_notes": "Original traded nifty200 stocks on 1-min bars seeking VWAP reversion after retail panic selling. Converted to NIFTY index at 5s: (1) Universe collapses to NIFTY itself — the panic/flush dynamic is replicated at index level by algo stop-loss cascades. (2) Timeframe: 1-min bars → 5s bars; hold 10-30 min → hold 30-90s. (3) VWAP stddev window: 20 1-min bars (20 min) → 36 5s bars (3 min) — shortened to match the faster hold and detect current-regime spike severity, not historic. (4) Volume SMA: 20 1-min bars (20 min) → 12 5s bars (1 min) — shortened to detect intrabar capitulation spikes versus recent pace. (5) Added bar_return_1 confirmation: original could wait for bar close to confirm; at 5s we need to verify the flush is still active when we enter. (6) DIFFERENTIATED from v18 (uses deviation momentum, not volume) and v19 (uses range contraction microstructure): this version uses volume exhaustion as the primary differentiator — the high-volume bar itself is the signal, not the depth of deviation or the subsequent range compression.",
+  "adaptation_notes": "Original traded nifty200 stocks on 1-min bars seeking VWAP reversion after retail panic selling. Converted to NIFTY index at 5s: (1) Universe collapses to NIFTY itself \u2014 the panic/flush dynamic is replicated at index level by algo stop-loss cascades. (2) Timeframe: 1-min bars \u2192 5s bars; hold 10-30 min \u2192 hold 30-90s. (3) VWAP stddev window: 20 1-min bars (20 min) \u2192 36 5s bars (3 min) \u2014 shortened to match the faster hold and detect current-regime spike severity, not historic. (4) Volume SMA: 20 1-min bars (20 min) \u2192 12 5s bars (1 min) \u2014 shortened to detect intrabar capitulation spikes versus recent pace. (5) Added bar_return_1 confirmation: original could wait for bar close to confirm; at 5s we need to verify the flush is still active when we enter. (6) DIFFERENTIATED from v18 (uses deviation momentum, not volume) and v19 (uses range contraction microstructure): this version uses volume exhaustion as the primary differentiator \u2014 the high-volume bar itself is the signal, not the depth of deviation or the subsequent range compression.",
   "weaknesses": [
     "NIFTY volume at 5s resolution is noisy and can produce false rel_vol spikes near session open and close",
     "Trending NIFTY days with sustained one-directional flow will trigger multiple losing reversion attempts",
-    "VIX spike events (budget, Fed news) invalidate the 3-minute stddev band — stop at VIX < 28 helps but is imperfect",
+    "VIX spike events (budget, Fed news) invalidate the 3-minute stddev band \u2014 stop at VIX < 28 helps but is imperfect",
     "VWAP calculation at 5s can drift if index volume data has gaps or bad prints"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_97.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 bars (10-30 min)",
-    "original_indicators": ["vwap", "vwap_zscore (stddev 20)", "rel_volume (sma 20)"],
+    "original_indicators": [
+      "vwap",
+      "vwap_zscore (stddev 20)",
+      "rel_volume (sma 20)"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "VWAP touch"
   }

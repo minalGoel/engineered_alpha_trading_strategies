@@ -2,14 +2,23 @@
   "name": "vwap_cross_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["vwap", "crossover", "momentum", "trend-following", "intraday"],
+  "tags": [
+    "vwap",
+    "crossover",
+    "momentum",
+    "trend-following",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_141.json",
   "original_name": "vwap_cross_momentum_v1",
   "mechanism": "On NIFTY, after the index has traded below VWAP for 5+ minutes (60+ bars at 5-second frequency), VWAP-benchmarked buy-side algorithms have accumulated underperformance vs their benchmark and are waiting to reset. When NIFTY's close crosses above VWAP on elevated volume (>1.5x 10-minute average) and the bar closes in the top 30% of its range, these algorithms interpret the cross as a regime confirmation and shift from passive accumulation to active bidding. The resulting institutional buy cohort, amplified by momentum algos triggering on the VWAP reclaim event, drives a 15-25 spot point continuation over the next 60-90 seconds before the new regime is fully absorbed.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-6",
   "max_trades_per_day": 8,
@@ -25,16 +34,16 @@
     {
       "name": "vwap",
       "formula": "cumsum(typical_price * volume) / cumsum(volume), reset at 09:15 each session",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative measure — no scaling. Session VWAP is the institutional benchmark; the cross event is the primary signal trigger. Does not need period adjustment regardless of bar size."
+      "purpose": "Cumulative measure \u2014 no scaling. Session VWAP is the institutional benchmark; the cross event is the primary signal trigger. Does not need period adjustment regardless of bar size."
     },
     {
       "name": "bars_below_vwap",
       "formula": "consecutive count of 5-second bars where close < vwap, reset at session open or when condition breaks",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Dwell filter set at 60 bars (5 minutes). Original used 20 bars on 1-min bars = 20 minutes of dwell. On NIFTY's deep liquidity, a 5-minute dwell establishes clear benchmark underperformance — index regime shifts occur faster than individual stocks due to continuous institutional rebalancing. The original 20-minute requirement was necessary for single stocks where VWAP noise is higher."
+      "purpose": "Dwell filter set at 60 bars (5 minutes). Original used 20 bars on 1-min bars = 20 minutes of dwell. On NIFTY's deep liquidity, a 5-minute dwell establishes clear benchmark underperformance \u2014 index regime shifts occur faster than individual stocks due to continuous institutional rebalancing. The original 20-minute requirement was necessary for single stocks where VWAP noise is higher."
     },
     {
       "name": "bars_above_vwap",
@@ -48,21 +57,21 @@
       "formula": "SMA(volume, 120)",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "10-minute rolling volume average (120 bars × 5-sec). Original used SMA(volume, 10) on 1-min bars = same 10-minute history. The 12x scaling is correct here: we need the identical clock-time baseline (10 min) to normalize index volume — the context window purpose is unchanged, only the bar count differs."
+      "purpose": "10-minute rolling volume average (120 bars \u00d7 5-sec). Original used SMA(volume, 10) on 1-min bars = same 10-minute history. The 12x scaling is correct here: we need the identical clock-time baseline (10 min) to normalize index volume \u2014 the context window purpose is unchanged, only the bar count differs."
     },
     {
       "name": "volume_surge",
       "formula": "volume / vol_sma_120",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "Identifies cross bars with anomalous institutional participation. Threshold lowered to 1.5x (from original 2.0x) because index volume is noisier at 5-second resolution — genuine institutional flow on NIFTY cross events runs 1.5-2.0x average, not the 2.0-3.0x spikes seen on individual stock events."
+      "purpose": "Identifies cross bars with anomalous institutional participation. Threshold lowered to 1.5x (from original 2.0x) because index volume is noisier at 5-second resolution \u2014 genuine institutional flow on NIFTY cross events runs 1.5-2.0x average, not the 2.0-3.0x spikes seen on individual stock events."
     },
     {
       "name": "ema_12",
       "formula": "EMA(close, 12), reset at day boundary",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "1-minute EMA (12 bars × 5-sec) for fast momentum direction confirmation. Original used EMA(5) on 1-min = 5-minute trend. Compressed to 1 minute because for a 15-120 second hold, a 5-min EMA is too slow to reflect current micro-momentum at entry; the 1-min EMA aligns with our hold horizon."
+      "purpose": "1-minute EMA (12 bars \u00d7 5-sec) for fast momentum direction confirmation. Original used EMA(5) on 1-min = 5-minute trend. Compressed to 1 minute because for a 15-120 second hold, a 5-min EMA is too slow to reflect current micro-momentum at entry; the 1-min EMA aligns with our hold horizon."
     },
     {
       "name": "bar_range_ratio",
@@ -75,7 +84,7 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "close >= vwap (current bar closes at or above VWAP — the cross)",
+        "close >= vwap (current bar closes at or above VWAP \u2014 the cross)",
         "close[t-1] < vwap[t-1] (previous bar was strictly below VWAP)",
         "bars_below_vwap >= 60 (5+ minutes of continuous dwell below VWAP before the cross)",
         "volume_surge >= 1.5 (cross bar volume is 1.5x the 10-minute average)",
@@ -86,7 +95,7 @@
     },
     "buy_pe": {
       "conditions": [
-        "close <= vwap (current bar closes at or below VWAP — the cross)",
+        "close <= vwap (current bar closes at or below VWAP \u2014 the cross)",
         "close[t-1] > vwap[t-1] (previous bar was strictly above VWAP)",
         "bars_above_vwap >= 60 (5+ minutes of continuous dwell above VWAP before the cross)",
         "volume_surge >= 1.5 (cross bar volume is 1.5x the 10-minute average)",
@@ -98,15 +107,15 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). A genuine VWAP reclaim should not see NIFTY return below VWAP within 90 seconds — institutional buying absorbs immediate selling. An 8 spot pt pullback signals the cross was a false breakout; typical NIFTY 30-second moves are 2-5 pts so 4 option pts allows one normal adverse wiggle before cutting.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). A genuine VWAP reclaim should not see NIFTY return below VWAP within 90 seconds \u2014 institutional buying absorbs immediate selling. An 8 spot pt pullback signals the cross was a false breakout; typical NIFTY 30-second moves are 2-5 pts so 4 option pts allows one normal adverse wiggle before cutting.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts (~14 NIFTY spot pts). VWAP cross momentum bursts on NIFTY extend 15-25 spot pts over 60-90 seconds as the algorithm cohort resets their benchmark positions. Targeting 14 spot pts captures ~60-70% of the median move at 1:1.75 risk-reward, consistent with typical 1-2 minute NIFTY moves of 5-10 option pts.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — VWAP cross momentum works across VIX regimes; the dwell filter and volume surge requirement already ensure high-conviction entries without needing a VIX regime gate",
+    "vix_filter": "none \u2014 VWAP cross momentum works across VIX regimes; the dwell filter and volume surge requirement already ensure high-conviction entries without needing a VIX regime gate",
     "time_filter": "09:30-15:20 IST (09:30 start allows 15 minutes for session VWAP to stabilize post-open; 15:20 avoids EOD dislocation and final-hour erratic crosses)",
     "volume_filter": "volume_surge >= 1.5x 10-minute SMA on the cross bar",
     "trend_filter": "ema_12 direction must align with the cross direction (rising for buy_ce, falling for buy_pe)",
@@ -115,13 +124,13 @@
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — VWAP cross is widely watched, but the 5-minute dwell filter and simultaneous volume + range-ratio requirements narrow entries to high-conviction crosses missed by participants using simple VWAP cross alerts"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "moderate \u2014 VWAP cross is widely watched, but the 5-minute dwell filter and simultaneous volume + range-ratio requirements narrow entries to high-conviction crosses missed by participants using simple VWAP cross alerts"
   },
-  "adaptation_notes": "Three substantive changes from the original: (1) Dwell time compressed from 20 min (20 bars × 1-min) to 5 min (60 bars × 5-sec) — NIFTY's liquidity means benchmark deviation regimes shift faster than individual stocks, and the choppier single-stock VWAP behavior that necessitated 20-min dwell is absent on the index. (2) Volume surge threshold lowered from 2.0x to 1.5x — index volume at 5-second resolution has higher baseline noise, and genuine cross-bar institutional participation on NIFTY runs 1.5-2.0x average rather than the 2.0-3.0x spikes on single stock events. (3) EMA compressed from EMA(5) on 1-min (5-min trend) to EMA(12) on 5-sec (1-min trend) — at 15-120 second hold horizons, the momentum confirmation filter must reflect direction over ~1 minute not 5 minutes. Volume baseline window (10 min) is preserved exactly via 12x bar-count scaling.",
+  "adaptation_notes": "Three substantive changes from the original: (1) Dwell time compressed from 20 min (20 bars \u00d7 1-min) to 5 min (60 bars \u00d7 5-sec) \u2014 NIFTY's liquidity means benchmark deviation regimes shift faster than individual stocks, and the choppier single-stock VWAP behavior that necessitated 20-min dwell is absent on the index. (2) Volume surge threshold lowered from 2.0x to 1.5x \u2014 index volume at 5-second resolution has higher baseline noise, and genuine cross-bar institutional participation on NIFTY runs 1.5-2.0x average rather than the 2.0-3.0x spikes on single stock events. (3) EMA compressed from EMA(5) on 1-min (5-min trend) to EMA(12) on 5-sec (1-min trend) \u2014 at 15-120 second hold horizons, the momentum confirmation filter must reflect direction over ~1 minute not 5 minutes. Volume baseline window (10 min) is preserved exactly via 12x bar-count scaling.",
   "weaknesses": [
-    "On range-bound NIFTY days (pre-RBI policy, expiry morning consolidation), VWAP crosses repeatedly with low follow-through — the 5-min dwell filter reduces but does not eliminate false signals",
+    "On range-bound NIFTY days (pre-RBI policy, expiry morning consolidation), VWAP crosses repeatedly with low follow-through \u2014 the 5-min dwell filter reduces but does not eliminate false signals",
     "The 5-second bar_range_ratio filter can be gamed by a single algorithmic print at bar close, producing a false conviction read on a small-range bar",
     "The 60-bar minimum dwell means missing the first VWAP cross of the session, which is statistically the highest-conviction cross of the day"
   ],
@@ -129,8 +138,15 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_141.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 minutes",
-    "original_indicators": ["VWAP (cumulative session)", "bars_below/above_vwap (20-bar dwell)", "volume_surge = vol/SMA(vol,10)", "EMA(close,5)", "bar_range_ratio (close position in bar)"],
+    "original_indicators": [
+      "VWAP (cumulative session)",
+      "bars_below/above_vwap (20-bar dwell)",
+      "volume_surge = vol/SMA(vol,10)",
+      "EMA(close,5)",
+      "bar_range_ratio (close position in bar)"
+    ],
     "original_stop": "VWAP re-cross OR 0.25% from entry, trailing at 0.15% once >0.25% profit",
     "original_target": "0.4% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

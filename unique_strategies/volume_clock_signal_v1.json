@@ -2,14 +2,23 @@
   "name": "volume_clock_signal_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "volume_clock", "mean_reversion", "rsi", "bollinger"],
+  "tags": [
+    "microstructure",
+    "volume_clock",
+    "mean_reversion",
+    "rsi",
+    "bollinger"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_242.json",
   "original_name": "volume_clock_signal_v1",
-  "mechanism": "On NIFTY, institutional TWAP/algo executions create bursts of high-volume 5-second bars where information content far exceeds low-volume drift bars. When the index RSI drops below 30 during a volume surge (vol > 1.5x rolling average), it means large sell programs have pushed price aggressively below the 5-minute Bollinger lower band AND below VWAP — a multi-confirmation exhaustion signal. The moment RSI turns up while volume remains elevated, market-makers and residual buy-side programs absorb the remaining sell flow, triggering a 10-20 NIFTY spot point bounce within 30-90 seconds. This approximates the volume-clock bar construction (treating high-volume 5s bars as 'information-dense' bars) without requiring dynamic bar regrouping.",
+  "mechanism": "On NIFTY, institutional TWAP/algo executions create bursts of high-volume 5-second bars where information content far exceeds low-volume drift bars. When the index RSI drops below 30 during a volume surge (vol > 1.5x rolling average), it means large sell programs have pushed price aggressively below the 5-minute Bollinger lower band AND below VWAP \u2014 a multi-confirmation exhaustion signal. The moment RSI turns up while volume remains elevated, market-makers and residual buy-side programs absorb the remaining sell flow, triggering a 10-20 NIFTY spot point bounce within 30-90 seconds. This approximates the volume-clock bar construction (treating high-volume 5s bars as 'information-dense' bars) without requiring dynamic bar regrouping.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "4-10",
   "max_trades_per_day": 10,
@@ -27,35 +36,35 @@
       "formula": "RSI(close, 12) with Wilder smoothing",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "12 bars = 60 seconds — detects fast exhaustion at 5s resolution. Original used RSI(14) on volume-clock bars averaging ~1.5 min each (14 bars ≈ 21 min). We compress sharply to 60s because we hold 30-120s, not 3-10 min. The 1-minute RSI captures the same exhaustion concept but tuned to our hold window: if selling is exhausted within 60 seconds, the bounce starts immediately."
+      "purpose": "12 bars = 60 seconds \u2014 detects fast exhaustion at 5s resolution. Original used RSI(14) on volume-clock bars averaging ~1.5 min each (14 bars \u2248 21 min). We compress sharply to 60s because we hold 30-120s, not 3-10 min. The 1-minute RSI captures the same exhaustion concept but tuned to our hold window: if selling is exhausted within 60 seconds, the bounce starts immediately."
     },
     {
       "name": "bb_upper_60",
       "formula": "SMA(close, 60) + 2.0 * STDEV(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "60 bars = 5-minute Bollinger Band. Original used 20-bar BB on volume-clock bars averaging ~1.5 min each (20 bars ≈ 30 min). Compressed to 5 min because our hold is 30-120s — we need the band to reflect the current micro-session context, not the full morning session. 5-min window captures the recent tight range from which a deviation is meaningful at our timescale."
+      "purpose": "60 bars = 5-minute Bollinger Band. Original used 20-bar BB on volume-clock bars averaging ~1.5 min each (20 bars \u2248 30 min). Compressed to 5 min because our hold is 30-120s \u2014 we need the band to reflect the current micro-session context, not the full morning session. 5-min window captures the recent tight range from which a deviation is meaningful at our timescale."
     },
     {
       "name": "bb_lower_60",
       "formula": "SMA(close, 60) - 2.0 * STDEV(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Lower band for oversold detection — same 5-min window as upper band."
+      "purpose": "Lower band for oversold detection \u2014 same 5-min window as upper band."
     },
     {
       "name": "vwap",
       "formula": "cumulative(close * volume) / cumulative(volume) from session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from 09:15 — no scaling needed. VWAP deviation confirms that price has deviated sufficiently from the fair value anchor that VWAP-benchmarked algos will start buying (bullish) or selling (bearish). Original used 15 bps deviation threshold; we adapt to the same concept."
+      "purpose": "Cumulative VWAP from 09:15 \u2014 no scaling needed. VWAP deviation confirms that price has deviated sufficiently from the fair value anchor that VWAP-benchmarked algos will start buying (bullish) or selling (bearish). Original used 15 bps deviation threshold; we adapt to the same concept."
     },
     {
       "name": "vol_ratio_60",
       "formula": "volume[i] / rolling_mean(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Current bar volume relative to 60-bar (5-min) rolling average. This is the volume-clock approximation: when vol_ratio > 1.5, the current 5s bar is 'information-dense' — equivalent to multiple volume-clock bars firing simultaneously. Threshold 1.5x chosen as the minimum surge that indicates genuine institutional order flow vs. normal noise on NIFTY."
+      "purpose": "Current bar volume relative to 60-bar (5-min) rolling average. This is the volume-clock approximation: when vol_ratio > 1.5, the current 5s bar is 'information-dense' \u2014 equivalent to multiple volume-clock bars firing simultaneously. Threshold 1.5x chosen as the minimum surge that indicates genuine institutional order flow vs. normal noise on NIFTY."
     }
   ],
   "entry": {
@@ -64,7 +73,7 @@
         "rsi_12 < 30 (oversold in 1-min window)",
         "close <= bb_lower_60 (below 5-min Bollinger lower band)",
         "vwap_dev < -0.0015 (>= 15 bps below VWAP, ~34 NIFTY pts at 23000)",
-        "vol_ratio_60 >= 1.5 (volume surge — information-dense bar)"
+        "vol_ratio_60 >= 1.5 (volume surge \u2014 information-dense bar)"
       ],
       "confirmation": "rsi_12 turning up: rsi[i] > rsi[i-1] (exhaustion confirmed, bounce starting)"
     },
@@ -73,7 +82,7 @@
         "rsi_12 > 70 (overbought in 1-min window)",
         "close >= bb_upper_60 (above 5-min Bollinger upper band)",
         "vwap_dev > 0.0015 (>= 15 bps above VWAP)",
-        "vol_ratio_60 >= 1.5 (volume surge — information-dense bar)"
+        "vol_ratio_60 >= 1.5 (volume surge \u2014 information-dense bar)"
       ],
       "confirmation": "rsi_12 turning down: rsi[i] < rsi[i-1] (exhaustion confirmed, reversal starting)"
     },
@@ -81,9 +90,9 @@
   },
   "exit": {
     "stop_points": 5,
-    "stop_rationale": "5 option points (≈10 NIFTY spot pts at delta 0.5). NIFTY volume-exhaustion bounces at 30-60s timeframe typically deliver 10-20 spot points. A retrace beyond 10 spot pts within 30s means the exhaustion read was wrong — institutional selling continues rather than reverting. Per CONVENTIONS stop/target calibration: 30s moves are 2-5 pts; we set stop at the upper end (5 pts) to give room for the bounce to develop.",
+    "stop_rationale": "5 option points (\u224810 NIFTY spot pts at delta 0.5). NIFTY volume-exhaustion bounces at 30-60s timeframe typically deliver 10-20 spot points. A retrace beyond 10 spot pts within 30s means the exhaustion read was wrong \u2014 institutional selling continues rather than reverting. Per CONVENTIONS stop/target calibration: 30s moves are 2-5 pts; we set stop at the upper end (5 pts) to give room for the bounce to develop.",
     "target_points": 8,
-    "target_rationale": "8 option points (≈16 NIFTY spot pts at delta 0.5). Volume-surge exhaustion bounces on NIFTY typically cover 14-20 spot points in the first 60-90 seconds. 8 pts captures the median first-leg reversion without overstaying. At 1-min horizon, typical NIFTY moves are 3-7 pts (per calibration table); targeting 8 pts assumes the volume confirmation adds edge above typical moves (1:1.6 R:R).",
+    "target_rationale": "8 option points (\u224816 NIFTY spot pts at delta 0.5). Volume-surge exhaustion bounces on NIFTY typically cover 14-20 spot points in the first 60-90 seconds. 8 pts captures the median first-leg reversion without overstaying. At 1-min horizon, typical NIFTY moves are 3-7 pts (per calibration table); targeting 8 pts assumes the volume confirmation adds edge above typical moves (1:1.6 R:R).",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20"
   },
@@ -91,19 +100,19 @@
     "vix_filter": "none (VIX not used; volume ratio implicitly captures volatility regime)",
     "time_filter": "09:20-15:20 IST (skip first 5 min pre-open noise and last 10 min)",
     "volume_filter": "vol_ratio >= threshold (core signal, not a pre-filter)",
-    "trend_filter": "none — this is a mean-reversion strategy; no trend alignment required",
-    "spread_filter": "none — limit orders at candle close, no spread cost"
+    "trend_filter": "none \u2014 this is a mean-reversion strategy; no trend alignment required",
+    "spread_filter": "none \u2014 limit orders at candle close, no spread cost"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.53,
     "avg_winner_to_loser": 1.6,
-    "profit_factor_estimate": 1.28,
-    "edge_decay_risk": "Low-Medium — volume-clock concept is known in quant literature but rarely implemented at 5-second resolution on Indian index options. The multi-confirmation filter (RSI + BB + VWAP + volume) reduces signal frequency but improves directional accuracy."
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "Low-Medium \u2014 volume-clock concept is known in quant literature but rarely implemented at 5-second resolution on Indian index options. The multi-confirmation filter (RSI + BB + VWAP + volume) reduces signal frequency but improves directional accuracy."
   },
-  "adaptation_notes": "Original strategy used RSI(14) and BB(20) on volume-clock bars constructed from NIFTY 50 constituent stocks (fires every ADV/300 shares traded). Key adaptations: (1) Applied directly to NIFTY index instead of individual stocks — the universe-level aggregation is replaced by index-level computation. (2) Lookbacks compressed from ~21-min (14 volume bars × ~1.5 min each) to 60s RSI and 5-min BB to match 30-120s hold time. (3) Volume-clock bar construction replaced with vol_ratio filter — this approximates the 'information-dense bar' concept without dynamic bar regrouping. (4) VWAP deviation threshold kept at 15 bps (original: 15 bps on stocks). (5) Stops and targets converted from percentage-based (25bps target, 12bps stop) to option premium points calibrated to NIFTY move sizes at 1-2 minute horizons.",
+  "adaptation_notes": "Original strategy used RSI(14) and BB(20) on volume-clock bars constructed from NIFTY 50 constituent stocks (fires every ADV/300 shares traded). Key adaptations: (1) Applied directly to NIFTY index instead of individual stocks \u2014 the universe-level aggregation is replaced by index-level computation. (2) Lookbacks compressed from ~21-min (14 volume bars \u00d7 ~1.5 min each) to 60s RSI and 5-min BB to match 30-120s hold time. (3) Volume-clock bar construction replaced with vol_ratio filter \u2014 this approximates the 'information-dense bar' concept without dynamic bar regrouping. (4) VWAP deviation threshold kept at 15 bps (original: 15 bps on stocks). (5) Stops and targets converted from percentage-based (25bps target, 12bps stop) to option premium points calibrated to NIFTY move sizes at 1-2 minute horizons.",
   "weaknesses": [
-    "Vol_ratio threshold may fire frequently in the opening 30 minutes when NIFTY volume is structurally elevated — could generate low-quality signals in noisy open.",
+    "Vol_ratio threshold may fire frequently in the opening 30 minutes when NIFTY volume is structurally elevated \u2014 could generate low-quality signals in noisy open.",
     "RSI(12) at 5s bars can be noisy; the 'turning up/down' confirmation is only 1 bar, potentially catching transient bounces rather than genuine exhaustion.",
     "Multi-condition filter (4 conditions + confirmation) may produce too few signals for robust statistical validation on 12 trading days."
   ],
@@ -111,8 +120,13 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_242.json",
     "original_timeframe": "1min",
     "original_hold_time": "3-10 min (variable, volume-clock dependent)",
-    "original_indicators": ["RSI(14) on volume-clock bars", "BB(20, 2.0) on volume-clock bars", "VWAP deviation (15 bps threshold)"],
+    "original_indicators": [
+      "RSI(14) on volume-clock bars",
+      "BB(20, 2.0) on volume-clock bars",
+      "VWAP deviation (15 bps threshold)"
+    ],
     "original_stop": "12 bps from entry",
     "original_target": "25 bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

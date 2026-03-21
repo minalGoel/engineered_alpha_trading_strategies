@@ -2,14 +2,21 @@
   "name": "vwap_mean_reversion_v18",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "vwap", "institutional_flow"],
+  "tags": [
+    "mean_reversion",
+    "vwap",
+    "institutional_flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_100.json",
   "original_name": "vwap_mean_reversion_v18",
-  "mechanism": "On NIFTY, sharp intraday selloffs push the index 40-80 spot points below session VWAP. At this deviation level, every VWAP-benchmarked institutional algorithm is sitting on large positive tracking error and begins aggressively accumulating — they are getting fills significantly better than their benchmark and are structurally compelled to buy. The accumulation shows up as a slowing in the rate of deviation change (dev_momentum turning positive) before price visibly recovers. We enter at the first bar where the z-score is still extreme (below -1.7 sigma of the session's deviation distribution) but momentum is already turning, capturing the onset of institutional re-entry rather than chasing after it.",
+  "mechanism": "On NIFTY, sharp intraday selloffs push the index 40-80 spot points below session VWAP. At this deviation level, every VWAP-benchmarked institutional algorithm is sitting on large positive tracking error and begins aggressively accumulating \u2014 they are getting fills significantly better than their benchmark and are structurally compelled to buy. The accumulation shows up as a slowing in the rate of deviation change (dev_momentum turning positive) before price visibly recovers. We enter at the first bar where the z-score is still extreme (below -1.7 sigma of the session's deviation distribution) but momentum is already turning, capturing the onset of institutional re-entry rather than chasing after it.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-5",
   "max_trades_per_day": 6,
@@ -27,28 +34,28 @@
       "formula": "cumsum(close * volume) / cumsum(volume), reset each session day",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session open — no scaling needed. VWAP is a session-anchored benchmark used by institutional algos; it accumulates from the open regardless of bar size."
+      "purpose": "Cumulative VWAP from session open \u2014 no scaling needed. VWAP is a session-anchored benchmark used by institutional algos; it accumulates from the open regardless of bar size."
     },
     {
       "name": "vwap_stddev_360",
       "formula": "STDDEV(close - vwap, 360)",
       "lookback": 360,
       "computed_on": "spot",
-      "purpose": "Rolling 30-minute (360 bars × 5s) standard deviation of (close - VWAP) used to normalize the deviation into a z-score. 30 minutes captures the current intraday volatility regime rather than the original's full-day window — we want the z-score calibrated to today's session amplitude, not yesterday's. Minimum floor of 0.5 pts to avoid division noise in low-vol periods."
+      "purpose": "Rolling 30-minute (360 bars \u00d7 5s) standard deviation of (close - VWAP) used to normalize the deviation into a z-score. 30 minutes captures the current intraday volatility regime rather than the original's full-day window \u2014 we want the z-score calibrated to today's session amplitude, not yesterday's. Minimum floor of 0.5 pts to avoid division noise in low-vol periods."
     },
     {
       "name": "vwap_zscore",
       "formula": "(close - vwap) / max(vwap_stddev_360, 0.5)",
       "lookback": 360,
       "computed_on": "spot",
-      "purpose": "Session-normalized deviation from VWAP. Replaces the original's STDDEV(close, 21) normalization — we normalize against the distribution of deviations from VWAP, not raw price, which makes the threshold scale-invariant across different NIFTY levels."
+      "purpose": "Session-normalized deviation from VWAP. Replaces the original's STDDEV(close, 21) normalization \u2014 we normalize against the distribution of deviations from VWAP, not raw price, which makes the threshold scale-invariant across different NIFTY levels."
     },
     {
       "name": "dev_momentum_24",
       "formula": "vwap_zscore[i] - vwap_zscore[i-24]",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute (24 bars × 5s) change in VWAP z-score. Positive for a buy_ce signal means the negative zscore is shrinking — selling pressure is abating. This replaces the original's rel_volume > 1.6 filter because NIFTY index volume is noisy (basket rebalances, roll-overs inflate volume without signalling panic). The rate of deviation change is a cleaner proxy for when institutional accumulation has begun."
+      "purpose": "2-minute (24 bars \u00d7 5s) change in VWAP z-score. Positive for a buy_ce signal means the negative zscore is shrinking \u2014 selling pressure is abating. This replaces the original's rel_volume > 1.6 filter because NIFTY index volume is noisy (basket rebalances, roll-overs inflate volume without signalling panic). The rate of deviation change is a cleaner proxy for when institutional accumulation has begun."
     }
   ],
   "entry": {
@@ -56,7 +63,7 @@
       "conditions": [
         "close < vwap (index trading below fair value)",
         "vwap_zscore < -1.7 (extreme negative deviation: ~40-70 NIFTY pts below VWAP in typical session)",
-        "dev_momentum_24 > 0 (z-score turning less negative — selling pressure abating, institutional buying starting)"
+        "dev_momentum_24 > 0 (z-score turning less negative \u2014 selling pressure abating, institutional buying starting)"
       ],
       "confirmation": "dev_momentum turning positive while zscore still extreme"
     },
@@ -64,7 +71,7 @@
       "conditions": [
         "close > vwap (index trading above fair value)",
         "vwap_zscore > 1.7 (extreme positive deviation)",
-        "dev_momentum_24 < 0 (z-score turning less positive — buying pressure abating)"
+        "dev_momentum_24 < 0 (z-score turning less positive \u2014 buying pressure abating)"
       ],
       "confirmation": "dev_momentum turning negative while zscore still extreme"
     },
@@ -72,38 +79,43 @@
   },
   "exit": {
     "stop_points": 6,
-    "stop_rationale": "6 option points because deep VWAP deviations often see a final flush of 10-15 spot points before reversing — a 3-4 option point stop would be triggered by this flush. At delta 0.5, 6 option pts = 12 spot pts, giving the trade room for the typical final flush while still protecting against the rare trending continuation that never reverts.",
+    "stop_rationale": "6 option points because deep VWAP deviations often see a final flush of 10-15 spot points before reversing \u2014 a 3-4 option point stop would be triggered by this flush. At delta 0.5, 6 option pts = 12 spot pts, giving the trade room for the typical final flush while still protecting against the rare trending continuation that never reverts.",
     "target_points": 10,
     "target_rationale": "10 option points = ~20 spot points at delta 0.5. Deep VWAP deviations on NIFTY (>40 pts) historically mean-revert 50-70% of the overshoot within 2 minutes. Capturing 10 option pts captures roughly the lower end of this range (1:1.67 R:R), biased conservatively since we are exiting well before full VWAP touch.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — VIX high days are exactly when VWAP deviations are largest and reversions fastest",
+    "vix_filter": "none \u2014 VIX high days are exactly when VWAP deviations are largest and reversions fastest",
     "time_filter": "09:30-15:20 IST; skip first 15 minutes to let VWAP establish a meaningful baseline",
-    "volume_filter": "none — index volume is noisy; using dev_momentum as cleaner signal",
-    "trend_filter": "none — VWAP z-score is already session-normalized, handles trending days via zscore threshold",
-    "spread_filter": "none — limit order execution at candle close, no spread cost"
+    "volume_filter": "none \u2014 index volume is noisy; using dev_momentum as cleaner signal",
+    "trend_filter": "none \u2014 VWAP z-score is already session-normalized, handles trending days via zscore threshold",
+    "spread_filter": "none \u2014 limit order execution at candle close, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.57,
     "avg_winner_to_loser": 1.67,
     "profit_factor_estimate": 2.21,
-    "edge_decay_risk": "medium — VWAP reversion is structural (institutional mandate) but threshold sensitivity means strong trending days can produce multiple false signals before regime is evident"
+    "edge_decay_risk": "medium \u2014 VWAP reversion is structural (institutional mandate) but threshold sensitivity means strong trending days can produce multiple false signals before regime is evident"
   },
-  "adaptation_notes": "The original trades nifty200 stocks on 15-min bars using raw price z-score (STDDEV of close, 21 bars) and relative volume surge (> 1.6x) as a panic detector. Three key changes: (1) Universe → single index: the NIFTY index is smoother, more liquid, and directly driven by institutional VWAP algo flow rather than retail panic, so the reversion mechanism is actually stronger. (2) Relative volume dropped → dev_momentum_24 added: NIFTY volume includes basket rebalances and derivatives roll that create false volume spikes; deviation momentum is cleaner. (3) Normalization → z-score of deviations not raw price: (close - VWAP) / STDDEV(close-VWAP, 360) makes the threshold scale-invariant. Lookback for stddev is 30 min (360 bars) capturing current session regime; VWAP itself needs no scaling as it is cumulative. The hold time compression from 30-60 15-min bars (~10-15 hours equivalent, clearly a metadata error in original) to 120 seconds is the most dramatic change — at 5s resolution, the first 60-120 seconds of institutional re-entry is the high-edge window.",
+  "adaptation_notes": "The original trades nifty200 stocks on 15-min bars using raw price z-score (STDDEV of close, 21 bars) and relative volume surge (> 1.6x) as a panic detector. Three key changes: (1) Universe \u2192 single index: the NIFTY index is smoother, more liquid, and directly driven by institutional VWAP algo flow rather than retail panic, so the reversion mechanism is actually stronger. (2) Relative volume dropped \u2192 dev_momentum_24 added: NIFTY volume includes basket rebalances and derivatives roll that create false volume spikes; deviation momentum is cleaner. (3) Normalization \u2192 z-score of deviations not raw price: (close - VWAP) / STDDEV(close-VWAP, 360) makes the threshold scale-invariant. Lookback for stddev is 30 min (360 bars) capturing current session regime; VWAP itself needs no scaling as it is cumulative. The hold time compression from 30-60 15-min bars (~10-15 hours equivalent, clearly a metadata error in original) to 120 seconds is the most dramatic change \u2014 at 5s resolution, the first 60-120 seconds of institutional re-entry is the high-edge window.",
   "weaknesses": [
-    "Strong trending days (e.g., big macro events) will see NIFTY drift away from VWAP for hours — dev_momentum will show false positive turns repeatedly",
+    "Strong trending days (e.g., big macro events) will see NIFTY drift away from VWAP for hours \u2014 dev_momentum will show false positive turns repeatedly",
     "VWAP stddev normalizer needs 30 min of warmup; first 30 min of session the z-score threshold is unreliable",
-    "Dev momentum 24-bar window can signal too early if selling is in multiple legs — final flush can hit stop"
+    "Dev momentum 24-bar window can signal too early if selling is in multiple legs \u2014 final flush can hit stop"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_100.json",
     "original_timeframe": "15min",
     "original_hold_time": "30-60 bars (metadata ambiguous)",
-    "original_indicators": ["vwap", "vwap_zscore (STDDEV close 21)", "rel_volume (SMA 30)"],
+    "original_indicators": [
+      "vwap",
+      "vwap_zscore (STDDEV close 21)",
+      "rel_volume (SMA 30)"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "VWAP touch"
-  }
+  },
+  "vix_agnostic": true
 }

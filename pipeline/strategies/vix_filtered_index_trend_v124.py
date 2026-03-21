@@ -39,7 +39,7 @@ class Strategy(BaseStrategy):
             TunableParam("vix_threshold", 21.0, 15.0, 30.0),
             TunableParam("vix_max", 35.0, 28.0, 45.0),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -54,7 +54,7 @@ class Strategy(BaseStrategy):
         vix_threshold = params.get("vix_threshold", 21.0)
         vix_max = params.get("vix_max", 35.0)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Spot data (forward-fill before numpy) ──
         close = spot_df["close"].fill_null(strategy="forward").to_numpy()

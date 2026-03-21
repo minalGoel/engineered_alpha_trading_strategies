@@ -31,8 +31,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("fib_tolerance", 0.003, 0.001, 0.008),
             TunableParam("min_range_pct", 0.0015, 0.0008, 0.003),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 15.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 15.0),
         ]
 
     def compute(
@@ -51,8 +51,8 @@ class Strategy(BaseStrategy):
 
         fib_tol = params.get("fib_tolerance", 0.003)
         min_range_pct = params.get("min_range_pct", 0.0015)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # 5-minute rolling swing high/low (60 bars @ 5s each)
         # Compressed from original 10-min pivot because we're trading 30-90s reversal,

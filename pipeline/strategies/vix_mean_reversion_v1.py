@@ -25,8 +25,8 @@ class Strategy(BaseStrategy):
             TunableParam("vix_crush_threshold", 3.0, 1.5, 6.0),   # % VIX drop in 10 min = complacency
             TunableParam("rsi_oversold", 35.0, 25.0, 45.0),       # NIFTY RSI below = oversold
             TunableParam("rsi_overbought", 65.0, 55.0, 75.0),     # NIFTY RSI above = overbought
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -38,8 +38,8 @@ class Strategy(BaseStrategy):
         vix_crush_threshold = params.get("vix_crush_threshold", 3.0)
         rsi_oversold = params.get("rsi_oversold", 35.0)
         rsi_overbought = params.get("rsi_overbought", 65.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX aligned to spot bars via asof join ──
         vix_close = np.full(n, 15.0)

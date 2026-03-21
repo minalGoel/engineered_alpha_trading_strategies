@@ -35,9 +35,9 @@ class Strategy(BaseStrategy):
             # Max opposing wick as fraction of HA body to qualify as "strong" bar
             TunableParam("wick_tolerance_frac", 0.20, 0.05, 0.40),
             # Stop loss in option premium points
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
             # Target in option premium points
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -54,8 +54,8 @@ class Strategy(BaseStrategy):
 
         min_consec = int(params.get("min_consecutive_bars", 3))
         wick_tol   = params.get("wick_tolerance_frac", 0.20)
-        stop_pts   = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts   = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Heikin Ashi construction ──────────────────────────────────────────
         ha_close = (open_ + high + low + close) / 4.0

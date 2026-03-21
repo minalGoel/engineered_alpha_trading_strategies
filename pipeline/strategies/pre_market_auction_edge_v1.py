@@ -27,7 +27,7 @@ class Strategy(BaseStrategy):
             TunableParam("gap_threshold", 0.002, 0.001, 0.005),
             TunableParam("confirm_threshold", 0.0005, 0.0002, 0.002),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -41,7 +41,7 @@ class Strategy(BaseStrategy):
         gap_threshold = params.get("gap_threshold", 0.002)
         confirm_threshold = params.get("confirm_threshold", 0.0005)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # Pass 1: collect per-day first open, last close, and bar index within day
         bar_in_day = np.zeros(n, dtype=np.int32)

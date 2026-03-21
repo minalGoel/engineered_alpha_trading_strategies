@@ -2,14 +2,22 @@
   "name": "sma_crossover_banknifty_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["momentum", "trend_following", "sma", "multi_timeframe"],
+  "tags": [
+    "momentum",
+    "trend_following",
+    "sma",
+    "multi_timeframe"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_1.json",
   "original_name": "sma_crossover_banknifty_v1",
-  "mechanism": "On BANKNIFTY, large institutional TWAP/VWAP algorithms working directional orders create persistent micro-trends visible as SMA alignment across 3-min, 15-min, and 60-min windows. When SMA(36) > SMA(180) > SMA(720) all align bullishly AND price retouches the fast SMA(36) after a brief pullback, the order flow is sustained at multiple timescales — not just a spike but continuous demand absorption by institutional desks still working their orders. This micro-pullback-to-fast-SMA entry captures the next 30-50 spot point continuation leg while limiting exposure by entering during a retracement rather than chasing breakouts.",
+  "mechanism": "On BANKNIFTY, large institutional TWAP/VWAP algorithms working directional orders create persistent micro-trends visible as SMA alignment across 3-min, 15-min, and 60-min windows. When SMA(36) > SMA(180) > SMA(720) all align bullishly AND price retouches the fast SMA(36) after a brief pullback, the order flow is sustained at multiple timescales \u2014 not just a spike but continuous demand absorption by institutional desks still working their orders. This micro-pullback-to-fast-SMA entry captures the next 30-50 spot point continuation leg while limiting exposure by entering during a retracement rather than chasing breakouts.",
   "universe": "BANKNIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-5",
   "max_trades_per_day": 5,
@@ -27,36 +35,44 @@
       "formula": "SMA(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute fast SMA — the trade trigger. Compressed from original 10-min (10 bars × 1 min) to 3 min because at 5s resolution we trade the micro-pullback continuation, not the slow drift. The 3-min window captures the pace at which BANKNIFTY institutional algorithms typically execute partial fills. When price touches and bounces from this level, the algorithm is still accumulating."
+      "purpose": "3-minute fast SMA \u2014 the trade trigger. Compressed from original 10-min (10 bars \u00d7 1 min) to 3 min because at 5s resolution we trade the micro-pullback continuation, not the slow drift. The 3-min window captures the pace at which BANKNIFTY institutional algorithms typically execute partial fills. When price touches and bounces from this level, the algorithm is still accumulating."
     },
     {
       "name": "sma_180",
       "formula": "SMA(close, 180)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "15-minute mid-trend SMA — context filter. Scaled to match original 29-min (29 × 1min ≈ 30 min, halved because we hold 30-120s not 5-20 min). Confirms the intraday directional regime is in place — institutional flows that create the micro-trend are typically working on a 15-30 min execution horizon."
+      "purpose": "15-minute mid-trend SMA \u2014 context filter. Scaled to match original 29-min (29 \u00d7 1min \u2248 30 min, halved because we hold 30-120s not 5-20 min). Confirms the intraday directional regime is in place \u2014 institutional flows that create the micro-trend are typically working on a 15-30 min execution horizon."
     },
     {
       "name": "sma_720",
       "formula": "SMA(close, 720)",
       "lookback": 720,
       "computed_on": "spot",
-      "purpose": "60-minute macro SMA — regime filter. Maps to original 100-min (100 × 1min ≈ 100 min) compressed to 60 min. At 5s bars, this is 720 bars = 1 hour. We need 1 hour of context to confirm BANKNIFTY is in a persistent directional session, not a range-bound day where SMA alignments are noise. This is purely a filter, not a trade trigger."
+      "purpose": "60-minute macro SMA \u2014 regime filter. Maps to original 100-min (100 \u00d7 1min \u2248 100 min) compressed to 60 min. At 5s bars, this is 720 bars = 1 hour. We need 1 hour of context to confirm BANKNIFTY is in a persistent directional session, not a range-bound day where SMA alignments are noise. This is purely a filter, not a trade trigger."
     },
     {
       "name": "pullback_to_sma36",
       "formula": "abs(close - sma_36) / sma_36 < 0.0005",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "Entry refinement: require price to be within 0.05% of the 3-min SMA (within ~25 BANKNIFTY points). This avoids chasing breakouts and instead waits for a pullback-to-support entry — better risk/reward than the original's simple alignment trigger. Added because 5s bars give us the resolution to make this distinction."
+      "purpose": "Entry refinement: require price to be within 0.05% of the 3-min SMA (within ~25 BANKNIFTY points). This avoids chasing breakouts and instead waits for a pullback-to-support entry \u2014 better risk/reward than the original's simple alignment trigger. Added because 5s bars give us the resolution to make this distinction."
+    },
+    {
+      "name": "sma_separation",
+      "formula": "abs(sma_fast - sma_slow) / sma_slow",
+      "lookback": 0,
+      "computed_on": "derived",
+      "purpose": "ensures minimum separation between moving averages before entry; filters low-conviction crossovers. Applied as: (sma_36 > sma_180 + sma_180 * sma_separation) and (sma_180 > sma_720 + sma_720 * sma_separation) for bull stack; reversed for bear stack. Default threshold 0.0002 (0.02%). Prevents entering on nearly-flat SMA stacks where alignment is noise rather than a genuine trend."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "sma_36 > sma_180 > sma_720 (bullish SMA stack)",
+        "sma_separation >= threshold (minimum SMA stack gap to confirm trend strength \u2014 sma_36 exceeds sma_180 by at least sma_separation fraction, and sma_180 exceeds sma_720 by same fraction)",
         "close > sma_36 (price above fast SMA, confirming uptrend intact)",
-        "abs(close - sma_36) / sma_36 < pullback_threshold (price near fast SMA — pullback touch)",
+        "abs(close - sma_36) / sma_36 < pullback_threshold (price near fast SMA \u2014 pullback touch)",
         "in_session: 09:20 - 15:25 IST"
       ],
       "confirmation": "All three SMA alignment conditions must be simultaneously true on the current 5s bar"
@@ -64,8 +80,9 @@
     "buy_pe": {
       "conditions": [
         "sma_36 < sma_180 < sma_720 (bearish SMA stack)",
+        "sma_separation >= threshold (minimum SMA stack gap to confirm trend strength \u2014 sma_36 falls below sma_180 by at least sma_separation fraction, and sma_180 falls below sma_720 by same fraction)",
         "close < sma_36 (price below fast SMA, confirming downtrend intact)",
-        "abs(close - sma_36) / sma_36 < pullback_threshold (price near fast SMA — pullback touch)",
+        "abs(close - sma_36) / sma_36 < pullback_threshold (price near fast SMA \u2014 pullback touch)",
         "in_session: 09:20 - 15:25 IST"
       ],
       "confirmation": "All three SMA alignment conditions must be simultaneously true on the current 5s bar"
@@ -73,9 +90,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option premium points (~8 BANKNIFTY spot points at delta 0.5). BANKNIFTY micro-pullbacks to the fast SMA typically retrace 8-15 spot points. If the move exceeds 8 spot points against us, the micro-trend structure is broken — the institutional order has likely completed or reversed. A 4-point option stop respects this boundary while keeping R:R viable.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option premium points (~8 BANKNIFTY spot points at delta 0.5). BANKNIFTY micro-pullbacks to the fast SMA typically retrace 8-15 spot points. If the move exceeds 8 spot points against us, the micro-trend structure is broken \u2014 the institutional order has likely completed or reversed. A 4-point option stop respects this boundary while keeping R:R viable.",
+    "target_points": 8.0,
     "target_rationale": "7 option premium points (~14 BANKNIFTY spot points at delta 0.5). BANKNIFTY micro-continuation legs from SMA pullback entries typically extend 30-50 spot points; 14 points captures the early portion (first 30-40%) of this move, balancing win rate against hold time. This gives a 1:1.75 R:R ratio. Targeting the full 30-50 pt move would require a 3-4 minute hold, outside our 30-120s window.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
@@ -84,29 +101,34 @@
     "vix_filter": "none (BANKNIFTY institutional flow-driven; VIX regime less relevant than for NIFTY at this timescale)",
     "time_filter": "no trades before 09:20 IST (skip opening noise); no new entries after 15:20 IST",
     "volume_filter": "none (5s index data volume is noisy; rely on SMA alignment for quality)",
-    "trend_filter": "SMA stack alignment is the trend filter — all three SMAs must be ordered",
+    "trend_filter": "SMA stack alignment is the trend filter \u2014 all three SMAs must be ordered",
     "spread_filter": "none (limit orders, no spread cost)"
   },
   "edge": {
     "expected_bps": 25,
     "win_rate_estimate": 0.55,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.15,
-    "edge_decay_risk": "medium — multi-timeframe SMA alignment is widely known; edge depends on entry refinement (pullback-to-SMA) which is less crowded than pure alignment strategies"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "medium \u2014 multi-timeframe SMA alignment is widely known; edge depends on entry refinement (pullback-to-SMA) which is less crowded than pure alignment strategies"
   },
-  "adaptation_notes": "Three key changes from original: (1) Lookbacks compressed from 10/29/100 min to 3/15/60 min — we target the 30-120s continuation, not the 5-20 min move, so context windows are proportionally shorter. (2) Added pullback_to_sma36 condition — at 5s resolution we can wait for price to touch the fast SMA rather than entering on any alignment; this improves entry quality and risk/reward. (3) Added bearish (buy_pe) mirror of original bullish-only logic — on BANKNIFTY both bull and bear institutional flows create the same pattern. The stop/target are in option premium points (4/7 pts) vs original's 50-pt spot stop and 0.5% target — calibrated to BANKNIFTY ATM delta ~0.5 and 30-120s typical move magnitudes.",
+  "adaptation_notes": "Three key changes from original: (1) Lookbacks compressed from 10/29/100 min to 3/15/60 min \u2014 we target the 30-120s continuation, not the 5-20 min move, so context windows are proportionally shorter. (2) Added pullback_to_sma36 condition \u2014 at 5s resolution we can wait for price to touch the fast SMA rather than entering on any alignment; this improves entry quality and risk/reward. (3) Added bearish (buy_pe) mirror of original bullish-only logic \u2014 on BANKNIFTY both bull and bear institutional flows create the same pattern. The stop/target are in option premium points (4/7 pts) vs original's 50-pt spot stop and 0.5% target \u2014 calibrated to BANKNIFTY ATM delta ~0.5 and 30-120s typical move magnitudes.",
   "weaknesses": [
     "BANKNIFTY SMA alignment breaks down in high-volatility intraday sessions with frequent direction changes (budget day, RBI events)",
-    "Pullback entry condition may miss fast trending days where price never touches the SMA — will underperform in strong momentum regimes",
-    "720-bar (60-min) SMA requires 1 hour of warmup before first trade — no signals in first hour of session",
+    "Pullback entry condition may miss fast trending days where price never touches the SMA \u2014 will underperform in strong momentum regimes",
+    "720-bar (60-min) SMA requires 1 hour of warmup before first trade \u2014 no signals in first hour of session",
     "SMA crossover strategies are crowded; edge depends on the pullback refinement differentiating from naive alignment entries"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_1.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-20 bars (5-20 min)",
-    "original_indicators": ["SMA(10)", "SMA(29)", "SMA(100)"],
+    "original_indicators": [
+      "SMA(10)",
+      "SMA(29)",
+      "SMA(100)"
+    ],
     "original_stop": "50 points spot (~0.5%)",
     "original_target": "0.5% fixed"
-  }
+  },
+  "vix_agnostic": true
 }

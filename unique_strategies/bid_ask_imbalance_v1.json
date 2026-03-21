@@ -2,14 +2,22 @@
   "name": "bid_ask_imbalance_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "order_flow", "imbalance", "momentum"],
+  "tags": [
+    "microstructure",
+    "order_flow",
+    "imbalance",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_239.json",
   "original_name": "bid_ask_imbalance_v1",
-  "mechanism": "On NIFTY, when large institutional participants (FII desks, mutual fund TWAP algos) are working directional orders, each 5-second bar consistently closes near its high (buy-side pressure) or near its low (sell-side pressure) because continuous aggressive order flow absorbs the opposing side. When this bar-level imbalance sustains across a 1-minute EMA window, the institutional order is still active — large directional orders are typically only 40-60% filled at any 1-minute mark — predicting continuation of the NIFTY spot move over the next 30-90 seconds. We approximate the L2 bid-ask imbalance using OHLCV microstructure: bar_imbalance = (close - low) / (high - low) - 0.5, which captures the net buying vs selling pressure visible in each 5-second bar without requiring raw order book depth data.",
+  "mechanism": "On NIFTY, when large institutional participants (FII desks, mutual fund TWAP algos) are working directional orders, each 5-second bar consistently closes near its high (buy-side pressure) or near its low (sell-side pressure) because continuous aggressive order flow absorbs the opposing side. When this bar-level imbalance sustains across a 1-minute EMA window, the institutional order is still active \u2014 large directional orders are typically only 40-60% filled at any 1-minute mark \u2014 predicting continuation of the NIFTY spot move over the next 30-90 seconds. We approximate the L2 bid-ask imbalance using OHLCV microstructure: bar_imbalance = (close - low) / (high - low) - 0.5, which captures the net buying vs selling pressure visible in each 5-second bar without requiring raw order book depth data.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "6-12",
   "max_trades_per_day": 12,
@@ -34,7 +42,7 @@
       "formula": "EMA(bar_imbalance, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute EMA (12 bars × 5s) of bar imbalance. The original used EMA(3) on 1-min bars = 3 minutes; we compress to 1 minute because our hold time is 30-90 seconds. The signal trigger lookback should match the hold horizon — using a 3-minute signal to trade a 90-second move introduces excessive lag."
+      "purpose": "1-minute EMA (12 bars \u00d7 5s) of bar imbalance. The original used EMA(3) on 1-min bars = 3 minutes; we compress to 1 minute because our hold time is 30-90 seconds. The signal trigger lookback should match the hold horizon \u2014 using a 3-minute signal to trade a 90-second move introduces excessive lag."
     },
     {
       "name": "imbalance_zscore_60",
@@ -100,20 +108,25 @@
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.67,
-    "profit_factor_estimate": 1.30,
-    "edge_decay_risk": "Medium — OHLCV-based imbalance proxy is less precise than true L2 order book data, but more robust to spoofing. As NIFTY microstructure becomes more efficient at 5s resolution, z-score thresholds may need upward adjustment."
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "Medium \u2014 OHLCV-based imbalance proxy is less precise than true L2 order book data, but more robust to spoofing. As NIFTY microstructure becomes more efficient at 5s resolution, z-score thresholds may need upward adjustment."
   },
-  "adaptation_notes": "Original required real-time L2 order book data (5-level bid/ask depth) for individual NIFTY 50 stocks. This is unavailable in the 5s OHLCV pipeline and unreliable for index trading. Adaptation: (1) replaced L2 BAI with bar_imbalance = (close-low)/(high-low)-0.5 as OHLCV proxy — captures net buy/sell pressure in each 5s bar without depth data; (2) universe changed from NIFTY 50 constituent stocks to NIFTY index itself; (3) EMA lookback compressed from 3-min (original: EMA(3) on 1-min bars) to 1-min (EMA(12) on 5s bars) to match 30-90s hold horizon; (4) z-score window compressed from 20-min to 5-min (60 bars) for fresher regime baseline; (5) eliminated cross-sectional stock selection (this version trades only NIFTY index options).",
+  "adaptation_notes": "Original required real-time L2 order book data (5-level bid/ask depth) for individual NIFTY 50 stocks. This is unavailable in the 5s OHLCV pipeline and unreliable for index trading. Adaptation: (1) replaced L2 BAI with bar_imbalance = (close-low)/(high-low)-0.5 as OHLCV proxy \u2014 captures net buy/sell pressure in each 5s bar without depth data; (2) universe changed from NIFTY 50 constituent stocks to NIFTY index itself; (3) EMA lookback compressed from 3-min (original: EMA(3) on 1-min bars) to 1-min (EMA(12) on 5s bars) to match 30-90s hold horizon; (4) z-score window compressed from 20-min to 5-min (60 bars) for fresher regime baseline; (5) eliminated cross-sectional stock selection (this version trades only NIFTY index options).",
   "weaknesses": [
-    "OHLCV bar imbalance is a noisy proxy for true L2 order flow — it conflates direction of trades with intensity, and cannot distinguish large block trades from multiple small orders.",
-    "On very fast NIFTY moves (>10 pts in 5s), bar_imbalance is always ±0.5 (close at extreme), making z-score less informative.",
-    "2-bar confirmation introduces latency — by bar 3, some of the institutional order may already be filled, reducing residual continuation."
+    "OHLCV bar imbalance is a noisy proxy for true L2 order flow \u2014 it conflates direction of trades with intensity, and cannot distinguish large block trades from multiple small orders.",
+    "On very fast NIFTY moves (>10 pts in 5s), bar_imbalance is always \u00b10.5 (close at extreme), making z-score less informative.",
+    "2-bar confirmation introduces latency \u2014 by bar 3, some of the institutional order may already be filled, reducing residual continuation."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_239.json",
     "original_timeframe": "1min",
     "original_hold_time": "1-5 min",
-    "original_indicators": ["BAI (L2 bid-ask imbalance)", "BAI_EMA(3)", "BAI_zscore(20)", "volume_ratio(20)"],
+    "original_indicators": [
+      "BAI (L2 bid-ask imbalance)",
+      "BAI_EMA(3)",
+      "BAI_zscore(20)",
+      "volume_ratio(20)"
+    ],
     "original_stop": "10 bps from entry",
     "original_target": "20 bps from entry"
   }

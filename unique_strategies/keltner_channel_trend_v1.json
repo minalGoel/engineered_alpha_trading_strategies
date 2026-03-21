@@ -2,14 +2,23 @@
   "name": "keltner_channel_trend_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["trend_following", "keltner", "volatility", "momentum", "channel-breakout"],
+  "tags": [
+    "trend_following",
+    "keltner",
+    "volatility",
+    "momentum",
+    "channel-breakout"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_83.json",
   "original_name": "keltner_channel_trend_v1",
-  "mechanism": "On NIFTY, when the index sustains above its 5-minute Keltner Channel upper band (EMA(60) + 2×ATR(60)) for 3 consecutive 5-second bars, it signals institutional directional flow has overwhelmed the volatility-adjusted supply ceiling — the band is harder to breach than Bollinger Bands because ATR widens in choppy conditions, so a sustained breach specifically means price velocity exceeds current micro-volatility regime, not just a single-bar noise spike. TWAP/VWAP algorithms filling large directional orders continue pushing for 30-90 seconds as only 40-60% of institutional orders are typically filled at the breakout bar. The ADX(36) filter confirms that +DI and -DI have diverged meaningfully over the past 3 minutes, validating that the breakout is driven by directional flow rather than a two-sided auction spike.",
+  "mechanism": "On NIFTY, when the index sustains above its 5-minute Keltner Channel upper band (EMA(60) + 2\u00d7ATR(60)) for 3 consecutive 5-second bars, it signals institutional directional flow has overwhelmed the volatility-adjusted supply ceiling \u2014 the band is harder to breach than Bollinger Bands because ATR widens in choppy conditions, so a sustained breach specifically means price velocity exceeds current micro-volatility regime, not just a single-bar noise spike. TWAP/VWAP algorithms filling large directional orders continue pushing for 30-90 seconds as only 40-60% of institutional orders are typically filled at the breakout bar. The ADX(36) filter confirms that +DI and -DI have diverged meaningfully over the past 3 minutes, validating that the breakout is driven by directional flow rather than a two-sided auction spike.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-5",
   "max_trades_per_day": 6,
@@ -41,7 +50,7 @@
       "formula": "EMA(close, 60) + 2 * ATR(60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Keltner upper band. Multiplier of 2x matches original. A breach signals price is moving faster than 2x the 5-minute ATR-calibrated volatility — genuine momentum rather than noise. The ATR-normalized band means this signal is more reliable in both high and low volatility regimes compared to standard deviation bands."
+      "purpose": "Keltner upper band. Multiplier of 2x matches original. A breach signals price is moving faster than 2x the 5-minute ATR-calibrated volatility \u2014 genuine momentum rather than noise. The ATR-normalized band means this signal is more reliable in both high and low volatility regimes compared to standard deviation bands."
     },
     {
       "name": "kc_lower",
@@ -55,14 +64,14 @@
       "formula": "ADX(36) using Wilder smoothing",
       "lookback": 72,
       "computed_on": "spot",
-      "purpose": "3-minute ADX for trend strength confirmation. Original used ADX(14) on 1-min bars (= 14 min). Compressed to ADX(36) = 3 min because we need near-term trend confirmation for a 30-120s trade — a 14-minute ADX would confirm trends far too slowly and would frequently lag by the time the channel break occurs. 3 minutes gives enough +DI/-DI divergence history to distinguish directional flow from two-sided auction without being so fast it generates noise."
+      "purpose": "3-minute ADX for trend strength confirmation. Original used ADX(14) on 1-min bars (= 14 min). Compressed to ADX(36) = 3 min because we need near-term trend confirmation for a 30-120s trade \u2014 a 14-minute ADX would confirm trends far too slowly and would frequently lag by the time the channel break occurs. 3 minutes gives enough +DI/-DI divergence history to distinguish directional flow from two-sided auction without being so fast it generates noise."
     },
     {
       "name": "vwap",
       "formula": "Cumulative session VWAP from 09:15 open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP as directional bias filter. No scaling needed — cumulative measure. Channel breakout above VWAP confirms institutional accumulation alignment; below VWAP confirms distribution. Replaces original's volume filter (volume > SMA_vol(20)) since index volume at 5s is noisy."
+      "purpose": "Session VWAP as directional bias filter. No scaling needed \u2014 cumulative measure. Channel breakout above VWAP confirms institutional accumulation alignment; below VWAP confirms distribution. Replaces original's volume filter (volume > SMA_vol(20)) since index volume at 5s is noisy."
     }
   ],
   "entry": {
@@ -72,7 +81,7 @@
         "adx_36 > adx_threshold (default 22.0, range 15-35)",
         "close > vwap (above session VWAP confirms accumulation bias)"
       ],
-      "confirmation": "3-bar persistence (15 seconds) filters single-bar spikes — same number of bars as original (3 consecutive 1-min bars), same time logic applied at 5s frequency"
+      "confirmation": "3-bar persistence (15 seconds) filters single-bar spikes \u2014 same number of bars as original (3 consecutive 1-min bars), same time logic applied at 5s frequency"
     },
     "buy_pe": {
       "conditions": [
@@ -85,9 +94,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4.0,
-    "stop_rationale": "4 option pts (~8 spot pts at delta 0.5). NIFTY Keltner Channel width at typical ATR is 10-20 spot pts. If a genuine breakout fails and price re-enters the channel by 4 option pts, the institutional flow that created the breakout has definitively reversed. Calibrated to 1-minute NIFTY move magnitude (3-7 pts) — a loss within that range means the thesis is wrong, cut before a full reversal consumes more premium.",
-    "target_points": 7.0,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts (~8 spot pts at delta 0.5). NIFTY Keltner Channel width at typical ATR is 10-20 spot pts. If a genuine breakout fails and price re-enters the channel by 4 option pts, the institutional flow that created the breakout has definitively reversed. Calibrated to 1-minute NIFTY move magnitude (3-7 pts) \u2014 a loss within that range means the thesis is wrong, cut before a full reversal consumes more premium.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts (~14 spot pts). Genuine Keltner breakouts with ADX confirmation on NIFTY typically extend 15-25 spot pts beyond the channel as TWAP/VWAP algo orders continue filling. 7 pts captures approximately 50-60% of the median first continuation leg (1:1.75 R:R). Stopping at 7 avoids giving back gains as the institutional order fills and momentum fades.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
@@ -102,23 +111,29 @@
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.42,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.27,
-    "edge_decay_risk": "medium — trend following on NIFTY index is structurally robust (institutional TWAP/VWAP flow is persistent), but ADX at 3-min lookback lags; may confirm trends only after 30-40% of the move is already done"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.16,
+    "edge_decay_risk": "medium \u2014 trend following on NIFTY index is structurally robust (institutional TWAP/VWAP flow is persistent), but ADX at 3-min lookback lags; may confirm trends only after 30-40% of the move is already done"
   },
-  "adaptation_notes": "Original was equity spot on NIFTY100 FnO stocks at 1-min bars, holding 30-180 minutes. Core Keltner Channel trend-following idea transfers cleanly to NIFTY index: channel breakout = genuine directional force exceeding ATR-calibrated volatility. Key adaptations: (1) Lookback compressed from 20-min EMA/ATR to 5-min (EMA(60)/ATR(60)) — we catch the fast 30-120s continuation burst, not the multi-hour trend; (2) ADX compressed from 14-min to 3-min (ADX(36)) for faster trend confirmation at 5s resolution; (3) Volume filter (volume > SMA_vol(20)) replaced by VWAP alignment — volume is noisy on index at 5s while VWAP provides cleaner directional bias; (4) Session start shifted to 09:30 (570 min) to skip 15 minutes of opening auction noise where channels are uncalibrated; (5) Hold time compressed from 30-180 min to 30-120s (24 bars max). Differentiated from existing keltner_channel_reversion_v1 (EMA(24), reversion on channel touch, 30-90s hold) by: opposite thesis (trend continuation vs mean reversion), longer lookback (60 vs 24), ADX filter (trend vs no trend filter), and VWAP directional bias.",
+  "adaptation_notes": "Original was equity spot on NIFTY100 FnO stocks at 1-min bars, holding 30-180 minutes. Core Keltner Channel trend-following idea transfers cleanly to NIFTY index: channel breakout = genuine directional force exceeding ATR-calibrated volatility. Key adaptations: (1) Lookback compressed from 20-min EMA/ATR to 5-min (EMA(60)/ATR(60)) \u2014 we catch the fast 30-120s continuation burst, not the multi-hour trend; (2) ADX compressed from 14-min to 3-min (ADX(36)) for faster trend confirmation at 5s resolution; (3) Volume filter (volume > SMA_vol(20)) replaced by VWAP alignment \u2014 volume is noisy on index at 5s while VWAP provides cleaner directional bias; (4) Session start shifted to 09:30 (570 min) to skip 15 minutes of opening auction noise where channels are uncalibrated; (5) Hold time compressed from 30-180 min to 30-120s (24 bars max). Differentiated from existing keltner_channel_reversion_v1 (EMA(24), reversion on channel touch, 30-90s hold) by: opposite thesis (trend continuation vs mean reversion), longer lookback (60 vs 24), ADX filter (trend vs no trend filter), and VWAP directional bias.",
   "weaknesses": [
-    "ADX(36) at 3-minute lookback lags sharply — entry confirmed only after 30-40% of momentum move is already done, reducing effective capture",
+    "ADX(36) at 3-minute lookback lags sharply \u2014 entry confirmed only after 30-40% of momentum move is already done, reducing effective capture",
     "3-bar persistence (15s) may miss fast breakouts in low-ATR environments where channel is tight and price moves through quickly",
     "NIFTY genuine Keltner breakouts with ADX > 22 occur only 1-3 times per session, limiting trade frequency to below max_trades_per_day most days",
-    "Differentiated from keltner_channel_reversion_v1 but both share EMA+ATR channel logic — on range days both strategies may trade at the same bars (one sees a reversion signal, this one sees a failed breakout) creating correlated losses"
+    "Differentiated from keltner_channel_reversion_v1 but both share EMA+ATR channel logic \u2014 on range days both strategies may trade at the same bars (one sees a reversion signal, this one sees a failed breakout) creating correlated losses"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_83.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-180 bars at 1min = 30-180 minutes",
-    "original_indicators": ["EMA(20)", "ATR(20)", "ADX(14)", "VWAP", "SMA(volume, 20)"],
-    "original_stop": "kc_mid (EMA 20) — dynamic channel midline",
-    "original_target": "3.0 × ATR(20) from entry"
+    "original_indicators": [
+      "EMA(20)",
+      "ATR(20)",
+      "ADX(14)",
+      "VWAP",
+      "SMA(volume, 20)"
+    ],
+    "original_stop": "kc_mid (EMA 20) \u2014 dynamic channel midline",
+    "original_target": "3.0 \u00d7 ATR(20) from entry"
   }
 }

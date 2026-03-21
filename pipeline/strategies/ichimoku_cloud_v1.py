@@ -52,8 +52,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("vix_low", 12.0, 8.0, 18.0),
             TunableParam("vix_high", 24.0, 18.0, 30.0),
-            TunableParam("stop_pts", 4.0, 2.0, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 7.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -71,8 +71,8 @@ class Strategy(BaseStrategy):
         low = spot_df["low"].fill_null(strategy="forward").to_numpy()
         time_min = spot_df["time_minutes"].to_numpy()
 
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
         vix_low = float(params.get("vix_low", 12.0))
         vix_high = float(params.get("vix_high", 24.0))
 

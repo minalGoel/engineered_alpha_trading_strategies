@@ -2,14 +2,22 @@
   "name": "bollinger_squeeze_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "bollinger", "volatility", "squeeze"],
+  "tags": [
+    "mean_reversion",
+    "bollinger",
+    "volatility",
+    "squeeze"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_21.json",
   "original_name": "bollinger_squeeze_reversion_v1",
-  "mechanism": "On NIFTY, when 5-second Bollinger bandwidth compresses to a 10-minute session low, latency-sensitive HFT algorithms probe the range edges with small directional orders looking for a breakout. When NIFTY closes outside the band without institutional follow-through — no sustained directional order flow visible as a series of higher closes — these probes are absorbed by market makers taking the opposite side, and the index snaps back toward the 20-bar SMA midline. At 5-second resolution we can enter the moment the probe closes outside the band (the failure signal itself), capturing the snap-back 30-90 seconds earlier than a 1-minute bar confirmation would allow. Reversion targets the midline typically 4-10 spot points away.",
+  "mechanism": "On NIFTY, when 5-second Bollinger bandwidth compresses to a 10-minute session low, latency-sensitive HFT algorithms probe the range edges with small directional orders looking for a breakout. When NIFTY closes outside the band without institutional follow-through \u2014 no sustained directional order flow visible as a series of higher closes \u2014 these probes are absorbed by market makers taking the opposite side, and the index snaps back toward the 20-bar SMA midline. At 5-second resolution we can enter the moment the probe closes outside the band (the failure signal itself), capturing the snap-back 30-90 seconds earlier than a 1-minute bar confirmation would allow. Reversion targets the midline typically 4-10 spot points away.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "SMA(close, 20) + 2 * STDDEV(close, 20)",
       "lookback": 20,
       "computed_on": "spot",
-      "purpose": "Upper Bollinger band. 20 bars = 100 seconds. NOT 12x the original's 20-min bars. We use 100s because we are catching micro-consolidations on NIFTY at 5s resolution. At this timescale, 100 seconds of price history is enough to define a local volatility envelope — longer windows would blur the signal into the broader session trend rather than detecting the momentary squeeze."
+      "purpose": "Upper Bollinger band. 20 bars = 100 seconds. NOT 12x the original's 20-min bars. We use 100s because we are catching micro-consolidations on NIFTY at 5s resolution. At this timescale, 100 seconds of price history is enough to define a local volatility envelope \u2014 longer windows would blur the signal into the broader session trend rather than detecting the momentary squeeze."
     },
     {
       "name": "bb_lower",
@@ -41,7 +49,7 @@
       "formula": "SMA(close, 20)",
       "lookback": 20,
       "computed_on": "spot",
-      "purpose": "20-bar SMA midline. This is the reversion target — VWAP-benchmarked algorithms and market makers treat this as a fair-value anchor for 100-second windows."
+      "purpose": "20-bar SMA midline. This is the reversion target \u2014 VWAP-benchmarked algorithms and market makers treat this as a fair-value anchor for 100-second windows."
     },
     {
       "name": "bb_bandwidth",
@@ -61,11 +69,11 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "bb_bandwidth_pctile < 20 (squeeze active — bandwidth in bottom 20th percentile of past 10 min)",
-        "close < bb_lower (failed bearish probe — price pushed below lower band without follow-through)",
+        "bb_bandwidth_pctile < 20 (squeeze active \u2014 bandwidth in bottom 20th percentile of past 10 min)",
+        "close < bb_lower (failed bearish probe \u2014 price pushed below lower band without follow-through)",
         "vix < 22 (avoid high-volatility regimes where genuine breakouts are more probable)"
       ],
-      "confirmation": "Signal fires on same bar — at 5s resolution the close-below-lower-band IS the failure signal. Buy CE immediately (index is below band, expect snap back up)."
+      "confirmation": "Signal fires on same bar \u2014 at 5s resolution the close-below-lower-band IS the failure signal. Buy CE immediately (index is below band, expect snap back up)."
     },
     "buy_pe": {
       "conditions": [
@@ -78,38 +86,45 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 3.0,
     "stop_rationale": "4 pts because if NIFTY continues extending beyond the band rather than reverting, the breakout is genuine (institutional order flow). A genuine NIFTY breakout covers 15-25 spot pts in the first minute; 4 option pts (~8 spot pts at delta 0.5) stops us before the move becomes directional and costly.",
-    "target_points": 7,
+    "target_points": 6.0,
     "target_rationale": "7 pts targets ~14 spot point reversion toward the midline. The full journey from band-break to midline is typically 20-30 spot pts on NIFTY; capturing the first 14 pts (50%) is conservative and achievable in 30-90 seconds. This gives 1:1.75 R:R, profitable at 55%+ win rate.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "vix < 22 — genuine breakouts far more common when VIX > 22; squeeze reversion only when volatility regime is moderate",
-    "time_filter": "09:25-15:20 IST — skip first 10 min opening noise, skip last 10 min illiquid close",
-    "volume_filter": "none — index volume at 5s resolution is noisy and unreliable as a filter",
-    "trend_filter": "none — the squeeze + failed-probe signal is strong enough without a trend filter; the low-bandwidth condition itself implies mean-reversion regime",
-    "spread_filter": "none — limit orders, no spread cost"
+    "vix_filter": "vix < 22 \u2014 genuine breakouts far more common when VIX > 22; squeeze reversion only when volatility regime is moderate",
+    "time_filter": "09:25-15:20 IST \u2014 skip first 10 min opening noise, skip last 10 min illiquid close",
+    "volume_filter": "none \u2014 index volume at 5s resolution is noisy and unreliable as a filter",
+    "trend_filter": "none \u2014 the squeeze + failed-probe signal is strong enough without a trend filter; the low-bandwidth condition itself implies mean-reversion regime",
+    "spread_filter": "none \u2014 limit orders, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.55,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.52,
-    "edge_decay_risk": "medium — as more algos detect Bollinger squeeze patterns on NIFTY index, failed breakouts may become rarer or shorter-lived"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.44,
+    "edge_decay_risk": "medium \u2014 as more algos detect Bollinger squeeze patterns on NIFTY index, failed breakouts may become rarer or shorter-lived"
   },
-  "adaptation_notes": "Original traded 1-min bars on top-30 NIFTY stocks with ATR-based percentage stops. Three key changes in conversion: (1) BB period kept at 20 bars but now represents 100 seconds not 20 minutes — capturing micro-squeezes on the index rather than multi-hour compressions on individual stocks. (2) Bandwidth percentile window compressed from 120 minutes to 10 minutes — we want 'compressed relative to recent intraday history', not 'compressed relative to yesterday'. (3) ATR-based percentage stop replaced with fixed option premium points (4 pts stop, 7 pts target) because we trade options not spot; percentage stops on option premium are not meaningful.",
+  "adaptation_notes": "Original traded 1-min bars on top-30 NIFTY stocks with ATR-based percentage stops. Three key changes in conversion: (1) BB period kept at 20 bars but now represents 100 seconds not 20 minutes \u2014 capturing micro-squeezes on the index rather than multi-hour compressions on individual stocks. (2) Bandwidth percentile window compressed from 120 minutes to 10 minutes \u2014 we want 'compressed relative to recent intraday history', not 'compressed relative to yesterday'. (3) ATR-based percentage stop replaced with fixed option premium points (4 pts stop, 7 pts target) because we trade options not spot; percentage stops on option premium are not meaningful.",
   "weaknesses": [
-    "At 5-second resolution, bandwidth squeezes are extremely frequent — the pctile<20 filter alone may fire dozens of times per session; the outside-band condition reduces this but trade frequency may still be high",
+    "At 5-second resolution, bandwidth squeezes are extremely frequent \u2014 the pctile<20 filter alone may fire dozens of times per session; the outside-band condition reduces this but trade frequency may still be high",
     "Genuine NIFTY breakouts on macro news (RBI, FII flows, global markets) will hit stops; the VIX<22 filter mitigates but does not eliminate this",
-    "The failed-breakout thesis depends on the probe being small and quickly absorbed — on days with sustained directional flow, the band-break will not revert"
+    "The failed-breakout thesis depends on the probe being small and quickly absorbed \u2014 on days with sustained directional flow, the band-break will not revert"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_21.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-45 bars (15-45 min)",
-    "original_indicators": ["bb_upper (20)", "bb_lower (20)", "bb_mid (20)", "bb_bandwidth (20)", "bb_bandwidth_pctile (120-bar)", "atr_20"],
+    "original_indicators": [
+      "bb_upper (20)",
+      "bb_lower (20)",
+      "bb_mid (20)",
+      "bb_bandwidth (20)",
+      "bb_bandwidth_pctile (120-bar)",
+      "atr_20"
+    ],
     "original_stop": "0.4% from entry",
     "original_target": "bb_mid (SMA 20) touch"
   }

@@ -2,14 +2,22 @@
   "name": "ema_crossover_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "ema", "crossover_fade", "range_bound"],
+  "tags": [
+    "mean_reversion",
+    "ema",
+    "crossover_fade",
+    "range_bound"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_24.json",
   "original_name": "ema_crossover_reversion_v1",
-  "mechanism": "On NIFTY, EMA(12)/(36) crossovers in range-bound intraday sessions attract late retail algo entries at precisely the moment the 60-90 second price impulse has exhausted — the crossover fires 1-2 minutes after the directional move began. When NIFTY's current 5-minute ATR is below 1.3× the 30-minute ATR baseline (range-bound regime), these crossover chasers create predictable supply/demand imbalance on the wrong side of an over-extended move. The 10-second confirmation wait (2 bars for price to cross back through the slow EMA) distinguishes genuine reversions from breakouts: if NIFTY is truly trending, it will NOT recross the slow EMA within 2 bars of the crossover, so only clean fade setups pass.",
+  "mechanism": "On NIFTY, EMA(12)/(36) crossovers in range-bound intraday sessions attract late retail algo entries at precisely the moment the 60-90 second price impulse has exhausted \u2014 the crossover fires 1-2 minutes after the directional move began. When NIFTY's current 5-minute ATR is below 1.3\u00d7 the 30-minute ATR baseline (range-bound regime), these crossover chasers create predictable supply/demand imbalance on the wrong side of an over-extended move. The 10-second confirmation wait (2 bars for price to cross back through the slow EMA) distinguishes genuine reversions from breakouts: if NIFTY is truly trending, it will NOT recross the slow EMA within 2 bars of the crossover, so only clean fade setups pass.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,55 +35,55 @@
       "formula": "EMA(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute fast EMA. NOT 108 bars (9 × 12 blind scaling). We trade the fast reversion within 30-90 seconds of the crossover, so the trigger EMA must be 1-minute scale. A 9-minute EMA (original period at 1-min bars) at 5s resolution would be 108 bars — far too slow for a 90-second hold. We want to detect the micro-crossover that retail algos react to, which occurs over 60-second momentum bursts on NIFTY."
+      "purpose": "1-minute fast EMA. NOT 108 bars (9 \u00d7 12 blind scaling). We trade the fast reversion within 30-90 seconds of the crossover, so the trigger EMA must be 1-minute scale. A 9-minute EMA (original period at 1-min bars) at 5s resolution would be 108 bars \u2014 far too slow for a 90-second hold. We want to detect the micro-crossover that retail algos react to, which occurs over 60-second momentum bursts on NIFTY."
     },
     {
       "name": "ema_36",
       "formula": "EMA(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute slow EMA. NOT 252 bars (21 × 12). The slow EMA defines the trend being faded. At 30-90s hold time, 3 minutes of context is sufficient to define a short-term trend direction on NIFTY. Longer periods (21-min equivalent) would make the crossover fire too rarely and miss intraday regime transitions. The 3:1 ratio to the fast EMA matches the original 9:21 ratio."
+      "purpose": "3-minute slow EMA. NOT 252 bars (21 \u00d7 12). The slow EMA defines the trend being faded. At 30-90s hold time, 3 minutes of context is sufficient to define a short-term trend direction on NIFTY. Longer periods (21-min equivalent) would make the crossover fire too rarely and miss intraday regime transitions. The 3:1 ratio to the fast EMA matches the original 9:21 ratio."
     },
     {
       "name": "atr_60",
       "formula": "ATR(high, low, close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute ATR measuring current NIFTY volatility. Compressed from the original's 60-bar 1-min ATR (= 60 minutes) to 60-bar 5s ATR (= 5 minutes) because we need same-horizon volatility assessment matching our trade timescale. A 5-minute ATR captures whether current price action is choppy or expansive — the relevant regime for a 30-90 second fade."
+      "purpose": "5-minute ATR measuring current NIFTY volatility. Compressed from the original's 60-bar 1-min ATR (= 60 minutes) to 60-bar 5s ATR (= 5 minutes) because we need same-horizon volatility assessment matching our trade timescale. A 5-minute ATR captures whether current price action is choppy or expansive \u2014 the relevant regime for a 30-90 second fade."
     },
     {
       "name": "atr_baseline",
       "formula": "ROLLING_MEAN(atr_60, 360)",
       "lookback": 360,
       "computed_on": "spot",
-      "purpose": "30-minute rolling mean of the 5-min ATR, serving as the intraday volatility baseline. Replaces the original's 1950-bar weekly ATR median — the same conceptual filter (is current ATR elevated vs normal?) adapted to intraday availability. 360 bars = 30 minutes provides enough history to define 'normal' session ATR while resetting each day and capturing session regime shifts."
+      "purpose": "30-minute rolling mean of the 5-min ATR, serving as the intraday volatility baseline. Replaces the original's 1950-bar weekly ATR median \u2014 the same conceptual filter (is current ATR elevated vs normal?) adapted to intraday availability. 360 bars = 30 minutes provides enough history to define 'normal' session ATR while resetting each day and capturing session regime shifts."
     },
     {
       "name": "vwap",
       "formula": "CUMULATIVE_VWAP(close, volume) per session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP from 09:15. Cumulative measure — no scaling needed. Used as directional extension filter: bullish crossover is only faded when NIFTY was above VWAP at crossover time (long side over-extended), bearish crossover only faded when below VWAP. This ensures we only fade moves that overshot the institutional benchmark level."
+      "purpose": "Session VWAP from 09:15. Cumulative measure \u2014 no scaling needed. Used as directional extension filter: bullish crossover is only faded when NIFTY was above VWAP at crossover time (long side over-extended), bearish crossover only faded when below VWAP. This ensures we only fade moves that overshot the institutional benchmark level."
     }
   ],
   "entry": {
     "buy_pe": {
       "conditions": [
         "EMA(12) crossed above EMA(36) exactly 2 bars ago (10 seconds ago)",
-        "close[now] < ema_36[now] (price has already recrossed back below slow EMA — reversion confirmed)",
-        "close[crossover_bar] > vwap[crossover_bar] * 1.001 (bullish crossover fired from above-VWAP position — over-extension)",
+        "close[now] < ema_36[now] (price has already recrossed back below slow EMA \u2014 reversion confirmed)",
+        "close[crossover_bar] > vwap[crossover_bar] * 1.001 (bullish crossover fired from above-VWAP position \u2014 over-extension)",
         "atr_60 < atr_ratio_threshold * atr_baseline (range-bound regime, not trending)"
       ],
-      "confirmation": "Price must recross slow EMA within 2 bars (10s) of the crossover firing — confirms it was a failed breakout, not a genuine trend start"
+      "confirmation": "Price must recross slow EMA within 2 bars (10s) of the crossover firing \u2014 confirms it was a failed breakout, not a genuine trend start"
     },
     "buy_ce": {
       "conditions": [
         "EMA(12) crossed below EMA(36) exactly 2 bars ago (10 seconds ago)",
-        "close[now] > ema_36[now] (price has recrossed back above slow EMA — reversion confirmed)",
-        "close[crossover_bar] < vwap[crossover_bar] * 0.999 (bearish crossover fired from below-VWAP position — over-extension to downside)",
+        "close[now] > ema_36[now] (price has recrossed back above slow EMA \u2014 reversion confirmed)",
+        "close[crossover_bar] < vwap[crossover_bar] * 0.999 (bearish crossover fired from below-VWAP position \u2014 over-extension to downside)",
         "atr_60 < atr_ratio_threshold * atr_baseline (range-bound regime)"
       ],
-      "confirmation": "Price must recross slow EMA within 10s — same logic as PE entry"
+      "confirmation": "Price must recross slow EMA within 10s \u2014 same logic as PE entry"
     },
     "entry_price": "market"
   },
@@ -83,36 +91,42 @@
     "stop_points": 4.0,
     "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. In range-bound conditions, a failed EMA fade that moves 8 spot pts against us signals a genuine breakout (not a range reversal), and we exit. Typical range-bound NIFTY moves are 5-12 spot pts; an 8-pt adverse move exhausts the expected range and invalidates the thesis.",
     "target_points": 6.0,
-    "target_rationale": "6 option pts = ~12 NIFTY spot pts. Range-bound NIFTY crossover fades revert 12-20 spot pts back toward VWAP within 90 seconds based on typical intraday range structure. Targeting the lower bound (12 pts × 0.5 delta = 6 option pts) at 1:1.5 risk:reward provides margin for slippage while remaining achievable within the time stop.",
+    "target_rationale": "6 option pts = ~12 NIFTY spot pts. Range-bound NIFTY crossover fades revert 12-20 spot pts back toward VWAP within 90 seconds based on typical intraday range structure. Targeting the lower bound (12 pts \u00d7 0.5 delta = 6 option pts) at 1:1.5 risk:reward provides margin for slippage while remaining achievable within the time stop.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — range-bound ATR filter handles volatility regime",
+    "vix_filter": "none \u2014 range-bound ATR filter handles volatility regime",
     "time_filter": "no trades before 09:25 (skip pre-open noise) or after 15:20",
-    "volume_filter": "none — index volume at 5s resolution is too noisy to be reliable",
+    "volume_filter": "none \u2014 index volume at 5s resolution is too noisy to be reliable",
     "trend_filter": "atr_60 < atr_ratio_threshold * atr_baseline_360 (range-bound only)",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.55,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.4,
-    "edge_decay_risk": "medium — retail EMA crossover algos are still prevalent in Indian markets but gradually declining; the range-bound filter ensures we only trade when the behavioral edge is most reliable"
+    "profit_factor_estimate": 1.83,
+    "edge_decay_risk": "medium \u2014 retail EMA crossover algos are still prevalent in Indian markets but gradually declining; the range-bound filter ensures we only trade when the behavioral edge is most reliable"
   },
-  "adaptation_notes": "Four key changes from original: (1) EMA periods compressed to 12/36 bars (1-min/3-min) from 9/21 minutes — we catch the fast 30-90s reversion, not the 5-25 minute recovery. (2) ATR regime filter scaled to 5-minute current vs 30-minute baseline, replacing the original's weekly-median calculation — same concept (is ATR elevated?) with intraday data. (3) Removed volume filter — NIFTY volume at 5s is too noisy; VWAP position replaces it as the extension confirmation. (4) Kept the 2-bar wait for confirmation, which maps to exactly 10 seconds at 5s resolution (vs 2 minutes in original) — the principle is identical, only the absolute time differs.",
+  "adaptation_notes": "Four key changes from original: (1) EMA periods compressed to 12/36 bars (1-min/3-min) from 9/21 minutes \u2014 we catch the fast 30-90s reversion, not the 5-25 minute recovery. (2) ATR regime filter scaled to 5-minute current vs 30-minute baseline, replacing the original's weekly-median calculation \u2014 same concept (is ATR elevated?) with intraday data. (3) Removed volume filter \u2014 NIFTY volume at 5s is too noisy; VWAP position replaces it as the extension confirmation. (4) Kept the 2-bar wait for confirmation, which maps to exactly 10 seconds at 5s resolution (vs 2 minutes in original) \u2014 the principle is identical, only the absolute time differs.",
   "weaknesses": [
     "In genuine NIFTY breakout days (budget, RBI decisions, US market moves), the range filter may admit trades that then run against us significantly",
-    "The 2-bar (10-second) confirmation is very tight — 5s NIFTY bars have high noise, a single noisy bar could trigger a false confirmation",
-    "EMA(12) and EMA(36) have only 60s and 180s of history — may be sensitive to very short-term NIFTY spike/reversal patterns not related to the behavioral thesis"
+    "The 2-bar (10-second) confirmation is very tight \u2014 5s NIFTY bars have high noise, a single noisy bar could trigger a false confirmation",
+    "EMA(12) and EMA(36) have only 60s and 180s of history \u2014 may be sensitive to very short-term NIFTY spike/reversal patterns not related to the behavioral thesis"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_24.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-25 bars (5-25 minutes)",
-    "original_indicators": ["EMA(9)", "EMA(21)", "ATR(60) vs weekly ATR median", "VWAP"],
+    "original_indicators": [
+      "EMA(9)",
+      "EMA(21)",
+      "ATR(60) vs weekly ATR median",
+      "VWAP"
+    ],
     "original_stop": "0.35% from entry",
     "original_target": "0.30% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

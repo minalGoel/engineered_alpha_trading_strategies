@@ -63,8 +63,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("dislocation_pct", 0.75, 0.60, 0.90),
-            TunableParam("stop_pts", 4.0, 2.0, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 7.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -85,8 +85,8 @@ class Strategy(BaseStrategy):
         time_min = spot_df["time_minutes"].to_numpy()
 
         dislocation_pct = float(params.get("dislocation_pct", 0.75))
-        stop_pts  = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts  = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # ── Session VWAP (cumulative, resets each day) ──
         vwap = np.zeros(n, dtype=np.float64)

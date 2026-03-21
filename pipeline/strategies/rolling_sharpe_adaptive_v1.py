@@ -91,8 +91,8 @@ class Strategy(BaseStrategy):
             TunableParam("signal_quality_threshold", 0.52, 0.48, 0.62),
             # Minimum |VWAP distance| in bps to confirm directional bias
             TunableParam("vwap_distance_bps", 5.0, 2.0, 15.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -113,8 +113,8 @@ class Strategy(BaseStrategy):
         # ── Parameters ──
         sq_thresh = float(params.get("signal_quality_threshold", 0.52))
         vwap_dist_bps = float(params.get("vwap_distance_bps", 5.0))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # ── Indicators ──
         # EMA(24) = 2-min fast; EMA(60) = 5-min slow (not 12x; calibrated to 30-90s hold)

@@ -2,14 +2,23 @@
   "name": "previous_day_high_low_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["breakout", "levels", "momentum", "stop-cascade", "pdh-pdl"],
+  "tags": [
+    "breakout",
+    "levels",
+    "momentum",
+    "stop-cascade",
+    "pdh-pdl"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_32.json",
   "original_name": "previous_day_high_low_breakout_v1",
-  "mechanism": "When NIFTY or BANKNIFTY crosses its prior day's high or low, two simultaneous forces create a burst of directional flow in the first 15-60 seconds: (1) directional futures traders who placed protective stops just beyond PDH/PDL are forced out, fuelling an order-book cascade; (2) option market-makers who sold calls (at PDH resistance) or puts (at PDL support) must delta-hedge by buying/selling the underlying as their strikes go in-the-money, adding systematic buying/selling pressure. At 5-second resolution we can enter on the third consecutive bar closing beyond the level — confirming a genuine break rather than a wick — and capture the first 15-25 NIFTY spot points (7-12 BANKNIFTY option points) of continuation before the cascade exhausts.",
+  "mechanism": "When NIFTY or BANKNIFTY crosses its prior day's high or low, two simultaneous forces create a burst of directional flow in the first 15-60 seconds: (1) directional futures traders who placed protective stops just beyond PDH/PDL are forced out, fuelling an order-book cascade; (2) option market-makers who sold calls (at PDH resistance) or puts (at PDL support) must delta-hedge by buying/selling the underlying as their strikes go in-the-money, adding systematic buying/selling pressure. At 5-second resolution we can enter on the third consecutive bar closing beyond the level \u2014 confirming a genuine break rather than a wick \u2014 and capture the first 15-25 NIFTY spot points (7-12 BANKNIFTY option points) of continuation before the cascade exhausts.",
   "universe": "BOTH",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "0-3",
   "max_trades_per_day": 3,
@@ -19,7 +28,9 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX | NSE:NIFTYBANK-INDEX",
     "order_book": false,
-    "other": ["session_date for prior-day partitioning"]
+    "other": [
+      "session_date for prior-day partitioning"
+    ]
   },
   "indicators": [
     {
@@ -27,14 +38,14 @@
       "formula": "max(high) of all 5s bars on prior trading date",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "PDH is a FIXED DAILY LEVEL — no scaling by bar frequency. The prior day's high is exactly the same reference point regardless of whether we look at 1-min or 5s bars. Computed by partitioning spot_df on session_date and lagging one day."
+      "purpose": "PDH is a FIXED DAILY LEVEL \u2014 no scaling by bar frequency. The prior day's high is exactly the same reference point regardless of whether we look at 1-min or 5s bars. Computed by partitioning spot_df on session_date and lagging one day."
     },
     {
       "name": "pdl",
       "formula": "min(low) of all 5s bars on prior trading date",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Same rationale as PDH — a daily extreme level, not scaled. Lagged one session from spot_df groupby session_date."
+      "purpose": "Same rationale as PDH \u2014 a daily extreme level, not scaled. Lagged one session from spot_df groupby session_date."
     },
     {
       "name": "dist_from_pdh_bps",
@@ -76,18 +87,18 @@
       "formula": "cumsum(close * volume) / cumsum(volume), reset each session_date",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative measure — no scaling needed. Acts as trend filter: NIFTY above VWAP means institutional net long bias; PDH breakout above VWAP has stronger continuation than a breakout while price is below VWAP (potential VWAP magnetic effect pulling price back down)."
+      "purpose": "Cumulative measure \u2014 no scaling needed. Acts as trend filter: NIFTY above VWAP means institutional net long bias; PDH breakout above VWAP has stronger continuation than a breakout while price is below VWAP (potential VWAP magnetic effect pulling price back down)."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "close > pdh",
-        "dist_from_pdh_bps >= break_min_bps (3 bps) AND dist_from_pdh_bps <= break_max_bps (20 bps) — clean break, not overextended",
-        "consec_above_pdh >= 3 — 15 seconds sustained close above PDH",
-        "vol_surge_60 > vol_thresh (1.5) — volume above 5-minute baseline on breakout",
-        "close > session_vwap — institutional net-long regime",
-        "vix_close < vix_thresh (22) — calm enough for directional breakout to sustain"
+        "dist_from_pdh_bps >= break_min_bps (3 bps) AND dist_from_pdh_bps <= break_max_bps (20 bps) \u2014 clean break, not overextended",
+        "consec_above_pdh >= 3 \u2014 15 seconds sustained close above PDH",
+        "vol_surge_60 > vol_thresh (1.5) \u2014 volume above 5-minute baseline on breakout",
+        "close > session_vwap \u2014 institutional net-long regime",
+        "vix_close < vix_thresh (22) \u2014 calm enough for directional breakout to sustain"
       ],
       "confirmation": "Third consecutive 5s bar closing above PDH is the entry bar"
     },
@@ -95,9 +106,9 @@
       "conditions": [
         "close < pdl",
         "dist_from_pdl_bps >= break_min_bps (3 bps) AND dist_from_pdl_bps <= break_max_bps (20 bps)",
-        "consec_below_pdl >= 3 — 15 seconds sustained close below PDL",
+        "consec_below_pdl >= 3 \u2014 15 seconds sustained close below PDL",
         "vol_surge_60 > vol_thresh (1.5)",
-        "close < session_vwap — institutional net-short regime",
+        "close < session_vwap \u2014 institutional net-short regime",
         "vix_close < vix_thresh (22)"
       ],
       "confirmation": "Third consecutive 5s bar closing below PDL is the entry bar"
@@ -105,39 +116,46 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "A failed PDH breakout on NIFTY typically sees price retrace 8-12 spot points back inside the range within 15-30 seconds — at delta ~0.5 that is 4-6 option points. Using 4 pts cuts the loss before the full retrace develops; if the cascade was real, NIFTY should NOT drop 8 spot pts back below PDH within seconds of a genuine break.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "A failed PDH breakout on NIFTY typically sees price retrace 8-12 spot points back inside the range within 15-30 seconds \u2014 at delta ~0.5 that is 4-6 option points. Using 4 pts cuts the loss before the full retrace develops; if the cascade was real, NIFTY should NOT drop 8 spot pts back below PDH within seconds of a genuine break.",
+    "target_points": 8.0,
     "target_rationale": "Successful first-leg PDH/PDL breakouts on NIFTY extend 15-25 spot points in the first 30-60 seconds as stop cascades and delta-hedging compound. 7 option points captures approximately 50% of the lower-bound (15 spot pt) expected continuation at 1:1.75 R:R. Exiting at 7 avoids the mean-reversion pullback that typically follows once the cascade exhausts.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "vix < 22 — above 22 breakouts whipsaw as IV expansion distorts short-term follow-through",
+    "vix_filter": "vix < 22 \u2014 above 22 breakouts whipsaw as IV expansion distorts short-term follow-through",
     "time_filter": "09:20-15:25 IST; avoid first 5 min of session for PDH/PDL setups (pre-open noise)",
-    "volume_filter": "vol_surge_60 > 1.5 — elevated volume vs 5-min baseline confirms institutional participation in the break",
+    "volume_filter": "vol_surge_60 > 1.5 \u2014 elevated volume vs 5-min baseline confirms institutional participation in the break",
     "trend_filter": "close vs session_vwap as intraday trend proxy",
-    "spread_filter": "none — limit order execution at candle close"
+    "spread_filter": "none \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.9,
-    "edge_decay_risk": "low — PDH/PDL is a structural anchoring level used by every participant class; stop-cascade mechanics persist as long as PDH/PDL remain focal points for order placement"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "low \u2014 PDH/PDL is a structural anchoring level used by every participant class; stop-cascade mechanics persist as long as PDH/PDL remain focal points for order placement"
   },
-  "adaptation_notes": "Original traded individual Nifty50 stocks on 1-min bars holding 15-60 min. Converted to NIFTY/BANKNIFTY index on 5s bars holding 15-90s. Key changes: (1) PDH/PDL are computed from spot_df session_date partitioning — no scaling needed, they remain daily levels. (2) Confirmation reduced from 2×1min bars to 3×5s bars (15 seconds) to match the noise level at 5s resolution. (3) Volume SMA compressed from 20×1min (20 min) to 60×5s (5 min) to detect IMMEDIATE volume acceleration rather than session average. (4) VIX threshold unchanged at 22 — still a regime filter. (5) Stops/targets converted from % of price to option premium points (4/7 pts vs original 0.4%/0.5%). The core mechanism — stop cascade + option delta-hedging pressure at prior day's extremes — is ENHANCED on the index because every option market-maker, futures algo, and benchmark PM watches NIFTY/BANKNIFTY PDH/PDL simultaneously, making the cascade more violent and faster than on individual stocks.",
+  "adaptation_notes": "Original traded individual Nifty50 stocks on 1-min bars holding 15-60 min. Converted to NIFTY/BANKNIFTY index on 5s bars holding 15-90s. Key changes: (1) PDH/PDL are computed from spot_df session_date partitioning \u2014 no scaling needed, they remain daily levels. (2) Confirmation reduced from 2\u00d71min bars to 3\u00d75s bars (15 seconds) to match the noise level at 5s resolution. (3) Volume SMA compressed from 20\u00d71min (20 min) to 60\u00d75s (5 min) to detect IMMEDIATE volume acceleration rather than session average. (4) VIX threshold unchanged at 22 \u2014 still a regime filter. (5) Stops/targets converted from % of price to option premium points (4/7 pts vs original 0.4%/0.5%). The core mechanism \u2014 stop cascade + option delta-hedging pressure at prior day's extremes \u2014 is ENHANCED on the index because every option market-maker, futures algo, and benchmark PM watches NIFTY/BANKNIFTY PDH/PDL simultaneously, making the cascade more violent and faster than on individual stocks.",
   "weaknesses": [
-    "PDH/PDL false breakouts ('fakeouts') are common on NIFTY — 3-bar confirmation reduces but doesn't eliminate them",
+    "PDH/PDL false breakouts ('fakeouts') are common on NIFTY \u2014 3-bar confirmation reduces but doesn't eliminate them",
     "On inside days (NIFTY range entirely within prior day's range), PDH/PDL may never be tested and the strategy generates zero signals",
-    "Volume data for NIFTY index 5s bars may be sparse/derived from futures — vol_surge signal quality depends on data provider",
+    "Volume data for NIFTY index 5s bars may be sparse/derived from futures \u2014 vol_surge signal quality depends on data provider",
     "After a strong trending day, the new PDH/PDL is far from current price and breakouts are rare"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_32.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 bars (15-60 min)",
-    "original_indicators": ["pdh", "pdl", "dist_from_pdh/pdl", "vol_surge (vol/SMA20)", "atr_20", "vwap"],
+    "original_indicators": [
+      "pdh",
+      "pdl",
+      "dist_from_pdh/pdl",
+      "vol_surge (vol/SMA20)",
+      "atr_20",
+      "vwap"
+    ],
     "original_stop": "pdh - 0.1% for longs",
     "original_target": "0.5% from entry"
   }

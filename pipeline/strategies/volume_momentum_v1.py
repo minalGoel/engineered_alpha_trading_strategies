@@ -30,8 +30,8 @@ class Strategy(BaseStrategy):
             TunableParam("vol_ratio_bull_thresh", 0.62, 0.55, 0.72),
             TunableParam("vol_ratio_bear_thresh", 0.38, 0.28, 0.45),
             TunableParam("roc_thresh", 0.10, 0.05, 0.25),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -50,8 +50,8 @@ class Strategy(BaseStrategy):
         vol_ratio_bull = params.get("vol_ratio_bull_thresh", 0.62)
         vol_ratio_bear = params.get("vol_ratio_bear_thresh", 0.38)
         roc_thresh = params.get("roc_thresh", 0.10)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Session VWAP — cumulative from 09:15, reset each day ──
         typical = (high + low + close) / 3.0

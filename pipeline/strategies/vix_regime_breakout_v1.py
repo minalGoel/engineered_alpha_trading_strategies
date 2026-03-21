@@ -29,7 +29,7 @@ class Strategy(BaseStrategy):
             TunableParam("vix_pullback_threshold", 3.0, 1.0, 7.0),
             TunableParam("nifty_drop_threshold", 0.3, 0.1, 0.8),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -42,7 +42,7 @@ class Strategy(BaseStrategy):
         vix_pullback_thr = params.get("vix_pullback_threshold", 3.0)
         nifty_drop_thr = params.get("nifty_drop_threshold", 0.3)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── VIX aligned to spot bars ──────────────────────────────────────────
         vix_close = np.full(n, 15.0)

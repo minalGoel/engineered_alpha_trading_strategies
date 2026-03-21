@@ -2,24 +2,36 @@
   "name": "vol_surface_signal_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "skew", "options", "mean_reversion", "intraday"],
+  "tags": [
+    "volatility",
+    "skew",
+    "options",
+    "mean_reversion",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_223.json",
   "original_name": "vol_surface_signal_v1",
-  "mechanism": "On NIFTY, the ratio of ATM put premium to ATM call premium tracks real-time intraday directional order flow between market participants. When institutions or hedgers aggressively buy puts for short-term protection, ATM PE premiums spike relative to ATM CE premiums, pushing the PE/CE ratio significantly above its 20-minute session baseline. At a 2-sigma intraday extreme, this put-buying burst has typically exhausted available demand — the feared event hasn't materialized — and NIFTY tends to recover over the next 30-90 seconds as market makers delta-hedge by purchasing index futures. Symmetrically, extreme call-buying (ratio z-score below -2σ) signals bullish exhaustion as speculative call demand wanes, creating a short-term bearish fade opportunity.",
+  "mechanism": "On NIFTY, the ratio of ATM put premium to ATM call premium tracks real-time intraday directional order flow between market participants. When institutions or hedgers aggressively buy puts for short-term protection, ATM PE premiums spike relative to ATM CE premiums, pushing the PE/CE ratio significantly above its 20-minute session baseline. At a 2-sigma intraday extreme, this put-buying burst has typically exhausted available demand \u2014 the feared event hasn't materialized \u2014 and NIFTY tends to recover over the next 30-90 seconds as market makers delta-hedge by purchasing index futures. Symmetrically, extreme call-buying (ratio z-score below -2\u03c3) signals bullish exhaustion as speculative call demand wanes, creating a short-term bearish fade opportunity.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-6",
-  "max_trades_per_day": 5,
+  "max_trades_per_day": 6,
   "data": {
     "ohlcv_5s": true,
     "option_chain": true,
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["atm_ce_close", "atm_pe_close"]
+    "other": [
+      "atm_ce_close",
+      "atm_pe_close"
+    ]
   },
   "indicators": [
     {
@@ -27,14 +39,14 @@
       "formula": "option_df[type==CE, strike==atm_strike, nearest_expiry].close (asof-joined to spot bars)",
       "lookback": 1,
       "computed_on": "option",
-      "purpose": "Captures the current ATM call premium — together with ATM PE gives a direct real-time skew proxy without needing Black-Scholes IV computation."
+      "purpose": "Captures the current ATM call premium \u2014 together with ATM PE gives a direct real-time skew proxy without needing Black-Scholes IV computation."
     },
     {
       "name": "atm_pe_close",
       "formula": "option_df[type==PE, strike==atm_strike, nearest_expiry].close (asof-joined to spot bars)",
       "lookback": 1,
       "computed_on": "option",
-      "purpose": "Captures the current ATM put premium — symmetric to atm_ce_close."
+      "purpose": "Captures the current ATM put premium \u2014 symmetric to atm_ce_close."
     },
     {
       "name": "pe_ce_ratio",
@@ -48,7 +60,7 @@
       "formula": "(pe_ce_ratio - mean(pe_ce_ratio, 240)) / std(pe_ce_ratio, 240)",
       "lookback": 240,
       "computed_on": "option",
-      "purpose": "Normalizes the PE/CE ratio to intraday context using a 20-minute (240-bar) rolling window. WHY 20 min: intraday skew in NIFTY options fluctuates on 10-30 minute cycles tied to institutional execution windows and news digestion; shorter windows (<60 bars) produce too many false signals, and longer windows (>500 bars) adapt too slowly to regime shifts within a session. 20 minutes is not a scaled version of the original 20-day window — it is independently chosen for intraday mean-reversion timing."
+      "purpose": "Normalizes the PE/CE ratio to intraday context using a 20-minute (240-bar) rolling window. WHY 20 min: intraday skew in NIFTY options fluctuates on 10-30 minute cycles tied to institutional execution windows and news digestion; shorter windows (<60 bars) produce too many false signals, and longer windows (>500 bars) adapt too slowly to regime shifts within a session. 20 minutes is not a scaled version of the original 20-day window \u2014 it is independently chosen for intraday mean-reversion timing."
     },
     {
       "name": "spot_mom_12",
@@ -61,20 +73,20 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "ratio_zscore > z_threshold (default 2.0) — extreme put-buying burst exhausted",
-        "spot_mom_12 > -trend_filter_pct (default -0.003) — spot not in free-fall",
-        "atm_ce > 5 AND atm_pe > 5 — options are liquid and priced",
-        "VIX between 12 and 25 — option market liquid and not in crisis",
+        "ratio_zscore > z_threshold (default 2.0) \u2014 extreme put-buying burst exhausted",
+        "spot_mom_12 > -trend_filter_pct (default -0.003) \u2014 spot not in free-fall",
+        "atm_ce > 5 AND atm_pe > 5 \u2014 options are liquid and priced",
+        "VIX between 12 and 25 \u2014 option market liquid and not in crisis",
         "time in 09:30-15:20 IST session"
       ],
       "confirmation": "ratio_zscore cross above z_threshold at bar close"
     },
     "buy_pe": {
       "conditions": [
-        "ratio_zscore < -z_threshold (default 2.0) — extreme call-buying burst exhausted",
-        "spot_mom_12 < trend_filter_pct (default 0.003) — spot not in strong rally",
-        "atm_ce > 5 AND atm_pe > 5 — options are liquid and priced",
-        "VIX between 12 and 25 — option market liquid and not in crisis",
+        "ratio_zscore < -z_threshold (default 2.0) \u2014 extreme call-buying burst exhausted",
+        "spot_mom_12 < trend_filter_pct (default 0.003) \u2014 spot not in strong rally",
+        "atm_ce > 5 AND atm_pe > 5 \u2014 options are liquid and priced",
+        "VIX between 12 and 25 \u2014 option market liquid and not in crisis",
         "time in 09:30-15:20 IST session"
       ],
       "confirmation": "ratio_zscore cross below -z_threshold at bar close"
@@ -83,7 +95,7 @@
   },
   "exit": {
     "stop_points": 5,
-    "stop_rationale": "NIFTY 30-90 second fade moves typically deliver 6-12 option points when the thesis is correct; if price moves 5 pts against us within the hold window, it signals the skew extreme is genuine (not noise) and deepening — the fade thesis is invalid at that point.",
+    "stop_rationale": "NIFTY 30-90 second fade moves typically deliver 6-12 option points when the thesis is correct; if price moves 5 pts against us within the hold window, it signals the skew extreme is genuine (not noise) and deepening \u2014 the fade thesis is invalid at that point.",
     "target_points": 8,
     "target_rationale": "Intraday skew exhaustion fades on NIFTY cover 10-20 spot points in the first 30-90 seconds (5-10 option points at delta ~0.5); 8 points captures roughly the median reversion, with 1:1.6 risk-reward. Based on NIFTY 1-min typical move range of 3-7 option pts, 8 pts is achievable on the stronger setups.",
     "time_stop_bars": 18,
@@ -94,27 +106,33 @@
     "time_filter": "09:30-15:20 IST: start at 09:30 to let post-open option market settle (first 15 min has erratic PE/CE pricing during gap absorption)",
     "volume_filter": "both ATM CE and PE must have premium > 5 pts (ensures meaningful pricing, not stale quotes)",
     "trend_filter": "spot_mom_12 bounded: don't fade into a strong established move; threshold 0.3% (30bps/min)",
-    "spread_filter": "nearest expiry options only — avoids mixing far-expiry pricing which distorts the ATM ratio"
+    "spread_filter": "nearest expiry options only \u2014 avoids mixing far-expiry pricing which distorts the ATM ratio"
   },
   "edge": {
     "expected_bps": 25,
     "win_rate_estimate": 0.55,
     "avg_winner_to_loser": 1.6,
     "profit_factor_estimate": 1.96,
-    "edge_decay_risk": "moderate — as more systematic traders monitor real-time PE/CE ratios, the extreme signal may attract faster faders, compressing the fade window from 90s to 30s"
+    "edge_decay_risk": "moderate \u2014 as more systematic traders monitor real-time PE/CE ratios, the extreme signal may attract faster faders, compressing the fade window from 90s to 30s"
   },
-  "adaptation_notes": "The original strategy used 25-delta OTM options and a 20-day rolling IV skew z-score, firing only 2-4 times per month and holding 60-240 minutes. Three fundamental changes: (1) ATM options replace 25-delta OTM to avoid the need for Black-Scholes IV computation — ATM premium ratio is a direct price-based skew proxy available at 5s resolution. (2) The 20-day window compresses to a 20-minute intraday window — not because of bar scaling (which would give 20 days × 375 min × 12 bars = 90,000 bars), but because the intraday thesis requires an intraday baseline; the same z-score concept applied to a session window reveals 10-30 minute order flow cycles. (3) Hold time compresses from 60-240 minutes to 30-90 seconds — we are capturing the immediate order flow exhaustion, not the multi-hour skew normalization of the original.",
+  "adaptation_notes": "The original strategy used 25-delta OTM options and a 20-day rolling IV skew z-score, firing only 2-4 times per month and holding 60-240 minutes. Three fundamental changes: (1) ATM options replace 25-delta OTM to avoid the need for Black-Scholes IV computation \u2014 ATM premium ratio is a direct price-based skew proxy available at 5s resolution. (2) The 20-day window compresses to a 20-minute intraday window \u2014 not because of bar scaling (which would give 20 days \u00d7 375 min \u00d7 12 bars = 90,000 bars), but because the intraday thesis requires an intraday baseline; the same z-score concept applied to a session window reveals 10-30 minute order flow cycles. (3) Hold time compresses from 60-240 minutes to 30-90 seconds \u2014 we are capturing the immediate order flow exhaustion, not the multi-hour skew normalization of the original.",
   "weaknesses": [
-    "Depends on option_df having sufficient quote coverage at 5s resolution — sparse option ticks create forward-fill artifacts that distort the PE/CE ratio",
+    "Depends on option_df having sufficient quote coverage at 5s resolution \u2014 sparse option ticks create forward-fill artifacts that distort the PE/CE ratio",
     "ATM strike changes (every ~50 NIFTY points) create discontinuities in the PE/CE ratio series; the rolling z-score adapts but may produce false signals around ATM shifts",
-    "On days where a genuine fear event materializes (RBI surprise, geopolitical shock), the PE/CE spike is real and fading it produces large losses — the VIX filter (cap at 25) mitigates but does not eliminate this risk",
+    "On days where a genuine fear event materializes (RBI surprise, geopolitical shock), the PE/CE spike is real and fading it produces large losses \u2014 the VIX filter (cap at 25) mitigates but does not eliminate this risk",
     "The 20-min z-score window means the strategy is effectively untraded for the first 20 minutes of each session after the 09:30 start"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_223.json",
     "original_timeframe": "1min",
     "original_hold_time": "60-240 min",
-    "original_indicators": ["put_IV_25d", "call_IV_25d", "skew_z (20-day)", "NIFTY_RSI_30", "term_structure"],
+    "original_indicators": [
+      "put_IV_25d",
+      "call_IV_25d",
+      "skew_z (20-day)",
+      "NIFTY_RSI_30",
+      "term_structure"
+    ],
     "original_stop": "0.5% NIFTY move against position",
     "original_target": "skew_z normalizes to 0.5 OR 0.5% NIFTY move in direction"
   }

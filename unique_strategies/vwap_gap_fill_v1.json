@@ -2,14 +2,24 @@
   "name": "vwap_gap_fill_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["vwap", "gap-fill", "mean-reversion", "opening", "morning", "institutional-flow"],
+  "tags": [
+    "vwap",
+    "gap-fill",
+    "mean_reversion",
+    "opening",
+    "morning",
+    "institutional-flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_147.json",
   "original_name": "vwap_gap_fill_v1",
-  "mechanism": "When NIFTY opens with a 0.25-1.5% gap from the previous session's VWAP, every VWAP-benchmarked institutional algorithm (representing ~40-60% of NSE derivatives volume by notional) is immediately mis-positioned against its daily benchmark — a gap-up means they paid too much relative to yesterday's volume-weighted consensus, a gap-down means they received too little. Unlike the previous close, previous VWAP reflects where most volume actually transacted, so algorithms with VWAP mandates will systematically work to close this gap throughout the morning (09:20-10:30), creating a persistent directional drift of 1-3 NIFTY spot points per minute. At 5-second resolution, we detect active fill momentum — price through the 60-second EMA in the fill direction with positive 1-minute return — and enter 30-90 second legs aligned with this institutional drift, riding each leg before the fill pauses for consolidation.",
+  "mechanism": "When NIFTY opens with a 0.25-1.5% gap from the previous session's VWAP, every VWAP-benchmarked institutional algorithm (representing ~40-60% of NSE derivatives volume by notional) is immediately mis-positioned against its daily benchmark \u2014 a gap-up means they paid too much relative to yesterday's volume-weighted consensus, a gap-down means they received too little. Unlike the previous close, previous VWAP reflects where most volume actually transacted, so algorithms with VWAP mandates will systematically work to close this gap throughout the morning (09:20-10:30), creating a persistent directional drift of 1-3 NIFTY spot points per minute. At 5-second resolution, we detect active fill momentum \u2014 price through the 60-second EMA in the fill direction with positive 1-minute return \u2014 and enter 30-90 second legs aligned with this institutional drift, riding each leg before the fill pauses for consolidation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-10:30 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-4",
   "max_trades_per_day": 4,
@@ -19,43 +29,45 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["prev_day_vwap"]
+    "other": [
+      "prev_day_vwap"
+    ]
   },
   "indicators": [
     {
       "name": "prev_day_vwap",
       "formula": "sum(close * volume) / sum(volume) for all bars in previous trading session",
-      "lookback": "prev_session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Previous session's volume-weighted average price — the institutional benchmark anchor. Unlike prev_close (arbitrary last price), prev_VWAP reflects where most volume transacted and is the reference level for VWAP-mandate algorithms. No bar-period scaling — this is a session-level constant carried forward. The gap from this level (not from prev_close) is the unique edge: gap fill toward VWAP is driven by algorithmic mandate, not just behavioral mean-reversion."
+      "purpose": "Previous session's volume-weighted average price \u2014 the institutional benchmark anchor. Unlike prev_close (arbitrary last price), prev_VWAP reflects where most volume transacted and is the reference level for VWAP-mandate algorithms. No bar-period scaling \u2014 this is a session-level constant carried forward. The gap from this level (not from prev_close) is the unique edge: gap fill toward VWAP is driven by algorithmic mandate, not just behavioral mean-reversion."
     },
     {
       "name": "gap_pct",
       "formula": "(day_first_open - prev_day_vwap) / prev_day_vwap",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Session-level constant: how far today's open is from yesterday's VWAP. Threshold 0.25% = ~50 NIFTY pts — below this the fill force is too weak to produce reliable directional legs. Maximum 1.5% avoids structural macro gaps (budget, election results, RBI) that may not fill intraday. This range is narrower than the original's 0.5-3.0% stock threshold because NIFTY index gaps are structurally smaller (index smoothing) and the 0.25% threshold is sufficient to trigger institutional rebalancing."
+      "purpose": "Session-level constant: how far today's open is from yesterday's VWAP. Threshold 0.25% = ~50 NIFTY pts \u2014 below this the fill force is too weak to produce reliable directional legs. Maximum 1.5% avoids structural macro gaps (budget, election results, RBI) that may not fill intraday. This range is narrower than the original's 0.5-3.0% stock threshold because NIFTY index gaps are structurally smaller (index smoothing) and the 0.25% threshold is sufficient to trigger institutional rebalancing."
     },
     {
       "name": "gap_fill_frac",
       "formula": "For gap-up: (day_open - close) / (day_open - prev_vwap). For gap-down: (close - day_open) / (prev_vwap - day_open)",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Dynamic intraday tracker: 0.0 at open (fill not started), 1.0 when close reaches prev_VWAP (full fill), <0 if gap is extending. We enter only when fill_frac in [0.0, 0.40] — fill has started but less than 40% complete, meaning most of the institutional rebalancing flow is still ahead. Original used gap_fill_pct < 20%; widened to 40% for NIFTY because the index fills gaps more slowly and uniformly than individual stocks."
+      "purpose": "Dynamic intraday tracker: 0.0 at open (fill not started), 1.0 when close reaches prev_VWAP (full fill), <0 if gap is extending. We enter only when fill_frac in [0.0, 0.40] \u2014 fill has started but less than 40% complete, meaning most of the institutional rebalancing flow is still ahead. Original used gap_fill_pct < 20%; widened to 40% for NIFTY because the index fills gaps more slowly and uniformly than individual stocks."
     },
     {
       "name": "ema_12",
       "formula": "EMA(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "60-second (12 bars × 5s) fast EMA for entry trigger confirmation. When close crosses through the 60s EMA in the gap-fill direction, it signals that institutional flow has resumed after a brief pause. 12 bars chosen because: (1) we hold 30-90s, so the trigger should respond in roughly the same window, (2) shorter (6 bars = 30s) is too noisy for NIFTY which can retrace 5-10 pts in 30s, (3) longer (24 bars = 120s) would lag entry into the fill momentum. This is NOT 14 × 12 = 168 bars blind scaling — the 60s window is sized to match hold time."
+      "purpose": "60-second (12 bars \u00d7 5s) fast EMA for entry trigger confirmation. When close crosses through the 60s EMA in the gap-fill direction, it signals that institutional flow has resumed after a brief pause. 12 bars chosen because: (1) we hold 30-90s, so the trigger should respond in roughly the same window, (2) shorter (6 bars = 30s) is too noisy for NIFTY which can retrace 5-10 pts in 30s, (3) longer (24 bars = 120s) would lag entry into the fill momentum. This is NOT 14 \u00d7 12 = 168 bars blind scaling \u2014 the 60s window is sized to match hold time."
     },
     {
       "name": "ret_12",
       "formula": "(close[i] - close[i-12]) / close[i-12]",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute (12 bars × 5s) return confirms gap-fill momentum is active at entry. Unlike the EMA cross (position signal), ret_12 is a momentum signal — it requires the NIFTY to have moved in the fill direction over the past minute, not just be positioned below/above EMA. This dual-confirmation (EMA position + 1-min momentum) filters out mean-reversion within the gap-fill rather than the gap-fill itself. Lookback 12 bars matches the EMA period for coherent signal timing."
+      "purpose": "1-minute (12 bars \u00d7 5s) return confirms gap-fill momentum is active at entry. Unlike the EMA cross (position signal), ret_12 is a momentum signal \u2014 it requires the NIFTY to have moved in the fill direction over the past minute, not just be positioned below/above EMA. This dual-confirmation (EMA position + 1-min momentum) filters out mean-reversion within the gap-fill rather than the gap-fill itself. Lookback 12 bars matches the EMA period for coherent signal timing."
     }
   ],
   "entry": {
@@ -64,10 +76,10 @@
         "gap_pct < -gap_threshold (gap-down day: NIFTY opened below prev_VWAP)",
         "gap_pct > -max_gap (gap not so large it is structural/macro)",
         "gap_fill_frac in [0.0, 0.40] (fill in progress, not yet 40% complete)",
-        "close > ema_12 (price above 60s EMA — bullish momentum in fill direction)",
+        "close > ema_12 (price above 60s EMA \u2014 bullish momentum in fill direction)",
         "ret_12 > 0.0001 (positive 1-min return confirms active fill momentum)",
-        "vix < vix_max (default 20 — not in panic regime)",
-        "time_minutes in [560, 630) — 09:20-10:30 IST only"
+        "vix < vix_max (default 20 \u2014 not in panic regime)",
+        "time_minutes in [560, 630) \u2014 09:20-10:30 IST only"
       ],
       "confirmation": "Both EMA position AND 1-minute momentum must align with gap fill direction"
     },
@@ -76,7 +88,7 @@
         "gap_pct > gap_threshold (gap-up day: NIFTY opened above prev_VWAP)",
         "gap_pct < max_gap (gap not so large it is structural)",
         "gap_fill_frac in [0.0, 0.40] (fill in progress, not yet 40% complete)",
-        "close < ema_12 (price below 60s EMA — bearish momentum in fill direction)",
+        "close < ema_12 (price below 60s EMA \u2014 bearish momentum in fill direction)",
         "ret_12 < -0.0001 (negative 1-min return confirms active fill momentum)",
         "vix < vix_max",
         "time_minutes in [560, 630)"
@@ -87,38 +99,45 @@
   },
   "exit": {
     "stop_points": 4.0,
-    "stop_rationale": "4 option points = ~8 NIFTY spot pts (delta ~0.5). During an active gap fill, institutional flow creates legs of 10-20 NIFTY pts per 60-90 seconds — if the trade reverses 8 spot pts against us, the current leg has clearly stalled or the fill has momentarily reversed, and the 30-90s thesis is invalidated. 4 pts provides 1:1.5 R:R with the 6-pt target and represents a meaningful threshold above the 30s NIFTY noise floor of ~5 pts.",
+    "stop_rationale": "4 option points = ~8 NIFTY spot pts (delta ~0.5). During an active gap fill, institutional flow creates legs of 10-20 NIFTY pts per 60-90 seconds \u2014 if the trade reverses 8 spot pts against us, the current leg has clearly stalled or the fill has momentarily reversed, and the 30-90s thesis is invalidated. 4 pts provides 1:1.5 R:R with the 6-pt target and represents a meaningful threshold above the 30s NIFTY noise floor of ~5 pts.",
     "target_points": 6.0,
-    "target_rationale": "6 option points = ~12 NIFTY spot pts. Each institutional rebalancing leg during a VWAP gap fill covers 12-20 spot pts in 60-90 seconds before consolidating or reversing briefly. 6 option pts captures the conservative bottom of this range (~12 spot pts) giving 1:1.5 R:R. Calibrated to 30-90s hold time: per the CONVENTIONS.md reference table, NIFTY 1-min moves average 3-7 option pts — 6 pts is the median for the upper half of this range which is where active institutional flow sits.",
+    "target_rationale": "6 option points = ~12 NIFTY spot pts. Each institutional rebalancing leg during a VWAP gap fill covers 12-20 spot pts in 60-90 seconds before consolidating or reversing briefly. 6 option pts captures the conservative bottom of this range (~12 spot pts) giving 1:1.5 R:R. Calibrated to 30-90s hold time: per the CONVENTIONS.md reference table, NIFTY 1-min moves average 3-7 option pts \u2014 6 pts is the median for the upper half of this range which is where active institutional flow sits.",
     "time_stop_bars": 18,
-    "eod_rule": "flatten at 10:30 IST (630 min) — gap fills are a morning phenomenon; after 10:30 unfilled gaps either proved structural or activity dwindles"
+    "eod_rule": "flatten at 10:30 IST (630 min) \u2014 gap fills are a morning phenomenon; after 10:30 unfilled gaps either proved structural or activity dwindles"
   },
   "filters": {
-    "vix_filter": "India VIX < 20 (default) — above 20 gap fills are less reliable as macro panic flows override algorithmic VWAP benchmarking; in high-VIX regimes, gaps extend rather than fill",
-    "time_filter": "09:20-10:30 IST only — gap fill momentum is strongest in the first 75 minutes; after 10:30 remaining gap fill is slow and not directional enough for 30-90s trades",
-    "volume_filter": "none — NIFTY index volume is always sufficient for execution; index volume is noisy at 5s resolution",
+    "vix_filter": "India VIX < 20 (default) \u2014 above 20 gap fills are less reliable as macro panic flows override algorithmic VWAP benchmarking; in high-VIX regimes, gaps extend rather than fill",
+    "time_filter": "09:20-10:30 IST only \u2014 gap fill momentum is strongest in the first 75 minutes; after 10:30 remaining gap fill is slow and not directional enough for 30-90s trades",
+    "volume_filter": "none \u2014 NIFTY index volume is always sufficient for execution; index volume is noisy at 5s resolution",
     "trend_filter": "gap_fill_frac >= 0 confirms fill has started (not a gap extension); gap_pct < max_gap excludes structural macro gaps",
-    "spread_filter": "none — limit order execution at candle close prices"
+    "spread_filter": "none \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.55,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 1.83,
-    "edge_decay_risk": "low-medium — VWAP benchmarking mandates are institutionally embedded and unlikely to disappear; the specific PREV_DAY_VWAP anchor (not prev_close) is a less-crowded signal than standard gap-fill strategies"
+    "edge_decay_risk": "low-medium \u2014 VWAP benchmarking mandates are institutionally embedded and unlikely to disappear; the specific PREV_DAY_VWAP anchor (not prev_close) is a less-crowded signal than standard gap-fill strategies"
   },
-  "adaptation_notes": "Original trades NIFTY200 stocks using prev_day_VWAP as gap anchor, 1-min bars, 10-60 min holds. Key conversion changes: (1) Index only (NIFTY50) — individual stock gaps reflect idiosyncratic risk; NIFTY index gap from prev_VWAP is purely driven by institutional VWAP mandate rebalancing, cleaner signal. (2) Hold time compressed from 10-60 min to 30-90s — we trade INDIVIDUAL LEGS of the gap fill, not the full gap closure. Each leg is predictable; the full fill duration is not. (3) EMA(12) replaces original's EMA(5) entry confirmation — on 5s bars, EMA(5) = 25 seconds is too noisy; 60s EMA matches our hold time. (4) ret_12 replaces 'close > EMA(5) after gap down' confirmation — 1-min momentum is more robust than a single bar EMA cross at 5s. (5) gap_fill_frac threshold widened from 20% to 40% — NIFTY index fills gaps more slowly and linearly than individual stocks, so more entry opportunities exist before 40% completion vs original's 20%. (6) Time window kept as morning (09:20-10:30 → same as original's 09:20-10:30). (7) Original's 'skip if NIFTY gaps same direction >1%' filter is irrelevant — we ARE trading NIFTY directly; we instead cap gap_pct at 1.5% to exclude macro events.",
+  "adaptation_notes": "Original trades NIFTY200 stocks using prev_day_VWAP as gap anchor, 1-min bars, 10-60 min holds. Key conversion changes: (1) Index only (NIFTY50) \u2014 individual stock gaps reflect idiosyncratic risk; NIFTY index gap from prev_VWAP is purely driven by institutional VWAP mandate rebalancing, cleaner signal. (2) Hold time compressed from 10-60 min to 30-90s \u2014 we trade INDIVIDUAL LEGS of the gap fill, not the full gap closure. Each leg is predictable; the full fill duration is not. (3) EMA(12) replaces original's EMA(5) entry confirmation \u2014 on 5s bars, EMA(5) = 25 seconds is too noisy; 60s EMA matches our hold time. (4) ret_12 replaces 'close > EMA(5) after gap down' confirmation \u2014 1-min momentum is more robust than a single bar EMA cross at 5s. (5) gap_fill_frac threshold widened from 20% to 40% \u2014 NIFTY index fills gaps more slowly and linearly than individual stocks, so more entry opportunities exist before 40% completion vs original's 20%. (6) Time window kept as morning (09:20-10:30 \u2192 same as original's 09:20-10:30). (7) Original's 'skip if NIFTY gaps same direction >1%' filter is irrelevant \u2014 we ARE trading NIFTY directly; we instead cap gap_pct at 1.5% to exclude macro events.",
   "weaknesses": [
     "Low trade frequency: NIFTY gaps from prev_VWAP > 0.25% occur ~2-3 times per week; only 2-4 qualifying entries per qualifying day",
     "EMA(12) can lag in fast-moving gap fills: on days when NIFTY moves 40-60 pts at open, the entry confirmation may come after 20-30% of the first leg is already complete",
-    "Macro gap days (budget, RBI, elections) will exceed max_gap threshold but some 1.5-2.0% gaps are still behavioral — the threshold is calibrated conservatively and will miss some valid setups",
-    "prev_day_VWAP computed from full prior session data in the dataset — on the first day in any dataset slice, no prior day exists and no trades fire"
+    "Macro gap days (budget, RBI, elections) will exceed max_gap threshold but some 1.5-2.0% gaps are still behavioral \u2014 the threshold is calibrated conservatively and will miss some valid setups",
+    "prev_day_VWAP computed from full prior session data in the dataset \u2014 on the first day in any dataset slice, no prior day exists and no trades fire"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_147.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-60 minutes",
-    "original_indicators": ["prev_day_VWAP", "session_VWAP", "gap_pct", "gap_fill_pct", "RSI(14)", "EMA(5)"],
+    "original_indicators": [
+      "prev_day_VWAP",
+      "session_VWAP",
+      "gap_pct",
+      "gap_fill_pct",
+      "RSI(14)",
+      "EMA(5)"
+    ],
     "original_stop": "50% gap extension beyond open",
     "original_target": "prev_day_VWAP (full gap fill)"
   }

@@ -129,8 +129,8 @@ class Strategy(BaseStrategy):
             # Stop: 4 pts = ~8 NIFTY spot pts. Genuine crossover should not retrace 8 pts in 120s.
             # Target: 7 pts = ~14 NIFTY spot pts. First impulse leg in VIX 12-22 extends 20-30 pts;
             #   capturing ~50-70% gives 7 option pts at delta ~0.5 (achievable in 60-120s).
-            stop_points=np.full(n, 4.0),
-            target_points=np.full(n, 7.0),
+            stop_points=np.full(n, 5),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=24,          # 120 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

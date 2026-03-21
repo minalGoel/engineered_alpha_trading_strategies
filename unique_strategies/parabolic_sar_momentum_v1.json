@@ -2,14 +2,23 @@
   "name": "parabolic_sar_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["parabolic-sar", "trend-following", "momentum", "adx", "vwap"],
+  "tags": [
+    "parabolic-sar",
+    "trend-following",
+    "momentum",
+    "adx",
+    "vwap"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_171.json",
   "original_name": "parabolic_sar_momentum_v1",
-  "mechanism": "On NIFTY, Parabolic SAR flips (from above to below price) mark the moment where directional order-flow imbalance shifts. At 5-second resolution, a SAR flip confirmed by ADX(36) > 20 (3-min trend filter) and price above session VWAP signals that VWAP-benchmarked institutional algorithms have pivoted to net-buy mode — their execution algorithms are now absorbing sell-side resting orders. The anti-whipsaw filter (fewer than 4 SAR flips in the prior 3 minutes) screens out the range-bound sessions where SAR oscillates uselessly; in genuine trending NIFTY conditions, the confirmed flip initiates a 10-20 spot-point continuation wave over the next 30-90 seconds as the institutional order continues to execute.",
+  "mechanism": "On NIFTY, Parabolic SAR flips (from above to below price) mark the moment where directional order-flow imbalance shifts. At 5-second resolution, a SAR flip confirmed by ADX(36) > 20 (3-min trend filter) and price above session VWAP signals that VWAP-benchmarked institutional algorithms have pivoted to net-buy mode \u2014 their execution algorithms are now absorbing sell-side resting orders. The anti-whipsaw filter (fewer than 4 SAR flips in the prior 3 minutes) screens out the range-bound sessions where SAR oscillates uselessly; in genuine trending NIFTY conditions, the confirmed flip initiates a 10-20 spot-point continuation wave over the next 30-90 seconds as the institutional order continues to execute.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-6",
   "max_trades_per_day": 8,
@@ -25,7 +34,7 @@
     {
       "name": "psar",
       "formula": "ParabolicSAR(af_step=0.02, af_max=0.20)",
-      "lookback": "dynamic",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "SAR parameters are ratio-based (not time-based), so no scaling is needed. The af_step=0.02 and af_max=0.20 are kept from original. The SAR's rate of acceleration is proportional to the price move, not bar duration. On 5-second bars, flips occur more frequently due to noise, hence the anti-whipsaw filter."
     },
@@ -41,66 +50,66 @@
       "formula": "ADX(high, low, close, period=36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute ADX. Original used ADX(14) on 1-min bars = 14-minute context window. Compressed to 3 min (36 bars at 5s) because: (a) we hold 15-120s, requiring ADX to respond faster; (b) the original's 14-min ADX was a slow trend filter for 15-60 min holds — proportional scaling for 30-90s holds gives ~3 min; (c) 14×12=168 bars would be a 14-min ADX that is far too slow to reflect the current momentum regime at 5s frequency."
+      "purpose": "3-minute ADX. Original used ADX(14) on 1-min bars = 14-minute context window. Compressed to 3 min (36 bars at 5s) because: (a) we hold 15-120s, requiring ADX to respond faster; (b) the original's 14-min ADX was a slow trend filter for 15-60 min holds \u2014 proportional scaling for 30-90s holds gives ~3 min; (c) 14\u00d712=168 bars would be a 14-min ADX that is far too slow to reflect the current momentum regime at 5s frequency."
     },
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume), reset each day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from 09:15 IST. No scaling needed — it is a session-level anchor. Price above VWAP confirms bullish institutional bias; below VWAP confirms bearish. Same role as original."
+      "purpose": "Cumulative VWAP from 09:15 IST. No scaling needed \u2014 it is a session-level anchor. Price above VWAP confirms bullish institutional bias; below VWAP confirms bearish. Same role as original."
     },
     {
       "name": "vol_avg_60",
       "formula": "SMA(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute rolling volume average. Original used SMA(volume,20) on 1-min = 20-minute window. Here we use 60-bar (5-min) window to measure current volume vs recent session activity — shorter than original because at 5s bars, a 20-min average would include too much historical session structure and not reflect the current momentum episode."
+      "purpose": "5-minute rolling volume average. Original used SMA(volume,20) on 1-min = 20-minute window. Here we use 60-bar (5-min) window to measure current volume vs recent session activity \u2014 shorter than original because at 5s bars, a 20-min average would include too much historical session structure and not reflect the current momentum episode."
     },
     {
       "name": "flip_count_36",
       "formula": "count of SAR direction changes in last 36 bars (3 min)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "Anti-whipsaw filter. Original checked > 4 flips in 30 bars (30 min). At 5s, 3 minutes of choppy behavior (36 bars) is sufficient to identify an unreliable SAR regime. If SAR has flipped 4+ times in 3 minutes, the market is range-bound and SAR signals are noise — skip entry."
+      "purpose": "Anti-whipsaw filter. Original checked > 4 flips in 30 bars (30 min). At 5s, 3 minutes of choppy behavior (36 bars) is sufficient to identify an unreliable SAR regime. If SAR has flipped 4+ times in 3 minutes, the market is range-bound and SAR signals are noise \u2014 skip entry."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "psar_direction == +1 (SAR below price — bull phase)",
+        "psar_direction == +1 (SAR below price \u2014 bull phase)",
         "psar_direction[t-1] == -1 (SAR just flipped from bear to bull)",
-        "adx_36 > adx_threshold (default 20) — trending environment",
-        "close > vwap — price above VWAP confirms institutional buy bias",
-        "flip_count_36 < 4 — not in a whipsaw/choppy regime",
-        "volume >= vol_avg_60 * vol_mult (default 0.8) — adequate participation"
+        "adx_36 > adx_threshold (default 20) \u2014 trending environment",
+        "close > vwap \u2014 price above VWAP confirms institutional buy bias",
+        "flip_count_36 < 4 \u2014 not in a whipsaw/choppy regime",
+        "volume >= vol_avg_60 * vol_mult (default 0.8) \u2014 adequate participation"
       ],
       "confirmation": "All conditions met on the SAR flip bar itself"
     },
     "buy_pe": {
       "conditions": [
-        "psar_direction == -1 (SAR above price — bear phase)",
+        "psar_direction == -1 (SAR above price \u2014 bear phase)",
         "psar_direction[t-1] == +1 (SAR just flipped from bull to bear)",
-        "adx_36 > adx_threshold (default 20) — trending environment",
-        "close < vwap — price below VWAP confirms institutional sell bias",
-        "flip_count_36 < 4 — not in a whipsaw/choppy regime",
-        "volume >= vol_avg_60 * vol_mult (default 0.8) — adequate participation"
+        "adx_36 > adx_threshold (default 20) \u2014 trending environment",
+        "close < vwap \u2014 price below VWAP confirms institutional sell bias",
+        "flip_count_36 < 4 \u2014 not in a whipsaw/choppy regime",
+        "volume >= vol_avg_60 * vol_mult (default 0.8) \u2014 adequate participation"
       ],
       "confirmation": "All conditions met on the SAR flip bar itself"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. If NIFTY reverses 8 spot pts immediately after a SAR flip, the flip was a false signal — genuine SAR flips in trending conditions should not retrace more than 5-6 spot points within 30 seconds. Using 4 option pts gives a small buffer above the 3-pt false-flip threshold.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. If NIFTY reverses 8 spot pts immediately after a SAR flip, the flip was a false signal \u2014 genuine SAR flips in trending conditions should not retrace more than 5-6 spot points within 30 seconds. Using 4 option pts gives a small buffer above the 3-pt false-flip threshold.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts = ~14 NIFTY spot pts. A confirmed SAR flip in a trending session leads to a 10-20 spot point continuation over 30-90 seconds (per typical 30-90s NIFTY move distributions). Targeting 14 pts captures the lower half of expected continuation (conservative but achievable), yielding a 1:1.75 risk-reward.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — original strategy had no VIX filter; ADX already screens out low-volatility choppy conditions",
-    "time_filter": "no entries before 09:25 IST (565 min) — skip first 2 minutes of session where SAR is still initializing; no entries after 15:20 IST",
+    "vix_filter": "none \u2014 original strategy had no VIX filter; ADX already screens out low-volatility choppy conditions",
+    "time_filter": "no entries before 09:25 IST (565 min) \u2014 skip first 2 minutes of session where SAR is still initializing; no entries after 15:20 IST",
     "volume_filter": "current bar volume >= 0.8x 60-bar rolling mean",
     "trend_filter": "ADX(36) > 20 and fewer than 4 SAR flips in prior 36 bars",
     "spread_filter": "not applicable (limit orders)"
@@ -108,23 +117,30 @@
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.48,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.61,
-    "edge_decay_risk": "moderate — SAR is a well-known indicator; edge comes from the conjunction of SAR flip + ADX + VWAP + anti-whipsaw, which is less commonly traded as a combined system at 5s frequency"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.48,
+    "edge_decay_risk": "moderate \u2014 SAR is a well-known indicator; edge comes from the conjunction of SAR flip + ADX + VWAP + anti-whipsaw, which is less commonly traded as a combined system at 5s frequency"
   },
-  "adaptation_notes": "Key changes from original: (1) Timeframe compressed from 1-min to 5s — SAR parameters unchanged (ratio-based), but ADX period compressed from 14 to 36 bars (14 min → 3 min) proportional to hold time reduction from 15-60 min to 15-120s. (2) Volume filter changed from 20-bar 1-min average to 60-bar 5s average (5-min window, shorter than original's 20-min but appropriate for detecting volume participation in a micro-episode). (3) Anti-whipsaw filter window compressed from 30 bars (30 min original) to 36 bars (3 min at 5s) — we check for recent choppiness, not long-term. (4) Exit: original used SAR as trailing stop (stop-and-reverse); converted to fixed 4-pt stop + 7-pt target with 24-bar time stop because trailing stops are not supported in the pipeline. (5) Universe changed from NIFTY200 stocks to NIFTY index — session 09:25 (not 09:30) because index data is available earlier and SAR initializes faster on a smoother series.",
+  "adaptation_notes": "Key changes from original: (1) Timeframe compressed from 1-min to 5s \u2014 SAR parameters unchanged (ratio-based), but ADX period compressed from 14 to 36 bars (14 min \u2192 3 min) proportional to hold time reduction from 15-60 min to 15-120s. (2) Volume filter changed from 20-bar 1-min average to 60-bar 5s average (5-min window, shorter than original's 20-min but appropriate for detecting volume participation in a micro-episode). (3) Anti-whipsaw filter window compressed from 30 bars (30 min original) to 36 bars (3 min at 5s) \u2014 we check for recent choppiness, not long-term. (4) Exit: original used SAR as trailing stop (stop-and-reverse); converted to fixed 4-pt stop + 7-pt target with 24-bar time stop because trailing stops are not supported in the pipeline. (5) Universe changed from NIFTY200 stocks to NIFTY index \u2014 session 09:25 (not 09:30) because index data is available earlier and SAR initializes faster on a smoother series.",
   "weaknesses": [
-    "SAR flips at 5s bars are inherently noisy — anti-whipsaw filter helps but cannot eliminate all false signals during NIFTY range sessions",
-    "ADX(36) at 5s has a 3-minute initialization lag — first 3 minutes of any trend change may be missed",
+    "SAR flips at 5s bars are inherently noisy \u2014 anti-whipsaw filter helps but cannot eliminate all false signals during NIFTY range sessions",
+    "ADX(36) at 5s has a 3-minute initialization lag \u2014 first 3 minutes of any trend change may be missed",
     "NIFTY SAR flips can cluster during high-volatility events (FOMC, RBI policy), causing the anti-whipsaw filter to block entries precisely when large moves occur",
-    "Fixed stops may be too tight on high-VIX days — consider adding a VIX filter (e.g., skip if VIX > 22) in future versions"
+    "Fixed stops may be too tight on high-VIX days \u2014 consider adding a VIX filter (e.g., skip if VIX > 22) in future versions"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_171.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 minutes",
-    "original_indicators": ["Parabolic SAR (af=0.02, max=0.20)", "ADX(14)", "VWAP", "ATR(14)", "SMA(volume,20)"],
+    "original_indicators": [
+      "Parabolic SAR (af=0.02, max=0.20)",
+      "ADX(14)",
+      "VWAP",
+      "ATR(14)",
+      "SMA(volume,20)"
+    ],
     "original_stop": "SAR value (dynamic trailing stop)",
-    "original_target": "none — SAR manages exit"
-  }
+    "original_target": "none \u2014 SAR manages exit"
+  },
+  "vix_agnostic": true
 }

@@ -2,14 +2,23 @@
   "name": "trend_strength_adaptive_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["ADX", "adaptive", "EMA-crossover", "trend-following", "regime-adaptive"],
+  "tags": [
+    "ADX",
+    "adaptive",
+    "EMA-crossover",
+    "trend-following",
+    "regime-adaptive"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_306.json",
   "original_name": "trend_strength_adaptive_v1",
-  "mechanism": "On NIFTY, the strength of an intraday trend (measured by 3-minute ADX) determines how fast directional momentum can be captured: high-ADX regimes (ADX > 35) reflect concentrated institutional order flow where even a 30-second window is sufficient to confirm direction, while low-ADX regimes (ADX 18-25) require 2-3 minutes of EMA history to filter noise. The adaptive EMA crossover exploits this by contracting its lookback from ~36 bars (3 min) to ~12 bars (1 min) as ADX rises, making the signal faster precisely when fast signals are reliable. The +DI/-DI comparison on 3-minute bars confirms that directional pressure is asymmetric — not just overall volatility — while the VWAP filter ensures the trade aligns with the accumulated session-level institutional flow benchmarking on NIFTY.",
+  "mechanism": "On NIFTY, the strength of an intraday trend (measured by 3-minute ADX) determines how fast directional momentum can be captured: high-ADX regimes (ADX > 35) reflect concentrated institutional order flow where even a 30-second window is sufficient to confirm direction, while low-ADX regimes (ADX 18-25) require 2-3 minutes of EMA history to filter noise. The adaptive EMA crossover exploits this by contracting its lookback from ~36 bars (3 min) to ~12 bars (1 min) as ADX rises, making the signal faster precisely when fast signals are reliable. The +DI/-DI comparison on 3-minute bars confirms that directional pressure is asymmetric \u2014 not just overall volatility \u2014 while the VWAP filter ensures the trade aligns with the accumulated session-level institutional flow benchmarking on NIFTY.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,7 +36,7 @@
       "formula": "Wilder ADX(high, low, close, 36)",
       "lookback": 72,
       "computed_on": "spot",
-      "purpose": "3-minute ADX (36 bars × 5s = 180s) as the regime-scaling parameter. Compressed from original's 14-min ADX because we're holding 15-120s — we need trend strength that reflects the CURRENT minute, not the past 14. At 5s bars, the 3-min ADX is fast enough to distinguish a trending micro-burst from a choppy range, which is exactly the regime information needed to adapt the EMA lookback."
+      "purpose": "3-minute ADX (36 bars \u00d7 5s = 180s) as the regime-scaling parameter. Compressed from original's 14-min ADX because we're holding 15-120s \u2014 we need trend strength that reflects the CURRENT minute, not the past 14. At 5s bars, the 3-min ADX is fast enough to distinguish a trending micro-burst from a choppy range, which is exactly the regime information needed to adapt the EMA lookback."
     },
     {
       "name": "plus_di_36",
@@ -46,73 +55,73 @@
     {
       "name": "adaptive_ema_fast",
       "formula": "EMA(close, max(12, 48 - floor(adx_36 / 3)))",
-      "lookback": "dynamic (12-48 bars = 1-4 min)",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Fast EMA whose alpha contracts as ADX rises. At ADX=15: lookback≈43 bars (3.6 min); ADX=30: 38 bars (3.2 min); ADX=60: 28 bars (2.3 min); ADX=100: 12 bars (1 min). Range 12-48 vs original 5-25 bars (1-min): compressed because 5s bars resolve micro-moves that 1-min bars average away. The adaptive contraction captures acceleration in the signal exactly when acceleration is meaningful — during strong NIFTY momentum pulses."
+      "purpose": "Fast EMA whose alpha contracts as ADX rises. At ADX=15: lookback\u224843 bars (3.6 min); ADX=30: 38 bars (3.2 min); ADX=60: 28 bars (2.3 min); ADX=100: 12 bars (1 min). Range 12-48 vs original 5-25 bars (1-min): compressed because 5s bars resolve micro-moves that 1-min bars average away. The adaptive contraction captures acceleration in the signal exactly when acceleration is meaningful \u2014 during strong NIFTY momentum pulses."
     },
     {
       "name": "adaptive_ema_slow",
       "formula": "EMA(close, max(24, 96 - floor(adx_36 * 2 / 3)))",
-      "lookback": "dynamic (24-96 bars = 2-8 min)",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Slow EMA = 2× fast EMA lookback, providing the crossover reference. Same adaptive logic: at high ADX, slow becomes more responsive but still 2× slower than fast, maintaining signal quality."
+      "purpose": "Slow EMA = 2\u00d7 fast EMA lookback, providing the crossover reference. Same adaptive logic: at high ADX, slow becomes more responsive but still 2\u00d7 slower than fast, maintaining signal quality."
     },
     {
       "name": "vwap",
       "formula": "cumulative sum(typical_price * volume) / cumulative sum(volume) from 09:15 IST, reset each day",
-      "lookback": "session-cumulative",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP — no scaling needed, cumulative. Filters directional bias: NIFTY above VWAP means institutional buyside flow has dominated the session; entering CE there aligns with accumulated demand. Below VWAP: net sell pressure has dominated. Directional accuracy improves significantly when entry aligns with VWAP-side bias."
+      "purpose": "Session VWAP \u2014 no scaling needed, cumulative. Filters directional bias: NIFTY above VWAP means institutional buyside flow has dominated the session; entering CE there aligns with accumulated demand. Below VWAP: net sell pressure has dominated. Directional accuracy improves significantly when entry aligns with VWAP-side bias."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "+DI(36) > -DI(36) — bullish directional asymmetry confirmed",
-        "ADX(36) > adx_threshold (default 18) — minimum trend strength",
+        "+DI(36) > -DI(36) \u2014 bullish directional asymmetry confirmed",
+        "ADX(36) > adx_threshold (default 18) \u2014 minimum trend strength",
         "ADX(36)[t] > ADX(36)[t-6] (ADX rising over 30s = trend is accelerating)",
-        "adaptive_ema_fast > adaptive_ema_slow — adaptive EMA crossover bullish",
-        "close > VWAP — aligned with session institutional buy flow"
+        "adaptive_ema_fast > adaptive_ema_slow \u2014 adaptive EMA crossover bullish",
+        "close > VWAP \u2014 aligned with session institutional buy flow"
       ],
       "confirmation": "All 5 conditions true simultaneously"
     },
     "buy_pe": {
       "conditions": [
-        "-DI(36) > +DI(36) — bearish directional asymmetry confirmed",
+        "-DI(36) > +DI(36) \u2014 bearish directional asymmetry confirmed",
         "ADX(36) > adx_threshold (default 18)",
         "ADX(36)[t] > ADX(36)[t-6] (ADX rising over 30s)",
-        "adaptive_ema_fast < adaptive_ema_slow — adaptive EMA crossover bearish",
-        "close < VWAP — aligned with session institutional sell flow"
+        "adaptive_ema_fast < adaptive_ema_slow \u2014 adaptive EMA crossover bearish",
+        "close < VWAP \u2014 aligned with session institutional sell flow"
       ],
       "confirmation": "All 5 conditions true simultaneously"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. For a 3-minute ADX trend, an 8-spot-pt adverse move within the 15-120s hold means the institutional order creating the trend has paused or reversed — thesis is broken. NIFTY 30s typical range is 2-5 option pts; 4 pts gives one full 30s range of room before invalidating the setup.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. For a 3-minute ADX trend, an 8-spot-pt adverse move within the 15-120s hold means the institutional order creating the trend has paused or reversed \u2014 thesis is broken. NIFTY 30s typical range is 2-5 option pts; 4 pts gives one full 30s range of room before invalidating the setup.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts = ~14 NIFTY spot pts. ADX-confirmed trending moves on NIFTY extend 15-25 spot pts in the first 60-90 seconds; targeting 14 pts captures ~60% of the typical first leg. 1:1.75 R:R, above the ~1.5 required for the 55% win rate threshold to be profitable.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "none — strategy works across VIX regimes; ADX captures trend quality independent of absolute volatility level",
-    "time_filter": "No entries before 09:20 (ADX warmup: 2×36 = 72 bars = 6 min) or after 15:25",
-    "volume_filter": "none — NIFTY index volume noisy at 5s; directional pressure captured by DI indicators",
-    "trend_filter": "ADX > 18 AND DI asymmetry — dual condition prevents entries in choppy regimes",
-    "spread_filter": "none — limit order execution at candle close"
+    "vix_filter": "none \u2014 strategy works across VIX regimes; ADX captures trend quality independent of absolute volatility level",
+    "time_filter": "No entries before 09:20 (ADX warmup: 2\u00d736 = 72 bars = 6 min) or after 15:25",
+    "volume_filter": "none \u2014 NIFTY index volume noisy at 5s; directional pressure captured by DI indicators",
+    "trend_filter": "ADX > 18 AND DI asymmetry \u2014 dual condition prevents entries in choppy regimes",
+    "spread_filter": "none \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.53,
-    "avg_winner_to_loser": 1.65,
-    "profit_factor_estimate": 1.48,
-    "edge_decay_risk": "Moderate — ADX-adaptive parameter scaling is a novel twist on standard ADX trend-following; the adaptive EMA contraction adds complexity that most participants don't implement"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "Moderate \u2014 ADX-adaptive parameter scaling is a novel twist on standard ADX trend-following; the adaptive EMA contraction adds complexity that most participants don't implement"
   },
-  "adaptation_notes": "Original traded ADX(14) on 1-min bars of NIFTY50 stocks with 15-60 min holds. KEY CHANGES: (1) ADX compressed from 14 min to 3 min (ADX(36) at 5s bars) — proportional to hold time reduction from 15-60 min to 15-120s. (2) Adaptive EMA formula re-calibrated: original used max(5, 25-floor(ADX/5)) bars on 1-min = range 5-25 min; converted to max(12, 48-floor(ADX/3)) at 5s = range 60-240s, targeting the same proportional effect. (3) ADX-rising check expanded from 3 bars (3 min original) to 6 bars (30s at 5s) — catches acceleration at our timescale. (4) Stock-specific filters removed (ADV, earnings, bid-ask spread <5bps). (5) Fixed ₹1L capital per pipeline conventions instead of ADX-proportional sizing. DIFFERENTIATOR vs adx_trend_strength_v1: that strategy uses fixed ADX(60) with DI-spread threshold; this strategy uses ADX-ADAPTIVE EMA crossover as primary signal — fundamentally different entry logic.",
+  "adaptation_notes": "Original traded ADX(14) on 1-min bars of NIFTY50 stocks with 15-60 min holds. KEY CHANGES: (1) ADX compressed from 14 min to 3 min (ADX(36) at 5s bars) \u2014 proportional to hold time reduction from 15-60 min to 15-120s. (2) Adaptive EMA formula re-calibrated: original used max(5, 25-floor(ADX/5)) bars on 1-min = range 5-25 min; converted to max(12, 48-floor(ADX/3)) at 5s = range 60-240s, targeting the same proportional effect. (3) ADX-rising check expanded from 3 bars (3 min original) to 6 bars (30s at 5s) \u2014 catches acceleration at our timescale. (4) Stock-specific filters removed (ADV, earnings, bid-ask spread <5bps). (5) Fixed \u20b91L capital per pipeline conventions instead of ADX-proportional sizing. DIFFERENTIATOR vs adx_trend_strength_v1: that strategy uses fixed ADX(60) with DI-spread threshold; this strategy uses ADX-ADAPTIVE EMA crossover as primary signal \u2014 fundamentally different entry logic.",
   "weaknesses": [
-    "Adaptive EMA alpha changes bar-by-bar as ADX fluctuates, potentially generating false crossovers when ADX crosses the boundary that shifts lookback — same weakness as original, amplified at 5s frequency due to noisier ADX readings",
+    "Adaptive EMA alpha changes bar-by-bar as ADX fluctuates, potentially generating false crossovers when ADX crosses the boundary that shifts lookback \u2014 same weakness as original, amplified at 5s frequency due to noisier ADX readings",
     "ADX(36) on 5s NIFTY bars is very short (3 minutes); ADX may oscillate rapidly, causing frequent lookback changes that destabilize EMA convergence",
     "All 5 entry conditions creating a tight conjunction reduces trade frequency; in low-ADX sessions NIFTY may generate 0-2 trades/day"
   ],
@@ -120,8 +129,16 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_306.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 min (inversely related to ADX)",
-    "original_indicators": ["ADX(14)", "+DI(14)", "-DI(14)", "Adaptive_EMA (5-25 bars dynamic)", "Adaptive_EMA_Slow (10-50 bars dynamic)", "VWAP"],
+    "original_indicators": [
+      "ADX(14)",
+      "+DI(14)",
+      "-DI(14)",
+      "Adaptive_EMA (5-25 bars dynamic)",
+      "Adaptive_EMA_Slow (10-50 bars dynamic)",
+      "VWAP"
+    ],
     "original_stop": "max(20, ADX_14 * 0.8) bps from entry",
     "original_target": "max(30, ADX_14 * 1.5) bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

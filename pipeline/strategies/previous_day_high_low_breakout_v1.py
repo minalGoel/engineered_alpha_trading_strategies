@@ -111,21 +111,21 @@ class Strategy(BaseStrategy):
             vol_sma60[i] = np.mean(volume[i - 60:i])
         vol_surge = np.where(vol_sma60 > 0, volume / vol_sma60, 0.0)
 
-        # ── Session VWAP (cumulative, reset each day) ────────────────────────
+        # ── Session VWAP (cumulative, reset each day via day_id) ─────────────
+        day_id = spot_df["day_id"].to_numpy().astype(np.int32)
+        pv = close * np.maximum(volume, 1.0)
         vwap = np.zeros(n)
         cum_pv = 0.0
         cum_vol = 0.0
-        prev_date = None
+        prev_day_id = -1
         for i in range(n):
-            d = session_dates[i]
-            if d != prev_date:
-                cum_pv = close[i] * max(volume[i], 1.0)
+            if day_id[i] != prev_day_id:
+                cum_pv = pv[i]
                 cum_vol = max(volume[i], 1.0)
-                prev_date = d
+                prev_day_id = day_id[i]
             else:
-                v = max(volume[i], 1.0)
-                cum_pv += close[i] * v
-                cum_vol += v
+                cum_pv += pv[i]
+                cum_vol += max(volume[i], 1.0)
             vwap[i] = cum_pv / cum_vol
 
         # ── VIX aligned to spot bars ─────────────────────────────────────────
@@ -180,8 +180,8 @@ class Strategy(BaseStrategy):
             buy_pe=buy_pe,
             sell_ce=sell_ce,
             sell_pe=sell_pe,
-            stop_points=np.full(n, 4.0),
-            target_points=np.full(n, 7.0),
+            stop_points=np.full(n, 5),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,          # 90 seconds
             max_trades_per_day=self.max_trades_per_day,

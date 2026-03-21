@@ -2,14 +2,22 @@
   "name": "ema200_dip_reversal_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "support", "ema_bounce"],
+  "tags": [
+    "mean_reversion",
+    "support",
+    "ema_bounce"
+  ],
+  "directional_bias": "bullish",
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_16.json",
   "original_name": "ema200_dip_reversal_v1",
-  "mechanism": "When NIFTY dips to its 60-minute EMA — a major intraday reference level explicitly tracked by index futures desks, VWAP-algo overlays, and delta-hedging market makers — resting buy orders cluster just above this EMA because systematic programs treat it as a 'buy zone' for intraday mean reversion. Each time NIFTY touches this level and holds, the absorption becomes faster as confirmation builds across desks; at 5-second resolution we can detect the first recovery bar (positive 5s return) the moment price re-crosses above the EMA touch zone, entering CE options before the broader 1-minute bar even closes. The 60-minute EMA compresses the original multi-day EMA concept to an intraday one because at 5s resolution with 15-90s hold times we are capturing the institutional intraday reversion, not a multi-day trend recovery.",
+  "mechanism": "When NIFTY dips to its 60-minute EMA \u2014 a major intraday reference level explicitly tracked by index futures desks, VWAP-algo overlays, and delta-hedging market makers \u2014 resting buy orders cluster just above this EMA because systematic programs treat it as a 'buy zone' for intraday mean reversion. Each time NIFTY touches this level and holds, the absorption becomes faster as confirmation builds across desks; at 5-second resolution we can detect the first recovery bar (positive 5s return) the moment price re-crosses above the EMA touch zone, entering CE options before the broader 1-minute bar even closes. The 60-minute EMA compresses the original multi-day EMA concept to an intraday one because at 5s resolution with 15-90s hold times we are capturing the institutional intraday reversion, not a multi-day trend recovery. This strategy is intentionally long-biased \u2014 PE entries require fewer conditions due to the underlying bullish structural assumption. The EMA dip-reversal mechanism describes institutional buy order clustering at the 60-min EMA; the analogous short-side setup (EMA resistance fades) requires a different signal structure and is outside the scope of this strategy.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:35-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-8",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "EMA(close, 720)",
       "lookback": 720,
       "computed_on": "spot",
-      "purpose": "60-minute EMA at 5s bars (720 × 5s = 3600s). NOT the original 200×12=2400 blind scaling. Rationale: the original EMA200-5min is a multi-day (~17hr) trend support level that is practically impossible to compute reliably within a single trading day's data window. At 5s resolution with 15-90s hold times, the relevant support is INTRADAY — the 60-min EMA represents 3600 seconds of exponentially-weighted price history, sufficient to capture the dominant intraday trend anchor while requiring only a 60-min warmup (signals from ~10:15 IST). The 60-min EMA is the highest-order SAME-SESSION support level visible in a single day's data."
+      "purpose": "60-minute EMA at 5s bars (720 \u00d7 5s = 3600s). NOT the original 200\u00d712=2400 blind scaling. Rationale: the original EMA200-5min is a multi-day (~17hr) trend support level that is practically impossible to compute reliably within a single trading day's data window. At 5s resolution with 15-90s hold times, the relevant support is INTRADAY \u2014 the 60-min EMA represents 3600 seconds of exponentially-weighted price history, sufficient to capture the dominant intraday trend anchor while requiring only a 60-min warmup (signals from ~10:15 IST). The 60-min EMA is the highest-order SAME-SESSION support level visible in a single day's data."
     },
     {
       "name": "dist_pct",
@@ -41,52 +49,55 @@
       "formula": "(close[i] - close[i-1]) / close[i-1]",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Single-bar 5-second return. Detects the precise moment price begins recovering at the EMA — the first positive 5s bar after the dip is the earliest possible entry, capturing more of the bounce than waiting for a full 1-min bar."
+      "purpose": "Single-bar 5-second return. Detects the precise moment price begins recovering at the EMA \u2014 the first positive 5s bar after the dip is the earliest possible entry, capturing more of the bounce than waiting for a full 1-min bar."
     },
     {
       "name": "mom_6",
       "formula": "(close[i] - close[i-6]) / close[i-6]",
       "lookback": 6,
       "computed_on": "spot",
-      "purpose": "30-second momentum (6 × 5s bars). Guards against entering into a trending breakdown — if 30s momentum is still sharply negative, the dip is a trend break, not a bounce. Chosen to match the minimum hold time (15-30s) so that we require positive momentum at the same timescale we plan to exit."
+      "purpose": "30-second momentum (6 \u00d7 5s bars). Guards against entering into a trending breakdown \u2014 if 30s momentum is still sharply negative, the dip is a trend break, not a bounce. Chosen to match the minimum hold time (15-30s) so that we require positive momentum at the same timescale we plan to exit."
     },
     {
       "name": "prior_min_dist",
       "formula": "min(|dist_pct[i-240:i]|)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Rolling minimum distance from EMA over prior 20 minutes (240 bars). Proxies the original strategy's 'multi-day support' condition: if price has not come within 2× the touch threshold in the last 20 minutes, this is the first approach and may be a breakout, not a tested support. We require at least one prior test within 20 minutes to confirm the EMA is acting as support."
+      "purpose": "Rolling minimum distance from EMA over prior 20 minutes (240 bars). Proxies the original strategy's 'multi-day support' condition: if price has not come within 2\u00d7 the touch threshold in the last 20 minutes, this is the first approach and may be a breakout, not a tested support. We require at least one prior test within 20 minutes to confirm the EMA is acting as support."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "|dist_pct| < ema_touch_pct (price within touch zone of EMA)",
-        "dist_pct[i-1] >= -ema_touch_pct (was at or above EMA on prior bar — not already broken)",
-        "ret_1 > bounce_threshold (current 5s bar is positive — bounce starting)",
+        "dist_pct[i-1] >= -ema_touch_pct (was at or above EMA on prior bar \u2014 not already broken)",
+        "ret_1 > bounce_threshold (current 5s bar is positive \u2014 bounce starting)",
         "mom_6 > -0.0003 (30s trend not in sharp breakdown)",
-        "prior_min_dist < 2 * ema_touch_pct (EMA was tested within last 20 min — confirmed support)",
+        "prior_min_dist < 2 * ema_touch_pct (EMA was tested within last 20 min \u2014 confirmed support)",
         "vix_close < vix_max"
       ],
       "confirmation": "First positive 5s bar as price re-touches the EMA from above"
     },
     "buy_pe": {
-      "conditions": ["NOT_APPLICABLE"],
-      "confirmation": "Not traded — original was long-only EMA bounce"
+      "conditions": [
+        "NOT_APPLICABLE \u2014 strategy is intentionally long-biased; no PE entries are taken",
+        "The EMA dip-reversal thesis (buy orders clustering at 60-min EMA) applies exclusively to the bullish direction"
+      ],
+      "confirmation": "Not traded \u2014 original was long-only EMA bounce. PE side omitted intentionally per directional_bias=bullish."
     },
     "entry_price": "limit at candle close"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 3.0,
     "stop_rationale": "4 option pts = ~8 NIFTY spot pts at ATM delta ~0.5. If NIFTY falls 8 pts below the 60-min EMA touch zone within 90s, the level has definitively broken and the bounce thesis has failed. Per the reference table, a 30-60s move of 8+ spot pts is a genuine breakdown, not noise (typical 30s range is 2-5 option pts; anything beyond is directional).",
-    "target_points": 7,
-    "target_rationale": "7 option pts = ~14 NIFTY spot pts at delta ~0.5. NIFTY EMA bounces within a session typically return 12-20 spot pts above the touch point within 60-90s as the resting buy orders absorb selling; 7 option pts captures the conservative lower end (1:1.75 R:R vs 4pt stop). This calibrated to typical 1-minute NIFTY moves of 3-7 option pts — our 90s time window should deliver at least that.",
+    "target_points": 6.0,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts at delta ~0.5. NIFTY EMA bounces within a session typically return 12-20 spot pts above the touch point within 60-90s as the resting buy orders absorb selling; 7 option pts captures the conservative lower end (1:1.75 R:R vs 4pt stop). This calibrated to typical 1-minute NIFTY moves of 3-7 option pts \u2014 our 90s time window should deliver at least that.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "vix < 20.0 (regime filter — in high-vol regimes EMA breaks are more likely to become trend breaks rather than bounce-and-recover)",
-    "time_filter": "09:35–15:20 IST (skip first 20 min of noisy pre-trend; skip last 10 min of EOD unwinding)",
+    "vix_filter": "vix < 20.0 (regime filter \u2014 in high-vol regimes EMA breaks are more likely to become trend breaks rather than bounce-and-recover)",
+    "time_filter": "09:35\u201315:20 IST (skip first 20 min of noisy pre-trend; skip last 10 min of EOD unwinding)",
     "volume_filter": "none (NIFTY index volume is noisy at 5s; replaced by prior_touch as support confirmation)",
     "trend_filter": "30s momentum (mom_6) must not be deeply negative",
     "spread_filter": "none (limit orders, no spread cost)"
@@ -94,13 +105,13 @@
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.57,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.1,
-    "edge_decay_risk": "medium — EMA support bounces become less reliable if algorithmic strategies that defend the level reduce their exposure"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.65,
+    "edge_decay_risk": "medium \u2014 EMA support bounces become less reliable if algorithmic strategies that defend the level reduce their exposure"
   },
-  "adaptation_notes": "Original EMA200-5min (~17hr lookback) compressed to EMA720-5s (60-min) for intraday use — original period is impractical to compute intraday and misaligned with 15-90s hold times. Multi-day support condition replaced by rolling-min prior_touch within the current session (20-minute look-back). Relative volume filter dropped — NIFTY index volume at 5s is too noisy; prior EMA test acts as a similar confirmation. Long-only preserved (bearish EMA bounces require different setup). VIX threshold kept near original (19→20).",
+  "adaptation_notes": "Original EMA200-5min (~17hr lookback) compressed to EMA720-5s (60-min) for intraday use \u2014 original period is impractical to compute intraday and misaligned with 15-90s hold times. Multi-day support condition replaced by rolling-min prior_touch within the current session (20-minute look-back). Relative volume filter dropped \u2014 NIFTY index volume at 5s is too noisy; prior EMA test acts as a similar confirmation. Long-only preserved (bearish EMA bounces require different setup). VIX threshold kept near original (19\u219220).",
   "weaknesses": [
-    "Signals only start ~60 minutes after open (720-bar warmup) — misses morning session",
+    "Signals only start ~60 minutes after open (720-bar warmup) \u2014 misses morning session",
     "EMA(720) is an intraday construct; on days where overnight gap creates an unusual open, the EMA may not yet reflect the day's dominant trend direction",
     "Prior touch filter with 20-min window may reject valid first-bounce entries on range expansion days",
     "Long-only: misses downside EMA-resistance fades"
@@ -109,8 +120,13 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_16.json",
     "original_timeframe": "1min bars, EMA aggregated to 5min",
     "original_hold_time": "10-30 bars (10-30 minutes)",
-    "original_indicators": ["ema_200_5min", "multi_day_support", "rel_volume > 1.6", "ATR(20)"],
+    "original_indicators": [
+      "ema_200_5min",
+      "multi_day_support",
+      "rel_volume > 1.6",
+      "ATR(20)"
+    ],
     "original_stop": "below ema_200_5min",
-    "original_target": "1.0 × ATR(20) above entry"
+    "original_target": "1.0 \u00d7 ATR(20) above entry"
   }
 }

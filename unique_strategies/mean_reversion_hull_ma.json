@@ -2,14 +2,22 @@
   "name": "mean_reversion_hull_ma",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "hull_ma", "ranging", "intraday"],
+  "tags": [
+    "mean_reversion",
+    "hull_ma",
+    "ranging",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_353.json",
   "original_name": "mean_reversion_hull_ma",
-  "mechanism": "On NIFTY, during mid-session ranging periods (flat HMA slope), the Hull Moving Average over 3 minutes (36 × 5s bars) serves as a real-time equilibrium anchor because its lag-less construction tracks where sustained institutional order flow has been placed. When NIFTY deviates >0.12% (≈25-27 spot points) from this HMA while the slope is near-zero, VWAP-benchmarked execution algos and market makers see the index as statistically cheap or expensive relative to recent flow — their delta-hedging and mean-reversion fills push price back toward the HMA within 30-90 seconds. The flat-slope filter is critical: it rules out trending regimes where the overshoot is justified by sustained directional order flow, isolating only the pure microstructure overshoots.",
+  "mechanism": "On NIFTY, during mid-session ranging periods (flat HMA slope), the Hull Moving Average over 3 minutes (36 \u00d7 5s bars) serves as a real-time equilibrium anchor because its lag-less construction tracks where sustained institutional order flow has been placed. When NIFTY deviates >0.12% (\u224825-27 spot points) from this HMA while the slope is near-zero, VWAP-benchmarked execution algos and market makers see the index as statistically cheap or expensive relative to recent flow \u2014 their delta-hedging and mean-reversion fills push price back toward the HMA within 30-90 seconds. The flat-slope filter is critical: it rules out trending regimes where the overshoot is justified by sustained directional order flow, isolating only the pure microstructure overshoots.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,14 +35,14 @@
       "formula": "WMA(2*WMA(close, 18) - WMA(close, 36), floor(sqrt(36))=6)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute Hull Moving Average. Original used 50-min HMA on 1-min bars (50-min equilibrium, 10-40 min hold). We compress to 3-min because our hold is 15-90s — the mean-reversion trigger and the equilibrium anchor must be at the same timescale. A 50-min HMA is too slow to flag micro-overshoots that resolve in under 2 minutes. HMA chosen over EMA/SMA because its lag-less property means it already reflects where the market settled 2-3 minutes ago, not a smoothed lag of historical data."
+      "purpose": "3-minute Hull Moving Average. Original used 50-min HMA on 1-min bars (50-min equilibrium, 10-40 min hold). We compress to 3-min because our hold is 15-90s \u2014 the mean-reversion trigger and the equilibrium anchor must be at the same timescale. A 50-min HMA is too slow to flag micro-overshoots that resolve in under 2 minutes. HMA chosen over EMA/SMA because its lag-less property means it already reflects where the market settled 2-3 minutes ago, not a smoothed lag of historical data."
     },
     {
       "name": "dist_hma",
       "formula": "(close - hma_36) / close",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Signed fractional deviation from HMA. Threshold at 0.12% (≈26 pts on NIFTY at 22000) — large enough to represent a genuine microstructure overshoot beyond normal 5s noise (~2-4 pts), small enough that 50% reversion is achievable in 30-90 seconds."
+      "purpose": "Signed fractional deviation from HMA. Threshold at 0.12% (\u224826 pts on NIFTY at 22000) \u2014 large enough to represent a genuine microstructure overshoot beyond normal 5s noise (~2-4 pts), small enough that 50% reversion is achievable in 30-90 seconds."
     },
     {
       "name": "hma_slope_12",
@@ -48,7 +56,7 @@
     "buy_ce": {
       "conditions": [
         "dist_hma < -dev_threshold (price below flat HMA by >0.12%)",
-        "abs(hma_slope_12) < slope_threshold (HMA flat — no persistent trend)",
+        "abs(hma_slope_12) < slope_threshold (HMA flat \u2014 no persistent trend)",
         "time in 09:30-15:20 IST session"
       ],
       "confirmation": "All conditions must be true simultaneously on same 5s bar"
@@ -56,7 +64,7 @@
     "buy_pe": {
       "conditions": [
         "dist_hma > +dev_threshold (price above flat HMA by >0.12%)",
-        "abs(hma_slope_12) < slope_threshold (HMA flat — no persistent trend)",
+        "abs(hma_slope_12) < slope_threshold (HMA flat \u2014 no persistent trend)",
         "time in 09:30-15:20 IST session"
       ],
       "confirmation": "All conditions must be true simultaneously on same 5s bar"
@@ -65,39 +73,43 @@
   },
   "exit": {
     "stop_points": 3.0,
-    "stop_rationale": "3 option pts = 6 NIFTY spot pts additional adverse move. At 0.12% initial deviation (≈26 pts), if NIFTY extends another 6 pts in the same direction, total deviation exceeds 32 pts and the flat-HMA regime assumption has broken — a trend has begun. This is the narrowest stop justified: a 30-60 second non-reverting overshoot on a flat-HMA NIFTY typically signals regime change, not deeper mean reversion.",
+    "stop_rationale": "3 option pts = 6 NIFTY spot pts additional adverse move. At 0.12% initial deviation (\u224826 pts), if NIFTY extends another 6 pts in the same direction, total deviation exceeds 32 pts and the flat-HMA regime assumption has broken \u2014 a trend has begun. This is the narrowest stop justified: a 30-60 second non-reverting overshoot on a flat-HMA NIFTY typically signals regime change, not deeper mean reversion.",
     "target_points": 6.0,
-    "target_rationale": "6 option pts ≈ 12 NIFTY spot pts of reversion. From a 26-pt overshoot, recovering 12 pts (≈46%) is the conservative estimate — NIFTY typically recovers 50-70% of a ranging overshoot within 60-90 seconds when HMA is genuinely flat. Targeting 12 pts rather than full reversion (26 pts) gives a high probability of completion within the 90s time stop. R:R = 1:2.",
+    "target_rationale": "6 option pts \u2248 12 NIFTY spot pts of reversion. From a 26-pt overshoot, recovering 12 pts (\u224846%) is the conservative estimate \u2014 NIFTY typically recovers 50-70% of a ranging overshoot within 60-90 seconds when HMA is genuinely flat. Targeting 12 pts rather than full reversion (26 pts) gives a high probability of completion within the 90s time stop. R:R = 1:2.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — HMA flatness filter already excludes high-volatility trending regimes",
+    "vix_filter": "none \u2014 HMA flatness filter already excludes high-volatility trending regimes",
     "time_filter": "09:30-15:20 IST; skip first 15 minutes of session to avoid opening-range spikes that look like deviations but are information absorption",
-    "volume_filter": "none — NIFTY volume at 5s is noisy; HMA slope filter is a cleaner proxy for regime",
-    "trend_filter": "embedded — hma_slope_12 < slope_threshold is the trend filter",
-    "spread_filter": "none — limit order execution"
+    "volume_filter": "none \u2014 NIFTY volume at 5s is noisy; HMA slope filter is a cleaner proxy for regime",
+    "trend_filter": "embedded \u2014 hma_slope_12 < slope_threshold is the trend filter",
+    "spread_filter": "none \u2014 limit order execution"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.55,
     "avg_winner_to_loser": 2.0,
-    "profit_factor_estimate": 2.2,
-    "edge_decay_risk": "medium — as more algorithms run HMA mean reversion, overshoots resolve faster and the edge compresses; but the flat-slope filter provides some durability by only trading genuine ranging regimes"
+    "profit_factor_estimate": 2.44,
+    "edge_decay_risk": "medium \u2014 as more algorithms run HMA mean reversion, overshoots resolve faster and the edge compresses; but the flat-slope filter provides some durability by only trading genuine ranging regimes"
   },
-  "adaptation_notes": "Three key changes from original: (1) Lookback compressed from 50-min to 3-min (36 bars) to match the 15-90s hold time — original's 10-40 min hold scales to 1-7 min at 5s, and we use the lower end. (2) Deviation threshold lowered from 1% to 0.12% — NIFTY index is smoother than individual F&O stocks; 1% would be a ~220pt deviation that is rare and takes 10+ minutes to revert, not our target timescale. (3) Slope threshold introduced as absolute % rather than binary HMA[0]>HMA[1] — 5-second HMA is noisy and a single bar up/down comparison is unreliable; use 12-bar slope to confirm flat regime. Session shifted to start at 09:30 (vs original 10:30) because NIFTY mid-session ranging can begin from 09:30 once the opening drive completes.",
+  "adaptation_notes": "Three key changes from original: (1) Lookback compressed from 50-min to 3-min (36 bars) to match the 15-90s hold time \u2014 original's 10-40 min hold scales to 1-7 min at 5s, and we use the lower end. (2) Deviation threshold lowered from 1% to 0.12% \u2014 NIFTY index is smoother than individual F&O stocks; 1% would be a ~220pt deviation that is rare and takes 10+ minutes to revert, not our target timescale. (3) Slope threshold introduced as absolute % rather than binary HMA[0]>HMA[1] \u2014 5-second HMA is noisy and a single bar up/down comparison is unreliable; use 12-bar slope to confirm flat regime. Session shifted to start at 09:30 (vs original 10:30) because NIFTY mid-session ranging can begin from 09:30 once the opening drive completes.",
   "weaknesses": [
     "HMA slope filter can over-exclude: in strongly trending sessions, almost no trades fire, creating zero-trade days",
     "0.12% threshold on NIFTY triggers more frequently during high-VIX days when mean reversion is less reliable",
-    "WMA computation is O(n * period) — 36-bar HMA on full session of 3375 bars is ~120k operations, acceptable but not trivial",
-    "Original thesis ('behavioral bias: traders chase') is harder to argue at index level — institutional flow dominates, so the mechanism is more microstructure-based than behavioral"
+    "WMA computation is O(n * period) \u2014 36-bar HMA on full session of 3375 bars is ~120k operations, acceptable but not trivial",
+    "Original thesis ('behavioral bias: traders chase') is harder to argue at index level \u2014 institutional flow dominates, so the mechanism is more microstructure-based than behavioral"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_353.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-40 bars (10-40 min)",
-    "original_indicators": ["hma_50", "dist_hma"],
+    "original_indicators": [
+      "hma_50",
+      "dist_hma"
+    ],
     "original_stop": "0.4% from entry",
     "original_target": "hma_50 touch"
-  }
+  },
+  "vix_agnostic": true
 }

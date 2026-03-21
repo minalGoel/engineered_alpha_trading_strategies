@@ -23,7 +23,7 @@ class Strategy(BaseStrategy):
     name = "opening_drive_post_gap_v1"
     underlying = "NIFTY"
     session_start_minutes = 560   # 09:20 IST — signal fires at first 5-min close
-    session_end_minutes = 925     # 15:25 IST EOD flatten
+    session_end_minutes = 562     # 09:22 IST — signal fires once at 09:20; no entries after 09:22
     max_lookback = 60             # 5-minute opening drive window (60 × 5s bars)
     max_trades_per_day = 1        # one entry per day at the open
 
@@ -33,7 +33,7 @@ class Strategy(BaseStrategy):
             TunableParam("body_ratio_min",   0.55,  0.40,  0.75),   # candle body/range min
             TunableParam("vol_surge_ratio",  1.5,   1.0,   3.0),    # vs 5-day avg first-5-min vol
             TunableParam("stop_pts",         4.0,   2.0,   8.0),    # option premium points
-            TunableParam("target_pts",       7.0,   4.0,   12.0),   # option premium points
+            TunableParam("target_pts",       8.0,   4.0,   12.0),   # option premium points
         ]
 
     def compute(
@@ -58,7 +58,7 @@ class Strategy(BaseStrategy):
         body_ratio_min = params.get("body_ratio_min",  0.55)
         vol_surge_min  = params.get("vol_surge_ratio", 1.5)
         stop_pts       = params.get("stop_pts",        4.0)
-        target_pts     = params.get("target_pts",      7.0)
+        target_pts     = params.get("target_pts",      8.0)
 
         buy_ce = np.zeros(n, dtype=bool)
         buy_pe = np.zeros(n, dtype=bool)

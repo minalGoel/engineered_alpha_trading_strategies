@@ -2,14 +2,22 @@
   "name": "vwap_slope_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["momentum", "vwap", "trend", "institutional_flow"],
+  "tags": [
+    "momentum",
+    "vwap",
+    "trend",
+    "institutional_flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_87.json",
   "original_name": "vwap_slope_momentum_v1",
-  "mechanism": "When NIFTY's session VWAP sustains an elevated linear-regression slope (z-score > 1.5 persisting 25+ seconds), it reflects active institutional TWAP execution — large buy-side desks slicing directional orders into the NIFTY futures book, weighted by volume. NIFTY futures market makers continuously quote against VWAP benchmarks, so a persistently steep VWAP slope forces their delta-hedging in the same direction, amplifying the initial institutional push and creating short-term price momentum at the index level. The 5-bar persistence requirement (25 seconds at 5s bars) filters NIFTY's inherent single-candle noise and confirms the slope is institutionally sustained — we enter as that flow continues and ride the 30-90 second continuation.",
+  "mechanism": "When NIFTY's session VWAP sustains an elevated linear-regression slope (z-score > 1.5 persisting 25+ seconds), it reflects active institutional TWAP execution \u2014 large buy-side desks slicing directional orders into the NIFTY futures book, weighted by volume. NIFTY futures market makers continuously quote against VWAP benchmarks, so a persistently steep VWAP slope forces their delta-hedging in the same direction, amplifying the initial institutional push and creating short-term price momentum at the index level. The 5-bar persistence requirement (25 seconds at 5s bars) filters NIFTY's inherent single-candle noise and confirms the slope is institutionally sustained \u2014 we enter as that flow continues and ride the 30-90 second continuation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-8",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "session_cumulative_VWAP(close, volume)",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative — no scaling. VWAP resets at 09:15 each session. The slope of this cumulative average captures the direction and intensity of institutional volume-weighted demand."
+      "purpose": "Cumulative \u2014 no scaling. VWAP resets at 09:15 each session. The slope of this cumulative average captures the direction and intensity of institutional volume-weighted demand."
     },
     {
       "name": "vwap_slope_bps",
@@ -41,14 +49,14 @@
       "formula": "zscore(vwap_slope_bps, 240)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "240 bars = 20 minutes. Original normalized over 120 min. 20 min is sufficient to capture current-session volatility regime — VWAP slope naturally flattens intraday, so the z-score corrects for that drift. Shorter than original because 5s resolution produces more data points and 20 min is already 240 observations."
+      "purpose": "240 bars = 20 minutes. Original normalized over 120 min. 20 min is sufficient to capture current-session volatility regime \u2014 VWAP slope naturally flattens intraday, so the z-score corrects for that drift. Shorter than original because 5s resolution produces more data points and 20 min is already 240 observations."
     },
     {
       "name": "price_above_vwap",
       "formula": "close > vwap",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Confirms price is on the correct side of VWAP — required for long entries (CE) or short entries (PE). Identical to original."
+      "purpose": "Confirms price is on the correct side of VWAP \u2014 required for long entries (CE) or short entries (PE). Identical to original."
     }
   ],
   "entry": {
@@ -58,7 +66,7 @@
         "price_above_vwap == True",
         "vix < 24"
       ],
-      "confirmation": "All 5 bars must satisfy z-score threshold — no single-bar lookahead"
+      "confirmation": "All 5 bars must satisfy z-score threshold \u2014 no single-bar lookahead"
     },
     "buy_pe": {
       "conditions": [
@@ -79,30 +87,35 @@
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "vix < 24 — above 24 NIFTY is volatile enough that VWAP slope signals become whippy and institutional TWAP execution is less predictable",
-    "time_filter": "no entry before 09:30 — VWAP is cumulative and needs 15 min of volume to produce a stable slope; first 15 min slope is dominated by opening auction artifacts",
+    "vix_filter": "vix < 24 \u2014 above 24 NIFTY is volatile enough that VWAP slope signals become whippy and institutional TWAP execution is less predictable",
+    "time_filter": "no entry before 09:30 \u2014 VWAP is cumulative and needs 15 min of volume to produce a stable slope; first 15 min slope is dominated by opening auction artifacts",
     "volume_filter": "implicit in VWAP (volume-weighted by construction)",
-    "trend_filter": "price_above_vwap for long, price_below_vwap for short — trades only in the direction the market is currently positioned vs. its own average",
-    "spread_filter": "limit orders at candle close — no spread filter needed"
+    "trend_filter": "price_above_vwap for long, price_below_vwap for short \u2014 trades only in the direction the market is currently positioned vs. its own average",
+    "spread_filter": "limit orders at candle close \u2014 no spread filter needed"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.52,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.25,
-    "edge_decay_risk": "medium — VWAP slope is not widely used at 5s intraday but as index-algo penetration grows, this edge may compress over 12-24 months"
+    "profit_factor_estimate": 1.63,
+    "edge_decay_risk": "medium \u2014 VWAP slope is not widely used at 5s intraday but as index-algo penetration grows, this edge may compress over 12-24 months"
   },
-  "adaptation_notes": "Original: equity FnO stocks, 1-min bars, 20-min slope, 120-min z-score, 5-bar (5-min) confirmation, hold 30-120 min. Converted: (1) VWAP is cumulative — no scaling needed, just fewer bars needed for stable estimate; (2) slope window compressed from 20 min to 2 min because we hold 30-90s, not 30-120 min; we're catching the early burst, not the full trend; (3) z-score window compressed from 120 min to 20 min — enough observations (240) to normalize slope while remaining responsive to current-session volatility regime; (4) 5-bar persistence translates directly: 5 bars × 5s = 25 seconds of sustained VWAP slope confirms institutional flow, not a noise spike; (5) ATR stop replaced with fixed option premium points calibrated to typical NIFTY 30-90s move sizes; (6) volume filter removed — VWAP is volume-weighted by construction, making a separate volume > SMA filter redundant.",
+  "adaptation_notes": "Original: equity FnO stocks, 1-min bars, 20-min slope, 120-min z-score, 5-bar (5-min) confirmation, hold 30-120 min. Converted: (1) VWAP is cumulative \u2014 no scaling needed, just fewer bars needed for stable estimate; (2) slope window compressed from 20 min to 2 min because we hold 30-90s, not 30-120 min; we're catching the early burst, not the full trend; (3) z-score window compressed from 120 min to 20 min \u2014 enough observations (240) to normalize slope while remaining responsive to current-session volatility regime; (4) 5-bar persistence translates directly: 5 bars \u00d7 5s = 25 seconds of sustained VWAP slope confirms institutional flow, not a noise spike; (5) ATR stop replaced with fixed option premium points calibrated to typical NIFTY 30-90s move sizes; (6) volume filter removed \u2014 VWAP is volume-weighted by construction, making a separate volume > SMA filter redundant.",
   "weaknesses": [
     "VWAP slope flattens mechanically as session progresses (more volume dilutes new trades into cumulative average), reducing signal quality post-13:00",
-    "5-bar persistence requirement creates 25-second entry lag — enter after 25 seconds of confirming z-score, which means a portion of the initial move is missed on fast NIFTY momentum bursts",
-    "During high-volatility regimes (VIX > 24), the VIX filter sits out — but precisely when VWAP slope gives the cleanest signals on large institutional flows, we may be excluded"
+    "5-bar persistence requirement creates 25-second entry lag \u2014 enter after 25 seconds of confirming z-score, which means a portion of the initial move is missed on fast NIFTY momentum bursts",
+    "During high-volatility regimes (VIX > 24), the VIX filter sits out \u2014 but precisely when VWAP slope gives the cleanest signals on large institutional flows, we may be excluded"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_87.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-120 bars (30-120 minutes)",
-    "original_indicators": ["vwap_slope (linreg 20 bars)", "vwap_slope_zscore (120 bars)", "price_above_vwap", "atr_20"],
+    "original_indicators": [
+      "vwap_slope (linreg 20 bars)",
+      "vwap_slope_zscore (120 bars)",
+      "price_above_vwap",
+      "atr_20"
+    ],
     "original_stop": "vwap level at entry (dynamic, ~1 ATR below)",
     "original_target": "1.5 * ATR(20) from entry"
   }

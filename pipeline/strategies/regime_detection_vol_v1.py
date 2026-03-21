@@ -144,8 +144,8 @@ class Strategy(BaseStrategy):
             buy_pe=buy_pe,
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
-            stop_points=np.full(n, 4.0),    # 4 pts = ~8 spot pts; catches false regime signals
-            target_points=np.full(n, 7.0),  # 7 pts = ~14 spot pts; ~60% of median vol burst move
+            stop_points=np.full(n, 3),    # 4 pts = ~8 spot pts; catches false regime signals
+            target_points=np.full(n, 6),  # 7 pts = ~14 spot pts; ~60% of median vol burst move
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=24,              # 120s max hold; regime transitions play out within 2 min
             max_trades_per_day=self.max_trades_per_day,

@@ -31,7 +31,7 @@ class Strategy(BaseStrategy):
             TunableParam("vix_high", 20.0, 17.0, 25.0),
             TunableParam("vol_ratio_threshold", 1.2, 0.8, 2.0),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -49,7 +49,7 @@ class Strategy(BaseStrategy):
         vix_high = params.get("vix_high", 20.0)
         vol_ratio_thresh = params.get("vol_ratio_threshold", 1.2)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # --- VIX at 09:30 IST per day (day-level filter) ---
         vix_930 = np.full(n, 15.0)

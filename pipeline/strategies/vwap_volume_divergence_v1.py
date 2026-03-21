@@ -68,7 +68,7 @@ class Strategy(BaseStrategy):
             TunableParam("vwap_dev_zscore_threshold", 1.5, 1.0, 2.5),
             TunableParam("vol_ratio_threshold", 0.85, 0.60, 1.00),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -93,7 +93,7 @@ class Strategy(BaseStrategy):
         zscore_thresh = params.get("vwap_dev_zscore_threshold", 1.5)
         vol_ratio_thresh = params.get("vol_ratio_threshold", 0.85)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── VWAP (cumulative, resets each session) ────────────────────────────
         vwap = _compute_vwap(high, low, close, volume, day_id)

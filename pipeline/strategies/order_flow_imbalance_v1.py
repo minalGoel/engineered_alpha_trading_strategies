@@ -57,8 +57,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("delta_zscore_threshold", 1.5, 1.0, 2.5),
-            TunableParam("stop_pts",               4.0, 2.0, 8.0),
-            TunableParam("target_pts",             7.0, 4.0, 12.0),
+            TunableParam("stop_pts",               5.0, 2.0, 8.0),
+            TunableParam("target_pts",             8.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -88,8 +88,8 @@ class Strategy(BaseStrategy):
 
         # ── Parameters ────────────────────────────────────────────────────
         threshold  = params.get("delta_zscore_threshold", 1.5)
-        stop_pts   = params.get("stop_pts",               4.0)
-        target_pts = params.get("target_pts",             7.0)
+        stop_pts   = params.get("stop_pts",               5.0)
+        target_pts = params.get("target_pts",             8.0)
 
         # ── Session VWAP (reset each day) ─────────────────────────────────
         vwap = _compute_vwap(close, volume, day_id)

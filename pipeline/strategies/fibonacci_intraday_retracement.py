@@ -26,8 +26,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("min_range_pct", 0.003, 0.001, 0.008),  # min morning range as fraction of price
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -42,8 +42,8 @@ class Strategy(BaseStrategy):
         day_id = spot_df["day_id"].to_numpy()
 
         min_range_pct = params.get("min_range_pct", 0.003)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── Compute session VWAP (resets each day) ──────────────────────────────
         vwap = np.zeros(n)

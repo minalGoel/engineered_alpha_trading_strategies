@@ -2,14 +2,23 @@
   "name": "orb_retest_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["ORB", "retest", "level_confirmation", "support_resistance", "intraday"],
+  "tags": [
+    "ORB",
+    "retest",
+    "level_confirmation",
+    "support_resistance",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_237.json",
   "original_name": "orb_retest_v1",
   "mechanism": "NIFTY's first 15 minutes (09:15-09:30) establishes an opening range whose high and low serve as the primary intraday reference levels for institutional VWAP algorithms, options market makers delta-hedging against gamma exposure accumulated at open, and systematic breakout programs that sized in on the initial move. When NIFTY retests the ORB high (for upside breakouts) or ORB low (for downside breakouts) mid-session, resting limit buy orders from participants who missed the initial breakout and stop-loss orders from trapped directional sellers concentrate at that level, creating a liquidity pool. At 5-second resolution, this absorption is detectable: NIFTY's low dips within 20-25 spot points of the ORB high, forms a micro-range over 60-90 seconds as aggressive sellers hit resting bids, then accelerates sharply away as the absorbed supply is exhausted and momentum programs re-enter in the original breakout direction.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-14:30 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "1-4",
   "max_trades_per_day": 4,
@@ -27,35 +36,35 @@
       "formula": "max(high, bars where time_minutes in [555, 570))",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "Opening range high from 09:15-09:30 (180 × 5s bars). NOT scaled — this is a fixed calendar time window; same 15 minutes regardless of bar frequency. The 09:15-09:30 window is the standard institutional opening range for NIFTY, used by VWAP benchmarked programs and options market makers to anchor their intraday reference."
+      "purpose": "Opening range high from 09:15-09:30 (180 \u00d7 5s bars). NOT scaled \u2014 this is a fixed calendar time window; same 15 minutes regardless of bar frequency. The 09:15-09:30 window is the standard institutional opening range for NIFTY, used by VWAP benchmarked programs and options market makers to anchor their intraday reference."
     },
     {
       "name": "orb_low",
       "formula": "min(low, bars where time_minutes in [555, 570))",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "Opening range low from 09:15-09:30. Same fixed-window logic as orb_high — no scaling needed."
+      "purpose": "Opening range low from 09:15-09:30. Same fixed-window logic as orb_high \u2014 no scaling needed."
     },
     {
       "name": "breakout_up_seen",
       "formula": "cumulative_any(close > orb_high, from 09:30 bar onward within session)",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative boolean flag: True once NIFTY has closed above ORB high at any point today after 09:30. Required precondition — retest signal only fires if an initial upside breakout has already occurred, confirming the ORB high is now acting as support."
+      "purpose": "Cumulative boolean flag: True once NIFTY has closed above ORB high at any point today after 09:30. Required precondition \u2014 retest signal only fires if an initial upside breakout has already occurred, confirming the ORB high is now acting as support."
     },
     {
       "name": "breakout_down_seen",
       "formula": "cumulative_any(close < orb_low, from 09:30 bar onward within session)",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Same as breakout_up_seen but for downside. Used to ensure single-direction breakout day — on whipsaw days when both levels break, we skip signals to avoid false retests."
+      "purpose": "Same as breakout_up_seen but for downside. Used to ensure single-direction breakout day \u2014 on whipsaw days when both levels break, we skip signals to avoid false retests."
     },
     {
       "name": "near_orb_high_24",
       "formula": "any(low[i-24:i] is within proximity_pct of orb_high)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "24-bar (2 minute) rolling window detecting whether NIFTY's intrabar low has recently touched within proximity_pct of the ORB high. 24 bars chosen because ORB retests on NIFTY form over 60-90 seconds — enough history to capture the approach without catching stale touches from hours earlier."
+      "purpose": "24-bar (2 minute) rolling window detecting whether NIFTY's intrabar low has recently touched within proximity_pct of the ORB high. 24 bars chosen because ORB retests on NIFTY form over 60-90 seconds \u2014 enough history to capture the approach without catching stale touches from hours earlier."
     },
     {
       "name": "near_orb_low_24",
@@ -69,17 +78,17 @@
       "formula": "close[i] - close[i-3]",
       "lookback": 3,
       "computed_on": "spot",
-      "purpose": "15-second momentum (3 × 5s bars) to confirm directional bounce off the ORB level. Deliberately short — we want the immediate acceleration after absorption, not a trend measure. Positive = bouncing off ORB high; negative = rejecting at ORB low."
+      "purpose": "15-second momentum (3 \u00d7 5s bars) to confirm directional bounce off the ORB level. Deliberately short \u2014 we want the immediate acceleration after absorption, not a trend measure. Positive = bouncing off ORB high; negative = rejecting at ORB low."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "breakout_up_seen == True (upside breakout confirmed earlier this session)",
-        "breakout_down_seen == False (single-direction day — no whipsaw)",
+        "breakout_down_seen == False (single-direction day \u2014 no whipsaw)",
         "near_orb_high_24 == True (NIFTY low touched within proximity_pct of ORB high in last 2 min)",
-        "close >= orb_high (current bar closes above ORB high — level held as support)",
-        "momentum_3 > 0 (positive 15-second momentum — bouncing off the level)"
+        "close >= orb_high (current bar closes above ORB high \u2014 level held as support)",
+        "momentum_3 > 0 (positive 15-second momentum \u2014 bouncing off the level)"
       ],
       "confirmation": "Close above ORB high on current bar with positive 15s momentum, after low touched within proximity of level in prior 2 minutes"
     },
@@ -88,8 +97,8 @@
         "breakout_down_seen == True (downside breakout confirmed earlier this session)",
         "breakout_up_seen == False (single-direction day)",
         "near_orb_low_24 == True (NIFTY high touched within proximity_pct of ORB low in last 2 min)",
-        "close <= orb_low (current bar closes below ORB low — level held as resistance)",
-        "momentum_3 < 0 (negative 15-second momentum — rejecting the level)"
+        "close <= orb_low (current bar closes below ORB low \u2014 level held as resistance)",
+        "momentum_3 < 0 (negative 15-second momentum \u2014 rejecting the level)"
       ],
       "confirmation": "Close below ORB low on current bar with negative 15s momentum, after high touched within proximity of level in prior 2 minutes"
     },
@@ -97,31 +106,31 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). A valid ORB retest-and-hold should not see NIFTY retrace more than 8 spot points against position in the first 30-90 seconds — if it does, the ORB level has failed as support/resistance and the thesis is wrong. Calibrated to the 15-second typical NIFTY move of 1-3 pts: a 4-pt option stop gives ~2 standard deviations of 15s moves before triggering.",
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). A valid ORB retest-and-hold should not see NIFTY retrace more than 8 spot points against position in the first 30-90 seconds \u2014 if it does, the ORB level has failed as support/resistance and the thesis is wrong. Calibrated to the 15-second typical NIFTY move of 1-3 pts: a 4-pt option stop gives ~2 standard deviations of 15s moves before triggering.",
     "target_points": 7,
     "stop_rationale_for_target": "7 option points (~14 NIFTY spot points). First impulse after ORB retest confirmation on NIFTY typically covers 15-25 spot points in the original breakout direction as momentum re-accelerates. Targeting 14 pts captures ~60-70% of the expected first leg at 1:1.75 R:R, avoiding the fade that often occurs as the move matures.",
     "target_rationale": "7 option points = ~14 NIFTY spot points. Based on 30-90 second typical NIFTY moves of 5-10 option points after a confirmed level hold, 7 pts targets the median outcome at 1:1.75 risk-reward.",
     "time_stop_bars": 18,
-    "eod_rule": "flatten at 14:30 IST — retests after 14:30 reflect end-of-day positioning, not genuine institutional reference level tests"
+    "eod_rule": "flatten at 14:30 IST \u2014 retests after 14:30 reflect end-of-day positioning, not genuine institutional reference level tests"
   },
   "filters": {
-    "vix_filter": "none — ORB retest logic is self-contained; the level-hold mechanism works across VIX regimes as long as initial breakout occurred",
+    "vix_filter": "none \u2014 ORB retest logic is self-contained; the level-hold mechanism works across VIX regimes as long as initial breakout occurred",
     "time_filter": "09:30-14:30 IST only; retests before 09:30 are impossible (ORB still forming), after 14:30 are late-day noise",
-    "volume_filter": "none at 5s level — index volume is too noisy for reliable filtering at this frequency",
+    "volume_filter": "none at 5s level \u2014 index volume is too noisy for reliable filtering at this frequency",
     "trend_filter": "single-direction breakout only (breakout_up XOR breakout_down); whipsaw days excluded to avoid false retest signals",
-    "spread_filter": "none — limit order execution at close prices"
+    "spread_filter": "none \u2014 limit order execution at close prices"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.58,
     "avg_winner_to_loser": 1.4,
     "profit_factor_estimate": 1.95,
-    "edge_decay_risk": "medium — ORB retest at 1-min bars is well-documented; the 5s micro-bounce entry is novel and less competed, but crowding risk grows if ORB strategies proliferate at HFT scale"
+    "edge_decay_risk": "medium \u2014 ORB retest at 1-min bars is well-documented; the 5s micro-bounce entry is novel and less competed, but crowding risk grows if ORB strategies proliferate at HFT scale"
   },
-  "adaptation_notes": "Original strategy: NIFTY 50 constituent stocks, 1-min bars, 20-120 minute hold, retest identified 1-3 hours after breakout. Three key adaptations: (1) Universe: individual stocks → NIFTY index. ORB retest is MORE reliable on the index because institutional VWAP programs explicitly use NIFTY's ORB as a reference level — every participant tracks it, concentrating liquidity at retests. (2) Hold time: 20-120 min → 30-90 seconds. We trade the microstructure reaction (first impulse after absorption) rather than the full continuation move. This requires much tighter stops and targets calibrated to 15-30 second NIFTY move magnitudes. (3) Entry precision: original used 1-min confirmation bar; at 5s we can detect the micro-bounce onset (close above level + positive 15s momentum after touching within 25 pts) rather than waiting a full minute. The 5s resolution is the structural advantage here — we enter closer to the actual inflection point.",
+  "adaptation_notes": "Original strategy: NIFTY 50 constituent stocks, 1-min bars, 20-120 minute hold, retest identified 1-3 hours after breakout. Three key adaptations: (1) Universe: individual stocks \u2192 NIFTY index. ORB retest is MORE reliable on the index because institutional VWAP programs explicitly use NIFTY's ORB as a reference level \u2014 every participant tracks it, concentrating liquidity at retests. (2) Hold time: 20-120 min \u2192 30-90 seconds. We trade the microstructure reaction (first impulse after absorption) rather than the full continuation move. This requires much tighter stops and targets calibrated to 15-30 second NIFTY move magnitudes. (3) Entry precision: original used 1-min confirmation bar; at 5s we can detect the micro-bounce onset (close above level + positive 15s momentum after touching within 25 pts) rather than waiting a full minute. The 5s resolution is the structural advantage here \u2014 we enter closer to the actual inflection point.",
   "weaknesses": [
-    "NIFTY ORB retests occur 1-4 times per session on qualifying days — low frequency means only 1-4 trades/day maximum, reducing statistical power in backtests",
-    "Single-direction filter (no whipsaw days) eliminates signal on range-bound days when both ORB levels are briefly breached — correctly avoids these but reduces trade count",
+    "NIFTY ORB retests occur 1-4 times per session on qualifying days \u2014 low frequency means only 1-4 trades/day maximum, reducing statistical power in backtests",
+    "Single-direction filter (no whipsaw days) eliminates signal on range-bound days when both ORB levels are briefly breached \u2014 correctly avoids these but reduces trade count",
     "2-minute proximity window may trigger entry during initial approach before retest completes, leading to early entries that get stopped before the actual bounce",
     "Gap days where NIFTY opens well above/below ORB levels from prior session may compress ORB range to near-zero, making proximity thresholds unreliable"
   ],
@@ -129,8 +138,16 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_237.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-120 mins",
-    "original_indicators": ["ORB_high_15", "ORB_low_15", "RSI_14", "ATR_14", "volume_at_retest", "time_since_breakout"],
+    "original_indicators": [
+      "ORB_high_15",
+      "ORB_low_15",
+      "RSI_14",
+      "ATR_14",
+      "volume_at_retest",
+      "time_since_breakout"
+    ],
     "original_stop": "0.3 * ORB_range below/above ORB level",
     "original_target": "session high at retest time + 0.5 * ORB_range"
-  }
+  },
+  "vix_agnostic": true
 }

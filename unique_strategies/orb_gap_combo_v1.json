@@ -89,7 +89,7 @@
     "target_points": 8,
     "target_rationale": "8 option pts = ~16 NIFTY spot pts. On gap-aligned ORB breakout days, the first-impulse leg extends 20-35 spot pts beyond the ORB level before the first meaningful pullback. Targeting 16 spot pts (bottom 50% of expected range) at 1:1.6 R:R is conservative enough to be hit frequently while exceeding breakeven by 13x. Consistent with the 2-minute NIFTY typical option move of 5-10 pts at our 90s hold time.",
     "time_stop_bars": 18,
-    "eod_rule": "flatten at 15:25 IST (entries already restricted to 10:40, so time_stop handles all exits)"
+    "eod_rule": "flatten at 10:40 IST (640 minutes) — entries restricted to 09:30-10:40 IST; gap+ORB combo thesis decays after 70 min post-ORB"
   },
   "filters": {
     "vix_filter": "India VIX 12–22 (default). Below 12: extremely low volatility makes ORB breaks false-positive prone; above 22: gap-driven ORB ranges become so wide that 5-pt stop is insufficient and breakout follow-through is erratic",

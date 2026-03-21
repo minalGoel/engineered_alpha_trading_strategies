@@ -2,14 +2,22 @@
   "name": "support_resistance_reversal_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["reversal", "s_r", "mean_reversion", "microstructure"],
+  "tags": [
+    "reversal",
+    "s_r",
+    "mean_reversion",
+    "microstructure"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_19.json",
   "original_name": "support_resistance_reversal_v1",
-  "mechanism": "NIFTY's previous day high and low are the most-watched reference levels by all algorithmic market makers, institutional desks, and retail momentum traders simultaneously — making them genuine order-flow anchors, not arbitrary lines. When NIFTY probes the previous day's high, option writers (covered call desks, prop short-gamma positions) and fresh put buyers cluster limit orders within 15-25 spot points of that level, creating a dense supply wall that materialises as range contraction at 5-second resolution. At 5s granularity, we detect the micro-structural 'probe-and-reject' signature: price approaching within 0.15% of the prev day level, range contracting over the last 30 seconds (accumulation of resting limit orders), and a visible 15-second rejection move in the opposite direction — all before the full 1-minute bar closes. BANKNIFTY amplifies this effect due to 2-3x higher volatility, so the same proximity threshold generates larger option moves.",
+  "mechanism": "NIFTY's previous day high and low are the most-watched reference levels by all algorithmic market makers, institutional desks, and retail momentum traders simultaneously \u2014 making them genuine order-flow anchors, not arbitrary lines. When NIFTY probes the previous day's high, option writers (covered call desks, prop short-gamma positions) and fresh put buyers cluster limit orders within 15-25 spot points of that level, creating a dense supply wall that materialises as range contraction at 5-second resolution. At 5s granularity, we detect the micro-structural 'probe-and-reject' signature: price approaching within 0.15% of the prev day level, range contracting over the last 30 seconds (accumulation of resting limit orders), and a visible 15-second rejection move in the opposite direction \u2014 all before the full 1-minute bar closes. BANKNIFTY amplifies this effect due to 2-3x higher volatility, so the same proximity threshold generates larger option moves.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -19,7 +27,10 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["prev_day_high", "prev_day_low"]
+    "other": [
+      "prev_day_high",
+      "prev_day_low"
+    ]
   },
   "indicators": [
     {
@@ -27,28 +38,28 @@
       "formula": "previous session's daily high, computed by grouping spot_df by day_id and shifting",
       "lookback": null,
       "computed_on": "spot",
-      "purpose": "The key S/R reference. Previous day high is a fixed daily reference, not a rolling window — no scaling needed. Acts as resistance: institutional sell programs and stop clusters rest just above this level."
+      "purpose": "The key S/R reference. Previous day high is a fixed daily reference, not a rolling window \u2014 no scaling needed. Acts as resistance: institutional sell programs and stop clusters rest just above this level."
     },
     {
       "name": "prev_day_low",
       "formula": "previous session's daily low",
       "lookback": null,
       "computed_on": "spot",
-      "purpose": "Previous day low as support level. Institutional buy programs, delta-hedging by put writers, and stop-loss reversals cluster at this reference. No scaling — this is a fixed date-level anchor."
+      "purpose": "Previous day low as support level. Institutional buy programs, delta-hedging by put writers, and stop-loss reversals cluster at this reference. No scaling \u2014 this is a fixed date-level anchor."
     },
     {
       "name": "range_6",
       "formula": "mean(high - low) over last 6 bars (30 seconds)",
       "lookback": 6,
       "computed_on": "spot",
-      "purpose": "30-second average bar range. Captures range contraction as price is squeezed against the S/R level by accumulation of limit orders on both sides. 6 bars (30s) chosen because micro-coiling at S/R happens in seconds on NIFTY — longer windows would include the approach phase and miss the contraction signal."
+      "purpose": "30-second average bar range. Captures range contraction as price is squeezed against the S/R level by accumulation of limit orders on both sides. 6 bars (30s) chosen because micro-coiling at S/R happens in seconds on NIFTY \u2014 longer windows would include the approach phase and miss the contraction signal."
     },
     {
       "name": "range_prior_6",
       "formula": "mean(high - low) over bars [i-12, i-6]",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "Baseline range from the prior 30-second window. Comparing to range_6 detects whether current activity is contracting (less volatile = limit orders absorbing flow at S/R) versus approaching (still moving directionally). Lookback of 12 bars (60s) total gives one comparison window of 30s each — sufficient context without including noise from earlier in the session."
+      "purpose": "Baseline range from the prior 30-second window. Comparing to range_6 detects whether current activity is contracting (less volatile = limit orders absorbing flow at S/R) versus approaching (still moving directionally). Lookback of 12 bars (60s) total gives one comparison window of 30s each \u2014 sufficient context without including noise from earlier in the session."
     },
     {
       "name": "ret_3",
@@ -62,16 +73,16 @@
     "buy_ce": {
       "conditions": [
         "close within sr_threshold_pct (default 0.15%) of prev_day_low",
-        "range_6 < range_prior_6 (range contracting — limit orders absorbing at support)",
+        "range_6 < range_prior_6 (range contracting \u2014 limit orders absorbing at support)",
         "ret_3 > 0.0002 (first visible bounce in last 15 seconds)",
-        "vix < vix_max (default 20.0) — S/R levels respected in low-volatility regimes"
+        "vix < vix_max (default 20.0) \u2014 S/R levels respected in low-volatility regimes"
       ],
       "confirmation": "All four conditions simultaneously on same 5s bar"
     },
     "buy_pe": {
       "conditions": [
         "close within sr_threshold_pct (default 0.15%) of prev_day_high",
-        "range_6 < range_prior_6 (range contracting — limit orders at resistance creating supply wall)",
+        "range_6 < range_prior_6 (range contracting \u2014 limit orders at resistance creating supply wall)",
         "ret_3 < -0.0002 (first visible rejection in last 15 seconds)",
         "vix < vix_max (default 20.0)"
       ],
@@ -80,9 +91,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points through the S/R level. A genuine S/R reversal should not allow 8 spot points of adverse penetration — if the level breaks by that much, stop-cascade selling begins and the thesis is definitively wrong. At delta 0.5 on ATM option, 8 spot points = 4 option points.",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points through the S/R level. A genuine S/R reversal should not allow 8 spot points of adverse penetration \u2014 if the level breaks by that much, stop-cascade selling begins and the thesis is definitively wrong. At delta 0.5 on ATM option, 8 spot points = 4 option points.",
+    "target_points": 6.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points bounce. NIFTY S/R reversals at prev day H/L typically extend 15-25 spot points before meeting next intraday resistance. Target of 7 captures ~60% of the lower-bound bounce (14 of 25 spot points), giving 1:1.75 risk-reward without being greedy enough to give back the move.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
@@ -97,22 +108,27 @@
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.55,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.1,
-    "edge_decay_risk": "medium — S/R levels are crowded; if too many algos pile in, levels break more often than bounce"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.44,
+    "edge_decay_risk": "medium \u2014 S/R levels are crowded; if too many algos pile in, levels break more often than bounce"
   },
-  "adaptation_notes": "Original trades nifty200 stocks at 1-min bars with multi-day S/R identification and HL reversal pattern (5-bar pattern = 5 minutes). Three key changes: (1) Universe shifted to NIFTY index using prev day H/L — cleanest, most liquid institutional S/R reference. (2) HL reversal pattern (5-min) compressed to ret_3 (15-second) — we want entry at bounce start, not confirmation. (3) Relative volume filter dropped — index volume at 5s is too noisy; replaced by range contraction which captures the same limit-order accumulation signal without the stock-level vol data requirement. VIX filter retained from original at same threshold (20).",
+  "adaptation_notes": "Original trades nifty200 stocks at 1-min bars with multi-day S/R identification and HL reversal pattern (5-bar pattern = 5 minutes). Three key changes: (1) Universe shifted to NIFTY index using prev day H/L \u2014 cleanest, most liquid institutional S/R reference. (2) HL reversal pattern (5-min) compressed to ret_3 (15-second) \u2014 we want entry at bounce start, not confirmation. (3) Relative volume filter dropped \u2014 index volume at 5s is too noisy; replaced by range contraction which captures the same limit-order accumulation signal without the stock-level vol data requirement. VIX filter retained from original at same threshold (20).",
   "weaknesses": [
-    "Trending days: when NIFTY is trending strongly, prev day H/L breaks rather than bounces — stop-cascade through these levels is especially violent",
-    "First trading day of data has no prev_day reference — those bars are excluded",
-    "NIFTY levels can be probed multiple times before reversing — multiple consecutive triggers may be required before a clean reversal fires",
-    "Range contraction can also precede breakouts (false reversals) — especially after 14:00 IST when institutional positioning is being unwound"
+    "Trending days: when NIFTY is trending strongly, prev day H/L breaks rather than bounces \u2014 stop-cascade through these levels is especially violent",
+    "First trading day of data has no prev_day reference \u2014 those bars are excluded",
+    "NIFTY levels can be probed multiple times before reversing \u2014 multiple consecutive triggers may be required before a clean reversal fires",
+    "Range contraction can also precede breakouts (false reversals) \u2014 especially after 14:00 IST when institutional positioning is being unwound"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_19.json",
     "original_timeframe": "1min",
     "original_hold_time": "12-35 bars (12-35 minutes)",
-    "original_indicators": ["s_r_level (multi-day price touch)", "hl_reversal (5-bar pattern)", "rel_volume > 1.5", "vix < 20"],
+    "original_indicators": [
+      "s_r_level (multi-day price touch)",
+      "hl_reversal (5-bar pattern)",
+      "rel_volume > 1.5",
+      "vix < 20"
+    ],
     "original_stop": "0.8 * ATR(20)",
     "original_target": "next S/R level"
   }

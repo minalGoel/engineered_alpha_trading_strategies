@@ -33,7 +33,7 @@ class Strategy(BaseStrategy):
             TunableParam("gap_threshold", 0.4, 0.2, 0.8),   # % gap to qualify
             TunableParam("vol_ratio", 1.2, 1.0, 2.0),        # volume multiplier for confirmation
             TunableParam("stop_pts", 4.0, 2.0, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -58,7 +58,7 @@ class Strategy(BaseStrategy):
         gap_threshold = params.get("gap_threshold", 0.4)
         vol_ratio = params.get("vol_ratio", 1.2)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Gap % per day ───────────────────────────────────────────────────
         # gap_pct[i] = (day_open - prev_day_close) / prev_day_close * 100

@@ -2,14 +2,22 @@
   "name": "intraday_trend_following_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["momentum", "trend_following", "ema", "pullback"],
+  "tags": [
+    "momentum",
+    "trend_following",
+    "ema",
+    "pullback"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_30.json",
   "original_name": "intraday_trend_following_v1",
-  "mechanism": "On NIFTY, when institutional TWAP/VWAP algorithms are working directional orders over 10-20 minute windows, they create a persistent EMA alignment visible as the 2-minute EMA sustaining itself above the 10-minute EMA. Brief pullbacks to the 2-minute EMA represent moments where short-term momentum sellers exhaust against resting institutional limit bids placed just below the recent micro-mean. At 5-second resolution, we detect the precise bar where NIFTY close returns above EMA(24) after the dip — signaling the institutional absorption has re-engaged — and ride the next 8-15 NIFTY spot points of continuation before the institutional order fill cycle completes.",
+  "mechanism": "On NIFTY, when institutional TWAP/VWAP algorithms are working directional orders over 10-20 minute windows, they create a persistent EMA alignment visible as the 2-minute EMA sustaining itself above the 10-minute EMA. Brief pullbacks to the 2-minute EMA represent moments where short-term momentum sellers exhaust against resting institutional limit bids placed just below the recent micro-mean. At 5-second resolution, we detect the precise bar where NIFTY close returns above EMA(24) after the dip \u2014 signaling the institutional absorption has re-engaged \u2014 and ride the next 8-15 NIFTY spot points of continuation before the institutional order fill cycle completes.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:35-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -34,41 +42,41 @@
       "formula": "EMA(close, 120)",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "10-minute EMA as the trend direction context filter. Original used EMA(50) on 1-min = 50-min trend. Shortened from 50 min to 10 min because 50-min trend direction is too stale for a 15-90s trade — a NIFTY trend established 40 minutes ago is irrelevant to the next 30 seconds. 10 min captures the current intraday directional bias without including pre-session gap effects, and produces 3-8 valid aligned states per day."
+      "purpose": "10-minute EMA as the trend direction context filter. Original used EMA(50) on 1-min = 50-min trend. Shortened from 50 min to 10 min because 50-min trend direction is too stale for a 15-90s trade \u2014 a NIFTY trend established 40 minutes ago is irrelevant to the next 30 seconds. 10 min captures the current intraday directional bias without including pre-session gap effects, and produces 3-8 valid aligned states per day."
     },
     {
       "name": "rsi_24",
       "formula": "RSI(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute RSI to prevent entries into exhausted short-term moves. Matched to EMA(24) window for consistency. Avoids entering a CE when the 2-min momentum is already extended (RSI > 65) — on NIFTY, an RSI above 65 over 2 minutes typically means the immediate burst is 70-80% complete and a counter-move is imminent."
+      "purpose": "2-minute RSI to prevent entries into exhausted short-term moves. Matched to EMA(24) window for consistency. Avoids entering a CE when the 2-min momentum is already extended (RSI > 65) \u2014 on NIFTY, an RSI above 65 over 2 minutes typically means the immediate burst is 70-80% complete and a counter-move is imminent."
     },
     {
       "name": "vwap",
       "formula": "Cumulative((H+L+C)/3 * V) / Cumulative(V) per session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP as institutional price anchor — no scaling needed, cumulative from open. Confirms NIFTY is on the correct side of the institutional benchmark before entry. Eliminates trades where the pullback is actually a mean-reversion toward VWAP rather than a micro-pullback in a trend above it."
+      "purpose": "Session VWAP as institutional price anchor \u2014 no scaling needed, cumulative from open. Confirms NIFTY is on the correct side of the institutional benchmark before entry. Eliminates trades where the pullback is actually a mean-reversion toward VWAP rather than a micro-pullback in a trend above it."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "EMA(24) > EMA(120) by at least trend_strength_pct (bullish trend aligned)",
-        "Previous bar: low <= EMA(24) * (1 + pullback_tolerance) — bar dipped to EMA(24)",
-        "Current bar: close > EMA(24) — bounce confirmed above EMA(24)",
-        "close > VWAP — above session institutional anchor",
-        "RSI(24) < rsi_overbought (default 65) — not extended"
+        "Previous bar: low <= EMA(24) * (1 + pullback_tolerance) \u2014 bar dipped to EMA(24)",
+        "Current bar: close > EMA(24) \u2014 bounce confirmed above EMA(24)",
+        "close > VWAP \u2014 above session institutional anchor",
+        "RSI(24) < rsi_overbought (default 65) \u2014 not extended"
       ],
       "confirmation": "Bar closes above EMA(24) after previous bar touched it"
     },
     "buy_pe": {
       "conditions": [
         "EMA(24) < EMA(120) by at least trend_strength_pct (bearish trend aligned)",
-        "Previous bar: high >= EMA(24) * (1 - pullback_tolerance) — bar rallied to EMA(24)",
-        "Current bar: close < EMA(24) — rejection confirmed below EMA(24)",
-        "close < VWAP — below session institutional anchor",
-        "RSI(24) > rsi_oversold (default 35) — not oversold"
+        "Previous bar: high >= EMA(24) * (1 - pullback_tolerance) \u2014 bar rallied to EMA(24)",
+        "Current bar: close < EMA(24) \u2014 rejection confirmed below EMA(24)",
+        "close < VWAP \u2014 below session institutional anchor",
+        "RSI(24) > rsi_oversold (default 35) \u2014 not oversold"
       ],
       "confirmation": "Bar closes below EMA(24) after previous bar touched it"
     },
@@ -76,29 +84,29 @@
   },
   "exit": {
     "stop_points": 3,
-    "stop_rationale": "3 option points (~6 NIFTY spot points at delta ~0.5): if the EMA(24) bounce fails and NIFTY retraces 6 spot points from entry within 15 seconds, the institutional bid is NOT absorbing selling and the micro-trend has already reversed — waiting longer increases loss without thesis support. Consistent with 15-30s NIFTY typical adverse move of 2-5 spot pts; 6 pts is the outer edge of normal noise.",
+    "stop_rationale": "3 option points (~6 NIFTY spot points at delta ~0.5): if the EMA(24) bounce fails and NIFTY retraces 6 spot points from entry within 15 seconds, the institutional bid is NOT absorbing selling and the micro-trend has already reversed \u2014 waiting longer increases loss without thesis support. Consistent with 15-30s NIFTY typical adverse move of 2-5 spot pts; 6 pts is the outer edge of normal noise.",
     "target_points": 5,
     "target_rationale": "5 option points (~10 NIFTY spot points): EMA(24) pullback continuations on NIFTY carry 10-15 spot points in the next 30-90 seconds when the trend is genuine. Targeting 10 spot pts captures ~70% of the expected continuation leg and exits well before the next EMA touch. R:R = 1:1.67 at 3-pt stop.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — VIX not used; trend_strength_pct implicitly filters choppy low-volatility days where EMA alignment is unstable",
-    "time_filter": "09:35-15:20 IST — skip first 20 min for trend to establish, no late entries",
-    "volume_filter": "none — index volume at 5s is noisy; VWAP position acts as implicit volume/conviction filter",
+    "vix_filter": "none \u2014 VIX not used; trend_strength_pct implicitly filters choppy low-volatility days where EMA alignment is unstable",
+    "time_filter": "09:35-15:20 IST \u2014 skip first 20 min for trend to establish, no late entries",
+    "volume_filter": "none \u2014 index volume at 5s is noisy; VWAP position acts as implicit volume/conviction filter",
     "trend_filter": "EMA(24) vs EMA(120) separation > trend_strength_pct is the trend filter",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 28,
     "win_rate_estimate": 0.52,
     "avg_winner_to_loser": 1.67,
     "profit_factor_estimate": 1.81,
-    "edge_decay_risk": "low — institutional trend-following algorithms on NIFTY are structural and persistent; the EMA pullback entry pattern reflects a stable microstructure dynamic"
+    "edge_decay_risk": "low \u2014 institutional trend-following algorithms on NIFTY are structural and persistent; the EMA pullback entry pattern reflects a stable microstructure dynamic"
   },
-  "adaptation_notes": "Original used EMA(20/50) on 1-min bars with universe of 25 NIFTY50 stocks, ADX(14) filter, and stock-specific filters (results day, turnover rank). All stock-specific elements are dropped for the NIFTY index. ADX(14) is replaced by the EMA separation ratio (EMA24 vs EMA120) as a trend strength proxy — ADX on 5s bars is too noisy. Lookbacks are NOT 12x scaled: EMA(20min→2min) and EMA(50min→10min) because hold time compresses from 20-90 min to 15-90 seconds, requiring proportionally tighter trigger and context windows. RSI(14min→2min) matched to EMA(24) window. VWAP unchanged (cumulative). Pullback tolerance replaces 'low <= EMA_20 * 1.001' with a tunable threshold.",
+  "adaptation_notes": "Original used EMA(20/50) on 1-min bars with universe of 25 NIFTY50 stocks, ADX(14) filter, and stock-specific filters (results day, turnover rank). All stock-specific elements are dropped for the NIFTY index. ADX(14) is replaced by the EMA separation ratio (EMA24 vs EMA120) as a trend strength proxy \u2014 ADX on 5s bars is too noisy. Lookbacks are NOT 12x scaled: EMA(20min\u21922min) and EMA(50min\u219210min) because hold time compresses from 20-90 min to 15-90 seconds, requiring proportionally tighter trigger and context windows. RSI(14min\u21922min) matched to EMA(24) window. VWAP unchanged (cumulative). Pullback tolerance replaces 'low <= EMA_20 * 1.001' with a tunable threshold.",
   "weaknesses": [
-    "EMA(24) on 5s bars is sensitive to single-tick spikes — a brief 5s dip to EMA24 can trigger without genuine institutional demand absorption",
+    "EMA(24) on 5s bars is sensitive to single-tick spikes \u2014 a brief 5s dip to EMA24 can trigger without genuine institutional demand absorption",
     "On days where NIFTY gaps and trends all day, EMA(24) rarely touches, producing very few signals",
     "EMA(120) separation threshold may miss early-stage trends that are nascent but not yet showing >0.1% separation"
   ],
@@ -106,8 +114,16 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_30.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-90 bars (20-90 min)",
-    "original_indicators": ["EMA(20)", "EMA(50)", "ADX(14)", "RSI(14)", "ATR(20)", "VWAP"],
+    "original_indicators": [
+      "EMA(20)",
+      "EMA(50)",
+      "ADX(14)",
+      "RSI(14)",
+      "ATR(20)",
+      "VWAP"
+    ],
     "original_stop": "1.0 * ATR(20)",
     "original_target": "2.0 * ATR(20)"
-  }
+  },
+  "vix_agnostic": true
 }

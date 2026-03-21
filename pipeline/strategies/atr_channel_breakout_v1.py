@@ -135,9 +135,9 @@ class Strategy(BaseStrategy):
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
             # 4 pts stop: ~8 spot pts at delta 0.5 — genuine breakout should not re-enter channel
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 4),
             # 7 pts target: ~14 spot pts — captures ~60% of typical 15-25 pt continuation impulse
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,          # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

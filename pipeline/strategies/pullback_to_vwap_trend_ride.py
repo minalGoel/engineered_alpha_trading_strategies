@@ -105,8 +105,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("adx_threshold", 25.0, 18.0, 35.0),
             TunableParam("vwap_dist_threshold", 0.0015, 0.0005, 0.003),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df: pl.DataFrame, option_df: pl.DataFrame,
@@ -132,8 +132,8 @@ class Strategy(BaseStrategy):
         # --- Parameters ---
         adx_thr = params.get("adx_threshold", 25.0)
         dist_thr = params.get("vwap_dist_threshold", 0.0015)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # --- Distance from VWAP (relative, element-wise) ---
         dist_to_vwap = np.where(close > 0, np.abs(close - vwap) / close, 1.0)

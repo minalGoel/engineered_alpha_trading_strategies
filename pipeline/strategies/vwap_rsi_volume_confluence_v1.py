@@ -81,8 +81,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_overbought", 75.0, 65.0, 85.0),
             TunableParam("vol_ratio_thresh", 2.0, 1.5, 4.0),
             TunableParam("vix_max", 22.0, 15.0, 30.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -105,8 +105,8 @@ class Strategy(BaseStrategy):
         rsi_overbought = params.get("rsi_overbought", 75.0)
         vol_thresh = params.get("vol_ratio_thresh", 2.0)
         vix_max = params.get("vix_max", 22.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX aligned to spot bars ──
         vix_close = np.full(n, 15.0)

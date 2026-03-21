@@ -176,9 +176,9 @@ class Strategy(BaseStrategy):
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
             # Stop: 4 pts = ~8 NIFTY spot pts; if momentum fails within 30s, thesis broken
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 3),
             # Target: 7 pts = ~14 NIFTY spot pts; ~60% of expected 15-25 pt continuation
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 6),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,          # 90s = 18 bars at 5s; mid-range of 30-90s hold
             max_trades_per_day=self.max_trades_per_day,

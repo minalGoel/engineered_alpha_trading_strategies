@@ -2,14 +2,23 @@
   "name": "pullback_to_vwap_trend_ride",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["trend_following", "vwap", "pullback", "adx", "institutional_flow"],
+  "tags": [
+    "trend_following",
+    "vwap",
+    "pullback",
+    "adx",
+    "institutional_flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_346.json",
   "original_name": "pullback_to_vwap_trend_ride",
-  "mechanism": "On NIFTY, when a large institutional participant executes a TWAP/VWAP order spanning 15-30 minutes, the index drifts persistently in one direction (ADX rises above 25, DI lines diverge) while their algo periodically pauses, letting price drift back to the session VWAP. At the VWAP touch, every other VWAP-benchmarked algorithm sees a favorable fill opportunity and re-enters aggressively in trend direction — a reflexive buy cluster within 10-20 seconds that pushes NIFTY 15-25 spot points in the trend direction. At 5-second resolution, we can detect the precise bar where price re-touches VWAP within this trend context and enter before the re-acceleration pulse, rather than waiting for a 1-minute bar confirmation as the original did.",
+  "mechanism": "On NIFTY, when a large institutional participant executes a TWAP/VWAP order spanning 15-30 minutes, the index drifts persistently in one direction (ADX rises above 25, DI lines diverge) while their algo periodically pauses, letting price drift back to the session VWAP. At the VWAP touch, every other VWAP-benchmarked algorithm sees a favorable fill opportunity and re-enters aggressively in trend direction \u2014 a reflexive buy cluster within 10-20 seconds that pushes NIFTY 15-25 spot points in the trend direction. At 5-second resolution, we can detect the precise bar where price re-touches VWAP within this trend context and enter before the re-acceleration pulse, rather than waiting for a 1-minute bar confirmation as the original did.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,35 +36,35 @@
       "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP is a cumulative measure — no scaling needed. It anchors from 09:15 each day regardless of bar size. This is the 'fair price' that institutional VWAP benchmarked algos rally around."
+      "purpose": "Session VWAP is a cumulative measure \u2014 no scaling needed. It anchors from 09:15 each day regardless of bar size. This is the 'fair price' that institutional VWAP benchmarked algos rally around."
     },
     {
       "name": "adx_60",
       "formula": "Wilder ADX(60) on 5s spot bars",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "60 bars = 5 minutes of trend context. The original used ADX(14) on 1-min bars = 14 minutes, which is too slow for 30-90s holds. We need trend confirmation on the same timescale we plan to trade. ADX(60) detects 5-minute sustained directional flow — exactly the signature of an active institutional TWAP order — while being fast enough to react when the trend terminates."
+      "purpose": "60 bars = 5 minutes of trend context. The original used ADX(14) on 1-min bars = 14 minutes, which is too slow for 30-90s holds. We need trend confirmation on the same timescale we plan to trade. ADX(60) detects 5-minute sustained directional flow \u2014 exactly the signature of an active institutional TWAP order \u2014 while being fast enough to react when the trend terminates."
     },
     {
       "name": "plus_di_60",
       "formula": "+DI(60) from Wilder's DMI",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "Directional bias confirmation aligned with ADX(60). +DI > -DI indicates upward institutional pressure — we only buy CE when this holds."
+      "purpose": "Directional bias confirmation aligned with ADX(60). +DI > -DI indicates upward institutional pressure \u2014 we only buy CE when this holds."
     },
     {
       "name": "minus_di_60",
       "formula": "-DI(60) from Wilder's DMI",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "-DI > +DI indicates downward institutional pressure — we only buy PE when this holds."
+      "purpose": "-DI > +DI indicates downward institutional pressure \u2014 we only buy PE when this holds."
     },
     {
       "name": "dist_to_vwap",
       "formula": "abs(close - vwap) / close",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Entry timing: price must be within 0.15% of VWAP (threshold tunable 0.05-0.30%). At NIFTY ~22000, 0.15% = ~33 spot pts — close enough to VWAP for institutional algo rebuy demand but allowing for 5s candle noise."
+      "purpose": "Entry timing: price must be within 0.15% of VWAP (threshold tunable 0.05-0.30%). At NIFTY ~22000, 0.15% = ~33 spot pts \u2014 close enough to VWAP for institutional algo rebuy demand but allowing for 5s candle noise."
     },
     {
       "name": "bullish_bar",
@@ -70,8 +79,8 @@
       "conditions": [
         "adx_60 > 25 (trend strong enough for institutional TWAP signature)",
         "plus_di_60 > minus_di_60 (upward directional pressure dominant)",
-        "dist_to_vwap < 0.0015 (price within 0.15% of VWAP — pullback to fair value)",
-        "close > open (current 5s bar is bouncing — confirmation of VWAP support)"
+        "dist_to_vwap < 0.0015 (price within 0.15% of VWAP \u2014 pullback to fair value)",
+        "close > open (current 5s bar is bouncing \u2014 confirmation of VWAP support)"
       ],
       "confirmation": "All four conditions on same bar; no multi-bar confirmation to avoid missing the fast re-acceleration burst"
     },
@@ -79,47 +88,51 @@
       "conditions": [
         "adx_60 > 25 (trend strong enough for institutional TWAP signature)",
         "minus_di_60 > plus_di_60 (downward directional pressure dominant)",
-        "dist_to_vwap < 0.0015 (price within 0.15% of VWAP — pullback to fair value)",
-        "close < open (current 5s bar is resuming the drop — confirmation of VWAP resistance)"
+        "dist_to_vwap < 0.0015 (price within 0.15% of VWAP \u2014 pullback to fair value)",
+        "close < open (current 5s bar is resuming the drop \u2014 confirmation of VWAP resistance)"
       ],
       "confirmation": "All four conditions on same bar"
     },
     "entry_price": "limit at bar close (no spread cost)"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 5.0,
     "stop_rationale": "4 option pts = ~8 NIFTY spot pts. If price breaks through VWAP by 8 spot pts in the WRONG direction, the institutional buyer has dried up and the thesis is wrong. At 30s hold, NIFTY normally moves 2-5 option pts favorably; a 4-pt adverse move signals thesis failure not noise.",
-    "target_points": 7,
+    "target_points": 8.0,
     "target_rationale": "NIFTY trend re-acceleration after VWAP touch typically yields 15-25 spot pts in the first 60-90 seconds (7-12 option pts at delta ~0.5). Target 7 pts captures the lower end conservatively at 1:1.75 R:R, exiting before the move exhausts.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — VWAP pullback in trend works in most vol regimes; high VIX may widen the pullback but doesn't kill the mechanism",
+    "vix_filter": "none \u2014 VWAP pullback in trend works in most vol regimes; high VIX may widen the pullback but doesn't kill the mechanism",
     "time_filter": "09:30-15:20 IST (09:30 to allow 15-min VWAP and ADX warmup; avoid late-day illiquidity)",
-    "volume_filter": "none — NIFTY volume is always sufficient for index option execution",
-    "trend_filter": "adx_60 > 25 (primary filter — only trade when institutional trend flow detected)",
-    "spread_filter": "none — limit order execution at candle close"
+    "volume_filter": "none \u2014 NIFTY volume is always sufficient for index option execution",
+    "trend_filter": "adx_60 > 25 (primary filter \u2014 only trade when institutional trend flow detected)",
+    "spread_filter": "none \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.1,
-    "edge_decay_risk": "low — driven by structural institutional VWAP benchmarking behavior which persists as long as funds manage to VWAP benchmarks"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "low \u2014 driven by structural institutional VWAP benchmarking behavior which persists as long as funds manage to VWAP benchmarks"
   },
-  "adaptation_notes": "Key changes from original: (1) ADX period compressed from 14 min to 5 min (60 bars) to match 30-90s hold horizon — the original used 14-min ADX to detect slow equity stock trends; NIFTY institutional flow manifests at much shorter timescales. (2) VWAP is unchanged as it is always session-cumulative. (3) Removed ATR-based stop and target — replaced with fixed option premium points calibrated to NIFTY 30-90s typical moves. (4) Session start advanced to 09:30 from original 10:30 — NIFTY trends can start from open especially around macro events; equity stocks needed 10:30 to clear opening volatility but NIFTY is mean-reverting at open which ADX filters naturally. (5) Removed trailing stop — too complex for 5-second sub-2-minute holds. (6) Removed 'ADX crosses below 25' signal exit — replaced with fixed time_stop_bars=18.",
+  "adaptation_notes": "Key changes from original: (1) ADX period compressed from 14 min to 5 min (60 bars) to match 30-90s hold horizon \u2014 the original used 14-min ADX to detect slow equity stock trends; NIFTY institutional flow manifests at much shorter timescales. (2) VWAP is unchanged as it is always session-cumulative. (3) Removed ATR-based stop and target \u2014 replaced with fixed option premium points calibrated to NIFTY 30-90s typical moves. (4) Session start advanced to 09:30 from original 10:30 \u2014 NIFTY trends can start from open especially around macro events; equity stocks needed 10:30 to clear opening volatility but NIFTY is mean-reverting at open which ADX filters naturally. (5) Removed trailing stop \u2014 too complex for 5-second sub-2-minute holds. (6) Removed 'ADX crosses below 25' signal exit \u2014 replaced with fixed time_stop_bars=18.",
   "weaknesses": [
     "False trend signals when NIFTY spikes on macro news then immediately reverses (ADX rises on spike but no sustained institutional flow)",
     "VWAP loses meaning in the last 30 min of session as it converges to day's average; positions after 15:00 may underperform",
-    "Multiple VWAP touches in the same trend direction can signal multiple times — later entries have lower edge as TWAP order completes"
+    "Multiple VWAP touches in the same trend direction can signal multiple times \u2014 later entries have lower edge as TWAP order completes"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_346.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-90 bars (30-90 min)",
-    "original_indicators": ["ADX(14)", "dist_to_vwap"],
+    "original_indicators": [
+      "ADX(14)",
+      "dist_to_vwap"
+    ],
     "original_stop": "0.4% from entry",
     "original_target": "3 * ATR(14) from entry"
-  }
+  },
+  "vix_agnostic": true
 }

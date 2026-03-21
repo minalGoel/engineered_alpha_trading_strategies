@@ -47,9 +47,9 @@ class Strategy(BaseStrategy):
 
     name = "european_open_momentum_continuation"
     underlying = "NIFTY"
-    # Full session data required for VWAP from 09:20 IST market open
+    # VWAP requires data from 09:20 IST; entries restricted to EU open window [810, 855)
     session_start_minutes = 560   # 09:20 IST
-    session_end_minutes = 925     # 15:25 IST
+    session_end_minutes = 855     # 14:15 IST — EU open window closes; no entries after this
     max_trades_per_day = 5
     # 360 bars (30 min context window) + 24 bars (2 min burst) + buffer
     max_lookback = 400

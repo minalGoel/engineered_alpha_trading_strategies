@@ -2,14 +2,22 @@
   "name": "intraday_rsi_divergence_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "divergence", "rsi", "momentum_exhaustion"],
+  "tags": [
+    "mean_reversion",
+    "divergence",
+    "rsi",
+    "momentum_exhaustion"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_26.json",
   "original_name": "intraday_rsi_divergence_v1",
-  "mechanism": "On NIFTY, when institutional algo selling (or buying) drives the index to a new 1-minute price extreme, but RSI at that extreme is higher (for a lower low) or lower (for a higher high) than it was at the prior extreme 1 minute earlier, it signals that the directional order flow is decelerating — fewer contracts are absorbing per tick even as price extends. At 5-second resolution this deceleration is visible before the full reversal, giving a 30-90 second lead. Market-maker delta-hedging amplifies the initial snap-back because they are unwinding hedges placed during the directional leg as flow exhausts. The divergence must form in RSI oversold (<45) or overbought (>55) territory to confirm the exhaustion context rather than catching mid-range noise.",
+  "mechanism": "On NIFTY, when institutional algo selling (or buying) drives the index to a new 1-minute price extreme, but RSI at that extreme is higher (for a lower low) or lower (for a higher high) than it was at the prior extreme 1 minute earlier, it signals that the directional order flow is decelerating \u2014 fewer contracts are absorbing per tick even as price extends. At 5-second resolution this deceleration is visible before the full reversal, giving a 30-90 second lead. Market-maker delta-hedging amplifies the initial snap-back because they are unwinding hedges placed during the directional leg as flow exhausts. The divergence must form in RSI oversold (<45) or overbought (>55) territory to confirm the exhaustion context rather than catching mid-range noise.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,14 +35,14 @@
       "formula": "RSI(close, 18)",
       "lookback": 18,
       "computed_on": "spot",
-      "purpose": "RSI over 90 seconds (18 × 5s). NOT 12x-scaled from original RSI(9) on 1-min — that would give RSI(108) = 9-minute RSI, far too slow for 30-90s holds. We use 18 bars because we need the RSI to be responsive to 1-2 minute micro-moves on NIFTY. A 90-second RSI captures whether momentum was genuinely decelerating at the recent extreme versus the prior extreme."
+      "purpose": "RSI over 90 seconds (18 \u00d7 5s). NOT 12x-scaled from original RSI(9) on 1-min \u2014 that would give RSI(108) = 9-minute RSI, far too slow for 30-90s holds. We use 18 bars because we need the RSI to be responsive to 1-2 minute micro-moves on NIFTY. A 90-second RSI captures whether momentum was genuinely decelerating at the recent extreme versus the prior extreme."
     },
     {
       "name": "low_recent_12",
       "formula": "min(close, 12 bars rolling)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "Lowest close in the most recent 1 minute (12 × 5s). This is the 'recent swing low' window. Compressed from the original's 20-bar (20 min) swing window because we're trading micro-divergences at 30-90s resolution, not the 5-30 minute swings in the original."
+      "purpose": "Lowest close in the most recent 1 minute (12 \u00d7 5s). This is the 'recent swing low' window. Compressed from the original's 20-bar (20 min) swing window because we're trading micro-divergences at 30-90s resolution, not the 5-30 minute swings in the original."
     },
     {
       "name": "low_prior_12",
@@ -48,21 +56,21 @@
       "formula": "max(close, 12 bars rolling)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "Highest close in the most recent 1 minute — used for bearish divergence detection."
+      "purpose": "Highest close in the most recent 1 minute \u2014 used for bearish divergence detection."
     },
     {
       "name": "high_prior_12",
       "formula": "max(close[-24:-12], 12 bars rolling from 24 to 12 bars ago)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "Highest close in the prior 1-minute window — prior swing high reference for bearish divergence."
+      "purpose": "Highest close in the prior 1-minute window \u2014 prior swing high reference for bearish divergence."
     },
     {
       "name": "rsi_12ago",
       "formula": "RSI_18[bar - 12]",
       "lookback": 30,
       "computed_on": "spot",
-      "purpose": "RSI value 12 bars (1 minute) ago — used to compare momentum at the recent swing vs the prior swing. If price made a new low but RSI is now higher than it was 12 bars ago, that is the bullish divergence condition."
+      "purpose": "RSI value 12 bars (1 minute) ago \u2014 used to compare momentum at the recent swing vs the prior swing. If price made a new low but RSI is now higher than it was 12 bars ago, that is the bullish divergence condition."
     }
   ],
   "entry": {
@@ -90,30 +98,30 @@
   },
   "exit": {
     "stop_points": 3,
-    "stop_rationale": "3 option pts = ~6 NIFTY spot pts at delta 0.5. If NIFTY moves 6 spot pts against us within 30 seconds of a divergence signal, the thesis is invalidated — the directional flow is still strong, not exhausted. This matches the 2-5 pt typical NIFTY 30s option move range; a 3-pt stop gives the trade time to work without too much room for a false divergence to cause large losses.",
+    "stop_rationale": "3 option pts = ~6 NIFTY spot pts at delta 0.5. If NIFTY moves 6 spot pts against us within 30 seconds of a divergence signal, the thesis is invalidated \u2014 the directional flow is still strong, not exhausted. This matches the 2-5 pt typical NIFTY 30s option move range; a 3-pt stop gives the trade time to work without too much room for a false divergence to cause large losses.",
     "target_points": 5,
     "target_rationale": "5 option pts = ~10 NIFTY spot pts at delta 0.5. RSI divergence on NIFTY micro-moves typically precedes a 10-20 spot point snap-back as the exhausted flow reverses and delta-hedging activity reinforces it. 5 pts captures the lower half of that expected reversal at a 1:1.67 risk-reward ratio.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "none — divergence is regime-agnostic; RSI threshold implicitly filters chop",
+    "vix_filter": "none \u2014 divergence is regime-agnostic; RSI threshold implicitly filters chop",
     "time_filter": "09:20-15:25 IST; skip first 5 minutes (09:15-09:20) to avoid pre-open noise",
-    "volume_filter": "none — index volume is noisy at 5s; RSI level acts as quality filter",
-    "trend_filter": "none — divergence is counter-trend by design",
-    "spread_filter": "none — limit order execution at candle close"
+    "volume_filter": "none \u2014 index volume is noisy at 5s; RSI level acts as quality filter",
+    "trend_filter": "none \u2014 divergence is counter-trend by design",
+    "spread_filter": "none \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.53,
     "avg_winner_to_loser": 1.67,
-    "profit_factor_estimate": 1.48,
-    "edge_decay_risk": "medium — RSI divergence is classic and well-known, but systematic detection at 5s on index is uncommon; competition is primarily from human discretionary traders on longer timeframes"
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "medium \u2014 RSI divergence is classic and well-known, but systematic detection at 5s on index is uncommon; competition is primarily from human discretionary traders on longer timeframes"
   },
-  "adaptation_notes": "Original strategy traded the top 40 FnO stocks on 1-minute bars with explicit swing-point tracking over 20-40 minute windows. Converted to NIFTY index at 5s by: (1) compressing swing detection from 20-minute rolling windows to 1-minute rolling windows (12-bar recent + 12-bar prior) since we hold 30-90s not 5-30 min; (2) replacing RSI(9 × 1min = 9 min) with RSI(18 × 5s = 90s) to match the compressed detection window — NOT a 12x scale which would give a uselessly slow 9-minute RSI; (3) dropping the exact swing-low-price detection (ATR-based in original) in favor of rolling window min/max which is more robust at 5s noise levels; (4) using rsi_div_threshold as a tunable parameter instead of fixed RSI level comparison; (5) removing ATR-based stops since option premium points are used directly.",
+  "adaptation_notes": "Original strategy traded the top 40 FnO stocks on 1-minute bars with explicit swing-point tracking over 20-40 minute windows. Converted to NIFTY index at 5s by: (1) compressing swing detection from 20-minute rolling windows to 1-minute rolling windows (12-bar recent + 12-bar prior) since we hold 30-90s not 5-30 min; (2) replacing RSI(9 \u00d7 1min = 9 min) with RSI(18 \u00d7 5s = 90s) to match the compressed detection window \u2014 NOT a 12x scale which would give a uselessly slow 9-minute RSI; (3) dropping the exact swing-low-price detection (ATR-based in original) in favor of rolling window min/max which is more robust at 5s noise levels; (4) using rsi_div_threshold as a tunable parameter instead of fixed RSI level comparison; (5) removing ATR-based stops since option premium points are used directly.",
   "weaknesses": [
     "1-minute swing windows at 5s bars may produce many false divergences in fast-trending NIFTY sessions",
-    "RSI(18) at 5s is still noisy — thin divergence (rsi_18 barely above rsi_12ago) may not have edge",
+    "RSI(18) at 5s is still noisy \u2014 thin divergence (rsi_18 barely above rsi_12ago) may not have edge",
     "Counter-trend strategy will suffer during strong sustained directional moves on NIFTY",
     "18-bar time stop (90s) may cut winners short if reversal is slow to develop"
   ],
@@ -121,8 +129,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_26.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-30 bars (5-30 min)",
-    "original_indicators": ["RSI(9)", "swing_low/high over 20 bars", "prior swing over 40 bars", "ATR(20)"],
+    "original_indicators": [
+      "RSI(9)",
+      "swing_low/high over 20 bars",
+      "prior swing over 40 bars",
+      "ATR(20)"
+    ],
     "original_stop": "0.3% beyond divergence swing point",
     "original_target": "0.4% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

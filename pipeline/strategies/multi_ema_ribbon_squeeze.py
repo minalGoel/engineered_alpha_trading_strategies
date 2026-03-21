@@ -129,9 +129,9 @@ class Strategy(BaseStrategy):
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
             # 4 option pts stop: ~8 spot pts — valid breakout should not retrace this far
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 5),
             # 7 option pts target: ~14 spot pts = ~50% of first expansion leg (20-30 spot pts)
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,          # 90 seconds = 18 × 5s bars
             max_trades_per_day=self.max_trades_per_day,

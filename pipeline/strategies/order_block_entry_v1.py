@@ -172,7 +172,7 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("impulse_pts", 8.0, 4.0, 15.0),
             TunableParam("stop_pts",    4.0, 2.0,  8.0),
-            TunableParam("target_pts",  7.0, 4.0, 14.0),
+            TunableParam("target_pts",  8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -189,7 +189,7 @@ class Strategy(BaseStrategy):
 
         impulse_pts = float(params.get("impulse_pts", 8.0))
         stop_pts    = float(params.get("stop_pts", 4.0))
-        target_pts  = float(params.get("target_pts", 7.0))
+        target_pts  = float(params.get("target_pts", 8.0))
         max_zone_age = 72  # 6 minutes — fixed (not tunable: a structural feature of OB decay)
 
         vwap = _compute_vwap(high_a, low_a, close_a, vol_a, day_id)

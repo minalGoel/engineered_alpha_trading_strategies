@@ -2,14 +2,22 @@
   "name": "rsi_extreme_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "rsi", "exhaustion", "intraday"],
+  "tags": [
+    "mean_reversion",
+    "rsi",
+    "exhaustion",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_22.json",
   "original_name": "rsi_extreme_reversion_v1",
-  "mechanism": "On NIFTY and BANKNIFTY, sharp 2-minute directional bursts that push RSI_24 below 20 or above 80 represent concentrated retail stop-loss and momentum-chasing flow overshooting session VWAP. The moment RSI crosses back across the extreme threshold, the directional flush is exhausting — resting institutional limit orders positioned better than VWAP absorb remaining flow and drive a 10-20 spot point reversion over the next 30-90 seconds. Index-level reversion is faster and more reliable than single-stock reversion because NIFTY/BANKNIFTY are continuously arbitraged by futures participants who immediately fade deviations from VWAP-derived fair value, making the recovery self-reinforcing.",
+  "mechanism": "On NIFTY and BANKNIFTY, sharp 2-minute directional bursts that push RSI_24 below 20 or above 80 represent concentrated retail stop-loss and momentum-chasing flow overshooting session VWAP. The moment RSI crosses back across the extreme threshold, the directional flush is exhausting \u2014 resting institutional limit orders positioned better than VWAP absorb remaining flow and drive a 10-20 spot point reversion over the next 30-90 seconds. Index-level reversion is faster and more reliable than single-stock reversion because NIFTY/BANKNIFTY are continuously arbitraged by futures participants who immediately fade deviations from VWAP-derived fair value, making the recovery self-reinforcing.",
   "universe": "BOTH",
   "timeframe": "5s",
   "session": "09:25-15:00 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,14 +35,14 @@
       "formula": "RSI(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute RSI detects fast momentum exhaustion. Original used 7-period on 1-min (7 minutes of context). We compress to 24 bars (2 minutes) because our hold time is 30-90s — the trigger lookback should match the hold horizon. At 5s resolution a 2-minute RSI is responsive enough to reach extremes during a genuine 2-min flush without being noisy from individual-bar price jitter."
+      "purpose": "2-minute RSI detects fast momentum exhaustion. Original used 7-period on 1-min (7 minutes of context). We compress to 24 bars (2 minutes) because our hold time is 30-90s \u2014 the trigger lookback should match the hold horizon. At 5s resolution a 2-minute RSI is responsive enough to reach extremes during a genuine 2-min flush without being noisy from individual-bar price jitter."
     },
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume) from session open, reset daily",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Intraday VWAP from session open. No scaling — cumulative measure is bar-size agnostic. Serves as the fair-value anchor: when RSI is extreme AND price is significantly below/above VWAP, both momentum exhaustion and mean-reversion pressure align."
+      "purpose": "Intraday VWAP from session open. No scaling \u2014 cumulative measure is bar-size agnostic. Serves as the fair-value anchor: when RSI is extreme AND price is significantly below/above VWAP, both momentum exhaustion and mean-reversion pressure align."
     },
     {
       "name": "vwap_dist_bps",
@@ -55,10 +63,10 @@
     "buy_ce": {
       "conditions": [
         "rsi_24[i-1] < rsi_oversold_threshold (prior bar was oversold)",
-        "rsi_24[i] >= rsi_oversold_threshold (RSI crossing back above threshold — exhaustion confirmed)",
-        "vwap_dist_bps < -vwap_dist_threshold (price still below VWAP — mean-reversion pull present)",
+        "rsi_24[i] >= rsi_oversold_threshold (RSI crossing back above threshold \u2014 exhaustion confirmed)",
+        "vwap_dist_bps < -vwap_dist_threshold (price still below VWAP \u2014 mean-reversion pull present)",
         "volume[i] / vol_sma_120 > vol_mult (above-average participation on the flush bar)",
-        "vix < 22 (VIX regime filter — extremes can persist in high-volatility environments)"
+        "vix < 22 (VIX regime filter \u2014 extremes can persist in high-volatility environments)"
       ],
       "confirmation": "RSI crosses from below to above oversold threshold on current bar (Wilder smoothing)"
     },
@@ -75,39 +83,44 @@
     "entry_price": "market (limit at candle close)"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 spot points of adverse move at delta 0.5. If NIFTY/BANKNIFTY moves 8+ spot points against the reversion within 30s of entry, the RSI exhaustion thesis has failed — likely a genuine momentum continuation rather than a flush. NIFTY 30s typical adverse move is 2-5 pts; 4 pts sits at the upper range of normal noise, cutting quickly if the thesis is wrong.",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "4 option points = ~8 spot points of adverse move at delta 0.5. If NIFTY/BANKNIFTY moves 8+ spot points against the reversion within 30s of entry, the RSI exhaustion thesis has failed \u2014 likely a genuine momentum continuation rather than a flush. NIFTY 30s typical adverse move is 2-5 pts; 4 pts sits at the upper range of normal noise, cutting quickly if the thesis is wrong.",
+    "target_points": 6.0,
     "target_rationale": "7 option points = ~14 spot points at delta 0.5. NIFTY mean-reversion from RSI extremes with VWAP deviation averages 15-25 spot points in the first 60-90 seconds. Targeting 14 spot points captures ~60% of the median move at 1:1.75 R:R.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:00 IST (no new entries after 15:00)"
   },
   "filters": {
-    "vix_filter": "vix < 22 — same as original; extreme VIX regimes sustain RSI extremes rather than reverting them",
-    "time_filter": "09:25-15:00 IST — skip first 10 minutes of chaotic price discovery; no new entries after 15:00",
+    "vix_filter": "vix < 22 \u2014 same as original; extreme VIX regimes sustain RSI extremes rather than reverting them",
+    "time_filter": "09:25-15:00 IST \u2014 skip first 10 minutes of chaotic price discovery; no new entries after 15:00",
     "volume_filter": "rel_volume > 1.3 (relaxed from original 1.5 since index volume is smoother than single-stock)",
-    "trend_filter": "none — RSI extreme already encodes the directional regime",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "trend_filter": "none \u2014 RSI extreme already encodes the directional regime",
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.58,
-    "avg_winner_to_loser": 1.4,
-    "profit_factor_estimate": 1.45,
-    "edge_decay_risk": "medium — RSI mean reversion is a persistent behavioral edge, but extreme thresholds (RSI < 20) occur less frequently at index level than single-stock, keeping trade count low enough to avoid crowding"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.76,
+    "edge_decay_risk": "medium \u2014 RSI mean reversion is a persistent behavioral edge, but extreme thresholds (RSI < 20) occur less frequently at index level than single-stock, keeping trade count low enough to avoid crowding"
   },
-  "adaptation_notes": "Original used RSI(7) on 1-min bars of top NIFTY50 stocks with extreme thresholds 15/85. Converted to RSI(24) on 5s NIFTY/BANKNIFTY index bars. Key changes: (1) Lookback compressed from 7 min to 2 min because our hold is 30-90s — the trigger must match the hold horizon. (2) Thresholds relaxed from 15/85 to 20/80 because index RSI is smoother than single-stock RSI, so 20/80 is equally extreme relative to typical index behavior. (3) Relative volume window compressed from 20-min to 10-min SMA. (4) Spread filter dropped — limit order execution eliminates bid-ask spread. (5) ATR-based stop replaced by fixed 4 option-point stop calibrated to NIFTY 30s move magnitude. (6) Exit target is now fixed in option points (7 pts) rather than RSI-50 crossover which is too slow for a 90s hold.",
+  "adaptation_notes": "Original used RSI(7) on 1-min bars of top NIFTY50 stocks with extreme thresholds 15/85. Converted to RSI(24) on 5s NIFTY/BANKNIFTY index bars. Key changes: (1) Lookback compressed from 7 min to 2 min because our hold is 30-90s \u2014 the trigger must match the hold horizon. (2) Thresholds relaxed from 15/85 to 20/80 because index RSI is smoother than single-stock RSI, so 20/80 is equally extreme relative to typical index behavior. (3) Relative volume window compressed from 20-min to 10-min SMA. (4) Spread filter dropped \u2014 limit order execution eliminates bid-ask spread. (5) ATR-based stop replaced by fixed 4 option-point stop calibrated to NIFTY 30s move magnitude. (6) Exit target is now fixed in option points (7 pts) rather than RSI-50 crossover which is too slow for a 90s hold.",
   "weaknesses": [
-    "RSI < 20 on 2-min NIFTY bars is rare — strategy may have fewer than 4 signals per day in low-volatility sessions",
+    "RSI < 20 on 2-min NIFTY bars is rare \u2014 strategy may have fewer than 4 signals per day in low-volatility sessions",
     "VIX < 22 filter removes the highest-volatility sessions where reversion moves would be largest",
     "Volume filter less discriminating on NIFTY index than on individual stocks",
-    "No trend context — can fight a sustained institutional directional order flow"
+    "No trend context \u2014 can fight a sustained institutional directional order flow"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_22.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-20 bars (5-20 minutes)",
-    "original_indicators": ["RSI(7)", "VWAP distance (bps)", "Relative volume SMA(20)", "ATR(14)"],
+    "original_indicators": [
+      "RSI(7)",
+      "VWAP distance (bps)",
+      "Relative volume SMA(20)",
+      "ATR(14)"
+    ],
     "original_stop": "1.0 * ATR(14) from entry",
     "original_target": "RSI crosses 50 (midline)"
   }

@@ -2,14 +2,23 @@
   "name": "kernel_density_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["kde", "support-resistance", "mean-reversion", "non-parametric", "price-clustering"],
+  "tags": [
+    "kde",
+    "support-resistance",
+    "mean_reversion",
+    "non-parametric",
+    "price-clustering"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_331.json",
   "original_name": "kernel_density_v1",
   "mechanism": "On NIFTY, institutional TWAP and VWAP algorithms executing multi-hour directional mandates repeatedly transact at the same price bands within any given 10-minute window, creating high-density clusters in the Gaussian KDE of recent 5-second closes. These KDE modes act as mechanical support/resistance: when NIFTY approaches a high-density mode from above with short-term RSI exhausted below 40, residual buy algorithms still working their orders at that level absorb the incoming sell flow and produce a 10-20 spot-point bounce. The same logic applies in reverse at resistance modes (RSI > 60, approaching from below), where sellers who accumulated near that band provide friction against further advance. At 5-second resolution we enter as proximity to the mode tightens to within 0.1% of price, capturing the first 1-2 bars of bounce before the level either holds or breaks.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,25 +36,25 @@
       "formula": "GaussianKDE(close[-120:], bandwidth=silverman) -> local maxima of density evaluated on 60-point grid",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "120 bars = 10 minutes of 5-second closes. NOT the original 2-hour window (1440 bars). For scalping 30-90 second bounces, we need modes from the current intraday micro-session — levels formed 2 hours ago have been displaced by new information. 10-minute KDE captures the price clustering visible to same-session institutional algos still working their orders."
+      "purpose": "120 bars = 10 minutes of 5-second closes. NOT the original 2-hour window (1440 bars). For scalping 30-90 second bounces, we need modes from the current intraday micro-session \u2014 levels formed 2 hours ago have been displaced by new information. 10-minute KDE captures the price clustering visible to same-session institutional algos still working their orders."
     },
     {
       "name": "nearest_support",
-      "formula": "argmax(kde_modes[kde_modes < close]) — highest KDE mode strictly below current close",
+      "formula": "argmax(kde_modes[kde_modes < close]) \u2014 highest KDE mode strictly below current close",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "The closest high-density price level below current price — represents the nearest zone where residual buy orders cluster. 'Nearest' because KDE can have multiple modes and only the closest is actionable in 30-90 seconds."
+      "purpose": "The closest high-density price level below current price \u2014 represents the nearest zone where residual buy orders cluster. 'Nearest' because KDE can have multiple modes and only the closest is actionable in 30-90 seconds."
     },
     {
       "name": "nearest_resistance",
-      "formula": "argmin(kde_modes[kde_modes > close]) — lowest KDE mode strictly above current close",
+      "formula": "argmin(kde_modes[kde_modes > close]) \u2014 lowest KDE mode strictly above current close",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "Mirror of nearest_support — closest supply zone above current price."
+      "purpose": "Mirror of nearest_support \u2014 closest supply zone above current price."
     },
     {
       "name": "mode_strength",
-      "formula": "kde_density_at_mode / mean(kde_density_over_grid) — relative density at the mode",
+      "formula": "kde_density_at_mode / mean(kde_density_over_grid) \u2014 relative density at the mode",
       "lookback": 120,
       "computed_on": "spot",
       "purpose": "Filters weak/shallow KDE peaks. A mode with strength < 1.5x mean density is not a meaningful cluster; it could just be a local noise peak in a thin distribution. Strength >= 1.5 indicates the level has received significantly above-average price concentration."
@@ -64,7 +73,7 @@
         "close > nearest_support (price above support, not yet broken)",
         "(close - nearest_support) / close < 0.001 (within 0.1% of support)",
         "mode_strength(nearest_support) > 1.5 (high-density cluster, not noise peak)",
-        "rsi_36 < 40 (short-term momentum exhausted — oversold into support)"
+        "rsi_36 < 40 (short-term momentum exhausted \u2014 oversold into support)"
       ],
       "confirmation": "VIX < 22 (S/R levels unreliable in high-vol when index behaves erratically)"
     },
@@ -81,38 +90,43 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "A 4-point adverse option move (~8 NIFTY spot points at delta 0.5) signals the KDE mode has failed — price has moved meaningfully through the level rather than bouncing. For 30-90 second NIFTY holds, a 8 spot-point level break is decisive: the support/resistance is confirmed absent and the thesis is wrong.",
+    "stop_rationale": "A 4-point adverse option move (~8 NIFTY spot points at delta 0.5) signals the KDE mode has failed \u2014 price has moved meaningfully through the level rather than bouncing. For 30-90 second NIFTY holds, a 8 spot-point level break is decisive: the support/resistance is confirmed absent and the thesis is wrong.",
     "target_points": 6,
-    "target_rationale": "A bounce from a meaningful NIFTY KDE support/resistance mode should produce 12-15 spot points of reversion as resting institutional orders absorb the flow. 6 option points (~12 spot points at delta 0.5) captures the lower bound of expected bounce amplitude while maintaining a 1:1.5 R:R. This is consistent with 30-second NIFTY typical moves of 2-5 option pts — we target the upper end given the KDE signal provides higher conviction.",
+    "target_rationale": "A bounce from a meaningful NIFTY KDE support/resistance mode should produce 12-15 spot points of reversion as resting institutional orders absorb the flow. 6 option points (~12 spot points at delta 0.5) captures the lower bound of expected bounce amplitude while maintaining a 1:1.5 R:R. This is consistent with 30-second NIFTY typical moves of 2-5 option pts \u2014 we target the upper end given the KDE signal provides higher conviction.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "VIX < 22 — above 22, intraday NIFTY moves become gappy and erratic, KDE modes from calm periods are overrun by momentum; original also used VIX < 22",
-    "time_filter": "09:30-15:20 IST — start at 09:30 to ensure 120-bar (10-min) warmup since 09:20 before first signal",
-    "volume_filter": "None — NIFTY volume is inherently noisy at 5s; mode strength filter replaces volume filter",
-    "trend_filter": "Implicit — RSI < 40 or RSI > 60 ensures we're not chasing a strongly trending bar",
-    "spread_filter": "None — limit orders, no spread cost"
+    "vix_filter": "VIX < 22 \u2014 above 22, intraday NIFTY moves become gappy and erratic, KDE modes from calm periods are overrun by momentum; original also used VIX < 22",
+    "time_filter": "09:30-15:20 IST \u2014 start at 09:30 to ensure 120-bar (10-min) warmup since 09:20 before first signal",
+    "volume_filter": "None \u2014 NIFTY volume is inherently noisy at 5s; mode strength filter replaces volume filter",
+    "trend_filter": "Implicit \u2014 RSI < 40 or RSI > 60 ensures we're not chasing a strongly trending bar",
+    "spread_filter": "None \u2014 limit orders, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.56,
     "avg_winner_to_loser": 1.15,
     "profit_factor_estimate": 1.47,
-    "edge_decay_risk": "Medium — KDE S/R is a rigorous version of subjective S/R; the statistical approach is cleaner but the underlying concept (price memory at clustered levels) is well-known and arbitrageable. Edge decays as more algos detect the same KDE modes."
+    "edge_decay_risk": "Medium \u2014 KDE S/R is a rigorous version of subjective S/R; the statistical approach is cleaner but the underlying concept (price memory at clustered levels) is well-known and arbitrageable. Edge decays as more algos detect the same KDE modes."
   },
-  "adaptation_notes": "Three major changes from the original equity strategy: (1) Lookback compressed from 120 bars × 1-min = 2 hours to 120 bars × 5s = 10 minutes, because NIFTY intraday S/R relevant for 30-90s scalping lives in the recent micro-session, not the full morning session. (2) RSI period changed from RSI(14, 1-min) = 14 min to RSI(36, 5s) = 3 min — faster exhaustion detection appropriate for 5-second bars. (3) Short-selling replaced with buy_pe (ATM put options) — no directional short constraint on options.",
+  "adaptation_notes": "Three major changes from the original equity strategy: (1) Lookback compressed from 120 bars \u00d7 1-min = 2 hours to 120 bars \u00d7 5s = 10 minutes, because NIFTY intraday S/R relevant for 30-90s scalping lives in the recent micro-session, not the full morning session. (2) RSI period changed from RSI(14, 1-min) = 14 min to RSI(36, 5s) = 3 min \u2014 faster exhaustion detection appropriate for 5-second bars. (3) Short-selling replaced with buy_pe (ATM put options) \u2014 no directional short constraint on options.",
   "weaknesses": [
-    "KDE computed fresh each bar is computationally intensive — mitigated by vectorized numpy but Python loop overhead still exists",
-    "Silverman bandwidth assumes near-Gaussian price distribution — NIFTY intraday prices can be bimodal after major gap events, producing spurious modes",
+    "KDE computed fresh each bar is computationally intensive \u2014 mitigated by vectorized numpy but Python loop overhead still exists",
+    "Silverman bandwidth assumes near-Gaussian price distribution \u2014 NIFTY intraday prices can be bimodal after major gap events, producing spurious modes",
     "In strong trending sessions (e.g., post-RBI policy), KDE modes shift rapidly, making the lookback window stale mid-session",
-    "RSI < 40 near support is rare on NIFTY intraday (index rarely oversells without fast recovery) — trade frequency may be low"
+    "RSI < 40 near support is rare on NIFTY intraday (index rarely oversells without fast recovery) \u2014 trade frequency may be low"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_331.json",
     "original_timeframe": "1-min",
     "original_hold_time": "10-30 min",
-    "original_indicators": ["GaussianKDE(close[-120:], Silverman bandwidth)", "KDE modes", "RSI(14)", "Mode Strength"],
+    "original_indicators": [
+      "GaussianKDE(close[-120:], Silverman bandwidth)",
+      "KDE modes",
+      "RSI(14)",
+      "Mode Strength"
+    ],
     "original_stop": "0.15% beyond KDE mode",
     "original_target": "opposite KDE mode"
   }

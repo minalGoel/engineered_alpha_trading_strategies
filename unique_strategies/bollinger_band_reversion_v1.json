@@ -2,14 +2,21 @@
   "name": "bollinger_band_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "bollinger_bands", "microstructure"],
+  "tags": [
+    "mean_reversion",
+    "bollinger_bands",
+    "microstructure"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_5.json",
   "original_name": "bollinger_band_reversion_v1",
-  "mechanism": "When NIFTY closes below its 5-minute Bollinger lower band (60-bar, 2σ), algorithmic sell programs have driven price beyond the normal micro-volatility range, exhausting near-term sell-side liquidity at that depth. Market makers net-short gamma from option selling immediately begin delta-hedging by buying NIFTY futures, and VWAP-benchmarked institutional desks see fills significantly better than their benchmark and start accumulating. This reactive buying typically pushes NIFTY back toward the 5-minute SMA within 30-90 seconds, covering 10-15 spot points of reversion. The converse holds at the upper band: overbought micro-conditions trigger gamma-hedgers selling futures and profit-taking from momentum players, producing a downward reversion to the midline.",
+  "mechanism": "When NIFTY closes below its 5-minute Bollinger lower band (60-bar, 2\u03c3), algorithmic sell programs have driven price beyond the normal micro-volatility range, exhausting near-term sell-side liquidity at that depth. Market makers net-short gamma from option selling immediately begin delta-hedging by buying NIFTY futures, and VWAP-benchmarked institutional desks see fills significantly better than their benchmark and start accumulating. This reactive buying typically pushes NIFTY back toward the 5-minute SMA within 30-90 seconds, covering 10-15 spot points of reversion. The converse holds at the upper band: overbought micro-conditions trigger gamma-hedgers selling futures and profit-taking from momentum players, producing a downward reversion to the midline.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -34,7 +41,7 @@
       "formula": "SMA(close, 60) + 2 * STD(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Upper band: 2σ threshold marks overbought micro-conditions where gamma-hedging sell flow kicks in. 2σ preserved from original; at 5s bars on NIFTY, tighter (1.5σ) fires too often on noise, looser (2.5σ) is rarely triggered."
+      "purpose": "Upper band: 2\u03c3 threshold marks overbought micro-conditions where gamma-hedging sell flow kicks in. 2\u03c3 preserved from original; at 5s bars on NIFTY, tighter (1.5\u03c3) fires too often on noise, looser (2.5\u03c3) is rarely triggered."
     },
     {
       "name": "bb_lower_60",
@@ -70,14 +77,14 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "If NIFTY continues past the Bollinger Band by another ~8 spot points (4 option pts at delta 0.5) the breach is a breakout, not a reversion — gamma-hedging buy flow has failed to hold and a trend is forming. Exiting here prevents a 1-band-width loss from becoming a 2-3 band-width loss.",
+    "stop_rationale": "If NIFTY continues past the Bollinger Band by another ~8 spot points (4 option pts at delta 0.5) the breach is a breakout, not a reversion \u2014 gamma-hedging buy flow has failed to hold and a trend is forming. Exiting here prevents a 1-band-width loss from becoming a 2-3 band-width loss.",
     "target_points": 6,
     "target_rationale": "NIFTY's 5-min BB midline sits ~12-15 spot points from the band edge in typical vol conditions; 6 option points captures roughly 60% of that reversion (1:1.5 R:R) without requiring a full mean reversion which is slower and risks time-stop.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "none — strategy fires on short-term BB breach regardless of regime",
+    "vix_filter": "none \u2014 strategy fires on short-term BB breach regardless of regime",
     "time_filter": "09:20-15:25 IST; first 60 bars skipped for BB warmup",
     "volume_filter": "volume > 1.5 * vol_avg_60 (tunable threshold)",
     "trend_filter": "none",
@@ -87,10 +94,10 @@
     "expected_bps": 20,
     "win_rate_estimate": 0.57,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.55,
-    "edge_decay_risk": "medium — mean reversion edges on indices weaken during strong trend days and macro event sessions"
+    "profit_factor_estimate": 1.99,
+    "edge_decay_risk": "medium \u2014 mean reversion edges on indices weaken during strong trend days and macro event sessions"
   },
-  "adaptation_notes": "Original used 20-bar BB on 1-min equity bars (20-min lookback) with 1-10 min holds. Key changes: (1) Lookback compressed from 20 min to 5 min (60 bars at 5s) — we hold 15-90s, not 1-10 min; detecting micro-overextensions requires a shorter reference window; (2) Volume filter preserved at the same 1.5x ratio but applied to 60-bar avg instead of 20-bar avg to match the same 5-minute baseline; (3) Stop redesigned in option premium points calibrated to NIFTY micro-moves — the original 0.4% equity stop becomes 4 option pts (2 NIFTY sigma continuation); (4) Target set at 6 option pts (midline partial reversion) instead of the original's full BB midline target, which takes too long at 5s; (5) Mechanism reframed around NIFTY-specific gamma-hedging and VWAP-benchmarked institutional behavior on the index.",
+  "adaptation_notes": "Original used 20-bar BB on 1-min equity bars (20-min lookback) with 1-10 min holds. Key changes: (1) Lookback compressed from 20 min to 5 min (60 bars at 5s) \u2014 we hold 15-90s, not 1-10 min; detecting micro-overextensions requires a shorter reference window; (2) Volume filter preserved at the same 1.5x ratio but applied to 60-bar avg instead of 20-bar avg to match the same 5-minute baseline; (3) Stop redesigned in option premium points calibrated to NIFTY micro-moves \u2014 the original 0.4% equity stop becomes 4 option pts (2 NIFTY sigma continuation); (4) Target set at 6 option pts (midline partial reversion) instead of the original's full BB midline target, which takes too long at 5s; (5) Mechanism reframed around NIFTY-specific gamma-hedging and VWAP-benchmarked institutional behavior on the index.",
   "weaknesses": [
     "Strong trending days (budget, Fed events, VIX spike) cause repeated band breaches that never revert, burning stop losses systematically",
     "At 5-second resolution, noisy candles near the band can fire multiple overlapping signals on the same move (whipsaw cost)",
@@ -100,8 +107,13 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_5.json",
     "original_timeframe": "1min",
     "original_hold_time": "1-10 bars (1-10 min)",
-    "original_indicators": ["bb_upper (SMA20 + 2σ)", "bb_lower (SMA20 - 2σ)", "bb_mid (SMA20)"],
+    "original_indicators": [
+      "bb_upper (SMA20 + 2\u03c3)",
+      "bb_lower (SMA20 - 2\u03c3)",
+      "bb_mid (SMA20)"
+    ],
     "original_stop": "0.4% from entry",
     "original_target": "bb_mid (SMA20)"
-  }
+  },
+  "vix_agnostic": true
 }

@@ -2,14 +2,24 @@
   "name": "order_block_entry_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["order_block", "fair_value_gap", "ICT", "price_action", "institutional_flow", "mean_reversion"],
+  "tags": [
+    "order_block",
+    "fair_value_gap",
+    "ICT",
+    "price_action",
+    "institutional_flow",
+    "mean_reversion"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_282.json",
   "original_name": "order_block_entry_v1",
-  "mechanism": "On NIFTY, when institutional algorithms execute concentrated directional orders within a 15-second window (3 × 5s bars), the net 8+ spot point impulse consumes all opposing limit orders at those price levels. The last opposite-direction candle immediately before that impulse — the Order Block — contains residual unfilled resting orders from participants whose limit orders were never reached during the rush. When NIFTY retraces to this zone within 5-6 minutes, those resting limit buy/sell orders re-engage and absorb the pullback, launching a fresh directional push of 15-25 spot points. Fair Value Gaps (3-bar price discontinuities where candle i-2's extreme fails to overlap with candle i's extreme at 5-second resolution) mark levels where NIFTY's continuous auction skipped price tiers during aggressive institutional sweeps — market makers fill these gaps with directional pushes as NIFTY revisits the untraded zone, producing a short-lived but cleanly directional 15-30 spot point continuation.",
+  "mechanism": "On NIFTY, when institutional algorithms execute concentrated directional orders within a 15-second window (3 \u00d7 5s bars), the net 8+ spot point impulse consumes all opposing limit orders at those price levels. The last opposite-direction candle immediately before that impulse \u2014 the Order Block \u2014 contains residual unfilled resting orders from participants whose limit orders were never reached during the rush. When NIFTY retraces to this zone within 5-6 minutes, those resting limit buy/sell orders re-engage and absorb the pullback, launching a fresh directional push of 15-25 spot points. Fair Value Gaps (3-bar price discontinuities where candle i-2's extreme fails to overlap with candle i's extreme at 5-second resolution) mark levels where NIFTY's continuous auction skipped price tiers during aggressive institutional sweeps \u2014 market makers fill these gaps with directional pushes as NIFTY revisits the untraded zone, producing a short-lived but cleanly directional 15-30 spot point continuation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,7 +37,7 @@
       "formula": "last bearish candle (close < open) in [i-3, i-1] when close[i] - close[i-3] >= impulse_pts. Zone = [low, high] of that candle.",
       "lookback": 3,
       "computed_on": "spot",
-      "purpose": "3-bar (15-second) impulse window: at 5s resolution, a significant NIFTY institutional order typically executes within 15 seconds. Using 3 bars matches the execution time of a TWAP/VWAP slice on NIFTY. The original used 3 × 1-min bars (3-min window) — we use 3 × 5s bars (15s) because we hold 15-90s, not 5-20 min. The OB bar itself is found by scanning backward within the window."
+      "purpose": "3-bar (15-second) impulse window: at 5s resolution, a significant NIFTY institutional order typically executes within 15 seconds. Using 3 bars matches the execution time of a TWAP/VWAP slice on NIFTY. The original used 3 \u00d7 1-min bars (3-min window) \u2014 we use 3 \u00d7 5s bars (15s) because we hold 15-90s, not 5-20 min. The OB bar itself is found by scanning backward within the window."
     },
     {
       "name": "bearish_ob_zone",
@@ -38,14 +48,14 @@
     },
     {
       "name": "bullish_fvg_zone",
-      "formula": "at bar i: high[i-2] < low[i] — 3-bar upward gap. Zone = [high[i-2], low[i]].",
+      "formula": "at bar i: high[i-2] < low[i] \u2014 3-bar upward gap. Zone = [high[i-2], low[i]].",
       "lookback": 2,
       "computed_on": "spot",
-      "purpose": "FVG detection is a 3-bar pattern with no free lookback parameter — it fires whenever a 5-second price gap exists between candle i-2's high and candle i's low. At 5s resolution, these gaps appear during rapid NIFTY bursts; they're smaller in absolute terms than 1-min FVGs but equally predictive of mean-reversion to the gap."
+      "purpose": "FVG detection is a 3-bar pattern with no free lookback parameter \u2014 it fires whenever a 5-second price gap exists between candle i-2's high and candle i's low. At 5s resolution, these gaps appear during rapid NIFTY bursts; they're smaller in absolute terms than 1-min FVGs but equally predictive of mean-reversion to the gap."
     },
     {
       "name": "bearish_fvg_zone",
-      "formula": "at bar i: low[i-2] > high[i] — 3-bar downward gap. Zone = [high[i], low[i-2]].",
+      "formula": "at bar i: low[i-2] > high[i] \u2014 3-bar downward gap. Zone = [high[i], low[i-2]].",
       "lookback": 2,
       "computed_on": "spot",
       "purpose": "Symmetric downward FVG. Same detection logic as bullish FVG. Gap zones are thin (0.5-3 pts wide at 5s) so the zone touch = zone center entry, making them very precise short-term signals."
@@ -55,14 +65,14 @@
       "formula": "expire zone if current_bar - birth_bar > 72",
       "lookback": 72,
       "computed_on": "spot",
-      "purpose": "72 bars = 6 minutes. The original used 60 bars × 1-min (60 minutes). At 5s bars, OB/FVG zones on NIFTY lose relevance after 5-6 minutes because (1) intraday VWAP shifts, (2) new OBs overwrite old supply/demand dynamics, (3) the resting limit orders at those levels decay or are cancelled. Compressing from 60 min to 6 min is NOT 12x scaling — it's thesis-driven: NIFTY's institutional order books at any given level don't persist for hours at 5s granularity."
+      "purpose": "72 bars = 6 minutes. The original used 60 bars \u00d7 1-min (60 minutes). At 5s bars, OB/FVG zones on NIFTY lose relevance after 5-6 minutes because (1) intraday VWAP shifts, (2) new OBs overwrite old supply/demand dynamics, (3) the resting limit orders at those levels decay or are cancelled. Compressing from 60 min to 6 min is NOT 12x scaling \u2014 it's thesis-driven: NIFTY's institutional order books at any given level don't persist for hours at 5s granularity."
     },
     {
       "name": "session_vwap",
-      "formula": "cumulative(typical_price × volume) / cumulative(volume), reset each trading day",
+      "formula": "cumulative(typical_price \u00d7 volume) / cumulative(volume), reset each trading day",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "VWAP is a session-cumulative measure — no lookback scaling needed. Used as a directional filter: only trade bullish OB/FVG zones when NIFTY is above VWAP (institutional TWAP benchmarks favour continued buying), and only trade bearish zones when below VWAP. This aligns zone trades with intraday institutional order flow direction."
+      "purpose": "VWAP is a session-cumulative measure \u2014 no lookback scaling needed. Used as a directional filter: only trade bullish OB/FVG zones when NIFTY is above VWAP (institutional TWAP benchmarks favour continued buying), and only trade bearish zones when below VWAP. This aligns zone trades with intraday institutional order flow direction."
     }
   ],
   "entry": {
@@ -73,7 +83,7 @@
         "NIFTY close >= session VWAP (trend aligned with demand zone)",
         "Zone has not been previously revisited (first-touch only)"
       ],
-      "confirmation": "Price entering zone from above (pullback into demand) — this is implicit in the OB/FVG zone definition"
+      "confirmation": "Price entering zone from above (pullback into demand) \u2014 this is implicit in the OB/FVG zone definition"
     },
     "buy_pe": {
       "conditions": [
@@ -82,35 +92,35 @@
         "NIFTY close <= session VWAP (trend aligned with supply zone)",
         "Zone has not been previously revisited (first-touch only)"
       ],
-      "confirmation": "Price entering zone from below (rally into supply) — implicit in zone definition"
+      "confirmation": "Price entering zone from below (rally into supply) \u2014 implicit in zone definition"
     },
     "entry_price": "limit order at zone midpoint (effectively the candle close price on entry bar)"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "If NIFTY closes 4 option pts (≈8 spot pts at ATM delta ~0.5) against the trade, the OB/FVG zone has been fully consumed by opposing flow and the residual resting orders thesis is invalidated. NIFTY's typical 30-second adverse move against a valid zone touch is 2-5 pts; a 4-pt stop provides room for the 1-bar noise (1-3 pts at 5s) while cutting quickly if the zone fails.",
-    "target_points": 7,
-    "target_rationale": "OB/FVG re-activation on NIFTY typically produces 15-25 spot point continuation in 15-60 seconds. At ATM delta ~0.5, capturing 55-60% of that move = 7-12 option pts. 7 pts targets the conservative end (15 spot pts × 0.5 delta × 93% = ~7 pts), achieving 1:1.75 R:R against the 4-pt stop — profitable at 55%+ win rate.",
+    "stop_points": 4.0,
+    "stop_rationale": "If NIFTY closes 4 option pts (\u22488 spot pts at ATM delta ~0.5) against the trade, the OB/FVG zone has been fully consumed by opposing flow and the residual resting orders thesis is invalidated. NIFTY's typical 30-second adverse move against a valid zone touch is 2-5 pts; a 4-pt stop provides room for the 1-bar noise (1-3 pts at 5s) while cutting quickly if the zone fails.",
+    "target_points": 8.0,
+    "target_rationale": "OB/FVG re-activation on NIFTY typically produces 15-25 spot point continuation in 15-60 seconds. At ATM delta ~0.5, capturing 55-60% of that move = 7-12 option pts. 7 pts targets the conservative end (15 spot pts \u00d7 0.5 delta \u00d7 93% = ~7 pts), achieving 1:1.75 R:R against the 4-pt stop \u2014 profitable at 55%+ win rate.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — VIX data not used; NIFTY OB/FVG zones work across volatility regimes",
+    "vix_filter": "none \u2014 VIX data not used; NIFTY OB/FVG zones work across volatility regimes",
     "time_filter": "09:25-15:20 IST; skip first 10 minutes (pre-open zones from 09:15-09:25 have no VWAP context)",
-    "volume_filter": "none — impulse detection already filters for meaningful moves (>= impulse_pts); volume is noisy at 5s resolution",
+    "volume_filter": "none \u2014 impulse detection already filters for meaningful moves (>= impulse_pts); volume is noisy at 5s resolution",
     "trend_filter": "VWAP alignment: bullish zones only when close >= VWAP, bearish zones only when close <= VWAP",
-    "spread_filter": "none — limit order execution, no bid-ask cost"
+    "spread_filter": "none \u2014 limit order execution, no bid-ask cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.4,
-    "edge_decay_risk": "Medium — ICT methodology is growing on Indian trading communities (YouTube, Telegram). As more retail traders place limit orders at OB zones, the zones become self-defeating. However, institutional OB/FVG formation at 5-second resolution is driven by algo execution mechanics that are more structural than retail behavior."
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.35,
+    "edge_decay_risk": "Medium \u2014 ICT methodology is growing on Indian trading communities (YouTube, Telegram). As more retail traders place limit orders at OB zones, the zones become self-defeating. However, institutional OB/FVG formation at 5-second resolution is driven by algo execution mechanics that are more structural than retail behavior."
   },
-  "adaptation_notes": "The original used 1-min bars on NIFTY50 constituent stocks + NIFTY/BANKNIFTY index with 5-20 minute holds. Key adaptations: (1) OB impulse window compressed from 3×1-min (3-min impulse) to 3×5s (15s impulse) — we capture micro-institutional sweeps rather than full directional flows; (2) Zone age limit compressed from 60 bars × 1min (60 min) to 72 bars × 5s (6 min) — thesis-driven, not 12x scaled, because 5s-scale OB zones lose institutional support much faster; (3) FVG detection is conceptually unchanged but fires at 5s frequency producing smaller gaps (0.5-3 pts wide vs 5-15 pts on 1-min); (4) Direction filter changed from VWAP trend (same concept, same implementation) but now inline rather than a separate indicator; (5) Stops/targets changed from percentage-based (2 bps stop, impulse-high target) to absolute option premium points calibrated to 15-90s NIFTY move magnitudes; (6) Universe narrowed to NIFTY index only (not individual stocks), which is actually the PRIMARY thesis vehicle mentioned in the original.",
+  "adaptation_notes": "The original used 1-min bars on NIFTY50 constituent stocks + NIFTY/BANKNIFTY index with 5-20 minute holds. Key adaptations: (1) OB impulse window compressed from 3\u00d71-min (3-min impulse) to 3\u00d75s (15s impulse) \u2014 we capture micro-institutional sweeps rather than full directional flows; (2) Zone age limit compressed from 60 bars \u00d7 1min (60 min) to 72 bars \u00d7 5s (6 min) \u2014 thesis-driven, not 12x scaled, because 5s-scale OB zones lose institutional support much faster; (3) FVG detection is conceptually unchanged but fires at 5s frequency producing smaller gaps (0.5-3 pts wide vs 5-15 pts on 1-min); (4) Direction filter changed from VWAP trend (same concept, same implementation) but now inline rather than a separate indicator; (5) Stops/targets changed from percentage-based (2 bps stop, impulse-high target) to absolute option premium points calibrated to 15-90s NIFTY move magnitudes; (6) Universe narrowed to NIFTY index only (not individual stocks), which is actually the PRIMARY thesis vehicle mentioned in the original.",
   "weaknesses": [
-    "OB/FVG zones at 5-second resolution are very narrow (0.5-3 spot pts wide) — first-touch detection requires extremely precise price levels that may fire on noise rather than genuine zone tests.",
+    "OB/FVG zones at 5-second resolution are very narrow (0.5-3 spot pts wide) \u2014 first-touch detection requires extremely precise price levels that may fire on noise rather than genuine zone tests.",
     "Circular buffer of 80 zones may overflow on high-volatility days producing many FVGs; oldest zones overwritten, potentially missing important zones created earlier in session.",
     "The 'first touch only' rule creates adverse selection: if a zone fires false on noise, the zone is consumed and will not re-fire even if the institutional order level is real and later produces the expected bounce.",
     "NIFTY at 5s resolution has low intraday autocorrelation in short windows; OB/FVG thesis assumes resting orders persist for 1-6 minutes, which may not hold if SEBI regulations or algo risk limits cause rapid order cancellation."
@@ -119,8 +129,17 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_282.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-20 min",
-    "original_indicators": ["bullish_OB (last bearish candle before 10bps+ impulse)", "bearish_OB", "bullish_FVG (3-bar gap up)", "bearish_FVG (3-bar gap down)", "zone_revisit (first touch)", "VWAP", "VIX"],
+    "original_indicators": [
+      "bullish_OB (last bearish candle before 10bps+ impulse)",
+      "bearish_OB",
+      "bullish_FVG (3-bar gap up)",
+      "bearish_FVG (3-bar gap down)",
+      "zone_revisit (first touch)",
+      "VWAP",
+      "VIX"
+    ],
     "original_stop": "2 bps beyond far edge of OB/FVG zone",
     "original_target": "re-test of impulse move high/low that created the zone"
-  }
+  },
+  "vix_agnostic": true
 }

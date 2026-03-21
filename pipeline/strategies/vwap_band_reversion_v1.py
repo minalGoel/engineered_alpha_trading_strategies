@@ -74,8 +74,8 @@ class Strategy(BaseStrategy):
             TunableParam("band_mult", 2.0, 1.5, 2.5),
             TunableParam("vol_ratio_thresh", 1.5, 1.2, 2.5),
             TunableParam("vix_max", 22.0, 18.0, 28.0),
-            TunableParam("stop_pts", 4.0, 3.0, 7.0),
-            TunableParam("target_pts", 7.0, 5.0, 12.0),
+            TunableParam("stop_pts", 3.0, 3.0, 7.0),
+            TunableParam("target_pts", 6.0, 5.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -93,8 +93,8 @@ class Strategy(BaseStrategy):
         band_mult = params.get("band_mult", 2.0)
         vol_ratio_thresh = params.get("vol_ratio_thresh", 1.5)
         vix_max = params.get("vix_max", 22.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX close (aligned to spot bars) ──────────────────────────────────
         vix_close = np.full(n, 15.0)

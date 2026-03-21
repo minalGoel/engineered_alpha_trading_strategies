@@ -53,8 +53,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_low", 38.0, 25.0, 45.0),
             TunableParam("rsi_high", 62.0, 55.0, 75.0),
             TunableParam("vix_max", 20.0, 15.0, 28.0),
-            TunableParam("stop_pts", 4.0, 2.0, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 3.0, 2.0, 7.0),
+            TunableParam("target_pts", 6.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -70,8 +70,8 @@ class Strategy(BaseStrategy):
         rsi_low = params.get("rsi_low", 38.0)
         rsi_high = params.get("rsi_high", 62.0)
         vix_max = params.get("vix_max", 20.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # --- VWAP: cumulative from session open, reset each trading day ---
         vwap = np.empty(n)

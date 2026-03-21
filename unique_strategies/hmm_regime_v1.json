@@ -2,14 +2,23 @@
   "name": "hmm_regime_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["regime-detection", "adaptive", "momentum", "mean-reversion", "microstructure"],
+  "tags": [
+    "regime-detection",
+    "adaptive",
+    "momentum",
+    "mean_reversion",
+    "microstructure"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_304.json",
   "original_name": "hmm_regime_v1",
-  "mechanism": "On NIFTY, intraday microstructure alternates between trending micro-sessions — when institutional TWAP/VWAP algorithms are executing large directional orders — and mean-reverting periods dominated by market makers and liquidity providers absorbing order flow. This alternation is detectable in the sign autocorrelation of 5-second returns: during institutional execution windows, consecutive 5s bars trend in the same direction (directional consistency > 60% over 3 minutes), while market-maker-dominated periods show near-random or negatively autocorrelated returns (consistency < 42%). In trending regime, we follow the institutional direction using 2-min/6-min EMA alignment; in mean-reverting regime, we fade z-score extremes as market makers push price back toward the intraday mean within 30-60 seconds.",
+  "mechanism": "On NIFTY, intraday microstructure alternates between trending micro-sessions \u2014 when institutional TWAP/VWAP algorithms are executing large directional orders \u2014 and mean-reverting periods dominated by market makers and liquidity providers absorbing order flow. This alternation is detectable in the sign autocorrelation of 5-second returns: during institutional execution windows, consecutive 5s bars trend in the same direction (directional consistency > 60% over 3 minutes), while market-maker-dominated periods show near-random or negatively autocorrelated returns (consistency < 42%). In trending regime, we follow the institutional direction using 2-min/6-min EMA alignment; in mean-reverting regime, we fade z-score extremes as market makers push price back toward the intraday mean within 30-60 seconds.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,72 +36,72 @@
       "formula": "fraction of consecutive-bar pairs with same return sign over 36-bar rolling window",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "36 bars (3 min) is the minimum window to distinguish institutional execution bursts from random noise at 5s resolution. Shorter windows (< 24 bars) produce too many false regime flips; longer windows (> 60 bars) lag genuine regime transitions. 3 min matches typical TWAP algorithm slice intervals. This is NOT 12x the original — the original used full Viterbi decoding over an entire prior session; here we use a rolling local measure calibrated to the hold time of 30-90s."
+      "purpose": "36 bars (3 min) is the minimum window to distinguish institutional execution bursts from random noise at 5s resolution. Shorter windows (< 24 bars) produce too many false regime flips; longer windows (> 60 bars) lag genuine regime transitions. 3 min matches typical TWAP algorithm slice intervals. This is NOT 12x the original \u2014 the original used full Viterbi decoding over an entire prior session; here we use a rolling local measure calibrated to the hold time of 30-90s."
     },
     {
       "name": "ema_24",
       "formula": "EMA(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-min fast EMA (24 × 5s) captures the current directional push within a trending regime. Original used EMA(9) on 1-min bars = 9-min context; compressed to 2-min because we hold 30-90s and need a trigger-level signal, not a context filter. 2-min EMA reacts fast enough to confirm in-progress institutional flow."
+      "purpose": "2-min fast EMA (24 \u00d7 5s) captures the current directional push within a trending regime. Original used EMA(9) on 1-min bars = 9-min context; compressed to 2-min because we hold 30-90s and need a trigger-level signal, not a context filter. 2-min EMA reacts fast enough to confirm in-progress institutional flow."
     },
     {
       "name": "ema_72",
       "formula": "EMA(close, 72)",
       "lookback": 72,
       "computed_on": "spot",
-      "purpose": "6-min slow EMA (72 × 5s) provides trend direction context within the trending regime. Original used EMA(21) on 1-min = 21-min context; compressed to 6-min because trending micro-sessions on NIFTY last 5-15 min, not 20+ min. The 2-min/6-min pair gives 1:3 fast/slow ratio, same as the original's 9:21."
+      "purpose": "6-min slow EMA (72 \u00d7 5s) provides trend direction context within the trending regime. Original used EMA(21) on 1-min = 21-min context; compressed to 6-min because trending micro-sessions on NIFTY last 5-15 min, not 20+ min. The 2-min/6-min pair gives 1:3 fast/slow ratio, same as the original's 9:21."
     },
     {
       "name": "zscore_60",
       "formula": "(close - mean(close, 60)) / std(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-min rolling z-score (60 × 5s) for mean-reversion entry signal. Replaces Bollinger Bands (original used SMA(20) on 1-min = 20-min window) because 5-min captures enough intraday mean to identify short-term deviations relevant to 30-90s reversion trades. Longer windows (120+ bars) mix different intraday regimes; shorter (< 36 bars) produce too-frequent extremes."
+      "purpose": "5-min rolling z-score (60 \u00d7 5s) for mean-reversion entry signal. Replaces Bollinger Bands (original used SMA(20) on 1-min = 20-min window) because 5-min captures enough intraday mean to identify short-term deviations relevant to 30-90s reversion trades. Longer windows (120+ bars) mix different intraday regimes; shorter (< 36 bars) produce too-frequent extremes."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "TRENDING: dir_consistency_36 > trend_threshold (0.60) AND ema_24 > ema_72 by > ema_signal_threshold (0.03%) AND last 5s return > 0 — institutional flow is pushing up, enter with it",
-        "REVERTING: dir_consistency_36 < reversion_threshold (0.42) AND zscore_60 < -1.5 — price has overshot the 5-min mean to the downside; market makers will fade it back up within 30-60s"
+        "TRENDING: dir_consistency_36 > trend_threshold (0.60) AND ema_24 > ema_72 by > ema_signal_threshold (0.03%) AND last 5s return > 0 \u2014 institutional flow is pushing up, enter with it",
+        "REVERTING: dir_consistency_36 < reversion_threshold (0.42) AND zscore_60 < -1.5 \u2014 price has overshot the 5-min mean to the downside; market makers will fade it back up within 30-60s"
       ],
       "confirmation": "Not simultaneously buy_pe (conflict exclusion)"
     },
     "buy_pe": {
       "conditions": [
-        "TRENDING: dir_consistency_36 > trend_threshold (0.60) AND ema_24 < ema_72 by > ema_signal_threshold (0.03%) AND last 5s return < 0 — institutional selling is sustained, follow down",
-        "REVERTING: dir_consistency_36 < reversion_threshold (0.42) AND zscore_60 > 1.5 — price has overshot above 5-min mean; market makers will push it back down"
+        "TRENDING: dir_consistency_36 > trend_threshold (0.60) AND ema_24 < ema_72 by > ema_signal_threshold (0.03%) AND last 5s return < 0 \u2014 institutional selling is sustained, follow down",
+        "REVERTING: dir_consistency_36 < reversion_threshold (0.42) AND zscore_60 > 1.5 \u2014 price has overshot above 5-min mean; market makers will push it back down"
       ],
       "confirmation": "Not simultaneously buy_ce (conflict exclusion)"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 3.0,
     "stop_rationale": "Trending regime: 4 option pts = ~8 spot pts. NIFTY trending micro-sessions should not retrace more than 8 spot pts mid-move if institutional flow is genuine. Mean-reversion regime uses 3 pts = ~6 spot pts; if the deviation deepens by 6 spot pts beyond entry, the thesis is wrong and the move is accelerating rather than reverting. Per-bar arrays in code: trending=4, reverting=3.",
-    "target_points": 7,
+    "target_points": 6.0,
     "target_rationale": "Trending regime: 7 option pts captures ~50% of expected 15-20 spot pt continuation burst from institutional TWAP flow at delta 0.5. Mean-reversion regime: 5 option pts captures the first ~10 spot pt snap-back from z-score extreme before the reversion stalls. Per-bar arrays: trending=7, reverting=5. Both give 1:1.5-1.75 R:R.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "none — VIX not used; regime is detected endogenously from NIFTY's own return structure",
+    "vix_filter": "none \u2014 VIX not used; regime is detected endogenously from NIFTY's own return structure",
     "time_filter": "09:20-15:25 IST; no entries after 15:20 to allow 90s time stop to run before EOD",
-    "volume_filter": "none at signal level — NIFTY index volume is aggregated and less meaningful than constituent volume",
-    "trend_filter": "endogenous — dir_consistency_36 acts as both regime classifier and trend filter",
-    "spread_filter": "not applicable — limit orders, no spread cost"
+    "volume_filter": "none at signal level \u2014 NIFTY index volume is aggregated and less meaningful than constituent volume",
+    "trend_filter": "endogenous \u2014 dir_consistency_36 acts as both regime classifier and trend filter",
+    "spread_filter": "not applicable \u2014 limit orders, no spread cost"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.55,
-    "profit_factor_estimate": 1.50,
-    "edge_decay_risk": "Medium — directional consistency is a proxy for HMM regime; as HFT participants become more prevalent, intraday microstructure regimes may become shorter-lived and harder to detect at 3-min windows"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.35,
+    "edge_decay_risk": "Medium \u2014 directional consistency is a proxy for HMM regime; as HFT participants become more prevalent, intraday microstructure regimes may become shorter-lived and harder to detect at 3-min windows"
   },
-  "adaptation_notes": "Major changes from original: (1) Full 3-state HMM with Viterbi/Baum-Welch fitting is infeasible at 5s frequency (computational cost, no stable fitting possible on intraday data); replaced with directional consistency (rolling sign autocorrelation proxy) which captures the same trending/mean-reverting/choppy distinction. (2) EMA periods compressed from 9/21 minutes (1-min bars) to 24/72 bars (2/6 min at 5s) — hold time compressed 15x (15-60 min → 30-90s) requires trigger signals at a faster timescale. (3) Bollinger Bands replaced with rolling z-score — cleaner measure for indexable price deviation without the BB width confound. (4) Previous-session HMM fitting requirement eliminated entirely — regime is detected in real-time from current session bars only. (5) Universe changed from NIFTY50 constituent stocks to NIFTY index itself — the regime-switching phenomenon applies more cleanly to the index because constituent-level noise is diversified away.",
+  "adaptation_notes": "Major changes from original: (1) Full 3-state HMM with Viterbi/Baum-Welch fitting is infeasible at 5s frequency (computational cost, no stable fitting possible on intraday data); replaced with directional consistency (rolling sign autocorrelation proxy) which captures the same trending/mean-reverting/choppy distinction. (2) EMA periods compressed from 9/21 minutes (1-min bars) to 24/72 bars (2/6 min at 5s) \u2014 hold time compressed 15x (15-60 min \u2192 30-90s) requires trigger signals at a faster timescale. (3) Bollinger Bands replaced with rolling z-score \u2014 cleaner measure for indexable price deviation without the BB width confound. (4) Previous-session HMM fitting requirement eliminated entirely \u2014 regime is detected in real-time from current session bars only. (5) Universe changed from NIFTY50 constituent stocks to NIFTY index itself \u2014 the regime-switching phenomenon applies more cleanly to the index because constituent-level noise is diversified away.",
   "weaknesses": [
-    "Directional consistency is a coarse HMM proxy — it cannot distinguish between a true trending regime and a temporary momentum spike; the full HMM's state probability confidence measure is absent",
+    "Directional consistency is a coarse HMM proxy \u2014 it cannot distinguish between a true trending regime and a temporary momentum spike; the full HMM's state probability confidence measure is absent",
     "Both sub-strategies (trend + reversion) fire simultaneously on the same index, relying on the dir_consistency threshold to separate regimes; threshold miscalibration could result in entering the wrong sub-strategy",
     "NIFTY trending micro-sessions driven by FII large orders may be less predictable post-algo fragmentation as orders split across venues",
     "The 3-min regime detection window may lag genuine regime transitions; entry may occur at the tail end of a trend or the start of a new reversion"
@@ -101,8 +110,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_304.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 min",
-    "original_indicators": ["3-state HMM (return, volume_ratio, range)", "EMA(9)", "EMA(21)", "BB(20, 2.0)"],
+    "original_indicators": [
+      "3-state HMM (return, volume_ratio, range)",
+      "EMA(9)",
+      "EMA(21)",
+      "BB(20, 2.0)"
+    ],
     "original_stop": "STATE_1: 30 bps; STATE_2: 25 bps",
     "original_target": "STATE_1: 50 bps; STATE_2: revert to BB_mid"
-  }
+  },
+  "vix_agnostic": true
 }

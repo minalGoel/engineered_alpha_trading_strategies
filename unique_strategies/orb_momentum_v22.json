@@ -2,14 +2,22 @@
   "name": "orb_momentum_v22",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["breakout", "momentum", "opening_range", "orb"],
+  "tags": [
+    "breakout",
+    "momentum",
+    "opening_range",
+    "orb"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_102.json",
   "original_name": "orb_momentum_v22",
-  "mechanism": "NIFTY's first 20 minutes (09:15-09:35) is the overnight information absorption window — FII/DII desks reconcile gap risk, news flow, and SGX Nifty signals before committing directional capital. Large institutional participants use this range to calibrate their day's TWAP/VWAP benchmarks and avoid entering until the range stabilizes. When price closes above the ORB high with VWAP confirmation, it signals that buy-side institutional flow has overwhelmed the supply ceiling created during the opening range; the executing algo is only partially filled and must continue buying, producing 20-40 spot point continuation moves. A 3-bar (15-second) persistence filter at 5s resolution eliminates the frequent spike-and-retrace noise inherent in index microstructure that would never occur in the original 1-minute framing.",
+  "mechanism": "NIFTY's first 20 minutes (09:15-09:35) is the overnight information absorption window \u2014 FII/DII desks reconcile gap risk, news flow, and SGX Nifty signals before committing directional capital. Large institutional participants use this range to calibrate their day's TWAP/VWAP benchmarks and avoid entering until the range stabilizes. When price closes above the ORB high with VWAP confirmation, it signals that buy-side institutional flow has overwhelmed the supply ceiling created during the opening range; the executing algo is only partially filled and must continue buying, producing 20-40 spot point continuation moves. A 3-bar (15-second) persistence filter at 5s resolution eliminates the frequent spike-and-retrace noise inherent in index microstructure that would never occur in the original 1-minute framing.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:35-14:30 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-4",
   "max_trades_per_day": 4,
@@ -27,7 +35,7 @@
       "formula": "MAX(high, bars_in_09:15-09:35)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Fixed 20-minute time window (09:15-09:35 = 240 bars at 5s). NOT scaled from original — the opening range is the same 20-minute real-time window regardless of bar granularity. The window size is defined by market structure (when institutional participants settle into directional flow), not by a rolling lookback."
+      "purpose": "Fixed 20-minute time window (09:15-09:35 = 240 bars at 5s). NOT scaled from original \u2014 the opening range is the same 20-minute real-time window regardless of bar granularity. The window size is defined by market structure (when institutional participants settle into directional flow), not by a rolling lookback."
     },
     {
       "name": "orb_low",
@@ -41,14 +49,14 @@
       "formula": "cumsum(typical_price * volume) / cumsum(volume), reset per day",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Cumulative measure — no lookback scaling needed. Used as trend context filter: ORB breakout above VWAP confirms institutional net buying for the session. Below VWAP breakout on upside would be suspect (supply overhang)."
+      "purpose": "Cumulative measure \u2014 no lookback scaling needed. Used as trend context filter: ORB breakout above VWAP confirms institutional net buying for the session. Below VWAP breakout on upside would be suspect (supply overhang)."
     },
     {
       "name": "persist_3bar",
       "formula": "close > orb_high for 3 consecutive 5s bars",
       "lookback": 3,
       "computed_on": "spot",
-      "purpose": "New indicator absent in original — required at 5s because index microstructure produces frequent 1-bar transient spikes above/below range that reverse immediately. 15-second persistence (3 bars) is the minimum confirmation that the breakout is real. Original 1-minute bars naturally filtered these sub-minute spikes."
+      "purpose": "New indicator absent in original \u2014 required at 5s because index microstructure produces frequent 1-bar transient spikes above/below range that reverse immediately. 15-second persistence (3 bars) is the minimum confirmation that the breakout is real. Original 1-minute bars naturally filtered these sub-minute spikes."
     },
     {
       "name": "vol_ratio",
@@ -81,40 +89,46 @@
   },
   "exit": {
     "stop_points": 5,
-    "stop_rationale": "5 option points = ~10 NIFTY spot points at delta 0.5. ORB breakouts typically 'throwback' to test the breakout level before continuation — a 10 spot point throwback is within normal range and doesn't invalidate the thesis. Beyond 10 pts, the breakout has likely failed and reversed.",
+    "stop_rationale": "5 option points = ~10 NIFTY spot points at delta 0.5. ORB breakouts typically 'throwback' to test the breakout level before continuation \u2014 a 10 spot point throwback is within normal range and doesn't invalidate the thesis. Beyond 10 pts, the breakout has likely failed and reversed.",
     "target_points": 8,
     "target_rationale": "8 option points = ~16 NIFTY spot points. The first leg of a genuine ORB breakout on NIFTY extends 20-40 spot points beyond the range boundary; 16 pts captures the lower half of this distribution conservatively. Risk:reward = 1:1.6.",
     "time_stop_bars": 24,
-    "eod_rule": "flatten at 14:30 IST — late-day ORB chasing degrades as liquidity thins and range expansion stalls"
+    "eod_rule": "flatten at 14:30 IST \u2014 late-day ORB chasing degrades as liquidity thins and range expansion stalls"
   },
   "filters": {
-    "vix_filter": "none — ORB works in both high and low VIX; edge decays only at extremes (VIX < 10 or VIX > 35), not modeled",
+    "vix_filter": "none \u2014 ORB works in both high and low VIX; edge decays only at extremes (VIX < 10 or VIX > 35), not modeled",
     "time_filter": "09:35-14:30 IST only; skip first 20 min to let range form, cut off at 14:30 to avoid late-session low-volume fakeouts",
     "volume_filter": "volume > 1.2x rolling 10-min average as breakout confirmation",
-    "trend_filter": "VWAP — price must be on the correct side of VWAP for the breakout direction",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "trend_filter": "VWAP \u2014 price must be on the correct side of VWAP for the breakout direction",
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.48,
     "avg_winner_to_loser": 1.6,
     "profit_factor_estimate": 1.47,
-    "edge_decay_risk": "medium — behavioral. ORB edge decays as more algos exploit it; remains durable when combined with VWAP/volume confirmation that filters mechanical ORB systems."
+    "edge_decay_risk": "medium \u2014 behavioral. ORB edge decays as more algos exploit it; remains durable when combined with VWAP/volume confirmation that filters mechanical ORB systems."
   },
-  "adaptation_notes": "Original trades a universe of Nifty200 stocks on 1-min bars, holding 10-30 minutes. Conversion keeps the core ORB thesis unchanged (opening range as institutional calibration window) but adapts the execution: (1) Applied to NIFTY index, not individual stocks — indices show cleaner ORBs because they aggregate order flow across all participants simultaneously. (2) Opening range remains 20 real-time minutes (240 bars vs original's 20 bars — same wall-clock time). (3) Added 3-bar persistence filter that is MANDATORY at 5s but irrelevant at 1-min. (4) ATR-based stops replaced by fixed option premium points (5 pts stop, 8 pts target) calibrated to NIFTY's typical 20-40 spot point ORB continuation. (5) Volume filter adapted from SMA(volume,20) on 1-min to rolling 120-bar (10-min) mean on 5s bars — same conceptual purpose, same real-time window. (6) Session end cutoff added at 14:30 IST — original's 15:15 cutoff is appropriate for 10-30 min holds but we exit by 14:30 to avoid low-volume late-session conditions incompatible with 30-120 second holds.",
+  "adaptation_notes": "Original trades a universe of Nifty200 stocks on 1-min bars, holding 10-30 minutes. Conversion keeps the core ORB thesis unchanged (opening range as institutional calibration window) but adapts the execution: (1) Applied to NIFTY index, not individual stocks \u2014 indices show cleaner ORBs because they aggregate order flow across all participants simultaneously. (2) Opening range remains 20 real-time minutes (240 bars vs original's 20 bars \u2014 same wall-clock time). (3) Added 3-bar persistence filter that is MANDATORY at 5s but irrelevant at 1-min. (4) ATR-based stops replaced by fixed option premium points (5 pts stop, 8 pts target) calibrated to NIFTY's typical 20-40 spot point ORB continuation. (5) Volume filter adapted from SMA(volume,20) on 1-min to rolling 120-bar (10-min) mean on 5s bars \u2014 same conceptual purpose, same real-time window. (6) Session end cutoff added at 14:30 IST \u2014 original's 15:15 cutoff is appropriate for 10-30 min holds but we exit by 14:30 to avoid low-volume late-session conditions incompatible with 30-120 second holds.",
   "weaknesses": [
-    "High frequency of false breakouts on NIFTY at 5s — partially mitigated by 3-bar persistence but not eliminated",
+    "High frequency of false breakouts on NIFTY at 5s \u2014 partially mitigated by 3-bar persistence but not eliminated",
     "3-bar filter introduces 15-second entry lag; miss ~15 pts of move on fast breakout days",
-    "Only 1-3 valid ORB breakouts per day on NIFTY — low trade frequency requires patience",
+    "Only 1-3 valid ORB breakouts per day on NIFTY \u2014 low trade frequency requires patience",
     "Opening range can be distorted by SGX Nifty overnight gap reversals, creating failed ORBs",
-    "Strategy has no edge after 14:30 — ORB continuation typically exhausted by early afternoon"
+    "Strategy has no edge after 14:30 \u2014 ORB continuation typically exhausted by early afternoon"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_102.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 bars (10-30 min)",
-    "original_indicators": ["orb_high (20-bar)", "orb_low (20-bar)", "vwap", "sma_volume_20"],
+    "original_indicators": [
+      "orb_high (20-bar)",
+      "orb_low (20-bar)",
+      "vwap",
+      "sma_volume_20"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "1.9 * ATR(20) from entry"
-  }
+  },
+  "vix_agnostic": true
 }

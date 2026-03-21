@@ -147,8 +147,8 @@ class Strategy(BaseStrategy):
             buy_pe=buy_pe,
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
-            stop_points=np.full(n, 4.0),    # 4 pts: retrace into 2-min base invalidates thesis
-            target_points=np.full(n, 7.0),  # 7 pts: ~60-70% of typical 15-25 spot pt continuation
+            stop_points=np.full(n, 4),    # 4 pts: retrace into 2-min base invalidates thesis
+            target_points=np.full(n, 8),  # 7 pts: ~60-70% of typical 15-25 spot pt continuation
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,              # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

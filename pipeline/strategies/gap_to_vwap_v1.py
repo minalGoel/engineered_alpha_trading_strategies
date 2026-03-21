@@ -209,9 +209,9 @@ class Strategy(BaseStrategy):
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
             # Stop: 4 pts = ~8 spot pts further from VWAP; if thesis not reversing, exit
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 4),
             # Target: 7 pts = ~14 spot pts convergence; ~70% of median first-leg reversion
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,          # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

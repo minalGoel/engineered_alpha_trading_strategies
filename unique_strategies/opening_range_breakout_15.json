@@ -2,14 +2,22 @@
   "name": "opening_range_breakout_15",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["breakout", "momentum", "opening-range", "intraday"],
+  "tags": [
+    "breakout",
+    "momentum",
+    "opening-range",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_340.json",
   "original_name": "opening_range_breakout_15",
-  "mechanism": "NIFTY's first 15 minutes (09:15-09:30) concentrates the bulk of overnight information processing — FII orders from global cues, domestic institution repositioning, and retail gap-chasers all compete. The 15-min ORB is narrower and forms faster than the 20-min variant, meaning a breakout above this range signals that the dominant institutional order has already absorbed the supply/demand from overnight news and is now committing fresh directional flow. On NIFTY, when price breaks the 15-min high with a volume surge (>1.5x the 5-min rolling average), it reflects a second wave of aggressive buyers entering after initial price discovery — momentum algorithms trigger, and VWAP-benchmarked buyers who missed the open accelerate. The 2-bar (10-second) persistence filter eliminates 5-second spikes that are common on NIFTY at the open.",
+  "mechanism": "NIFTY's first 15 minutes (09:15-09:30) concentrates the bulk of overnight information processing \u2014 FII orders from global cues, domestic institution repositioning, and retail gap-chasers all compete. The 15-min ORB is narrower and forms faster than the 20-min variant, meaning a breakout above this range signals that the dominant institutional order has already absorbed the supply/demand from overnight news and is now committing fresh directional flow. On NIFTY, when price breaks the 15-min high with a volume surge (>1.5x the 5-min rolling average), it reflects a second wave of aggressive buyers entering after initial price discovery \u2014 momentum algorithms trigger, and VWAP-benchmarked buyers who missed the open accelerate. The 2-bar (10-second) persistence filter eliminates 5-second spikes that are common on NIFTY at the open.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-11:00 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "1-3",
   "max_trades_per_day": 5,
@@ -27,21 +35,21 @@
       "formula": "max(high) over day where time_minutes in [555, 570)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "FIXED TIME WINDOW (09:15-09:30 = 180 bars at 5s). Not scaled — the 15-minute opening range is the same 15 calendar minutes regardless of bar size. This captures the exact overnight-to-open information absorption window. It is shorter than the 20-min ORB used in orb_momentum_v22, which means the range is tighter and breakouts are more decisive but also tested against less price discovery."
+      "purpose": "FIXED TIME WINDOW (09:15-09:30 = 180 bars at 5s). Not scaled \u2014 the 15-minute opening range is the same 15 calendar minutes regardless of bar size. This captures the exact overnight-to-open information absorption window. It is shorter than the 20-min ORB used in orb_momentum_v22, which means the range is tighter and breakouts are more decisive but also tested against less price discovery."
     },
     {
       "name": "orb_low",
       "formula": "min(low) over day where time_minutes in [555, 570)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "FIXED TIME WINDOW — same rationale as orb_high. Together, orb_high and orb_low define the equilibrium zone from the first 15 minutes. A break below orb_low with volume signals that sellers have overwhelmed the open-period buyers."
+      "purpose": "FIXED TIME WINDOW \u2014 same rationale as orb_high. Together, orb_high and orb_low define the equilibrium zone from the first 15 minutes. A break below orb_low with volume signals that sellers have overwhelmed the open-period buyers."
     },
     {
       "name": "volume_ratio_60",
       "formula": "volume / rolling_mean(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "60-bar (5-minute) rolling volume mean as the baseline. The original used SMA(volume, 20) on 1-min bars = 20 minutes; this compresses to 5 minutes because at 5-second bars we want to measure a surge WITHIN the current momentum burst, not compare to earlier-morning conditions. A ratio >1.5 means current bar volume is 1.5x the recent 5-min average — consistent with an institutional commitment rather than random noise."
+      "purpose": "60-bar (5-minute) rolling volume mean as the baseline. The original used SMA(volume, 20) on 1-min bars = 20 minutes; this compresses to 5 minutes because at 5-second bars we want to measure a surge WITHIN the current momentum burst, not compare to earlier-morning conditions. A ratio >1.5 means current bar volume is 1.5x the recent 5-min average \u2014 consistent with an institutional commitment rather than random noise."
     }
   ],
   "entry": {
@@ -50,7 +58,7 @@
         "close > orb_high",
         "prev_close > orb_high (2-bar persistence = 10 seconds)",
         "volume_ratio_60 >= 1.5",
-        "time_minutes in [570, 660) — 09:30 to 11:00 IST"
+        "time_minutes in [570, 660) \u2014 09:30 to 11:00 IST"
       ],
       "confirmation": "Two consecutive 5s closes above ORB high ensures this is not a single-bar spike; NIFTY's market impact at open creates frequent 1-bar overshoots"
     },
@@ -59,46 +67,51 @@
         "close < orb_low",
         "prev_close < orb_low (2-bar persistence = 10 seconds)",
         "volume_ratio_60 >= 1.5",
-        "time_minutes in [570, 660) — 09:30 to 11:00 IST"
+        "time_minutes in [570, 660) \u2014 09:30 to 11:00 IST"
       ],
-      "confirmation": "Same persistence logic — two consecutive closes below ORB low before entering PE"
+      "confirmation": "Same persistence logic \u2014 two consecutive closes below ORB low before entering PE"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. The 15-min ORB range on NIFTY typically spans 25-55 spot points; a false breakout that reverses back into the range does so within 5-8 spot points if the momentum was genuine. Beyond 8 spot pts of retracement within 120 seconds, the breakout has definitively failed — algo sellers are not absorbing the move.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. The 15-min ORB range on NIFTY typically spans 25-55 spot points; a false breakout that reverses back into the range does so within 5-8 spot points if the momentum was genuine. Beyond 8 spot pts of retracement within 120 seconds, the breakout has definitively failed \u2014 algo sellers are not absorbing the move.",
+    "target_points": 8.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points. Post-ORB breakout continuation on NIFTY's first leg typically extends 15-30 spot points within 60-120 seconds as momentum algorithms and VWAP buyers join. 7 pts captures the lower bound of this extension with a 1:1.75 risk-reward, consistent with a 55%+ win rate being profitable after costs.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 11:00 IST (session_end)"
   },
   "filters": {
-    "vix_filter": "none — ORB breakouts on NIFTY work across VIX regimes; high VIX widens the range but breakout thesis holds",
-    "time_filter": "09:30-11:00 IST only — after range forms; ORB validity decays after 11:00 as intraday conditions dominate",
-    "volume_filter": "volume_ratio_60 >= 1.5 — required on both trigger bars",
-    "trend_filter": "none — direction determined by which side of ORB breaks",
+    "vix_filter": "none \u2014 ORB breakouts on NIFTY work across VIX regimes; high VIX widens the range but breakout thesis holds",
+    "time_filter": "09:30-11:00 IST only \u2014 after range forms; ORB validity decays after 11:00 as intraday conditions dominate",
+    "volume_filter": "volume_ratio_60 >= 1.5 \u2014 required on both trigger bars",
+    "trend_filter": "none \u2014 direction determined by which side of ORB breaks",
     "spread_filter": "none"
   },
   "edge": {
     "expected_bps": 30,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — as more algo strategies trade ORB, the first-break false-positive rate increases; volume confirmation mitigates but does not eliminate this"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.17,
+    "edge_decay_risk": "moderate \u2014 as more algo strategies trade ORB, the first-break false-positive rate increases; volume confirmation mitigates but does not eliminate this"
   },
-  "adaptation_notes": "Original strategy traded top-20 gappers (FNO stocks) using a 15-min ORB at 1-min resolution with hold time 30-120 bars (30-120 min). Three key changes: (1) Universe changed from individual gap stocks to NIFTY index — the ORB thesis applies even more cleanly on the index because institutional flow is concentrated here; (2) Timeframe changed from 1-min to 5-second bars — the same 15-minute window now covers 180 bars, allowing precise detection of breakout confirmation within seconds of the break rather than waiting for a full minute close; (3) Hold time compressed from 30-120 min to 15-120 seconds — we capture only the first momentum leg, not the multi-hour trend the original targeted. Volume filter is retained (1.5x vs original's 2x) because 5-second NIFTY volume is noisier and 1.5x still filters meaningful surges without over-filtering. Trailing stop and 1:1 breakeven from original are dropped — too complex for 120-second holds.",
+  "adaptation_notes": "Original strategy traded top-20 gappers (FNO stocks) using a 15-min ORB at 1-min resolution with hold time 30-120 bars (30-120 min). Three key changes: (1) Universe changed from individual gap stocks to NIFTY index \u2014 the ORB thesis applies even more cleanly on the index because institutional flow is concentrated here; (2) Timeframe changed from 1-min to 5-second bars \u2014 the same 15-minute window now covers 180 bars, allowing precise detection of breakout confirmation within seconds of the break rather than waiting for a full minute close; (3) Hold time compressed from 30-120 min to 15-120 seconds \u2014 we capture only the first momentum leg, not the multi-hour trend the original targeted. Volume filter is retained (1.5x vs original's 2x) because 5-second NIFTY volume is noisier and 1.5x still filters meaningful surges without over-filtering. Trailing stop and 1:1 breakeven from original are dropped \u2014 too complex for 120-second holds.",
   "weaknesses": [
-    "False breakouts at 09:30 open are common on NIFTY — the 2-bar persistence filter helps but may not be sufficient on high-volatility days",
+    "False breakouts at 09:30 open are common on NIFTY \u2014 the 2-bar persistence filter helps but may not be sufficient on high-volatility days",
     "15-min ORB range can be very wide (50-80 pts) on high-VIX days, making the stop/target calibration aggressive relative to range width",
-    "Strategy fires only 09:30-11:00 IST — limited trade count per day (1-3 typical), making results sensitive to small sample sizes"
+    "Strategy fires only 09:30-11:00 IST \u2014 limited trade count per day (1-3 typical), making results sensitive to small sample sizes"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_340.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-120 bars (30-120 min)",
-    "original_indicators": ["orb_high (15-min high)", "orb_low (15-min low)", "volume > 2x SMA(20)"],
+    "original_indicators": [
+      "orb_high (15-min high)",
+      "orb_low (15-min low)",
+      "volume > 2x SMA(20)"
+    ],
     "original_stop": "orb_low for long / orb_high for short",
     "original_target": "2x ORB range from entry"
-  }
+  },
+  "vix_agnostic": true
 }

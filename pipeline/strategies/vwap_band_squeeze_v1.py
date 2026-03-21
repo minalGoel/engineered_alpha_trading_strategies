@@ -78,8 +78,8 @@ class Strategy(BaseStrategy):
             TunableParam("squeeze_pctile",  20.0, 10.0, 30.0),  # band-width percentile threshold
             TunableParam("vol_ratio_thresh", 1.4,  1.1,  2.0),  # volume breakout multiplier
             TunableParam("band_k",           2.0,  1.5,  2.5),  # band width multiplier (sigma)
-            TunableParam("stop_pts",         4.0,  2.0,  7.0),  # option premium points stop
-            TunableParam("target_pts",       7.0,  4.0, 12.0),  # option premium points target
+            TunableParam("stop_pts",         5.0,  2.0,  7.0),  # option premium points stop
+            TunableParam("target_pts",       8.0,  4.0, 12.0),  # option premium points target
         ]
 
     def compute(
@@ -100,8 +100,8 @@ class Strategy(BaseStrategy):
         squeeze_pctile   = params.get("squeeze_pctile",   20.0)
         vol_ratio_thresh = params.get("vol_ratio_thresh",  1.4)
         band_k           = params.get("band_k",            2.0)
-        stop_pts         = params.get("stop_pts",          4.0)
-        target_pts       = params.get("target_pts",        7.0)
+        stop_pts         = params.get("stop_pts",          5.0)
+        target_pts       = params.get("target_pts",        8.0)
 
         # ── VIX filter (moderate-volatility regime) ──────────────────────────
         vix_close = np.full(n, 15.0)

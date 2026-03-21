@@ -27,8 +27,8 @@ class Strategy(BaseStrategy):
             TunableParam("vix_zscore_high", 1.5, 1.0, 2.5),   # elevated VIX threshold
             TunableParam("vix_zscore_low", 1.0, 0.5, 2.0),    # depressed VIX threshold
             TunableParam("vix_slope_thresh", 0.03, 0.01, 0.10),  # VIX turning speed
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df: pl.DataFrame, option_df: pl.DataFrame,
@@ -41,8 +41,8 @@ class Strategy(BaseStrategy):
         vix_zscore_high = params.get("vix_zscore_high", 1.5)
         vix_zscore_low = params.get("vix_zscore_low", 1.0)
         vix_slope_thresh = params.get("vix_slope_thresh", 0.03)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── Align VIX to spot timestamps (backward join) ─────────────────────
         vix_close = np.full(n, 15.0)

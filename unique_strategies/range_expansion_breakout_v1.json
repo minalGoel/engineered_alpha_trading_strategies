@@ -2,14 +2,23 @@
   "name": "range_expansion_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["range-expansion", "tight-base", "consolidation", "breakout", "microstructure"],
+  "tags": [
+    "range-expansion",
+    "tight-base",
+    "consolidation",
+    "breakout",
+    "microstructure"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_179.json",
   "original_name": "range_expansion_breakout_v1",
-  "mechanism": "On NIFTY, when the index compresses into a 2-minute micro-consolidation (range < 0.08% of price, ~18 spot points at 22500), dominant algorithms have paused directional orders and limit orders have equilibrated at both range extremes — forming a compressed orderbook. The first 5-second bar expanding to more than 2.5x the base-period average bar range signals a large institutional basket or futures order breaking through resting limit orders on one side. This expansion bar consuming the base high (or low) triggers automated stops placed by participants positioned within the base, creating a self-reinforcing directional push that sustains for 60-90 seconds. On NIFTY specifically — more liquid and less gappy than single stocks — these micro-expansions generate cleaner continuation because there are no single-stock event gaps to contaminate the signal.",
+  "mechanism": "On NIFTY, when the index compresses into a 2-minute micro-consolidation (range < 0.08% of price, ~18 spot points at 22500), dominant algorithms have paused directional orders and limit orders have equilibrated at both range extremes \u2014 forming a compressed orderbook. The first 5-second bar expanding to more than 2.5x the base-period average bar range signals a large institutional basket or futures order breaking through resting limit orders on one side. This expansion bar consuming the base high (or low) triggers automated stops placed by participants positioned within the base, creating a self-reinforcing directional push that sustains for 60-90 seconds. On NIFTY specifically \u2014 more liquid and less gappy than single stocks \u2014 these micro-expansions generate cleaner continuation because there are no single-stock event gaps to contaminate the signal.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-8",
   "max_trades_per_day": 8,
@@ -41,7 +50,7 @@
       "formula": "(high[i] - low[i]) / avg_bar_range_24[i]",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "Core signal: ratio of current bar range to base average bar range. A value > 2.5 means the current 5-second bar is anomalously large relative to the quiet base — signal of order book rupture."
+      "purpose": "Core signal: ratio of current bar range to base average bar range. A value > 2.5 means the current 5-second bar is anomalously large relative to the quiet base \u2014 signal of order book rupture."
     },
     {
       "name": "prev_base_high",
@@ -60,9 +69,9 @@
     {
       "name": "vwap",
       "formula": "cumulative(typical_price * volume) / cumulative(volume) from session open",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Directional filter: only trade expansions in the direction of VWAP to avoid fighting institutional benchmark flow. Cumulative measure — no scaling needed."
+      "purpose": "Directional filter: only trade expansions in the direction of VWAP to avoid fighting institutional benchmark flow. Cumulative measure \u2014 no scaling needed."
     },
     {
       "name": "avg_volume_24",
@@ -78,19 +87,19 @@
         "base_range_pct < tight_range_pct (tight consolidation: range < 0.08% of close = ~18 spot pts at NIFTY 22500)",
         "expansion_ratio > expansion_ratio_thresh (current bar range > 2.5x base average bar range)",
         "close > prev_base_high (expansion bar closes above the base ceiling)",
-        "(close - low) / (high - low) > 0.75 (bar closes in top quartile — strong bullish close)",
+        "(close - low) / (high - low) > 0.75 (bar closes in top quartile \u2014 strong bullish close)",
         "close > vwap (aligned with intraday VWAP direction)",
         "volume > avg_volume_24 * 1.5 (above-average volume confirms institutional participation)",
-        "India VIX < 22 (extreme panic excluded — gaps and fast reversals distort expansion signals)"
+        "India VIX < 22 (extreme panic excluded \u2014 gaps and fast reversals distort expansion signals)"
       ],
-      "confirmation": "Single-bar signal: expansion bar itself is both signal and confirmation. No additional bar needed — on 5s timeframe, waiting one more bar loses most of the continuation."
+      "confirmation": "Single-bar signal: expansion bar itself is both signal and confirmation. No additional bar needed \u2014 on 5s timeframe, waiting one more bar loses most of the continuation."
     },
     "buy_pe": {
       "conditions": [
         "base_range_pct < tight_range_pct",
         "expansion_ratio > expansion_ratio_thresh",
         "close < prev_base_low (expansion bar closes below the base floor)",
-        "(close - low) / (high - low) < 0.25 (bar closes in bottom quartile — strong bearish close)",
+        "(close - low) / (high - low) < 0.25 (bar closes in bottom quartile \u2014 strong bearish close)",
         "close < vwap",
         "volume > avg_volume_24 * 1.5",
         "India VIX < 22"
@@ -100,9 +109,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts (~8 spot points at delta 0.5). If a genuine NIFTY micro-expansion is underway, price should not retrace back into the 2-min base within 30 seconds. An 8 spot-point reversal into the base means the institutional order has stalled or reversed — invalidating the thesis. This is slightly tighter than the 2-min ATM option move (2-5 pts) to protect against false expansions.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts (~8 spot points at delta 0.5). If a genuine NIFTY micro-expansion is underway, price should not retrace back into the 2-min base within 30 seconds. An 8 spot-point reversal into the base means the institutional order has stalled or reversed \u2014 invalidating the thesis. This is slightly tighter than the 2-min ATM option move (2-5 pts) to protect against false expansions.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts (~14 spot points). A genuine NIFTY micro-consolidation breakout extends 15-25 spot points from the base boundary in the first 60-90 seconds as stop-triggered orders amplify the initial push. 7 pts captures 60-70% of the typical first-leg continuation (conservative) with 1:1.75 R:R.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
@@ -112,16 +121,16 @@
     "time_filter": "09:30-15:20 IST. Pre-09:30 excluded to allow 24-bar base to form after open. Post-15:20 excluded for EOD volatility.",
     "volume_filter": "Expansion bar volume > 1.5x 24-bar average to confirm institutional participation.",
     "trend_filter": "close vs VWAP aligns trade direction with intraday benchmark flow.",
-    "spread_filter": "Not applicable — limit order execution at candle close."
+    "spread_filter": "Not applicable \u2014 limit order execution at candle close."
   },
   "edge": {
     "expected_bps": 35,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.9,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.17,
     "edge_decay_risk": "Medium. Pattern is not widely automated at 5-second resolution, but could be crowded as more HFTs add range-expansion logic to their NIFTY books."
   },
-  "adaptation_notes": "Three key changes from original: (1) Universe collapsed from NIFTY200 stocks to NIFTY index — the mechanism transfers cleanly since index consolidation is driven by institutional pauses; (2) Lookback compressed from 30 bars (30 min on 1-min) to 24 bars (2 min on 5s) — we're trading 60-90s not 15-60 min, so the relevant micro-base window is proportionally shorter; (3) Percentage threshold (0.3%) adjusted down to 0.08% because NIFTY index is much less volatile bar-to-bar than individual NIFTY200 stocks, and a 2-minute NIFTY base of 0.08% (~18 pts) is as meaningful as a 30-minute stock base of 0.3% — both represent genuine equilibrium states.",
+  "adaptation_notes": "Three key changes from original: (1) Universe collapsed from NIFTY200 stocks to NIFTY index \u2014 the mechanism transfers cleanly since index consolidation is driven by institutional pauses; (2) Lookback compressed from 30 bars (30 min on 1-min) to 24 bars (2 min on 5s) \u2014 we're trading 60-90s not 15-60 min, so the relevant micro-base window is proportionally shorter; (3) Percentage threshold (0.3%) adjusted down to 0.08% because NIFTY index is much less volatile bar-to-bar than individual NIFTY200 stocks, and a 2-minute NIFTY base of 0.08% (~18 pts) is as meaningful as a 30-minute stock base of 0.3% \u2014 both represent genuine equilibrium states.",
   "weaknesses": [
     "2-minute tight bases on NIFTY occur 3-6 times per session at most, limiting frequency",
     "False expansions from single large futures print (block trade) can trigger without real directional conviction",
@@ -131,7 +140,13 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_179.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 minutes",
-    "original_indicators": ["base_range (30-bar %)", "avg_bar_range_30", "expansion_ratio (3x)", "VWAP", "ATR_14"],
+    "original_indicators": [
+      "base_range (30-bar %)",
+      "avg_bar_range_30",
+      "expansion_ratio (3x)",
+      "VWAP",
+      "ATR_14"
+    ],
     "original_stop": "opposite side of the base",
     "original_target": "base_range projected from breakout (measured move)"
   }

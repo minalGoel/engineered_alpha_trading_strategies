@@ -2,14 +2,23 @@
   "name": "orb_wide_range_fade_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["ORB", "wide_range", "fade", "mean_reversion", "opening_range"],
+  "tags": [
+    "ORB",
+    "wide_range",
+    "fade",
+    "mean_reversion",
+    "opening_range"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_228.json",
   "original_name": "orb_wide_range_fade_v1",
-  "mechanism": "On NIFTY, when the 09:15-09:30 opening range exceeds 2x its 20-session average, institutional option writers at the ORB extreme strikes (puts at ORB_low, calls at ORB_high) become heavily gamma-exposed and delta-hedge aggressively against further extension. Simultaneously, VWAP-benchmarked buy-side desks — seeing the index pinned at the ORB extreme — begin fading the deviation to protect their intraday benchmark. Each subsequent test of the ORB extreme generates a 10-20 spot point micro-rejection within 30-90 seconds as these two flows converge. At 5-second resolution we enter the instant RSI exhaustion confirms the rejection is beginning, capturing the first leg of the mean-reversion toward ORB midpoint before the move extends.",
+  "mechanism": "On NIFTY, when the 09:15-09:30 opening range exceeds 2x its 20-session average, institutional option writers at the ORB extreme strikes (puts at ORB_low, calls at ORB_high) become heavily gamma-exposed and delta-hedge aggressively against further extension. Simultaneously, VWAP-benchmarked buy-side desks \u2014 seeing the index pinned at the ORB extreme \u2014 begin fading the deviation to protect their intraday benchmark. Each subsequent test of the ORB extreme generates a 10-20 spot point micro-rejection within 30-90 seconds as these two flows converge. At 5-second resolution we enter the instant RSI exhaustion confirms the rejection is beginning, capturing the first leg of the mean-reversion toward ORB midpoint before the move extends.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:35-15:25 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-5",
   "max_trades_per_day": 6,
@@ -19,7 +28,9 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["per_session_orb_range_rolling_20d"]
+    "other": [
+      "per_session_orb_range_rolling_20d"
+    ]
   },
   "indicators": [
     {
@@ -27,7 +38,7 @@
       "formula": "max(high) for bars where time_minutes in [555, 570)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "Opening range high (09:15-09:30 = 15 min = 180 bars). FIXED TIME WINDOW — not scaled by frequency. The same 15-minute window regardless of bar size defines where institutional supply was established at the open."
+      "purpose": "Opening range high (09:15-09:30 = 15 min = 180 bars). FIXED TIME WINDOW \u2014 not scaled by frequency. The same 15-minute window regardless of bar size defines where institutional supply was established at the open."
     },
     {
       "name": "orb_low_15",
@@ -41,7 +52,7 @@
       "formula": "mean(orb_range_15) over previous 20 trading sessions",
       "lookback": 20,
       "computed_on": "spot",
-      "purpose": "20-session rolling average ORB range. NOT scaled — this is a cross-session normalizer. 20 sessions ≈ 1 month of trading days, enough to establish a stable baseline range for NIFTY's typical opening volatility without being stale. The original also used 20 sessions."
+      "purpose": "20-session rolling average ORB range. NOT scaled \u2014 this is a cross-session normalizer. 20 sessions \u2248 1 month of trading days, enough to establish a stable baseline range for NIFTY's typical opening volatility without being stale. The original also used 20 sessions."
     },
     {
       "name": "price_position",
@@ -55,7 +66,7 @@
       "formula": "RSI(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute RSI (36 bars × 5s) for micro-exhaustion detection at ORB extremes. Original used RSI(14) at 1-min = 14-minute window. We compress to 3 minutes because we are catching the INTRABAR exhaustion signal at the ORB extreme touch, not confirming a completed session-level reversal. A 3-min RSI above 70 at the ORB high means the micro-rally into the high is overbought — the fading thesis is active."
+      "purpose": "3-minute RSI (36 bars \u00d7 5s) for micro-exhaustion detection at ORB extremes. Original used RSI(14) at 1-min = 14-minute window. We compress to 3 minutes because we are catching the INTRABAR exhaustion signal at the ORB extreme touch, not confirming a completed session-level reversal. A 3-min RSI above 70 at the ORB high means the micro-rally into the high is overbought \u2014 the fading thesis is active."
     }
   ],
   "entry": {
@@ -82,38 +93,46 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 3.0,
     "stop_rationale": "4 option pts = ~8 spot pts extension beyond the ORB extreme. On NIFTY, if the index extends >8 spot pts beyond the ORB extreme after the RSI exhaustion signal, the fading thesis has failed and momentum is breaking out rather than reverting. At delta ~0.5, 4 option pts = 8 spot pts, which is the threshold between normal noise and genuine ORB extension.",
-    "target_points": 7,
+    "target_points": 6.0,
     "target_rationale": "7 option pts = ~14 spot pts reversion toward ORB midpoint. Micro-rejections at NIFTY ORB extremes on wide-range days typically yield 10-20 spot pt bounces within 60-90 seconds before the next pause. 7 pts captures ~50-70% of the expected 10-20 spot pt first leg (1:1.75 R:R). Consistent with NIFTY 1-min typical move of 3-7 option pts at ATM delta.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "vix_close < 22.0 — on NIFTY, VIX > 22 signals regime where wide ORB ranges continue expanding rather than reverting (panic/trend days)",
-    "time_filter": "09:35-15:25 IST — enter only after ORB has fully formed (09:30); allow until 15:25 since ORB extremes remain relevant all day on wide-range sessions",
-    "volume_filter": "none — NIFTY index volume is institutional and noisy at 5s; the ORB range width itself is the volume proxy",
-    "trend_filter": "none applied explicitly — the wide_range filter and VIX filter together exclude strong trend days where ORB fade fails",
-    "spread_filter": "not applicable — limit orders at candle close, no bid-ask cost"
+    "vix_filter": "vix_close < 22.0 \u2014 on NIFTY, VIX > 22 signals regime where wide ORB ranges continue expanding rather than reverting (panic/trend days)",
+    "time_filter": "09:35-15:25 IST \u2014 enter only after ORB has fully formed (09:30); allow until 15:25 since ORB extremes remain relevant all day on wide-range sessions",
+    "volume_filter": "none \u2014 NIFTY index volume is institutional and noisy at 5s; the ORB range width itself is the volume proxy",
+    "trend_filter": "none applied explicitly \u2014 the wide_range filter and VIX filter together exclude strong trend days where ORB fade fails",
+    "spread_filter": "not applicable \u2014 limit orders at candle close, no bid-ask cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.58,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.65,
-    "edge_decay_risk": "medium — if NIFTY ORB patterns become widely known and faded by algos, the micro-rejection signals may be front-run and weakened"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.76,
+    "edge_decay_risk": "medium \u2014 if NIFTY ORB patterns become widely known and faded by algos, the micro-rejection signals may be front-run and weakened"
   },
-  "adaptation_notes": "Original: fade NIFTY50 stocks when 15-min ORB > 2x avg, hold 20-120 min, target ORB midpoint. Converted: same trigger (wide ORB day, price at extreme, RSI exhaustion) but targets the MICRO-REJECTION at each ORB extreme test (15-120 second hold) rather than the full-session mean reversion. This is valid because: (1) the ORB is a FIXED TIME WINDOW — same 15 minutes regardless of bar size; (2) the RSI was compressed from 14-min to 3-min to detect intrabar exhaustion rather than session-level reversal; (3) the target changes from 'reach ORB midpoint' (may take hours) to 'capture first 10-20 spot pt micro-rejection leg' (completes in 30-90 seconds). The VIX < 22 filter replaces the original's 'NIFTY not in extreme trend > 2%' filter with a more quantifiable index-level regime check. The equity-specific event_filter (skip news-driven wide ranges) is dropped — NIFTY index cannot have stock-specific news, and macro events that widen the ORB still create valid ORB extreme S/R zones.",
+  "adaptation_notes": "Original: fade NIFTY50 stocks when 15-min ORB > 2x avg, hold 20-120 min, target ORB midpoint. Converted: same trigger (wide ORB day, price at extreme, RSI exhaustion) but targets the MICRO-REJECTION at each ORB extreme test (15-120 second hold) rather than the full-session mean reversion. This is valid because: (1) the ORB is a FIXED TIME WINDOW \u2014 same 15 minutes regardless of bar size; (2) the RSI was compressed from 14-min to 3-min to detect intrabar exhaustion rather than session-level reversal; (3) the target changes from 'reach ORB midpoint' (may take hours) to 'capture first 10-20 spot pt micro-rejection leg' (completes in 30-90 seconds). The VIX < 22 filter replaces the original's 'NIFTY not in extreme trend > 2%' filter with a more quantifiable index-level regime check. The equity-specific event_filter (skip news-driven wide ranges) is dropped \u2014 NIFTY index cannot have stock-specific news, and macro events that widen the ORB still create valid ORB extreme S/R zones.",
   "weaknesses": [
-    "Wide ORB days on NIFTY are infrequent (10-15% of sessions), producing low signal density — the strategy must be combined with others",
-    "On RBI/FOMC announcement days, wide ORB ranges may extend continuously rather than revert — the VIX filter partially mitigates but doesn't eliminate this risk",
+    "Wide ORB days on NIFTY are infrequent (10-15% of sessions), producing low signal density \u2014 the strategy must be combined with others",
+    "On RBI/FOMC announcement days, wide ORB ranges may extend continuously rather than revert \u2014 the VIX filter partially mitigates but doesn't eliminate this risk",
     "The 20-session lookback for avg_orb_range requires sufficient cross-session data; in backtests with short windows the baseline may be unreliable"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_228.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-120 mins",
-    "original_indicators": ["ORB_high_15", "ORB_low_15", "ORB_range_15", "avg_ORB_range_20d", "price_position", "RSI_14", "vwap_dev"],
+    "original_indicators": [
+      "ORB_high_15",
+      "ORB_low_15",
+      "ORB_range_15",
+      "avg_ORB_range_20d",
+      "price_position",
+      "RSI_14",
+      "vwap_dev"
+    ],
     "original_stop": "0.4% from entry or 0.2x ORB_range extension",
     "original_target": "ORB midpoint"
   }

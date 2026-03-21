@@ -24,16 +24,16 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("vol_ratio_threshold", 2.5, 1.5, 4.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
         n = len(spot_df)
 
         vol_threshold = params.get("vol_ratio_threshold", 2.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         time_min = spot_df["time_minutes"].to_numpy()
 

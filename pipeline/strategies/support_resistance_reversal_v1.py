@@ -27,8 +27,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("sr_threshold_pct", 0.0015, 0.0005, 0.004),  # % proximity to S/R
             TunableParam("ret3_threshold", 0.0002, 0.00005, 0.0006),   # 15s return for reversal candle
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
             TunableParam("vix_max", 20.0, 15.0, 28.0),
         ]
 
@@ -42,8 +42,8 @@ class Strategy(BaseStrategy):
 
         sr_threshold = params.get("sr_threshold_pct", 0.0015)
         ret3_threshold = params.get("ret3_threshold", 0.0002)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
         vix_max = params.get("vix_max", 20.0)
 
         # --- VIX filter ---

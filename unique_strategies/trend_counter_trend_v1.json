@@ -2,14 +2,24 @@
   "name": "trend_counter_trend_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["trend-following", "counter-trend", "hybrid", "supertrend", "rsi-divergence", "exits"],
+  "tags": [
+    "trend-following",
+    "counter-trend",
+    "hybrid",
+    "supertrend",
+    "rsi-divergence",
+    "exits"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_291.json",
   "original_name": "trend_counter_trend_v1",
-  "mechanism": "On NIFTY, when the 2-minute Supertrend flips bullish (bearish) while price is above (below) session VWAP and the 5-minute EMA trend aligns, it signals that institutional directional algorithms have committed to a short-term trend — their TWAP/VWAP execution orders are now directionally biased and will sustain the move for the next 30-90 seconds. The counter-trend sell signal fires when 3-minute RSI diverges from price (new spot high but RSI lower) AND NIFTY has overshot VWAP by 15+ spot points — at that level, VWAP-benchmarked algorithms begin systematic fade-selling against the benchmark, providing an asymmetric early exit before trend exhaustion. This asymmetry captures the institutional directional burst while avoiding the mean-reversion tail that kills symmetric trend exits.",
+  "mechanism": "On NIFTY, when the 2-minute Supertrend flips bullish (bearish) while price is above (below) session VWAP and the 5-minute EMA trend aligns, it signals that institutional directional algorithms have committed to a short-term trend \u2014 their TWAP/VWAP execution orders are now directionally biased and will sustain the move for the next 30-90 seconds. The counter-trend sell signal fires when 3-minute RSI diverges from price (new spot high but RSI lower) AND NIFTY has overshot VWAP by 15+ spot points \u2014 at that level, VWAP-benchmarked algorithms begin systematic fade-selling against the benchmark, providing an asymmetric early exit before trend exhaustion. This asymmetry captures the institutional directional burst while avoiding the mean-reversion tail that kills symmetric trend exits.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "1-6",
   "max_trades_per_day": 6,
@@ -27,34 +37,34 @@
       "formula": "Supertrend(ATR_period=24, multiplier=3.0) on 5s bars",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "24-bar (2-minute) ATR period. NOT the naive 12x scale from the original's 10 bars (which would give 120 bars = 10-min — far too slow for 30-120s holds). 2-min ATR detects micro-trend flips that precede 30-90 second institutional directional runs on NIFTY. Shorter lookback makes the Supertrend reactive enough to serve as a trade trigger rather than a context filter."
+      "purpose": "24-bar (2-minute) ATR period. NOT the naive 12x scale from the original's 10 bars (which would give 120 bars = 10-min \u2014 far too slow for 30-120s holds). 2-min ATR detects micro-trend flips that precede 30-90 second institutional directional runs on NIFTY. Shorter lookback makes the Supertrend reactive enough to serve as a trade trigger rather than a context filter."
     },
     {
       "name": "rsi_36",
-      "formula": "RSI(close, 36) — Wilder smoothed",
+      "formula": "RSI(close, 36) \u2014 Wilder smoothed",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute RSI (36 bars at 5s). Original used 14-bar RSI on 1-min charts (14-min window) to detect divergences in a 20-90 min hold. At 5s with 30-120s holds, divergence must develop within the holding window — so we use 3-min RSI. A 14-bar RSI at 5s (70 seconds) would be too noisy; 36 bars provides a stable but fast-enough divergence signal that forms before the trend reverses."
+      "purpose": "3-minute RSI (36 bars at 5s). Original used 14-bar RSI on 1-min charts (14-min window) to detect divergences in a 20-90 min hold. At 5s with 30-120s holds, divergence must develop within the holding window \u2014 so we use 3-min RSI. A 14-bar RSI at 5s (70 seconds) would be too noisy; 36 bars provides a stable but fast-enough divergence signal that forms before the trend reverses."
     },
     {
       "name": "ema_60",
       "formula": "EMA(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute EMA (60 bars) as trend context filter. Original used 20-bar 1-min EMA (20-min context) for the same purpose. We use 60 bars (5 min) — compressed because NIFTY's intraday trend regime shifts faster than individual equities; a 20-min EMA context filter on NIFTY at 5s would keep us in stale regime reads for too long during reversals."
+      "purpose": "5-minute EMA (60 bars) as trend context filter. Original used 20-bar 1-min EMA (20-min context) for the same purpose. We use 60 bars (5 min) \u2014 compressed because NIFTY's intraday trend regime shifts faster than individual equities; a 20-min EMA context filter on NIFTY at 5s would keep us in stale regime reads for too long during reversals."
     },
     {
       "name": "vwap_session",
       "formula": "Cumulative VWAP reset at 09:15 each session",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative measure — no lookback scaling needed. Aligns entry direction with institutional benchmark (price above VWAP = demand side, below = supply side). Distance from VWAP in spot points serves as the overshoot exit threshold: when NIFTY has drifted 15+ pts from VWAP, VWAP-benchmarked algos activate counter-pressure."
+      "purpose": "Cumulative measure \u2014 no lookback scaling needed. Aligns entry direction with institutional benchmark (price above VWAP = demand side, below = supply side). Distance from VWAP in spot points serves as the overshoot exit threshold: when NIFTY has drifted 15+ pts from VWAP, VWAP-benchmarked algos activate counter-pressure."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "Supertrend(24, 3.0) flips bullish this bar (direction changes -1 → +1)",
+        "Supertrend(24, 3.0) flips bullish this bar (direction changes -1 \u2192 +1)",
         "close > session VWAP (above institutional benchmark)",
         "close > EMA(60) (5-minute trend is bullish)"
       ],
@@ -62,7 +72,7 @@
     },
     "buy_pe": {
       "conditions": [
-        "Supertrend(24, 3.0) flips bearish this bar (direction changes +1 → -1)",
+        "Supertrend(24, 3.0) flips bearish this bar (direction changes +1 \u2192 -1)",
         "close < session VWAP (below institutional benchmark)",
         "close < EMA(60) (5-minute trend is bearish)"
       ],
@@ -72,38 +82,45 @@
   },
   "exit": {
     "stop_points": 5,
-    "stop_rationale": "5 option pts ≈ 10 NIFTY spot pts (delta ~0.5). A genuine Supertrend flip on NIFTY should not see a 10-pt adverse move within 30s if institutional flow is real — if it does, the flip was noise. Calibrated to sit between 30s typical moves (2-5 pts) and 1-min typical moves (3-7 pts) from conventions table; wide enough to survive normal oscillation, tight enough to cap damage on false flips.",
+    "stop_rationale": "5 option pts \u2248 10 NIFTY spot pts (delta ~0.5). A genuine Supertrend flip on NIFTY should not see a 10-pt adverse move within 30s if institutional flow is real \u2014 if it does, the flip was noise. Calibrated to sit between 30s typical moves (2-5 pts) and 1-min typical moves (3-7 pts) from conventions table; wide enough to survive normal oscillation, tight enough to cap damage on false flips.",
     "target_points": 8,
-    "target_rationale": "8 option pts ≈ 16 NIFTY spot pts. A confirmed Supertrend flip accompanied by VWAP alignment and 5-min EMA context typically drives NIFTY 15-25 spot pts over 60-120 seconds. Targeting 8 pts captures the lower end of the 2-min move range (5-10 pts in conventions table) at 1:1.6 R:R — realistic given the early counter-trend exit may close positions before full target.",
+    "target_rationale": "8 option pts \u2248 16 NIFTY spot pts. A confirmed Supertrend flip accompanied by VWAP alignment and 5-min EMA context typically drives NIFTY 15-25 spot pts over 60-120 seconds. Targeting 8 pts captures the lower end of the 2-min move range (5-10 pts in conventions table) at 1:1.6 R:R \u2014 realistic given the early counter-trend exit may close positions before full target.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "None — Supertrend auto-adapts to volatility via ATR; no external VIX overlay needed",
+    "vix_filter": "None \u2014 Supertrend auto-adapts to volatility via ATR; no external VIX overlay needed",
     "time_filter": "09:20-15:25 IST; avoids pre-open noise (first 5 min) and EOD illiquidity",
-    "volume_filter": "None — NIFTY index volume is noisy at 5s; Supertrend + VWAP alignment provide quality filter",
+    "volume_filter": "None \u2014 NIFTY index volume is noisy at 5s; Supertrend + VWAP alignment provide quality filter",
     "trend_filter": "close > EMA(60) for long entries, close < EMA(60) for short entries (5-min context)",
-    "spread_filter": "Not applicable — limit order execution at candle close prices"
+    "spread_filter": "Not applicable \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 25,
     "win_rate_estimate": 0.52,
     "avg_winner_to_loser": 1.6,
-    "profit_factor_estimate": 1.32,
-    "edge_decay_risk": "Moderate — Supertrend is widely known but the asymmetric counter-trend exit overlay (RSI divergence + VWAP overshoot) is less commonly implemented at 5s frequency; as HFT normalizes these patterns, edge may compress within 12-18 months"
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "Moderate \u2014 Supertrend is widely known but the asymmetric counter-trend exit overlay (RSI divergence + VWAP overshoot) is less commonly implemented at 5s frequency; as HFT normalizes these patterns, edge may compress within 12-18 months"
   },
-  "adaptation_notes": "Original applied to NIFTY50/NiftyNext50 equity stocks on 1-min bars, hold 20-90 min. Key adaptations: (1) Supertrend ATR period: 10 bars (10-min) → 24 bars (2-min) — catching fast micro-trend flips, not slow equity trends. NOT 12x blind scale (which would be 120-bar = 10-min, identical to original). (2) RSI: 14 bars (14-min) → 36 bars (3-min) — divergence must form within the 30-120s hold window. (3) EMA context: 20 bars (20-min) → 60 bars (5-min) — NIFTY regime changes faster than single equities. (4) VWAP distance threshold: 60 bps (original) → 15 spot points (~6 bps at NIFTY 24000) — original 60 bps threshold calibrated for slow equity moves over 20-90 min; at 5s on an index, we use absolute point distance because the overshoot that triggers VWAP-algo counter-pressure is magnitude-based, not percentage-based. (5) ATR-based stops → fixed option premium points (5 stop, 8 target) consistent with 5s options pipeline cost model.",
+  "adaptation_notes": "Original applied to NIFTY50/NiftyNext50 equity stocks on 1-min bars, hold 20-90 min. Key adaptations: (1) Supertrend ATR period: 10 bars (10-min) \u2192 24 bars (2-min) \u2014 catching fast micro-trend flips, not slow equity trends. NOT 12x blind scale (which would be 120-bar = 10-min, identical to original). (2) RSI: 14 bars (14-min) \u2192 36 bars (3-min) \u2014 divergence must form within the 30-120s hold window. (3) EMA context: 20 bars (20-min) \u2192 60 bars (5-min) \u2014 NIFTY regime changes faster than single equities. (4) VWAP distance threshold: 60 bps (original) \u2192 15 spot points (~6 bps at NIFTY 24000) \u2014 original 60 bps threshold calibrated for slow equity moves over 20-90 min; at 5s on an index, we use absolute point distance because the overshoot that triggers VWAP-algo counter-pressure is magnitude-based, not percentage-based. (5) ATR-based stops \u2192 fixed option premium points (5 stop, 8 target) consistent with 5s options pipeline cost model.",
   "weaknesses": [
     "Supertrend flips on 2-min ATR at 5s can whipsaw during NIFTY opening auction (09:15-09:25) and pre-expiry settlement sessions; session start filter at 09:20 partially mitigates but does not eliminate",
-    "RSI divergence detection over 18 bars (90 seconds) compares only two distant points — may trigger on normal RSI oscillation rather than structural divergence; a proper swing-high divergence detector would require more complex logic",
+    "RSI divergence detection over 18 bars (90 seconds) compares only two distant points \u2014 may trigger on normal RSI oscillation rather than structural divergence; a proper swing-high divergence detector would require more complex logic",
     "Supertrend flip frequency on NIFTY at 2-min ATR is low (1-4 per day typical), limiting statistical significance on 12-day test window"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_291.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-90 min",
-    "original_indicators": ["Supertrend(10, 3.0)", "RSI(14)", "VWAP_Distance_bps", "ATR(14)", "RSI_Divergence(30)"],
-    "original_stop": "1.0 × ATR(14)",
-    "original_target": "1.5 × ATR(14)"
-  }
+    "original_indicators": [
+      "Supertrend(10, 3.0)",
+      "RSI(14)",
+      "VWAP_Distance_bps",
+      "ATR(14)",
+      "RSI_Divergence(30)"
+    ],
+    "original_stop": "1.0 \u00d7 ATR(14)",
+    "original_target": "1.5 \u00d7 ATR(14)"
+  },
+  "vix_agnostic": true
 }

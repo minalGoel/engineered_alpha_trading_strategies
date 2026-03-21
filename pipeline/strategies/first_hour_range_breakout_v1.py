@@ -29,8 +29,8 @@ class Strategy(BaseStrategy):
             TunableParam("fhr_width_min_pct", 0.30, 0.10, 0.70),
             TunableParam("fhr_width_max_pct", 1.50, 0.80, 2.50),
             TunableParam("vol_ratio_threshold", 1.30, 1.00, 2.00),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -48,8 +48,8 @@ class Strategy(BaseStrategy):
         fhr_width_min_pct = params.get("fhr_width_min_pct", 0.30)
         fhr_width_max_pct = params.get("fhr_width_max_pct", 1.50)
         vol_ratio_threshold = params.get("vol_ratio_threshold", 1.30)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Session VWAP (cumulative, reset per day) ──
         typical = (high + low + close) / 3.0

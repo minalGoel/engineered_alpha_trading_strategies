@@ -2,14 +2,23 @@
   "name": "opening_drive_post_gap_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["gap", "opening_drive", "momentum", "institutional_flow", "session_open"],
+  "tags": [
+    "gap",
+    "opening_drive",
+    "momentum",
+    "institutional_flow",
+    "session_open"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_207.json",
   "original_name": "opening_drive_post_gap_v1",
-  "mechanism": "On NIFTY, overnight gaps >0.3% are driven by FII flows, US market close, and macro news absorbed after the Indian close. The first 5 minutes (09:15-09:20) serve as the price discovery window where pre-open auction imbalances resolve into live orders. When this discovery window closes in the same direction as the gap — confirmed by a strong candle body (>55% body/range ratio) and above-average volume — institutional VWAP/TWAP algorithms have committed to directional orders that are only 20-30% filled at 09:20. The residual unfilled institutional demand continues pushing NIFTY 10-20 spot points in the same direction for the next 30-120 seconds, creating a high-probability window for ATM CE/PE entry at exactly 09:20 IST.",
+  "mechanism": "On NIFTY, overnight gaps >0.3% are driven by FII flows, US market close, and macro news absorbed after the Indian close. The first 5 minutes (09:15-09:20) serve as the price discovery window where pre-open auction imbalances resolve into live orders. When this discovery window closes in the same direction as the gap \u2014 confirmed by a strong candle body (>55% body/range ratio) and above-average volume \u2014 institutional VWAP/TWAP algorithms have committed to directional orders that are only 20-30% filled at 09:20. The residual unfilled institutional demand continues pushing NIFTY 10-20 spot points in the same direction for the next 30-120 seconds, creating a high-probability window for ATM CE/PE entry at exactly 09:20 IST.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-09:22 IST (signal fires once at first 5-min close, hold 30-120s)",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "1",
   "max_trades_per_day": 1,
@@ -27,28 +36,28 @@
       "formula": "(today_open - prev_day_close) / prev_day_close",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Identifies overnight FII/macro-driven directional bias. Requires one prior trading day only — the gap is a single day-boundary comparison, not a rolling window. Threshold 0.3% chosen to exclude noise-driven intraday gaps and focus on structurally meaningful overnight repositioning."
+      "purpose": "Identifies overnight FII/macro-driven directional bias. Requires one prior trading day only \u2014 the gap is a single day-boundary comparison, not a rolling window. Threshold 0.3% chosen to exclude noise-driven intraday gaps and focus on structurally meaningful overnight repositioning."
     },
     {
       "name": "first_5min_drive",
       "formula": "sign(close_at_09:19:55 - open_at_09:15:00)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "FIXED TIME WINDOW: 09:15-09:20 = exactly 60 bars at 5s frequency. NOT scaled from original 1-min bars — it is the same 5-minute window regardless of bar size. This window captures the resolution of pre-open order book imbalances and confirms whether institutional order flow is aligned with the gap direction."
+      "purpose": "FIXED TIME WINDOW: 09:15-09:20 = exactly 60 bars at 5s frequency. NOT scaled from original 1-min bars \u2014 it is the same 5-minute window regardless of bar size. This window captures the resolution of pre-open order book imbalances and confirms whether institutional order flow is aligned with the gap direction."
     },
     {
       "name": "first_5min_body_ratio",
       "formula": "abs(close_09:19:55 - open_09:15) / (high_first5min - low_first5min + 0.01)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Candle body strength of the first 5-minute window. Ratio >0.55 confirms directional conviction — a doji or spinning top in the first 5 min suggests price discovery is unresolved and the drive thesis is invalid. Replaces the original 'close in upper/lower 25% of range' confirmation."
+      "purpose": "Candle body strength of the first 5-minute window. Ratio >0.55 confirms directional conviction \u2014 a doji or spinning top in the first 5 min suggests price discovery is unresolved and the drive thesis is invalid. Replaces the original 'close in upper/lower 25% of range' confirmation."
     },
     {
       "name": "vol_surge_ratio",
       "formula": "first_5min_total_volume / rolling_5day_avg_first_5min_volume",
       "lookback": 5,
       "computed_on": "spot",
-      "purpose": "5-day rolling average of first-5-min volume as baseline. 5 days chosen as minimum stable baseline — shorter windows are too noisy at the open, longer windows dilute recent structural changes in market participation. Surge ratio >1.5x confirms genuine institutional order flow, not mechanical market-maker hedging."
+      "purpose": "5-day rolling average of first-5-min volume as baseline. 5 days chosen as minimum stable baseline \u2014 shorter windows are too noisy at the open, longer windows dilute recent structural changes in market participation. Surge ratio >1.5x confirms genuine institutional order flow, not mechanical market-maker hedging."
     }
   ],
   "entry": {
@@ -75,40 +84,49 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If a gap-aligned institutional drive reverses 8 spot points within the first 120 seconds, the VWAP/TWAP order flow thesis has failed — algo orders were absorbed or cancelled. NIFTY's typical 30-second range is 2-5 pts; a 4-pt stop allows for normal noise while cutting a genuinely failed drive.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If a gap-aligned institutional drive reverses 8 spot points within the first 120 seconds, the VWAP/TWAP order flow thesis has failed \u2014 algo orders were absorbed or cancelled. NIFTY's typical 30-second range is 2-5 pts; a 4-pt stop allows for normal noise while cutting a genuinely failed drive.",
+    "target_points": 8.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. Opening drive continuations on NIFTY after gap-aligned first-5-min closes historically push 15-25 spot points in the next 60-120 seconds as residual institutional orders execute. 7 pts captures the conservative lower bound of this range at 1:1.75 R:R.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 09:22 IST (1:1.75 R:R or time stop, whichever comes first)"
   },
   "filters": {
-    "vix_filter": "none — VIX level does not materially alter institutional order flow behavior at the open",
+    "vix_filter": "none \u2014 VIX level does not materially alter institutional order flow behavior at the open",
     "time_filter": "signal fires only at time_minutes == 560 (09:20 IST); no re-entries intraday",
     "volume_filter": "first_5min volume > 1.5x rolling 5-day average first-5-min volume",
     "trend_filter": "drive direction must match gap direction (alignment check built into logic)",
-    "spread_filter": "not applicable — limit orders at candle close"
+    "spread_filter": "not applicable \u2014 limit orders at candle close"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.56,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.24,
-    "edge_decay_risk": "low — opening drive dynamics are structural: institutional VWAP algo behavior at market open is consistent across market regimes. Risk is reduced participation on expiry days."
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.55,
+    "edge_decay_risk": "low \u2014 opening drive dynamics are structural: institutional VWAP algo behavior at market open is consistent across market regimes. Risk is reduced participation on expiry days."
   },
-  "adaptation_notes": "Original strategy traded individual NIFTY50 stocks with cross-sectional stock selection and spread filtering. Converted to trade NIFTY index directly: (1) gap_pct now computed on NIFTY index open vs prior day's index close, not individual stocks; (2) first_5min_drive computed on index candle, which is smoother and less gappy than single stocks; (3) volume surge uses rolling 5-day avg of index first-5-min volume (more stable baseline than stock-specific volumes); (4) bar_body_ratio simplified from original's 'close in upper/lower 25% of range' to body/range ratio (equivalent but cleaner for 5-second aggregated window); (5) hold time compressed from 10-40 min to 30-120 seconds — we are not riding the full institutional order completion but only the first momentum burst where unfilled orders create a predictable 30-120 second continuation.",
+  "adaptation_notes": "Original strategy traded individual NIFTY50 stocks with cross-sectional stock selection and spread filtering. Converted to trade NIFTY index directly: (1) gap_pct now computed on NIFTY index open vs prior day's index close, not individual stocks; (2) first_5min_drive computed on index candle, which is smoother and less gappy than single stocks; (3) volume surge uses rolling 5-day avg of index first-5-min volume (more stable baseline than stock-specific volumes); (4) bar_body_ratio simplified from original's 'close in upper/lower 25% of range' to body/range ratio (equivalent but cleaner for 5-second aggregated window); (5) hold time compressed from 10-40 min to 30-120 seconds \u2014 we are not riding the full institutional order completion but only the first momentum burst where unfilled orders create a predictable 30-120 second continuation.",
   "weaknesses": [
-    "Signal fires only once per day — low trade frequency reduces statistical confidence in backtests",
+    "Signal fires only once per day \u2014 low trade frequency reduces statistical confidence in backtests",
     "On expiry days (Thursday for NIFTY), opening drive dynamics can be distorted by hedging unwinds and morning volatility spikes, reducing edge",
     "Gap detection using index open vs prev close can be noisy on days with pre-market futures gyrations that partially normalize before cash open",
-    "Volume surge filter effectiveness depends on having at least 5 prior trading days in the DataFrame — cold-start problem at beginning of backtest window"
+    "Volume surge filter effectiveness depends on having at least 5 prior trading days in the DataFrame \u2014 cold-start problem at beginning of backtest window"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_207.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-40 min",
-    "original_indicators": ["gap_pct", "first_5min_close", "drive_direction", "volume_surge 2x", "bar_body_ratio", "ATR_10", "EMA_5"],
+    "original_indicators": [
+      "gap_pct",
+      "first_5min_close",
+      "drive_direction",
+      "volume_surge 2x",
+      "bar_body_ratio",
+      "ATR_10",
+      "EMA_5"
+    ],
     "original_stop": "0.5 * ATR_10 or reversal to opposite end of first 5-min range",
     "original_target": "0.5% move from entry in drive direction"
-  }
+  },
+  "vix_agnostic": true
 }

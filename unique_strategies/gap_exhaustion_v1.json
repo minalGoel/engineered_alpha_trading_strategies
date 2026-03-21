@@ -2,14 +2,23 @@
   "name": "gap_exhaustion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["gap", "exhaustion", "reversal", "volume_divergence", "opening_session"],
+  "tags": [
+    "gap",
+    "exhaustion",
+    "reversal",
+    "volume_divergence",
+    "opening_session"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_208.json",
   "original_name": "gap_exhaustion_v1",
-  "mechanism": "On NIFTY, gap openings (>0.5%) trigger 10-30 minutes of sustained directional participation — momentum algos, retail FOMO, and index arbitrage all push the index to successive new session extremes. As this absorption process nears completion, each new extreme is made on shrinking 5-second volume: the institutional buyers (gap-up) or sellers (gap-down) have been absorbed and remaining order flow is retail noise. When MFI(3-min) reaches extreme levels (>72 or <28) AND 5-second volume falls below the session average while price is at or near the session extreme, the exhaustion is confirmed. VWAP-benchmarked funds and short-gamma market-makers then initiate counter-trend flow — they are now getting fills significantly better than their benchmark, which accelerates the reversal.",
+  "mechanism": "On NIFTY, gap openings (>0.5%) trigger 10-30 minutes of sustained directional participation \u2014 momentum algos, retail FOMO, and index arbitrage all push the index to successive new session extremes. As this absorption process nears completion, each new extreme is made on shrinking 5-second volume: the institutional buyers (gap-up) or sellers (gap-down) have been absorbed and remaining order flow is retail noise. When MFI(3-min) reaches extreme levels (>72 or <28) AND 5-second volume falls below the session average while price is at or near the session extreme, the exhaustion is confirmed. VWAP-benchmarked funds and short-gamma market-makers then initiate counter-trend flow \u2014 they are now getting fills significantly better than their benchmark, which accelerates the reversal.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-11:00 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "1-3",
   "max_trades_per_day": 3,
@@ -19,7 +28,9 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["prev_day_close derived from day_id boundaries"]
+    "other": [
+      "prev_day_close derived from day_id boundaries"
+    ]
   },
   "indicators": [
     {
@@ -27,14 +38,14 @@
       "formula": "(session_open - prev_day_close) / prev_day_close * 100",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session-level attribute derived from day boundary. No scaling needed — same time concept regardless of bar size."
+      "purpose": "Session-level attribute derived from day boundary. No scaling needed \u2014 same time concept regardless of bar size."
     },
     {
       "name": "session_high / session_low",
       "formula": "running max(high) / min(low) from session open within each day_id",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative measure — tracks the full gap extension from session open. No lookback period; tracks since bar 0 of each day."
+      "purpose": "Cumulative measure \u2014 tracks the full gap extension from session open. No lookback period; tracks since bar 0 of each day."
     },
     {
       "name": "vol_ma_36",
@@ -55,21 +66,21 @@
       "formula": "MFI(high, low, close, volume, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "Money Flow Index over 36 bars (3 minutes). Original used MFI(14) on 1-min bars = 14 minutes. Scaled to 36 bars (3 min) because we trade 15-120s holds — a 14-min MFI on 5s bars would be 168 bars (too slow to respond within the 09:25-11:00 exhaustion window). 3 minutes gives an MFI that reflects the current flow state without lagging behind the exhaustion signal."
+      "purpose": "Money Flow Index over 36 bars (3 minutes). Original used MFI(14) on 1-min bars = 14 minutes. Scaled to 36 bars (3 min) because we trade 15-120s holds \u2014 a 14-min MFI on 5s bars would be 168 bars (too slow to respond within the 09:25-11:00 exhaustion window). 3 minutes gives an MFI that reflects the current flow state without lagging behind the exhaustion signal."
     },
     {
       "name": "rsi_24",
       "formula": "RSI(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "RSI over 24 bars (2 minutes). Original used RSI(10) on 1-min bars = 10 minutes. At 5s resolution, 24 bars (2 min) is the appropriate trigger lookback — it's fast enough to confirm overbought/oversold conditions at the exhaustion point while holding 15-120 seconds. A 10-min RSI at 5s (120 bars) would not distinguish intraday exhaustion from the broader session trend."
+      "purpose": "RSI over 24 bars (2 minutes). Original used RSI(10) on 1-min bars = 10 minutes. At 5s resolution, 24 bars (2 min) is the appropriate trigger lookback \u2014 it's fast enough to confirm overbought/oversold conditions at the exhaustion point while holding 15-120 seconds. A 10-min RSI at 5s (120 bars) would not distinguish intraday exhaustion from the broader session trend."
     },
     {
       "name": "near_extreme",
       "formula": "True if (gap_pct>0 and close >= session_high * (1 - near_pct)) OR (gap_pct<0 and close <= session_low * (1 + near_pct))",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Checks if price is currently at or near the session extreme. Uses a tunable proximity threshold (default 0.12%) because at 5-second bars the exact extreme bar is noisy — the exhaustion pattern spans several bars near the high/low."
+      "purpose": "Checks if price is currently at or near the session extreme. Uses a tunable proximity threshold (default 0.12%) because at 5-second bars the exact extreme bar is noisy \u2014 the exhaustion pattern spans several bars near the high/low."
     }
   ],
   "entry": {
@@ -100,38 +111,44 @@
     "entry_price": "market (limit order at bar close)"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points corresponds to ~8 spot points adverse move at delta 0.5. If NIFTY extends the gap by 8 more spot points after entry, there is fresh buying/selling arriving — the exhaustion thesis is invalid and we exit immediately. NIFTY gap-day extensions rarely exceed 15-20 spot points from the exhaustion entry level if the reversal is genuine.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points corresponds to ~8 spot points adverse move at delta 0.5. If NIFTY extends the gap by 8 more spot points after entry, there is fresh buying/selling arriving \u2014 the exhaustion thesis is invalid and we exit immediately. NIFTY gap-day extensions rarely exceed 15-20 spot points from the exhaustion entry level if the reversal is genuine.",
+    "target_points": 8.0,
     "target_rationale": "7 option points = ~14 spot point reversion at delta 0.5. NIFTY's first reversal leg after gap exhaustion typically spans 15-25 spot points within 30-120 seconds (VWAP algorithms and short-gamma market-makers provide immediate counter-flow). Capturing 14 pts (56-93% of expected move) at 1:1.75 R:R is the appropriate calibration.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 11:00 IST (no new entries after 11:00; open positions closed at 15:25)"
   },
   "filters": {
-    "vix_filter": "India VIX between 12 and 22 — gaps need sufficient volatility to exhaust (VIX>12) but extreme VIX (>22) implies macro panic where gaps can run without exhausting",
-    "time_filter": "09:25-11:00 IST only — before 09:25 the gap extension is still gathering momentum; after 11:00 natural volume decline creates false exhaustion signals indistinguishable from genuine ones",
-    "volume_filter": "vol_ma_6 < vol_ma_36 * vol_ratio — ensures declining volume at extremes, not just random low-volume bars",
+    "vix_filter": "India VIX between 12 and 22 \u2014 gaps need sufficient volatility to exhaust (VIX>12) but extreme VIX (>22) implies macro panic where gaps can run without exhausting",
+    "time_filter": "09:25-11:00 IST only \u2014 before 09:25 the gap extension is still gathering momentum; after 11:00 natural volume decline creates false exhaustion signals indistinguishable from genuine ones",
+    "volume_filter": "vol_ma_6 < vol_ma_36 * vol_ratio \u2014 ensures declining volume at extremes, not just random low-volume bars",
     "trend_filter": "gap_pct threshold (default 0.5%) ensures only meaningful gaps are traded; micro-gaps of 0.1-0.3% lack the momentum-exhaustion dynamic",
-    "spread_filter": "none — limit order execution at candle close prices"
+    "spread_filter": "none \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 28,
     "win_rate_estimate": 0.57,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.33,
-    "edge_decay_risk": "moderate — if index structure changes (e.g., circuit breakers, SEBI gap rules), the exhaustion timing shifts. Also degrades if too many participants adopt the same exhaustion detection logic."
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.65,
+    "edge_decay_risk": "moderate \u2014 if index structure changes (e.g., circuit breakers, SEBI gap rules), the exhaustion timing shifts. Also degrades if too many participants adopt the same exhaustion detection logic."
   },
-  "adaptation_notes": "Original strategy traded individual NIFTY50 constituent stocks (universe of equities). For index adaptation: (1) Universe collapses from 50 stocks to single NIFTY index — gap_pct now measured on the index itself, not per-stock; (2) Volume-at-extreme tracking simplified from 'track volume at each exact new-extreme bar' to 'compare rolling 30s volume to 3-min baseline while near session extreme' — this is more robust at 5-second index frequency where individual bar volumes are noisy; (3) MFI period scaled from 14-min (MFI14 on 1-min bars) to 3-min (MFI36 on 5s bars) because we hold 15-120s and need responsive signals; (4) RSI period scaled from 10-min to 2-min for same reason; (5) Session window compressed to 09:25-11:00 from 09:30-11:00 (no meaningfully different) — original 09:30 start kept in spirit; (6) MFI/RSI thresholds loosened slightly (original: MFI<25, RSI unspecified; converted: MFI<28/MFI>72) to account for index being smoother than individual stocks.",
+  "adaptation_notes": "Original strategy traded individual NIFTY50 constituent stocks (universe of equities). For index adaptation: (1) Universe collapses from 50 stocks to single NIFTY index \u2014 gap_pct now measured on the index itself, not per-stock; (2) Volume-at-extreme tracking simplified from 'track volume at each exact new-extreme bar' to 'compare rolling 30s volume to 3-min baseline while near session extreme' \u2014 this is more robust at 5-second index frequency where individual bar volumes are noisy; (3) MFI period scaled from 14-min (MFI14 on 1-min bars) to 3-min (MFI36 on 5s bars) because we hold 15-120s and need responsive signals; (4) RSI period scaled from 10-min to 2-min for same reason; (5) Session window compressed to 09:25-11:00 from 09:30-11:00 (no meaningfully different) \u2014 original 09:30 start kept in spirit; (6) MFI/RSI thresholds loosened slightly (original: MFI<25, RSI unspecified; converted: MFI<28/MFI>72) to account for index being smoother than individual stocks.",
   "weaknesses": [
-    "On macro event days (RBI rate decision, budget, election results), NIFTY gaps can run for 1-2 hours without exhausting — the first apparent exhaustion signal at 09:45 leads into a continuation move",
+    "On macro event days (RBI rate decision, budget, election results), NIFTY gaps can run for 1-2 hours without exhausting \u2014 the first apparent exhaustion signal at 09:45 leads into a continuation move",
     "5-second volume on NIFTY index is noisy; vol_ma_6 (30s window) can spuriously dip below vol_ma_36 during brief algo pauses even on strong trend days",
-    "Strategy fires only on gap days with gap > 0.5% — this is perhaps 25-40% of trading days, limiting the number of signals per month"
+    "Strategy fires only on gap days with gap > 0.5% \u2014 this is perhaps 25-40% of trading days, limiting the number of signals per month"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_208.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-90 mins",
-    "original_indicators": ["exhaustion_count (new extremes on declining volume)", "RSI(10)", "MFI(14)", "ATR(14)", "session VWAP"],
+    "original_indicators": [
+      "exhaustion_count (new extremes on declining volume)",
+      "RSI(10)",
+      "MFI(14)",
+      "ATR(14)",
+      "session VWAP"
+    ],
     "original_stop": "0.4 * ATR_14 OR 0.15% price extension",
     "original_target": "session VWAP OR 60% of gap-to-extreme range"
   }

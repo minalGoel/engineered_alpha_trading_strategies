@@ -19,7 +19,7 @@ class Strategy(BaseStrategy):
     underlying = "NIFTY"
     session_start_minutes = 560   # 09:20 IST
     session_end_minutes = 920     # 15:20 IST
-    max_trades_per_day = 8
+    max_trades_per_day = 10
     max_lookback = 48             # 4 min warmup (covers 36-bar trend window + 2 bars for pattern)
 
     def tunable_params(self) -> list[TunableParam]:

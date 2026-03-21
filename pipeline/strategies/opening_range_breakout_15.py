@@ -39,7 +39,7 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("volume_ratio_threshold", 1.5, 1.0, 3.0),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 15.0),
+            TunableParam("target_pts", 8.0, 4.0, 15.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -60,7 +60,7 @@ class Strategy(BaseStrategy):
 
         vol_ratio_thresh = params.get("volume_ratio_threshold", 1.5)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # --- Compute ORB high/low per day (09:15-09:30 = time_minutes 555-569) ---
         # Fixed time window — 180 bars at 5s = exactly 15 calendar minutes.

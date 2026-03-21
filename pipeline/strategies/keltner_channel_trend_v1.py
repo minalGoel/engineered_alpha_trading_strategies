@@ -135,8 +135,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("adx_threshold", 22.0, 15.0, 35.0),
             TunableParam("kc_multiplier", 2.0, 1.5, 3.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -152,8 +152,8 @@ class Strategy(BaseStrategy):
 
         adx_threshold = params.get("adx_threshold", 22.0)
         kc_mult = params.get("kc_multiplier", 2.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Keltner Channel (5-min EMA + 5-min ATR) ──
         kc_mid = _ema(close, 60)

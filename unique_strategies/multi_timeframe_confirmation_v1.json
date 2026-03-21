@@ -2,20 +2,26 @@
   "name": "multi_timeframe_confirmation_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["multi_timeframe", "trend_following", "pullback_entry", "ema_crossover", "rsi"],
+  "tags": [
+    "multi_timeframe",
+    "trend_following",
+    "pullback_entry",
+    "ema_crossover",
+    "rsi"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_62.json",
   "original_name": "multi_timeframe_confirmation_v1",
-
-  "mechanism": "On NIFTY, large institutional directional orders (FII/DII TWAP programs) sustain price above both the 5-minute and 15-minute EMA throughout the execution window — visible as EMA(60) > EMA(180) alignment at 5-second bars. Within these institutional trends, retail stop-loss cascades and counter-trend scalpers create 30-90 second micro-pullbacks that temporarily drive the 1-minute RSI below 30. At the moment RSI crosses back above the oversold threshold, the counter-trend flow is exhausted and the institutional bid reasserts. At 5-second resolution we can detect this RSI crossing in real time and enter before the first 5-10 spot points of trend resumption — the original 1-minute bars could only confirm the pullback was ending after it had already run half its course.",
-
+  "mechanism": "On NIFTY, large institutional directional orders (FII/DII TWAP programs) sustain price above both the 5-minute and 15-minute EMA throughout the execution window \u2014 visible as EMA(60) > EMA(180) alignment at 5-second bars. Within these institutional trends, retail stop-loss cascades and counter-trend scalpers create 30-90 second micro-pullbacks that temporarily drive the 1-minute RSI below 30. At the moment RSI crosses back above the oversold threshold, the counter-trend flow is exhausted and the institutional bid reasserts. At 5-second resolution we can detect this RSI crossing in real time and enter before the first 5-10 spot points of trend resumption \u2014 the original 1-minute bars could only confirm the pullback was ending after it had already run half its course.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
-
   "data": {
     "ohlcv_5s": true,
     "option_chain": true,
@@ -24,44 +30,42 @@
     "order_book": false,
     "other": []
   },
-
   "indicators": [
     {
       "name": "ema_60",
       "formula": "EMA(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute fast EMA — context filter for 5-min institutional trend direction. NOT a 12x blind scaling of the original EMA_9_5min; instead we preserve the same 5-minute TIME window since that is the relevant order flow accumulation window for institutional TWAP programs. 60 bars × 5s = exactly 5 min."
+      "purpose": "5-minute fast EMA \u2014 context filter for 5-min institutional trend direction. NOT a 12x blind scaling of the original EMA_9_5min; instead we preserve the same 5-minute TIME window since that is the relevant order flow accumulation window for institutional TWAP programs. 60 bars \u00d7 5s = exactly 5 min."
     },
     {
       "name": "ema_180",
       "formula": "EMA(close, 180)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "15-minute slow EMA — dominant trend context filter. NOT 12x of the original EMA_21_5min (which would give 252 bars = 21 min). Chosen as 15 min (180 bars) to give a 3:1 ratio with the fast EMA (same directional logic as 9:21 = ~2.3x in the original but rounded to a cleaner 15-min window). Context filters can use longer lookbacks — this is NOT a trade trigger."
+      "purpose": "15-minute slow EMA \u2014 dominant trend context filter. NOT 12x of the original EMA_21_5min (which would give 252 bars = 21 min). Chosen as 15 min (180 bars) to give a 3:1 ratio with the fast EMA (same directional logic as 9:21 = ~2.3x in the original but rounded to a cleaner 15-min window). Context filters can use longer lookbacks \u2014 this is NOT a trade trigger."
     },
     {
       "name": "rsi_12",
       "formula": "RSI(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute RSI for micro-pullback detection — trade trigger. 12 bars × 5s = 60s = exactly 1 minute. The original used RSI(7) on 1-min bars to detect 7-minute pullback cycles. We use RSI(12) at 5-second bars because we want to detect the SAME 1-minute pullback pattern (not a 7-minute one). 7 × 12 = 84 bars would capture 7-minute cycles — far too long for a 15-90 second hold. RSI(12) at 5s detects the exact 1-min oscillation that represents the micro-pullback within the 5-min trend."
+      "purpose": "1-minute RSI for micro-pullback detection \u2014 trade trigger. 12 bars \u00d7 5s = 60s = exactly 1 minute. The original used RSI(7) on 1-min bars to detect 7-minute pullback cycles. We use RSI(12) at 5-second bars because we want to detect the SAME 1-minute pullback pattern (not a 7-minute one). 7 \u00d7 12 = 84 bars would capture 7-minute cycles \u2014 far too long for a 15-90 second hold. RSI(12) at 5s detects the exact 1-min oscillation that represents the micro-pullback within the 5-min trend."
     },
     {
       "name": "vwap",
       "formula": "VWAP(close, volume, session_open)",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session cumulative VWAP — directional confirmation filter. Cumulative from session open; no time-scaling needed. VWAP acts as the institutional participation benchmark: if close > VWAP and EMA trend is up, institutional flow dominates the buy side, confirming the RSI pullback is a dip-to-buy rather than a trend reversal."
+      "purpose": "Session cumulative VWAP \u2014 directional confirmation filter. Cumulative from session open; no time-scaling needed. VWAP acts as the institutional participation benchmark: if close > VWAP and EMA trend is up, institutional flow dominates the buy side, confirming the RSI pullback is a dip-to-buy rather than a trend reversal."
     }
   ],
-
   "entry": {
     "buy_ce": {
       "conditions": [
         "ema_60 > ema_180 (5-min EMA uptrend confirmed)",
         "rsi_12 crosses from below 30 to above 30 (1-min micro-pullback ending, confirmation bar)",
-        "close > vwap (price above institutional benchmark — institutional buy side dominant)"
+        "close > vwap (price above institutional benchmark \u2014 institutional buy side dominant)"
       ],
       "confirmation": "RSI(12) crossing above oversold threshold on the signal bar itself"
     },
@@ -69,54 +73,55 @@
       "conditions": [
         "ema_60 < ema_180 (5-min EMA downtrend confirmed)",
         "rsi_12 crosses from above 70 to below 70 (1-min micro-rally exhaustion, confirmation bar)",
-        "close < vwap (price below institutional benchmark — institutional sell side dominant)"
+        "close < vwap (price below institutional benchmark \u2014 institutional sell side dominant)"
       ],
       "confirmation": "RSI(12) crossing below overbought threshold on the signal bar itself"
     },
     "entry_price": "limit at candle close"
   },
-
   "exit": {
     "stop_points": 3,
-    "stop_rationale": "3 option pts because a valid micro-pullback entry in a 5-min NIFTY uptrend should not retrace more than 6 spot points after RSI crosses back up (3 pts at delta ~0.5). If it does, the micro-pullback is continuing into a deeper reversal of the 5-min trend — the thesis is wrong. This is the tightest calibration for the 15-30s expected hold at 3-bar timescale (NIFTY typical: 1-3 pts in 15s).",
+    "stop_rationale": "3 option pts because a valid micro-pullback entry in a 5-min NIFTY uptrend should not retrace more than 6 spot points after RSI crosses back up (3 pts at delta ~0.5). If it does, the micro-pullback is continuing into a deeper reversal of the 5-min trend \u2014 the thesis is wrong. This is the tightest calibration for the 15-30s expected hold at 3-bar timescale (NIFTY typical: 1-3 pts in 15s).",
     "target_points": 5,
     "target_rationale": "5 option pts = ~10 spot points. A micro-trend resumption after RSI oversold recovery in a confirmed 5-min NIFTY uptrend typically extends 10-20 spot points within the next 30-90 seconds. Targeting the lower end (10 pts = 5 option pts at delta 0.5) gives 1:1.67 R:R with high probability of being hit within the 90-second max hold. Calibrated against typical 1-minute NIFTY move of 3-7 pts.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
-
   "filters": {
-    "vix_filter": "none — strategy trades the index trend direction which is defined at all VIX levels; RSI extremes naturally compress in trending high-VIX environments providing a natural self-filter",
+    "vix_filter": "none \u2014 strategy trades the index trend direction which is defined at all VIX levels; RSI extremes naturally compress in trending high-VIX environments providing a natural self-filter",
     "time_filter": "09:25-15:20 IST (skip first 10 min for EMA warmup; no late-day choppy close)",
-    "volume_filter": "none — index volume is noisy at 5s; RSI level already filters low-momentum bars",
+    "volume_filter": "none \u2014 index volume is noisy at 5s; RSI level already filters low-momentum bars",
     "trend_filter": "EMA_60 vs EMA_180 crossover is the primary trend filter",
-    "spread_filter": "none — limit order execution at candle close prices; no spread cost in model"
+    "spread_filter": "none \u2014 limit order execution at candle close prices; no spread cost in model"
   },
-
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.67,
-    "profit_factor_estimate": 1.51,
-    "edge_decay_risk": "low — multi-timeframe EMA alignment reflects genuine institutional order flow persistence; RSI crossing logic is robust and self-adaptive to session volatility"
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low \u2014 multi-timeframe EMA alignment reflects genuine institutional order flow persistence; RSI crossing logic is robust and self-adaptive to session volatility"
   },
-
-  "adaptation_notes": "Key changes from original: (1) Stock universe → single NIFTY index: original traded top-30 FnO stocks; we trade NIFTY which is smoother, more liquid, and driven by institutional flow rather than per-stock events. (2) Timeframe compression: EMA lookbacks changed from 9/21 on 5-min bars (45/105 min) to 60/180 bars at 5s (5/15 min) — NOT 12x scaling but explicit time-window matching. (3) Entry trigger RSI: original used RSI(7) on 1-min bars; we use RSI(12) on 5s bars to capture the SAME 1-minute pullback cycle, not a 7-minute one. (4) Removed trailing stop and signal exit — too complex for 15-90 second holds. (5) ATR-based stops replaced with fixed option premium points calibrated to NIFTY's typical micro-move magnitudes. (6) Removed stock-specific filters (earnings filter, spread filter based on equity bid-ask).",
-
+  "adaptation_notes": "Key changes from original: (1) Stock universe \u2192 single NIFTY index: original traded top-30 FnO stocks; we trade NIFTY which is smoother, more liquid, and driven by institutional flow rather than per-stock events. (2) Timeframe compression: EMA lookbacks changed from 9/21 on 5-min bars (45/105 min) to 60/180 bars at 5s (5/15 min) \u2014 NOT 12x scaling but explicit time-window matching. (3) Entry trigger RSI: original used RSI(7) on 1-min bars; we use RSI(12) on 5s bars to capture the SAME 1-minute pullback cycle, not a 7-minute one. (4) Removed trailing stop and signal exit \u2014 too complex for 15-90 second holds. (5) ATR-based stops replaced with fixed option premium points calibrated to NIFTY's typical micro-move magnitudes. (6) Removed stock-specific filters (earnings filter, spread filter based on equity bid-ask).",
   "weaknesses": [
-    "5-min EMA lag: by the time EMA(60) > EMA(180) on NIFTY, the first 5-min trend leg may be mostly done — entering on the 2nd pullback instead of the 1st",
+    "5-min EMA lag: by the time EMA(60) > EMA(180) on NIFTY, the first 5-min trend leg may be mostly done \u2014 entering on the 2nd pullback instead of the 1st",
     "RSI(12) at 5s can spike below 30 even in strong uptrends on a single large candle, creating false pullback signals",
     "VWAP confirmation adds a filter that disqualifies early-session entries when price has not yet moved relative to VWAP",
-    "Strategy does not fire in range-bound sessions where EMA crossover never develops — 3-4 days/month may produce zero signals",
+    "Strategy does not fire in range-bound sessions where EMA crossover never develops \u2014 3-4 days/month may produce zero signals",
     "At 5-second resolution, RSI crossing logic fires on very short bursts that may reverse within 1-2 bars; position management relies entirely on the time stop"
   ],
-
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_62.json",
     "original_timeframe": "1-min bars with 5-min context",
     "original_hold_time": "10-45 bars (10-45 min at 1-min resolution)",
-    "original_indicators": ["EMA_9_5min", "EMA_21_5min", "RSI_7_1min", "VWAP", "ATR_20"],
-    "original_stop": "1.0 × ATR(20) from entry",
-    "original_target": "1.5 × ATR(20) from entry"
-  }
+    "original_indicators": [
+      "EMA_9_5min",
+      "EMA_21_5min",
+      "RSI_7_1min",
+      "VWAP",
+      "ATR_20"
+    ],
+    "original_stop": "1.0 \u00d7 ATR(20) from entry",
+    "original_target": "1.5 \u00d7 ATR(20) from entry"
+  },
+  "vix_agnostic": true
 }

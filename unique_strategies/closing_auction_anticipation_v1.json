@@ -2,14 +2,22 @@
   "name": "closing_auction_anticipation_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["time_of_day", "closing_auction", "microstructure", "momentum"],
+  "tags": [
+    "time_of_day",
+    "closing_auction",
+    "microstructure",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_52.json",
   "original_name": "closing_auction_anticipation_v1",
-  "mechanism": "On NIFTY, the 15:00-15:20 window concentrates institutional closing flow — index fund rebalancers matching NAV benchmarks, FII basket orders, and algorithmic TWAP executors finishing daily programs all lean in the same direction that the index has been trending over the prior 30 minutes. When NIFTY has moved more than 0.15% over the prior 30 minutes with volume accelerating into 15:00, these closing orders reinforce the directional bias and create a sharp 12-20 spot-point burst in the first 60-120 seconds. At 5-second resolution we enter at the first 15:00 bar and exit within 2 minutes — capturing only the initial surge of closing flow before the order book becomes diffuse near 15:20.",
+  "mechanism": "On NIFTY, the 15:00-15:20 window concentrates institutional closing flow \u2014 index fund rebalancers matching NAV benchmarks, FII basket orders, and algorithmic TWAP executors finishing daily programs all lean in the same direction that the index has been trending over the prior 30 minutes. When NIFTY has moved more than 0.15% over the prior 30 minutes with volume accelerating into 15:00, these closing orders reinforce the directional bias and create a sharp 12-20 spot-point burst in the first 60-120 seconds. At 5-second resolution we enter at the first 15:00 bar and exit within 2 minutes \u2014 capturing only the initial surge of closing flow before the order book becomes diffuse near 15:20.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "15:00-15:20 IST (entry window only)",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "0-3",
   "max_trades_per_day": 3,
@@ -27,21 +35,21 @@
       "formula": "(close - close[360]) / close[360]",
       "lookback": 360,
       "computed_on": "spot",
-      "purpose": "30-minute NIFTY return (360 × 5s = 30 min). This is the SAME time window as the original (30 min) — not 12x scaled, because the original's 30-min lookback is a FIXED TIME WINDOW capturing the institutional accumulation phase before close. 360 bars at 5s represents exactly that same 30-minute trend. Threshold 0.15% maps directly from the original's 0.15% threshold."
+      "purpose": "30-minute NIFTY return (360 \u00d7 5s = 30 min). This is the SAME time window as the original (30 min) \u2014 not 12x scaled, because the original's 30-min lookback is a FIXED TIME WINDOW capturing the institutional accumulation phase before close. 360 bars at 5s represents exactly that same 30-minute trend. Threshold 0.15% maps directly from the original's 0.15% threshold."
     },
     {
       "name": "vwap_session",
       "formula": "cumsum(close * volume) / cumsum(volume) per day",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP from 09:15. Cumulative measure — no scaling. If NIFTY close > VWAP at 15:00, institutional buyers have been net accumulators all day and closing rebalancing will likely add to that directional lean."
+      "purpose": "Session VWAP from 09:15. Cumulative measure \u2014 no scaling. If NIFTY close > VWAP at 15:00, institutional buyers have been net accumulators all day and closing rebalancing will likely add to that directional lean."
     },
     {
       "name": "volume_ratio_30s_5min",
       "formula": "SMA(volume, 6) / SMA(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Volume in last 30s (6 bars) vs last 5 min (60 bars). Original used SMA(vol,5)/SMA(vol,30) on 1-min bars = last 5 min vs last 30 min. We compress this to 30s/5min because at 5-second entry we want to detect the immediate order flow surge at 15:00, not the gradual buildup over 30 minutes — the gradual buildup is already captured by return_360."
+      "purpose": "Volume in last 30s (6 bars) vs last 5 min (60 bars). Original used SMA(vol,5)/SMA(vol,30) on 1-min bars = last 5 min vs last 30 min. We compress this to 30s/5min because at 5-second entry we want to detect the immediate order flow surge at 15:00, not the gradual buildup over 30 minutes \u2014 the gradual buildup is already captured by return_360."
     }
   ],
   "entry": {
@@ -49,8 +57,8 @@
       "conditions": [
         "time_minutes >= 900 (15:00 IST) AND time_minutes < 920 (15:20 IST)",
         "return_360 > trend_threshold (default 0.0015, i.e., +0.15% over 30 min)",
-        "close > vwap_session (NIFTY above session VWAP — bulls controlled the day)",
-        "volume_ratio_30s_5min > volume_ratio_threshold (default 1.3 — closing flow beginning)"
+        "close > vwap_session (NIFTY above session VWAP \u2014 bulls controlled the day)",
+        "volume_ratio_30s_5min > volume_ratio_threshold (default 1.3 \u2014 closing flow beginning)"
       ],
       "confirmation": "All three conditions must hold simultaneously on the same 5s bar"
     },
@@ -58,7 +66,7 @@
       "conditions": [
         "time_minutes >= 900 AND time_minutes < 920",
         "return_360 < -trend_threshold (NIFTY down 0.15%+ over 30 min)",
-        "close < vwap_session (NIFTY below session VWAP — bears controlled the day)",
+        "close < vwap_session (NIFTY below session VWAP \u2014 bears controlled the day)",
         "volume_ratio_30s_5min > volume_ratio_threshold"
       ],
       "confirmation": "All three conditions must hold simultaneously on the same 5s bar"
@@ -66,31 +74,31 @@
     "entry_price": "limit at candle close"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 5.0,
     "stop_rationale": "4 option pts = ~8 NIFTY spot pts. If closing institutional flow reverses within 30 seconds of entry, the directional thesis is broken. NIFTY 1-min typical move is 3-7 option pts; a 4-pt adverse move means the closing order flow leaned against us, not with us.",
-    "target_points": 7,
+    "target_points": 8.0,
     "target_rationale": "7 option pts = ~14 NIFTY spot pts. The first 60-120 second closing momentum burst on a confirmed 30-min trend day typically moves NIFTY 12-20 spot points. Targeting 7 option pts captures ~50-60% of the median burst (1:1.75 R:R), exiting before the flow becomes diffuse.",
     "time_stop_bars": 24,
-    "eod_rule": "flatten at 15:25 (925 min) — never carry into the actual 15:30 auction"
+    "eod_rule": "flatten at 15:25 (925 min) \u2014 never carry into the actual 15:30 auction"
   },
   "filters": {
-    "vix_filter": "none — closing auction momentum is a structural flow phenomenon, not VIX-regime dependent",
+    "vix_filter": "none \u2014 closing auction momentum is a structural flow phenomenon, not VIX-regime dependent",
     "time_filter": "entry only 15:00-15:20; strategy is inactive outside this window",
-    "volume_filter": "volume_ratio_30s_5min > 1.3 — require accelerating volume confirming institutional order arrival",
+    "volume_filter": "volume_ratio_30s_5min > 1.3 \u2014 require accelerating volume confirming institutional order arrival",
     "trend_filter": "return_360 > 0.15% magnitude AND close vs session VWAP alignment",
-    "spread_filter": "none — limit orders at candle close, no spread cost",
+    "spread_filter": "none \u2014 limit orders at candle close, no spread cost",
     "event_filter": "expiry day behavior may differ but not explicitly excluded in this version"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.55,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.35,
-    "edge_decay_risk": "low — closing auction structural flow from index fund rebalancing is a regulatory/structural feature of NSE, unlikely to disappear"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low \u2014 closing auction structural flow from index fund rebalancing is a regulatory/structural feature of NSE, unlikely to disappear"
   },
-  "adaptation_notes": "Original is a stock-universe strategy on Nifty50 constituents. Converted to NIFTY index because the closing auction effect is DRIVEN BY index fund rebalancing — the same institutional flow that moves individual stocks moves the NIFTY index. Key changes: (1) Universe: individual stocks → NIFTY index directly. (2) Hold time: 15-29 minutes → 15-120 seconds. We capture only the FIRST BURST of closing flow, not the full ride to auction. The original holds through the entire 15:00-15:29 window; we exit within 2 minutes because at 5s resolution we can pinpoint the surge entry. (3) Volume indicator: original used SMA(vol,5)/SMA(vol,30) on 1-min to detect 5-min vs 30-min acceleration; we compress to last-30s vs last-5-min because the acceleration we need at 5s entry is the immediate closing order arrival, not the gradual daily buildup. (4) Return lookback: kept at exactly 30 minutes (360 bars) — NOT scaled by 12x — because 30 minutes is the original's explicit time window, not an indicator period to scale.",
+  "adaptation_notes": "Original is a stock-universe strategy on Nifty50 constituents. Converted to NIFTY index because the closing auction effect is DRIVEN BY index fund rebalancing \u2014 the same institutional flow that moves individual stocks moves the NIFTY index. Key changes: (1) Universe: individual stocks \u2192 NIFTY index directly. (2) Hold time: 15-29 minutes \u2192 15-120 seconds. We capture only the FIRST BURST of closing flow, not the full ride to auction. The original holds through the entire 15:00-15:29 window; we exit within 2 minutes because at 5s resolution we can pinpoint the surge entry. (3) Volume indicator: original used SMA(vol,5)/SMA(vol,30) on 1-min to detect 5-min vs 30-min acceleration; we compress to last-30s vs last-5-min because the acceleration we need at 5s entry is the immediate closing order arrival, not the gradual daily buildup. (4) Return lookback: kept at exactly 30 minutes (360 bars) \u2014 NOT scaled by 12x \u2014 because 30 minutes is the original's explicit time window, not an indicator period to scale.",
   "weaknesses": [
-    "Very narrow entry window (15:00-15:20) — 0-3 trades per day maximum; strategy is idle 95%+ of session",
+    "Very narrow entry window (15:00-15:20) \u2014 0-3 trades per day maximum; strategy is idle 95%+ of session",
     "Closing flow direction can be overwhelmed by late news or FII selling after 15:00",
     "Strong trending days see the momentum already priced in before 15:00; thin return threshold may generate false signals on flat days",
     "2-minute max hold may cut winners short on strong closing flow days where the move extends 5+ minutes"
@@ -99,8 +107,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_52.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-29 bars (15-29 min)",
-    "original_indicators": ["return_last_30 (30-bar return)", "vwap_dist_pct", "volume_accel (SMA5/SMA30)", "atr_20"],
+    "original_indicators": [
+      "return_last_30 (30-bar return)",
+      "vwap_dist_pct",
+      "volume_accel (SMA5/SMA30)",
+      "atr_20"
+    ],
     "original_stop": "0.25% against entry",
     "original_target": "hold until 15:29 (time-based)"
-  }
+  },
+  "vix_agnostic": true
 }

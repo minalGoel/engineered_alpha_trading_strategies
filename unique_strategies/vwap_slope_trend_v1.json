@@ -2,14 +2,23 @@
   "name": "vwap_slope_trend_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["vwap", "slope", "trend-following", "institutional-flow", "directional"],
+  "tags": [
+    "vwap",
+    "slope",
+    "trend-following",
+    "institutional-flow",
+    "directional"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_143.json",
   "original_name": "vwap_slope_trend_v1",
-  "mechanism": "On NIFTY, large institutional TWAP and VWAP execution algorithms are benchmarked against session VWAP — when they need to buy, they systematically lift offers at progressively higher prices, causing the VWAP slope to rise. At 5-second resolution, the 3-minute VWAP slope (linreg over 36 bars) captures this institutional directional pressure before it fully manifests in price. When the 1-minute slope (12 bars) exceeds the 3-minute slope, it signals that institutional demand is accelerating, not plateauing — the executing TWAP order has not finished and the remaining flow will push NIFTY spot another 10-20 points in the same direction. This acceleration window is the entry trigger: buy CE when slope is positive and building, buy PE when slope is negative and deepening, holding for the next 60-90 seconds while institutional execution continues.",
+  "mechanism": "On NIFTY, large institutional TWAP and VWAP execution algorithms are benchmarked against session VWAP \u2014 when they need to buy, they systematically lift offers at progressively higher prices, causing the VWAP slope to rise. At 5-second resolution, the 3-minute VWAP slope (linreg over 36 bars) captures this institutional directional pressure before it fully manifests in price. When the 1-minute slope (12 bars) exceeds the 3-minute slope, it signals that institutional demand is accelerating, not plateauing \u2014 the executing TWAP order has not finished and the remaining flow will push NIFTY spot another 10-20 points in the same direction. This acceleration window is the entry trigger: buy CE when slope is positive and building, buy PE when slope is negative and deepening, holding for the next 60-90 seconds while institutional execution continues.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -25,37 +34,37 @@
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP — the institutional benchmark. No scaling needed; it's a full-session cumulative measure."
+      "purpose": "Cumulative VWAP \u2014 the institutional benchmark. No scaling needed; it's a full-session cumulative measure."
     },
     {
       "name": "vwap_slope_36",
       "formula": "linreg_slope(vwap, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute VWAP slope — primary directional signal. Original used 20 bars at 1-min (20 min). We do NOT use 12x (240 bars = 20 min) because we're trading 30-90s holds. A 3-minute slope detects the institutional order being executed NOW, not a trend from an hour ago. Shorter = more responsive to active flow; longer = too lagged for 30s entries."
+      "purpose": "3-minute VWAP slope \u2014 primary directional signal. Original used 20 bars at 1-min (20 min). We do NOT use 12x (240 bars = 20 min) because we're trading 30-90s holds. A 3-minute slope detects the institutional order being executed NOW, not a trend from an hour ago. Shorter = more responsive to active flow; longer = too lagged for 30s entries."
     },
     {
       "name": "vwap_slope_12",
       "formula": "linreg_slope(vwap, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute VWAP slope — acceleration detector. When slope_12 > slope_36, institutional buying is ramping up (algorithm is behind schedule and increasing urgency). This is the key condition distinguishing a trend beginning from one topping out. Not in the original, added because 5s bars let us detect acceleration within the 3-min trend."
+      "purpose": "1-minute VWAP slope \u2014 acceleration detector. When slope_12 > slope_36, institutional buying is ramping up (algorithm is behind schedule and increasing urgency). This is the key condition distinguishing a trend beginning from one topping out. Not in the original, added because 5s bars let us detect acceleration within the 3-min trend."
     },
     {
       "name": "slope_ma_18",
       "formula": "SMA(vwap_slope_36, 18)",
       "lookback": 18,
       "computed_on": "spot",
-      "purpose": "90-second SMA of the 3-min slope — ensures the slope itself is building, not reverting. Original had vwap_slope_ma over 10 bars (10 min). Scaled to 18 bars (90s) to match our faster trade timescale. Filters entries where slope is present but decaying."
+      "purpose": "90-second SMA of the 3-min slope \u2014 ensures the slope itself is building, not reverting. Original had vwap_slope_ma over 10 bars (10 min). Scaled to 18 bars (90s) to match our faster trade timescale. Filters entries where slope is present but decaying."
     },
     {
       "name": "ema_36",
       "formula": "EMA(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute EMA — confirms price in short-term uptrend. Original used EMA(9) on 1-min bars (9 min). We use 36 bars (3 min) rather than 108 bars (9x12) because for a 30-90s trade, price must be above the 3-min EMA to confirm trend; the 9-min EMA would be too slow to add information beyond VWAP itself."
+      "purpose": "3-minute EMA \u2014 confirms price in short-term uptrend. Original used EMA(9) on 1-min bars (9 min). We use 36 bars (3 min) rather than 108 bars (9x12) because for a 30-90s trade, price must be above the 3-min EMA to confirm trend; the 9-min EMA would be too slow to add information beyond VWAP itself."
     }
   ],
   "entry": {
@@ -82,30 +91,30 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points. When VWAP slope is positive and accelerating, the index should not retrace 8 spot points within the first 30 seconds; if it does, the institutional flow thesis is invalidated. NIFTY 30s typical move is 2-5 option points — a 4-point adverse move indicates the signal was wrong, not normal noise.",
-    "target_points": 7,
-    "target_rationale": "7 option points = ~14 NIFTY spot points. Institutional TWAP continuations on NIFTY driven by active slope-positive flow typically extend 15-25 spot points within 60-90 seconds. 7 option points captures ~50-60% of the expected move at delta 0.5, with 1:1.75 R:R. NIFTY 1-min typical move is 3-7 option points — 7 is the upper end, appropriate for a trend-confirmed signal.",
+    "stop_points": 5.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points. When VWAP slope is positive and accelerating, the index should not retrace 8 spot points within the first 30 seconds; if it does, the institutional flow thesis is invalidated. NIFTY 30s typical move is 2-5 option points \u2014 a 4-point adverse move indicates the signal was wrong, not normal noise.",
+    "target_points": 8.0,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. Institutional TWAP continuations on NIFTY driven by active slope-positive flow typically extend 15-25 spot points within 60-90 seconds. 7 option points captures ~50-60% of the expected move at delta 0.5, with 1:1.75 R:R. NIFTY 1-min typical move is 3-7 option points \u2014 7 is the upper end, appropriate for a trend-confirmed signal.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — VWAP slope trend works across volatility regimes as it captures active order flow",
+    "vix_filter": "none \u2014 VWAP slope trend works across volatility regimes as it captures active order flow",
     "time_filter": "no entries before 09:25 (VWAP slope needs 5 min of data to stabilize) or after 15:20",
-    "volume_filter": "implicit — VWAP is volume-weighted, so slope is naturally stronger when volume is higher",
+    "volume_filter": "implicit \u2014 VWAP is volume-weighted, so slope is naturally stronger when volume is higher",
     "trend_filter": "vwap_slope_36 > slope_ma_18 ensures slope is building, filtering decaying trends",
-    "spread_filter": "none — limit order execution at candle close"
+    "spread_filter": "none \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.05,
-    "edge_decay_risk": "moderate — VWAP slope analysis is proprietary but computable; edge persists while institutional TWAP algorithms remain dominant on NIFTY"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "moderate \u2014 VWAP slope analysis is proprietary but computable; edge persists while institutional TWAP algorithms remain dominant on NIFTY"
   },
-  "adaptation_notes": "Original was a 20-60 minute equity strategy on NIFTY200 stocks using 1-min bars. Key changes: (1) Universe from equity stocks to NIFTY index — the thesis actually strengthens because NIFTY is dominated by institutional TWAP/VWAP flow, not retail; (2) Lookback compressed from 20 bars (20 min) to 36 bars (3 min) because we trade 30-90s holds, not 20-60 min — we want the slope of the currently-executing order, not a historical trend; (3) Added slope_12 acceleration condition — at 5s resolution we can distinguish an accelerating slope from a flattening one, which 1-min bars cannot; (4) Dropped ADX — irrelevant at 5s frequency, replaced by slope-vs-slope-MA filter which directly tests whether the trend signal is building; (5) Stops/targets calibrated to 5s NIFTY option point magnitudes rather than percentage-based.",
+  "adaptation_notes": "Original was a 20-60 minute equity strategy on NIFTY200 stocks using 1-min bars. Key changes: (1) Universe from equity stocks to NIFTY index \u2014 the thesis actually strengthens because NIFTY is dominated by institutional TWAP/VWAP flow, not retail; (2) Lookback compressed from 20 bars (20 min) to 36 bars (3 min) because we trade 30-90s holds, not 20-60 min \u2014 we want the slope of the currently-executing order, not a historical trend; (3) Added slope_12 acceleration condition \u2014 at 5s resolution we can distinguish an accelerating slope from a flattening one, which 1-min bars cannot; (4) Dropped ADX \u2014 irrelevant at 5s frequency, replaced by slope-vs-slope-MA filter which directly tests whether the trend signal is building; (5) Stops/targets calibrated to 5s NIFTY option point magnitudes rather than percentage-based.",
   "weaknesses": [
-    "VWAP slope is lagging — by bar 36, the institutional order may be 80% complete and the remaining 20% may reverse",
+    "VWAP slope is lagging \u2014 by bar 36, the institutional order may be 80% complete and the remaining 20% may reverse",
     "Acceleration condition (slope_12 > slope_36) fires late in a move when the trend is about to exhaust, not at the start",
     "At 5-second resolution, single large-volume bars can distort VWAP and create false slope readings",
     "NIFTY closing 30 min (3:00-3:30) sees programmatic buying that creates slope signals not backed by directional institutional flow"
@@ -114,8 +123,15 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_143.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-60 minutes",
-    "original_indicators": ["VWAP (cumulative)", "vwap_slope (linreg 20)", "vwap_slope_ma (SMA 10)", "EMA(9)", "ADX(14)"],
+    "original_indicators": [
+      "VWAP (cumulative)",
+      "vwap_slope (linreg 20)",
+      "vwap_slope_ma (SMA 10)",
+      "EMA(9)",
+      "ADX(14)"
+    ],
     "original_stop": "0.3% from entry",
     "original_target": "0.5% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

@@ -28,7 +28,7 @@ class Strategy(BaseStrategy):
             TunableParam("gap_threshold", 0.004, 0.002, 0.010),
             TunableParam("vix_max", 20.0, 15.0, 30.0),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def _compute_gap_pct(self, spot_df: pl.DataFrame) -> np.ndarray:
@@ -86,7 +86,7 @@ class Strategy(BaseStrategy):
         gap_threshold = params.get("gap_threshold", 0.004)
         vix_max = params.get("vix_max", 20.0)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── VIX close (aligned to spot bars) ──────────────────────────────────
         vix_close = np.full(n, 15.0)

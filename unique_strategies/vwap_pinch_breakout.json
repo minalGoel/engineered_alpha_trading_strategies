@@ -2,14 +2,23 @@
   "name": "vwap_pinch_breakout",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["momentum", "breakout", "vwap", "ema", "squeeze"],
+  "tags": [
+    "momentum",
+    "breakout",
+    "vwap",
+    "ema",
+    "squeeze"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_343.json",
   "original_name": "vwap_pinch_breakout",
-  "mechanism": "On NIFTY, the session VWAP anchors institutional execution benchmarks while a 2-minute EMA tracks short-term directional drift. When these two anchors converge to within 0.05% of spot, NIFTY is in micro-equilibrium: VWAP-benchmarked algorithms (both buy-side and sell-side) are filling at similar prices and neither directional camp holds an advantage. When price breaks above BOTH anchors simultaneously with a volume surge, it signals that buy-side institutional order flow has overwhelmed the balance — their accumulated unfilled demand drives a 10-20 spot point continuation as sell-side algorithms step back and liquidity thins. The reverse applies on breaks below both anchors: trapped long positions and fresh sell flow compound into a quick downside continuation.",
+  "mechanism": "On NIFTY, the session VWAP anchors institutional execution benchmarks while a 2-minute EMA tracks short-term directional drift. When these two anchors converge to within 0.05% of spot, NIFTY is in micro-equilibrium: VWAP-benchmarked algorithms (both buy-side and sell-side) are filling at similar prices and neither directional camp holds an advantage. When price breaks above BOTH anchors simultaneously with a volume surge, it signals that buy-side institutional order flow has overwhelmed the balance \u2014 their accumulated unfilled demand drives a 10-20 spot point continuation as sell-side algorithms step back and liquidity thins. The reverse applies on breaks below both anchors: trapped long positions and fresh sell flow compound into a quick downside continuation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,14 +36,14 @@
       "formula": "EMA(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute EMA (24 bars × 5s) tracks the short-term directional drift of NIFTY. NOT scaled 12x from the original EMA(20) on 1-min bars (which would give 240 bars = 20 min — same horizon as the original). Instead compressed to 2 min because at 5s bars we're detecting a MICRO-pinch that precedes a 15-90s trade, not the 20-60 min move the original targeted. The 2-min EMA reacts quickly enough to reflect where price has been drifting in the last few minutes while smoothing single-bar noise."
+      "purpose": "2-minute EMA (24 bars \u00d7 5s) tracks the short-term directional drift of NIFTY. NOT scaled 12x from the original EMA(20) on 1-min bars (which would give 240 bars = 20 min \u2014 same horizon as the original). Instead compressed to 2 min because at 5s bars we're detecting a MICRO-pinch that precedes a 15-90s trade, not the 20-60 min move the original targeted. The 2-min EMA reacts quickly enough to reflect where price has been drifting in the last few minutes while smoothing single-bar noise."
     },
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume) from session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from daily session open. No lookback scaling needed — it is inherently anchored to day start and represents the institutional benchmark price for the entire session. This is the primary anchor that VWAP-benchmarked algos (typically 60-70% of institutional flow) target."
+      "purpose": "Cumulative VWAP from daily session open. No lookback scaling needed \u2014 it is inherently anchored to day start and represents the institutional benchmark price for the entire session. This is the primary anchor that VWAP-benchmarked algos (typically 60-70% of institutional flow) target."
     },
     {
       "name": "pinch",
@@ -48,7 +57,7 @@
       "formula": "mean(volume, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "Rolling 1-minute (12 bars × 5s) average volume. Used as the baseline for detecting volume surges on the breakout bar. 1-min window is short enough to reflect current session intensity while being long enough to avoid single-bar outliers. Original used prev_volume comparison (1-bar lag); 12-bar average is more robust on the index where volume varies by time-of-day."
+      "purpose": "Rolling 1-minute (12 bars \u00d7 5s) average volume. Used as the baseline for detecting volume surges on the breakout bar. 1-min window is short enough to reflect current session intensity while being long enough to avoid single-bar outliers. Original used prev_volume comparison (1-bar lag); 12-bar average is more robust on the index where volume varies by time-of-day."
     }
   ],
   "entry": {
@@ -73,40 +82,46 @@
     "entry_price": "limit at bar close"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. A genuine pinch breakout should not retrace 8 spot pts within the 15-90s hold window — if it does, the institutional flow that caused the breakout has reversed and the thesis is invalidated. NIFTY 15-30s moves average 1-5 pts; 8 spot pt adverse move signals a failed breakout, not noise.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. A genuine pinch breakout should not retrace 8 spot pts within the 15-90s hold window \u2014 if it does, the institutional flow that caused the breakout has reversed and the thesis is invalidated. NIFTY 15-30s moves average 1-5 pts; 8 spot pt adverse move signals a failed breakout, not noise.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts = ~14 NIFTY spot pts at delta 0.5. Clean pinch breakouts on NIFTY (where the index was in genuine equilibrium before the break) typically extend 15-20 spot pts as the trapped side unwinds and momentum algos pile in. 14 pts captures the conservative end of that range (1:1.75 R:R). At 5s bars we capture this in 30-60 seconds without waiting for the full leg.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "none — pinch breakouts on NIFTY work across VIX regimes; low VIX means tighter ranges and cleaner breaks",
+    "vix_filter": "none \u2014 pinch breakouts on NIFTY work across VIX regimes; low VIX means tighter ranges and cleaner breaks",
     "time_filter": "09:20-15:25 IST; first 5 minutes excluded to let opening range noise settle",
     "volume_filter": "volume > vol_multiplier * avg_vol_12 built into entry conditions",
-    "trend_filter": "none — strategy is directionally agnostic, triggered by breakout direction",
-    "spread_filter": "none — limit orders at candle close price"
+    "trend_filter": "none \u2014 strategy is directionally agnostic, triggered by breakout direction",
+    "spread_filter": "none \u2014 limit orders at candle close price"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — if VWAP-benchmarked algo prevalence decreases, the VWAP anchor weakens; also susceptible to macro news events resetting the session VWAP context"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "moderate \u2014 if VWAP-benchmarked algo prevalence decreases, the VWAP anchor weakens; also susceptible to macro news events resetting the session VWAP context"
   },
-  "adaptation_notes": "Three key changes from original: (1) LOOKBACK — EMA compressed from 20 bars (20 min on 1-min) to 24 bars (2 min on 5s) because the target trade is a 15-90s micro-continuation, not a 20-60 min trend; using 12x scaling would give EMA(240)=20 min which is context, not trigger. (2) VOLUME — original used volume > prev_volume (1-bar comparison); replaced with volume > vol_multiplier * avg_vol_12 for a more stable baseline on an index where volume has strong time-of-day patterns. (3) UNIVERSE — original traded top-20 nifty100 stocks; converted to NIFTY index where the same EMA-VWAP pinch reflects the aggregate of all constituent institutional flows, producing cleaner signals without stock-specific noise.",
+  "adaptation_notes": "Three key changes from original: (1) LOOKBACK \u2014 EMA compressed from 20 bars (20 min on 1-min) to 24 bars (2 min on 5s) because the target trade is a 15-90s micro-continuation, not a 20-60 min trend; using 12x scaling would give EMA(240)=20 min which is context, not trigger. (2) VOLUME \u2014 original used volume > prev_volume (1-bar comparison); replaced with volume > vol_multiplier * avg_vol_12 for a more stable baseline on an index where volume has strong time-of-day patterns. (3) UNIVERSE \u2014 original traded top-20 nifty100 stocks; converted to NIFTY index where the same EMA-VWAP pinch reflects the aggregate of all constituent institutional flows, producing cleaner signals without stock-specific noise.",
   "weaknesses": [
     "Pinch events may cluster at specific times (10:00-10:30 rebalancing, lunch hour) making intraday signal distribution uneven",
     "VWAP anchor shifts meaningfully after large morning gaps, reducing its relevance as benchmark anchor for first 30 minutes",
-    "During macro events (RBI policy, US CPI), volume surges accompany directional moves but not genuine pinch breakouts — risk of false signals",
+    "During macro events (RBI policy, US CPI), volume surges accompany directional moves but not genuine pinch breakouts \u2014 risk of false signals",
     "Very similar to squeeze_release_breakout_001 in concept; differentiated by EMA-as-anchor vs Bollinger-bands and tighter 2-min lookback"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_343.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-60 bars (20-60 min)",
-    "original_indicators": ["EMA(close, 20)", "VWAP", "pinch = abs(ema_20 - vwap)/close < 0.001", "volume > prev_volume"],
+    "original_indicators": [
+      "EMA(close, 20)",
+      "VWAP",
+      "pinch = abs(ema_20 - vwap)/close < 0.001",
+      "volume > prev_volume"
+    ],
     "original_stop": "0.3% from entry",
     "original_target": "3 * ATR(20) from entry"
-  }
+  },
+  "vix_agnostic": true
 }

@@ -102,7 +102,7 @@ class Strategy(BaseStrategy):
     session_start_minutes = 580   # 09:40 IST — 240-bar (20 min) FFT warmup before signals
     session_end_minutes = 920     # 15:20 IST
     max_lookback = 288            # 240-bar FFT window + 48 bars stability buffer
-    max_trades_per_day = 6
+    max_trades_per_day = 8
 
     def tunable_params(self) -> list[TunableParam]:
         return [

@@ -99,8 +99,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("adx_threshold", 25.0, 18.0, 35.0),
             TunableParam("di_spread_min", 8.0, 4.0, 20.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 15.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 15.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -116,8 +116,8 @@ class Strategy(BaseStrategy):
 
         adx_threshold = params.get("adx_threshold", 25.0)
         di_spread_min = params.get("di_spread_min", 8.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ADX(60) = 5-minute trend context
         adx60, plus_di60, minus_di60 = _compute_adx(high, low, close, 60)

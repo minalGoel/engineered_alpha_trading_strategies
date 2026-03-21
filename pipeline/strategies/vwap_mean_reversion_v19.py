@@ -79,10 +79,18 @@ class Strategy(BaseStrategy):
             & (time_min < self.session_end_minutes)
         )
 
+        # Explicit VWAP side guard (matches JSON spec exactly):
+        # buy_ce requires close < vwap (index below fair value — precondition for reversion)
+        # buy_pe requires close > vwap (index above fair value — precondition for reversion)
+        # Note: a negative zscore implies close < vwap only roughly (via the stddev normalisation),
+        # so the explicit guard is needed to match the JSON specification precisely.
+        vwap_arr = vwap  # alias for clarity
+
         # buy_ce: moderate negative VWAP deviation + basing pattern
         # (range contracting, close near top of compressed range)
         buy_ce = (
             in_session
+            & (close < vwap_arr)
             & (vwap_zscore < -zscore_thresh)
             & (range_ratio < range_contraction_ratio)
             & (close_vs_low_6 > close_position_threshold)
@@ -92,6 +100,7 @@ class Strategy(BaseStrategy):
         # (range contracting, close near bottom of compressed range)
         buy_pe = (
             in_session
+            & (close > vwap_arr)
             & (vwap_zscore > zscore_thresh)
             & (range_ratio < range_contraction_ratio)
             & (close_vs_low_6 < (1.0 - close_position_threshold))

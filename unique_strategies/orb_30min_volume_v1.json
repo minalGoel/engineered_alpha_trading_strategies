@@ -92,7 +92,7 @@
     "target_points": 8,
     "target_rationale": "The first leg of a genuine NIFTY 30-min ORB breakout typically extends 20-40 spot points beyond the range. Capturing 40% of that (8-16 spot points = 4-8 option points at delta ~0.5) in a 60-120 second hold is the realistic target. 8 option points corresponds to ~16 spot points, which is the lower end of the first-leg extension. This gives a 1:1.6 R:R (stop 5, target 8).",
     "time_stop_bars": 24,
-    "eod_rule": "flatten at 15:25 IST (pipeline EOD)"
+    "eod_rule": "flatten at 11:00 IST (660 minutes) — ORB thesis expires 75 min after range completion; entries restricted to 09:45-11:00 IST"
   },
   "filters": {
     "vix_filter": "No hard VIX filter in code — original used VIX 13-22; the VWAP and volume conditions naturally suppress signals in erratic (very high VIX) sessions",

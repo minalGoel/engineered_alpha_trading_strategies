@@ -60,8 +60,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_oversold", 30.0, 22.0, 38.0),
             TunableParam("rsi_overbought", 70.0, 62.0, 78.0),
             TunableParam("vix_max", 22.0, 16.0, 28.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -87,8 +87,8 @@ class Strategy(BaseStrategy):
         rsi_oversold = params.get("rsi_oversold", 30.0)
         rsi_overbought = params.get("rsi_overbought", 70.0)
         vix_max = params.get("vix_max", 22.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # --- VIX: join_asof to align with spot bars ---
         vix_close = np.full(n, 15.0)

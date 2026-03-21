@@ -21,16 +21,16 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("vol_surge_mult", 1.5, 1.0, 3.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 15.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 15.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
         n = len(spot_df)
 
         vol_surge_mult = params.get("vol_surge_mult", 1.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         close = spot_df["close"].fill_null(strategy="forward").to_numpy()
         high_arr = spot_df["high"].fill_null(strategy="forward").to_numpy()

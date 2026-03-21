@@ -49,8 +49,8 @@ class Strategy(BaseStrategy):
             # VIX ceiling — mean reversion only in low-volatility, orderly regimes.
             TunableParam("vix_max", 18.0, 14.0, 24.0),
             # Stop and target in option premium points.
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -72,8 +72,8 @@ class Strategy(BaseStrategy):
         band_touch_pct = params.get("band_touch_pct", 0.001)
         wick_ratio = params.get("wick_ratio", 2.0)
         vix_max = params.get("vix_max", 18.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── Bollinger Bands: 60-bar (5-minute) window ──
         # 60 bars chosen because:

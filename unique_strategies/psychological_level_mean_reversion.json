@@ -2,14 +2,22 @@
   "name": "psychological_level_mean_reversion",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "microstructure", "psychological_levels", "behavioral"],
+  "tags": [
+    "mean_reversion",
+    "microstructure",
+    "psychological_levels",
+    "behavioral"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_347.json",
   "original_name": "psychological_level_mean_reversion",
-  "mechanism": "On NIFTY, retail options traders and semi-institutional participants densely cluster stop-loss orders and protective limit orders at round 100-multiple levels (24000, 24100, 23900, etc.) because financial media and brokerage platforms display these levels as natural reference points. When NIFTY briefly pierces below a 100-multiple by 5-15 index points, it triggers stop-loss cascades and sweeps resting sell orders — but this selling is quickly absorbed by resting limit buy orders placed by VWAP-benchmarked algorithms and market makers who recognise the level as significant. The absorption creates a sharp snapback within 30-90 seconds: the very mechanism that caused the overshoot (stop hunting) ensures the subsequent reversal is fast and clean. At 5-second resolution we detect the pierce (price within 0.06% of the round level, just below it) combined with 3-minute RSI exhaustion below 35, entering as the bounce begins rather than waiting for a full bar confirmation.",
+  "mechanism": "On NIFTY, retail options traders and semi-institutional participants densely cluster stop-loss orders and protective limit orders at round 100-multiple levels (24000, 24100, 23900, etc.) because financial media and brokerage platforms display these levels as natural reference points. When NIFTY briefly pierces below a 100-multiple by 5-15 index points, it triggers stop-loss cascades and sweeps resting sell orders \u2014 but this selling is quickly absorbed by resting limit buy orders placed by VWAP-benchmarked algorithms and market makers who recognise the level as significant. The absorption creates a sharp snapback within 30-90 seconds: the very mechanism that caused the overshoot (stop hunting) ensures the subsequent reversal is fast and clean. At 5-second resolution we detect the pierce (price within 0.06% of the round level, just below it) combined with 3-minute RSI exhaustion below 35, entering as the bounce begins rather than waiting for a full bar confirmation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "round(close / 100) * 100",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Nearest 100-multiple level — no lookback needed, computed bar-by-bar. NIFTY at 24000-25000 range has 100-multiples every 0.4-0.5% apart, appearing 2-4 times per session as price oscillates within a 150-200pt daily range."
+      "purpose": "Nearest 100-multiple level \u2014 no lookback needed, computed bar-by-bar. NIFTY at 24000-25000 range has 100-multiples every 0.4-0.5% apart, appearing 2-4 times per session as price oscillates within a 150-200pt daily range."
     },
     {
       "name": "dist_signed",
@@ -41,7 +49,7 @@
       "formula": "RSI(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute RSI (36 bars × 5s = 180s). NOT 12x scaled from original RSI(14) on 1-min bars — 14 × 12 = 168 bars (14 minutes) would be far too slow for a 30-90s trade. Instead, 36 bars captures short-term selling exhaustion within the last 3 minutes: if NIFTY has been declining for 3 minutes and now touches a round level, RSI < 35 confirms the near-term selloff is overextended. This is the TRIGGER window, not a trend-context filter. 36 bars is the minimum reliable RSI period that smooths out the 5-second noise while remaining sensitive enough to flag exhaustion before the bounce starts."
+      "purpose": "3-minute RSI (36 bars \u00d7 5s = 180s). NOT 12x scaled from original RSI(14) on 1-min bars \u2014 14 \u00d7 12 = 168 bars (14 minutes) would be far too slow for a 30-90s trade. Instead, 36 bars captures short-term selling exhaustion within the last 3 minutes: if NIFTY has been declining for 3 minutes and now touches a round level, RSI < 35 confirms the near-term selloff is overextended. This is the TRIGGER window, not a trend-context filter. 36 bars is the minimum reliable RSI period that smooths out the 5-second noise while remaining sensitive enough to flag exhaustion before the bounce starts."
     }
   ],
   "entry": {
@@ -52,7 +60,7 @@
         "rsi_36 < rsi_oversold (3-min RSI below 35 = short-term exhaustion)",
         "in_session (09:20 - 15:20 IST)"
       ],
-      "confirmation": "All conditions must be true on the same 5-second bar — no multi-bar confirmation needed since RSI itself provides the exhaustion filter"
+      "confirmation": "All conditions must be true on the same 5-second bar \u2014 no multi-bar confirmation needed since RSI itself provides the exhaustion filter"
     },
     "buy_pe": {
       "conditions": [
@@ -66,40 +74,44 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5): if NIFTY moves 8 pts FURTHER away from the round level after entry, the stop-hunt thesis is wrong and the move is trending, not reverting — a 30-60 second reversion signal should not tolerate more than 8 spot pt adverse excursion (typical 30s NIFTY move is 2-5 pts, so 8 pts represents a clean trend break at this horizon).",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5): if NIFTY moves 8 pts FURTHER away from the round level after entry, the stop-hunt thesis is wrong and the move is trending, not reverting \u2014 a 30-60 second reversion signal should not tolerate more than 8 spot pt adverse excursion (typical 30s NIFTY move is 2-5 pts, so 8 pts represents a clean trend break at this horizon).",
+    "target_points": 6.0,
     "target_rationale": "7 option points (~14 NIFTY spot points at delta 0.5): a round-level snapback on NIFTY typically covers 10-20 spot points in the first 60-90 seconds before stalling at the next micro-resistance. Targeting 14 spot points captures ~70% of the lower-end reversal (1:1.75 risk-reward at 4 stop vs 7 target).",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — round-level reversions are behavioral and occur in both low and high volatility regimes",
+    "vix_filter": "none \u2014 round-level reversions are behavioral and occur in both low and high volatility regimes",
     "time_filter": "09:20-15:20 IST; skip first 5 minutes (09:15-09:20) to avoid opening auction noise where price discovery is erratic",
-    "volume_filter": "none — index volume bars are pre-aggregated and noisy at 5s; not reliable as a filter",
-    "trend_filter": "none — mean reversion at round levels works against the intraday trend, so trend alignment would reduce signal frequency",
-    "spread_filter": "none — limit order execution at candle close prices; no bid-ask spread cost"
+    "volume_filter": "none \u2014 index volume bars are pre-aggregated and noisy at 5s; not reliable as a filter",
+    "trend_filter": "none \u2014 mean reversion at round levels works against the intraday trend, so trend alignment would reduce signal frequency",
+    "spread_filter": "none \u2014 limit order execution at candle close prices; no bid-ask spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.55,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.60,
-    "edge_decay_risk": "medium — behavioral bias is persistent but round levels shift over time as NIFTY moves to new ranges (24000-25000 becomes 26000-27000). Within a range, the same levels are tested repeatedly."
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.44,
+    "edge_decay_risk": "medium \u2014 behavioral bias is persistent but round levels shift over time as NIFTY moves to new ranges (24000-25000 becomes 26000-27000). Within a range, the same levels are tested repeatedly."
   },
-  "adaptation_notes": "Original strategy used dist < 0.2 absolute for equity stocks priced ~500-5000 INR. Translated to percentage-based distance (pierce_threshold_pct) to work across NIFTY at any price level. Original RSI(14) on 1-min bars → RSI(36) on 5-second bars (3 minutes) for matching the fast exhaustion detection needed at our 30-90s hold horizon — NOT mechanically scaled to 168 bars. Original targeted individual stocks where round numbers (500, 1000) are personal price references; NIFTY/BANKNIFTY round 100-multiples are even stronger because they correspond to option strike levels every 50 points, and every other 100-multiple is a double-anchored round number (24100 = round 100 + round 200). Hold time compressed from 10-25 minutes to 30-90 seconds; stops/targets recalibrated from % moves to absolute option premium points.",
+  "adaptation_notes": "Original strategy used dist < 0.2 absolute for equity stocks priced ~500-5000 INR. Translated to percentage-based distance (pierce_threshold_pct) to work across NIFTY at any price level. Original RSI(14) on 1-min bars \u2192 RSI(36) on 5-second bars (3 minutes) for matching the fast exhaustion detection needed at our 30-90s hold horizon \u2014 NOT mechanically scaled to 168 bars. Original targeted individual stocks where round numbers (500, 1000) are personal price references; NIFTY/BANKNIFTY round 100-multiples are even stronger because they correspond to option strike levels every 50 points, and every other 100-multiple is a double-anchored round number (24100 = round 100 + round 200). Hold time compressed from 10-25 minutes to 30-90 seconds; stops/targets recalibrated from % moves to absolute option premium points.",
   "weaknesses": [
-    "NIFTY breaks through round levels cleanly during macro events (FII sell programs, index rebalances) — no news filter in place",
-    "Signal fires 4-8 times per day at most — limited throughput relative to pure momentum strategies",
+    "NIFTY breaks through round levels cleanly during macro events (FII sell programs, index rebalances) \u2014 no news filter in place",
+    "Signal fires 4-8 times per day at most \u2014 limited throughput relative to pure momentum strategies",
     "RSI(36) on 5-second bars can be noisy during volatile sessions; may generate false oversold readings mid-trend",
-    "Near-level condition is binary — no check for HOW MANY times the level has been tested (first test vs fifth test behaves differently)"
+    "Near-level condition is binary \u2014 no check for HOW MANY times the level has been tested (first test vs fifth test behaves differently)"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_347.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-25 bars (10-25 minutes)",
-    "original_indicators": ["dist (abs(close - round(close/100)*100))", "rsi(14)"],
+    "original_indicators": [
+      "dist (abs(close - round(close/100)*100))",
+      "rsi(14)"
+    ],
     "original_stop": "0.25% from entry",
     "original_target": "0.4% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

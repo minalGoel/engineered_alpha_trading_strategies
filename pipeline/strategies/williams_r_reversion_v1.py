@@ -82,8 +82,8 @@ class Strategy(BaseStrategy):
             TunableParam("vol_ratio_threshold",   1.5,    1.1,   3.0),
             TunableParam("vwap_band",             0.015,  0.005, 0.03),
             TunableParam("vix_max",              25.0,   18.0,  35.0),
-            TunableParam("stop_pts",              4.0,    2.0,   8.0),
-            TunableParam("target_pts",            7.0,    4.0,  14.0),
+            TunableParam("stop_pts",              3.0,    2.0,   8.0),
+            TunableParam("target_pts",            6.0,    4.0,  14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -104,8 +104,8 @@ class Strategy(BaseStrategy):
         vol_ratio_thr  = params.get("vol_ratio_threshold",  1.5)
         vwap_band      = params.get("vwap_band",            0.015)
         vix_max        = params.get("vix_max",             25.0)
-        stop_pts       = params.get("stop_pts",             4.0)
-        target_pts     = params.get("target_pts",           7.0)
+        stop_pts       = params.get("stop_pts",             3.0)
+        target_pts     = params.get("target_pts",           6.0)
 
         # --- Williams %R (36 bars = 3 minutes) ---
         wr = _williams_r(high, low, close, 36)

@@ -28,7 +28,7 @@ class Strategy(BaseStrategy):
             TunableParam("vix_low", 13.0, 10.0, 17.0),
             TunableParam("vix_high", 22.0, 18.0, 28.0),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 15.0),
+            TunableParam("target_pts", 8.0, 4.0, 15.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -46,7 +46,7 @@ class Strategy(BaseStrategy):
         vix_low = params.get("vix_low", 13.0)
         vix_high = params.get("vix_high", 22.0)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # VIX — align to spot bars via backward asof join
         vix_close = np.full(n, 15.0)

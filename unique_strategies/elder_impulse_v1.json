@@ -2,14 +2,25 @@
   "name": "elder_impulse_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["trend_following", "momentum", "elder_impulse", "dual_indicator", "ema", "macd", "aligned_flow"],
+  "tags": [
+    "trend_following",
+    "momentum",
+    "elder_impulse",
+    "dual_indicator",
+    "ema",
+    "macd",
+    "aligned_flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_288.json",
   "original_name": "elder_impulse_v1",
-  "mechanism": "On NIFTY, when the 2-minute EMA slope and the MACD(12,36,9) histogram slope simultaneously turn upward ('green impulse'), large institutional TWAP/VWAP orders are absorbing sell-side liquidity at multiple bid levels — the EMA captures the persistent directional drift while the accelerating MACD histogram signals that buy-side order flow intensity is growing, not plateauing. This dual alignment on the NIFTY index (driven by FII and large domestic fund flow rather than single-stock events) creates 30-90 second momentum bursts with statistically meaningful autocorrelation because institutional orders are typically only 40-60% executed when the initial impulse fires. Conversely, simultaneous EMA decline and MACD histogram decline ('red impulse') signals sustained institutional selling that compresses NIFTY 10-20 spot points before absorbing. Elder's core 'forbidden trade' rule — never buy CE on a red impulse, never buy PE on a green impulse — functions here as a regime filter that prevents trading against active institutional directional flow.",
+  "mechanism": "On NIFTY, when the 2-minute EMA slope and the MACD(12,36,9) histogram slope simultaneously turn upward ('green impulse'), large institutional TWAP/VWAP orders are absorbing sell-side liquidity at multiple bid levels \u2014 the EMA captures the persistent directional drift while the accelerating MACD histogram signals that buy-side order flow intensity is growing, not plateauing. This dual alignment on the NIFTY index (driven by FII and large domestic fund flow rather than single-stock events) creates 30-90 second momentum bursts with statistically meaningful autocorrelation because institutional orders are typically only 40-60% executed when the initial impulse fires. Conversely, simultaneous EMA decline and MACD histogram decline ('red impulse') signals sustained institutional selling that compresses NIFTY 10-20 spot points before absorbing. Elder's core 'forbidden trade' rule \u2014 never buy CE on a red impulse, never buy PE on a green impulse \u2014 functions here as a regime filter that prevents trading against active institutional directional flow.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:22-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,34 +38,34 @@
       "formula": "EMA(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute (24 bars × 5s) trend slope captures the medium-direction bias set by institutional TWAP orders. Original used EMA(9) on 1-min bars = 9-minute trend for a 5-15 min hold. We're holding 30-90s so we compress the trend window proportionally to 2 minutes — NOT 12× blind scaling (which would give 9-minute EMA on 5s bars, irrelevant for a 60-second hold). EMA slope direction is the primary trend gate."
+      "purpose": "2-minute (24 bars \u00d7 5s) trend slope captures the medium-direction bias set by institutional TWAP orders. Original used EMA(9) on 1-min bars = 9-minute trend for a 5-15 min hold. We\u2019re holding 30-90s so we compress the trend window proportionally to 2 minutes \u2014 NOT 12\u00d7 blind scaling (which would give 9-minute EMA on 5s bars, irrelevant for a 60-second hold). EMA slope direction is the primary trend gate. A minimum slope magnitude threshold (ema_slope_min, default 0.005 index points per bar) is required \u2014 bare directional change (ema_24[i] > ema_24[i-1]) is insufficient; the slope must exceed this floor to filter micro-oscillations around a flat EMA."
     },
     {
       "name": "macd_line",
       "formula": "EMA(close, 12) - EMA(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "MACD fast=12 bars (1min) / slow=36 bars (3min). Original MACD(9,21,7) on 1-min bars used a ~1:2.3 fast:slow ratio. We preserve that ratio (12:36 = 1:3 ≈ same) but compress the absolute periods to match our 30-90s hold: 3-min slow EMA captures the trend context while 1-min fast detects acceleration. Blind 12× scaling would give MACD(108,252,84) — a 15-minute fast EMA — completely wrong for a 60-second trade."
+      "purpose": "MACD fast=12 bars (1min) / slow=36 bars (3min). Original MACD(9,21,7) on 1-min bars used a ~1:2.3 fast:slow ratio. We preserve that ratio (12:36 = 1:3 \u2248 same) but compress the absolute periods to match our 30-90s hold: 3-min slow EMA captures the trend context while 1-min fast detects acceleration. Blind 12\u00d7 scaling would give MACD(108,252,84) \u2014 a 15-minute fast EMA \u2014 completely wrong for a 60-second trade."
     },
     {
       "name": "macd_histogram",
       "formula": "macd_line - EMA(macd_line, 9)",
       "lookback": 45,
       "computed_on": "spot",
-      "purpose": "MACD histogram (MACD line minus 9-bar signal = 45s signal EMA). Rising histogram = momentum accelerating upward; falling histogram = momentum accelerating downward. The histogram SLOPE (not level) is the momentum trigger, as Elder specified — this is what distinguishes the Impulse System from a plain MACD crossover."
+      "purpose": "MACD histogram (MACD line minus 9-bar signal = 45s signal EMA). Rising histogram = momentum accelerating upward; falling histogram = momentum accelerating downward. The histogram SLOPE (not level) is the momentum trigger, as Elder specified \u2014 this is what distinguishes the Impulse System from a plain MACD crossover."
     },
     {
       "name": "vwap",
-      "formula": "cumsum(HLC3 × volume) / cumsum(volume), reset at session open",
+      "formula": "cumsum(HLC3 \u00d7 volume) / cumsum(volume), reset at session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP as directional confirmation filter. Original used VWAP as a filter: long only above VWAP, short only below VWAP. On NIFTY index, VWAP represents the average cost basis of the day's institutional volume — trades aligned with VWAP direction have institutional flow support. No scaling needed; VWAP is cumulative from session open regardless of bar size."
+      "purpose": "Session VWAP as directional confirmation filter. Original used VWAP as a filter: long only above VWAP, short only below VWAP. On NIFTY index, VWAP represents the average cost basis of the day's institutional volume \u2014 trades aligned with VWAP direction have institutional flow support. No scaling needed; VWAP is cumulative from session open regardless of bar size."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "ema_24[i] > ema_24[i-1] (EMA trending up) AND macd_histogram[i] > macd_histogram[i-1] (histogram accelerating up) — 'green impulse'",
+        "ema_slope >= ema_slope_min (EMA trending up with minimum magnitude, default 0.005 index pts/bar) AND hist_slope >= hist_slope_min (histogram slope exceeds minimum threshold) \u2014 \u2018green impulse\u2019",
         "green impulse confirmed for 2 consecutive bars (i-1 and i both green, filters 5-second spikes)",
         "close > vwap (price above session VWAP, confirms institutional buy-side alignment)"
       ],
@@ -62,7 +73,7 @@
     },
     "buy_pe": {
       "conditions": [
-        "ema_24[i] < ema_24[i-1] (EMA trending down) AND macd_histogram[i] < macd_histogram[i-1] (histogram accelerating down) — 'red impulse'",
+        "ema_slope <= -ema_slope_min (EMA trending down with minimum magnitude) AND hist_slope <= -hist_slope_min (histogram slope sufficiently negative) \u2014 \u2018red impulse\u2019",
         "red impulse confirmed for 2 consecutive bars",
         "close < vwap (price below session VWAP, confirms institutional sell-side alignment)"
       ],
@@ -72,17 +83,17 @@
   },
   "exit": {
     "stop_points": 3.0,
-    "stop_rationale": "3 option pts = ~6 NIFTY spot points at delta 0.5. A confirmed dual-indicator alignment (both EMA and MACD histogram directional) on NIFTY should not retrace 6 spot points within 30s if the institutional order flow thesis is correct — if it does, the impulse was a false signal and we exit. This is the tightest calibrated stop among trend-following strategies because the dual confirmation provides high-quality entries.",
+    "stop_rationale": "3 option pts = ~6 NIFTY spot points at delta 0.5. A confirmed dual-indicator alignment (both EMA and MACD histogram directional) on NIFTY should not retrace 6 spot points within 30s if the institutional order flow thesis is correct \u2014 if it does, the impulse was a false signal and we exit. This is the tightest calibrated stop among trend-following strategies because the dual confirmation provides high-quality entries.",
     "target_points": 5.0,
     "target_rationale": "5 option pts = ~10 NIFTY spot points. A confirmed green/red impulse on NIFTY driven by institutional TWAP flow typically carries 15-25 spot points at full extension within 1-2 minutes; we target 10 spot points (5 option pts) which represents the 40-50th percentile of the expected move, achievable within our 90s max hold. Risk:reward = 1:1.67.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none (VIX data not used — VWAP filter already provides session-level regime context)",
+    "vix_filter": "none (VIX data not used \u2014 VWAP filter already provides session-level regime context)",
     "time_filter": "09:22-15:20 IST (skip first 7 min for EMA warmup, EOD flatten at 15:20)",
     "volume_filter": "none (NIFTY index volume is noisy; dual-indicator confirmation acts as quality filter)",
-    "trend_filter": "VWAP directional alignment — CE only above VWAP, PE only below VWAP",
+    "trend_filter": "VWAP directional alignment \u2014 CE only above VWAP, PE only below VWAP",
     "spread_filter": "limit order execution, no spread cost",
     "whipsaw_filter": "2-bar consecutive confirmation implicitly filters rapid green-red-green transitions"
   },
@@ -90,21 +101,27 @@
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.67,
-    "profit_factor_estimate": 1.31,
-    "edge_decay_risk": "Medium — Elder's Impulse System is well-documented but the MACD(12,36,9) parameters on 5-second NIFTY bars are non-standard. The dual-confirmation requirement and VWAP filter are not typical retail implementations, reducing crowding. Risk: index becomes less trending in certain macro regimes."
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "Medium \u2014 Elder's Impulse System is well-documented but the MACD(12,36,9) parameters on 5-second NIFTY bars are non-standard. The dual-confirmation requirement and VWAP filter are not typical retail implementations, reducing crowding. Risk: index becomes less trending in certain macro regimes."
   },
-  "adaptation_notes": "Original uses 1-min bars on NIFTY50 stocks, EMA(9)/MACD(9,21,7), holds 5-15 min. Key changes: (1) Bars → 5s: EMA compressed from 9-min to 2-min (EMA24) to match 30-90s hold — NOT 12× blind scaling. (2) MACD preserved at same fast:slow ratio (1:2.3 → 1:3) but absolute periods compressed to 1-min/3-min. (3) Universe → NIFTY index only (not stocks): the mechanism is institutional flow on the index, which is purer and more liquid than individual Nifty50 stocks. (4) VWAP filter preserved but applied to index cumulative VWAP. (5) 2-bar confirmation preserved (was: 2 consecutive 1-min bars; now: 2 consecutive 5s bars = 10 seconds, much tighter but appropriate given faster hold). (6) Elder's 'forbidden trade' rule preserved as the directional logic itself.",
+  "adaptation_notes": "Original uses 1-min bars on NIFTY50 stocks, EMA(9)/MACD(9,21,7), holds 5-15 min. Key changes: (1) Bars \u2192 5s: EMA compressed from 9-min to 2-min (EMA24) to match 30-90s hold \u2014 NOT 12\u00d7 blind scaling. (2) MACD preserved at same fast:slow ratio (1:2.3 \u2192 1:3) but absolute periods compressed to 1-min/3-min. (3) Universe \u2192 NIFTY index only (not stocks): the mechanism is institutional flow on the index, which is purer and more liquid than individual Nifty50 stocks. (4) VWAP filter preserved but applied to index cumulative VWAP. (5) 2-bar confirmation preserved (was: 2 consecutive 1-min bars; now: 2 consecutive 5s bars = 10 seconds, much tighter but appropriate given faster hold). (6) Elder's 'forbidden trade' rule preserved as the directional logic itself.",
   "weaknesses": [
-    "On NIFTY range-bound days (low VIX, narrow intraday range), green/red impulses alternate frequently at 5-second resolution — the MACD histogram on 5s bars is noisier than on 1-min bars, generating more false color changes.",
+    "On NIFTY range-bound days (low VIX, narrow intraday range), green/red impulses alternate frequently at 5-second resolution \u2014 the MACD histogram on 5s bars is noisier than on 1-min bars, generating more false color changes.",
     "The 2-bar confirmation introduces a 10-second entry delay; if the impulse move front-runs quickly (common during macro announcements), we may enter late and face poor risk:reward.",
-    "VWAP filter biases entries to one side of the session range — on mean-reverting days, VWAP crossovers create a series of false impulse trades that all trigger on the wrong side."
+    "VWAP filter biases entries to one side of the session range \u2014 on mean-reverting days, VWAP crossovers create a series of false impulse trades that all trigger on the wrong side."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_288.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-15 min",
-    "original_indicators": ["EMA(9)", "MACD(9,21,7)", "impulse_color", "VWAP"],
+    "original_indicators": [
+      "EMA(9)",
+      "MACD(9,21,7)",
+      "impulse_color",
+      "VWAP"
+    ],
     "original_stop": "10 bps from entry OR impulse color turns opposite",
     "original_target": "20 bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

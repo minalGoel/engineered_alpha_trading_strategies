@@ -2,14 +2,23 @@
   "name": "opening_drive_reversal_001",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "opening_reversal", "vwap", "microstructure", "intraday"],
+  "tags": [
+    "mean_reversion",
+    "opening_reversal",
+    "vwap",
+    "microstructure",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_130.json",
   "original_name": "opening_drive_reversal_001",
-  "mechanism": "On NIFTY, the post-auction first 25-35 minutes produce a sharp directional burst of 30-80 spot points as gap-fill program trades, institutional TWAP launches, and retail market orders hit a book that was thinly pre-positioned overnight. When this opening drive stalls — signaled by price reaching 0.3%+ deviation from session VWAP, the 30-second RSI(6) reading entering extreme territory (≤15 or ≥85), and a visible rejection wick consuming ≥35% of the bar range — VWAP-benchmarked institutional algorithms begin counter-flow aggressively since they are getting fills materially better/worse than their session-VWAP benchmark. At 5-second resolution we enter the moment the exhaustion wick forms, capturing the first 10-18 spot point mean-reversion leg within 30-90 seconds before the full 1-minute reversal confirmation is visible.",
+  "mechanism": "On NIFTY, the post-auction first 25-35 minutes produce a sharp directional burst of 30-80 spot points as gap-fill program trades, institutional TWAP launches, and retail market orders hit a book that was thinly pre-positioned overnight. When this opening drive stalls \u2014 signaled by price reaching 0.3%+ deviation from session VWAP, the 30-second RSI(6) reading entering extreme territory (\u226415 or \u226585), and a visible rejection wick consuming \u226535% of the bar range \u2014 VWAP-benchmarked institutional algorithms begin counter-flow aggressively since they are getting fills materially better/worse than their session-VWAP benchmark. At 5-second resolution we enter the moment the exhaustion wick forms, capturing the first 10-18 spot point mean-reversion leg within 30-90 seconds before the full 1-minute reversal confirmation is visible.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-10:00 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-5",
   "max_trades_per_day": 5,
@@ -19,7 +28,11 @@
     "vix": false,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["wick_ratios", "session_vwap", "relative_volume"]
+    "other": [
+      "wick_ratios",
+      "session_vwap",
+      "relative_volume"
+    ]
   },
   "indicators": [
     {
@@ -27,42 +40,42 @@
       "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each day",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative measure — no scaling needed. VWAP is the intraday fair value anchor used by NIFTY-benchmarked institutional algorithms; deviation from it measures the overshoot depth and also determines when algorithmic buy/sell programs activate."
+      "purpose": "Cumulative measure \u2014 no scaling needed. VWAP is the intraday fair value anchor used by NIFTY-benchmarked institutional algorithms; deviation from it measures the overshoot depth and also determines when algorithmic buy/sell programs activate."
     },
     {
       "name": "vwap_dev",
       "formula": "(close - session_vwap) / session_vwap",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Fractional deviation from VWAP. Threshold of 0.3% (tunable 0.2-0.6%) corresponds to 69-138 NIFTY spot points at 23000 — the range where opening drive overshoots reliably attract institutional VWAP counter-flow. Tighter than original's 0.5% because the index is smoother than individual stocks and hits 0.3% more frequently."
+      "purpose": "Fractional deviation from VWAP. Threshold of 0.3% (tunable 0.2-0.6%) corresponds to 69-138 NIFTY spot points at 23000 \u2014 the range where opening drive overshoots reliably attract institutional VWAP counter-flow. Tighter than original's 0.5% because the index is smoother than individual stocks and hits 0.3% more frequently."
     },
     {
       "name": "rsi_6",
       "formula": "RSI(close, 6)",
       "lookback": 6,
       "computed_on": "spot",
-      "purpose": "30-second RSI — fast enough to detect exhaustion within 1-2 minutes of the drive starting. Original used RSI(2) on 1-min bars (ultra-fast by design). At 5s bars, RSI(2) is pure noise (only 2 candles); RSI(6)=30s preserves the ultra-fast exhaustion detection intent while smoothing individual-bar spikes. NOT the standard 14-period RSI — we need the signal before the drive reverses, not after."
+      "purpose": "30-second RSI \u2014 fast enough to detect exhaustion within 1-2 minutes of the drive starting. Original used RSI(2) on 1-min bars (ultra-fast by design). At 5s bars, RSI(2) is pure noise (only 2 candles); RSI(6)=30s preserves the ultra-fast exhaustion detection intent while smoothing individual-bar spikes. NOT the standard 14-period RSI \u2014 we need the signal before the drive reverses, not after."
     },
     {
       "name": "wick_down_ratio",
       "formula": "(MIN(open, close) - low) / MAX(high - low, 0.001)",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Lower wick as fraction of total bar range. No lookback scaling — wick geometry is bar-local. Measures whether sellers were rejected intrabar, indicating resting buy orders absorbed the final flush. ≥0.35 means at least 35% of the bar's range is wicked below the body."
+      "purpose": "Lower wick as fraction of total bar range. No lookback scaling \u2014 wick geometry is bar-local. Measures whether sellers were rejected intrabar, indicating resting buy orders absorbed the final flush. \u22650.35 means at least 35% of the bar's range is wicked below the body."
     },
     {
       "name": "wick_up_ratio",
       "formula": "(high - MAX(open, close)) / MAX(high - low, 0.001)",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Upper wick as fraction of total bar range. Symmetric to wick_down_ratio for bearish setups. Detects buyers getting rejected at the top of the up-drive bar — intrabar evidence that supply absorbed the bid."
+      "purpose": "Upper wick as fraction of total bar range. Symmetric to wick_down_ratio for bearish setups. Detects buyers getting rejected at the top of the up-drive bar \u2014 intrabar evidence that supply absorbed the bid."
     },
     {
       "name": "rel_vol_60",
       "formula": "volume / rolling_mean(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Relative volume vs 5-minute rolling average. Original used SMA(volume, 20) on 1-min = 20-minute window. At 5s bars we use 60 bars = 5 minutes, shorter than original's 20-min equivalent (240 bars), because in the opening window the volume baseline is itself elevated — comparing against the immediate 5-min window detects a surge WITHIN the opening rush, filtering for the peak exhaustion candle rather than just any elevated-volume bar."
+      "purpose": "Relative volume vs 5-minute rolling average. Original used SMA(volume, 20) on 1-min = 20-minute window. At 5s bars we use 60 bars = 5 minutes, shorter than original's 20-min equivalent (240 bars), because in the opening window the volume baseline is itself elevated \u2014 comparing against the immediate 5-min window detects a surge WITHIN the opening rush, filtering for the peak exhaustion candle rather than just any elevated-volume bar."
     },
     {
       "name": "vwap_slope_60",
@@ -76,64 +89,74 @@
     "buy_ce": {
       "conditions": [
         "time in 09:20-10:00 IST (560-600 min)",
-        "vwap_dev <= -vwap_dev_threshold (price ≥ 0.3% below VWAP)",
-        "rsi_6 <= rsi_os_threshold (≤ 15, severely oversold on 30s RSI)",
-        "wick_down_ratio >= wick_threshold (≥ 0.35, lower wick absorbs sellers)",
-        "rel_vol_60 >= vol_threshold (≥ 1.5, volume surge confirming exhaustion bar)",
+        "vwap_dev <= -vwap_dev_threshold (price \u2265 0.3% below VWAP)",
+        "rsi_6 <= rsi_os_threshold (\u2264 15, severely oversold on 30s RSI)",
+        "wick_down_ratio >= wick_threshold (\u2265 0.35, lower wick absorbs sellers)",
+        "rel_vol_60 >= vol_threshold (\u2265 1.5, volume surge confirming exhaustion bar)",
         "abs(vwap_slope_60 / close) <= 0.002 (VWAP not in strong trend)",
-        "close > open (current 5s bar is bullish — reversal has started)"
+        "close > open (current 5s bar is bullish \u2014 reversal has started)"
       ],
-      "confirmation": "close > open on the signal bar — first bullish 5s print after exhaustion"
+      "confirmation": "close > open on the signal bar \u2014 first bullish 5s print after exhaustion"
     },
     "buy_pe": {
       "conditions": [
         "time in 09:20-10:00 IST (560-600 min)",
-        "vwap_dev >= +vwap_dev_threshold (price ≥ 0.3% above VWAP)",
-        "rsi_6 >= rsi_ob_threshold (≥ 85, severely overbought on 30s RSI)",
-        "wick_up_ratio >= wick_threshold (≥ 0.35, upper wick absorbs buyers)",
-        "rel_vol_60 >= vol_threshold (≥ 1.5, volume surge confirming exhaustion bar)",
+        "vwap_dev >= +vwap_dev_threshold (price \u2265 0.3% above VWAP)",
+        "rsi_6 >= rsi_ob_threshold (\u2265 85, severely overbought on 30s RSI)",
+        "wick_up_ratio >= wick_threshold (\u2265 0.35, upper wick absorbs buyers)",
+        "rel_vol_60 >= vol_threshold (\u2265 1.5, volume surge confirming exhaustion bar)",
         "abs(vwap_slope_60 / close) <= 0.002 (VWAP not in strong trend)",
-        "close < open (current 5s bar is bearish — reversal has started)"
+        "close < open (current 5s bar is bearish \u2014 reversal has started)"
       ],
-      "confirmation": "close < open on the signal bar — first bearish 5s print after exhaustion"
+      "confirmation": "close < open on the signal bar \u2014 first bearish 5s print after exhaustion"
     },
     "entry_price": "limit at candle close"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 4.0,
     "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. An opening drive that reverses does not retrace more than 8 spot points within 30-90s if the exhaustion thesis is correct; if it does, the drive is resuming (not reversing), and we must exit immediately. 4 pts chosen because the typical reversal move is 10-18 spot pts (5-9 option pts), giving ~1:1.75 R:R.",
-    "target_points": 7,
+    "target_points": 8.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. Opening drive reversals on NIFTY from 0.3%+ VWAP deviations typically cover 15-25 spot points in the first 30-90 seconds as VWAP-benchmarked algorithms absorb the counter-flow. Targeting 14 pts captures ~60% of the typical first leg at 1:1.75 R:R, leaving room for time stop to kick in on weaker reversals.",
     "time_stop_bars": 18,
-    "eod_rule": "flatten at 10:00 IST (session_end_minutes = 600) — only trade the opening drive window"
+    "eod_rule": "flatten at 10:00 IST (session_end_minutes = 600) \u2014 only trade the opening drive window"
   },
   "filters": {
-    "vix_filter": "none — opening reversal works in both low/high VIX as the drive overshoot is a structural feature of opening auction mechanics",
-    "time_filter": "strict 09:20-10:00 only — opening drive exhaustion is exclusively an opening-window phenomenon; later in the day VWAP deviations of this size indicate trending, not reversal",
-    "volume_filter": "rel_vol_60 >= 1.5 — exhaustion bars must show a volume spike, confirming the drive consumed available supply/demand",
-    "trend_filter": "abs(vwap_slope_60 / close) <= 0.002 — skip if 5-min VWAP is trending (drift > 0.2%), indicating the drive is a sustained directional move",
-    "spread_filter": "none — limit orders at 5s close prices"
+    "vix_filter": "none \u2014 opening reversal works in both low/high VIX as the drive overshoot is a structural feature of opening auction mechanics",
+    "time_filter": "strict 09:20-10:00 only \u2014 opening drive exhaustion is exclusively an opening-window phenomenon; later in the day VWAP deviations of this size indicate trending, not reversal",
+    "volume_filter": "rel_vol_60 >= 1.5 \u2014 exhaustion bars must show a volume spike, confirming the drive consumed available supply/demand",
+    "trend_filter": "abs(vwap_slope_60 / close) <= 0.002 \u2014 skip if 5-min VWAP is trending (drift > 0.2%), indicating the drive is a sustained directional move",
+    "spread_filter": "none \u2014 limit orders at 5s close prices"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.57,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.3,
-    "edge_decay_risk": "medium-low — structural feature of opening auction mechanics, but opening drive amplitude can shrink in low-gap sessions reducing signal frequency"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.65,
+    "edge_decay_risk": "medium-low \u2014 structural feature of opening auction mechanics, but opening drive amplitude can shrink in low-gap sessions reducing signal frequency"
   },
-  "adaptation_notes": "Original traded top-150 NIFTY200 stocks on 1-min bars, 09:20-10:15, with cross-sectional screening. Converted to NIFTY index directly — the opening drive is more predictable on the index (smoother, less gappy, driven by institutional program flow rather than single-stock events). Key changes: (1) RSI period compressed from RSI(2)@1min to RSI(6)@5s — preserves ultra-fast exhaustion intent at 5s frequency; (2) VWAP deviation threshold tightened from 0.5% to 0.3% because NIFTY index reaches 0.3% deviation ~5-8x/session vs stocks that may move 1-2%; (3) volume window compressed from 20-min to 5-min rolling avg to detect the peak exhaustion bar within the opening burst; (4) session end tightened from 10:15 to 10:00 since the drive overshoot is most reliable in the first 45 minutes; (5) hold time compressed from 5-12 minutes to 30-90 seconds — at 5s we enter the moment the exhaustion wick forms rather than waiting for the next 1-min bar.",
+  "adaptation_notes": "Original traded top-150 NIFTY200 stocks on 1-min bars, 09:20-10:15, with cross-sectional screening. Converted to NIFTY index directly \u2014 the opening drive is more predictable on the index (smoother, less gappy, driven by institutional program flow rather than single-stock events). Key changes: (1) RSI period compressed from RSI(2)@1min to RSI(6)@5s \u2014 preserves ultra-fast exhaustion intent at 5s frequency; (2) VWAP deviation threshold tightened from 0.5% to 0.3% because NIFTY index reaches 0.3% deviation ~5-8x/session vs stocks that may move 1-2%; (3) volume window compressed from 20-min to 5-min rolling avg to detect the peak exhaustion bar within the opening burst; (4) session end tightened from 10:15 to 10:00 since the drive overshoot is most reliable in the first 45 minutes; (5) hold time compressed from 5-12 minutes to 30-90 seconds \u2014 at 5s we enter the moment the exhaustion wick forms rather than waiting for the next 1-min bar.",
   "weaknesses": [
     "Low-gap or sideways opening sessions produce shallow drives that do not reach the 0.3% VWAP threshold, reducing trade frequency to zero.",
     "RSI(6) at 5-second frequency can produce false extremes during micro-volatility spikes unrelated to the opening drive structure.",
-    "The 30-90 second hold window may be too tight to capture the full mean-reversion on slow-reverting days — time stop fires before target is reached.",
-    "VWAP is less meaningful in the first 5-10 minutes (too few bars) — late session_start (09:20) partially mitigates this but early VWAP is still noisy."
+    "The 30-90 second hold window may be too tight to capture the full mean-reversion on slow-reverting days \u2014 time stop fires before target is reached.",
+    "VWAP is less meaningful in the first 5-10 minutes (too few bars) \u2014 late session_start (09:20) partially mitigates this but early VWAP is still noisy."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_130.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-12 bars (5-12 minutes)",
-    "original_indicators": ["VWAP", "ATR(14)", "rel_volume_20", "RSI(2)", "wick_down_ratio", "wick_up_ratio", "vwap_slope_5", "index_return_5"],
+    "original_indicators": [
+      "VWAP",
+      "ATR(14)",
+      "rel_volume_20",
+      "RSI(2)",
+      "wick_down_ratio",
+      "wick_up_ratio",
+      "vwap_slope_5",
+      "index_return_5"
+    ],
     "original_stop": "signal bar extreme or 0.45% from entry",
     "original_target": "session VWAP or 0.60% move"
-  }
+  },
+  "vix_agnostic": true
 }

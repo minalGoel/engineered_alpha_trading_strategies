@@ -28,8 +28,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("gap_threshold", 0.003, 0.001, 0.008),   # min gap fraction
             TunableParam("vol_mult", 1.2, 1.0, 2.0),              # volume surge multiplier
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -60,8 +60,8 @@ class Strategy(BaseStrategy):
 
         gap_threshold = params.get("gap_threshold", 0.003)
         vol_mult = params.get("vol_mult", 1.2)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── Compute day-level open and previous-day close ─────────────────────
         day_open = np.zeros(n)

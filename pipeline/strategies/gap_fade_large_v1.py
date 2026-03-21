@@ -154,10 +154,10 @@ class Strategy(BaseStrategy):
             sell_pe=np.zeros(n, dtype=bool),
             # Stop: 4 pts = ~8 NIFTY spot pts at delta 0.5
             # If extension deepens by 4 option pts, institutional flow is joining — exit
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 4),
             # Target: 7 pts = ~14 NIFTY spot pts
             # First fade leg from an over-extended gap covers 15-25 spot pts; 7 pts captures ~50%
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,          # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

@@ -2,14 +2,23 @@
   "name": "vwap_rsi_confluence_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["vwap", "rsi", "confluence", "mean-reversion", "double-confirmation"],
+  "tags": [
+    "vwap",
+    "rsi",
+    "confluence",
+    "mean_reversion",
+    "double-confirmation"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_146.json",
   "original_name": "vwap_rsi_confluence_v1",
-  "mechanism": "On NIFTY, when the index trades >0.3% below session VWAP while the 2-minute RSI (24 bars at 5s) falls below 30, two distinct institutional flows converge simultaneously: VWAP-benchmarked algorithms (pension funds, FII desks) begin aggressive accumulation because they are filling 30-50 points below their daily benchmark, and delta-hedging market makers who sold ATM puts at the RSI extreme begin unwinding their short delta. This dual-flow demand creates sharp 15-40 second reversions of 10-20 NIFTY spot points. The RSI slope turning positive from below 30 (within the same 5-second bar) signals the exhaustion of selling pressure before the 1-minute bar closes, enabling entry 45-55 seconds earlier than the original strategy's 1-min confirmation — capturing the steepest part of the reversion curve.",
+  "mechanism": "On NIFTY, when the index trades >0.3% below session VWAP while the 2-minute RSI (24 bars at 5s) falls below 30, two distinct institutional flows converge simultaneously: VWAP-benchmarked algorithms (pension funds, FII desks) begin aggressive accumulation because they are filling 30-50 points below their daily benchmark, and delta-hedging market makers who sold ATM puts at the RSI extreme begin unwinding their short delta. This dual-flow demand creates sharp 15-40 second reversions of 10-20 NIFTY spot points. The RSI slope turning positive from below 30 (within the same 5-second bar) signals the exhaustion of selling pressure before the 1-minute bar closes, enabling entry 45-55 seconds earlier than the original strategy's 1-min confirmation \u2014 capturing the steepest part of the reversion curve.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -25,30 +34,30 @@
     {
       "name": "vwap",
       "formula": "cumsum(typical_price * volume) / cumsum(volume), reset daily at 09:15",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative session VWAP — no scaling needed, same definition regardless of bar size. Institutional fair-value anchor."
+      "purpose": "Cumulative session VWAP \u2014 no scaling needed, same definition regardless of bar size. Institutional fair-value anchor."
     },
     {
       "name": "vwap_dev_pct",
       "formula": "(close - vwap) / vwap * 100",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Deviation from VWAP as percentage. Threshold reduced from original 0.5% (equity) to 0.3% (index) because NIFTY index is smoother than single stocks — 0.3% on NIFTY (~70 pts) is already a significant intraday deviation comparable to 0.5% on a liquid mid-cap."
+      "purpose": "Deviation from VWAP as percentage. Threshold reduced from original 0.5% (equity) to 0.3% (index) because NIFTY index is smoother than single stocks \u2014 0.3% on NIFTY (~70 pts) is already a significant intraday deviation comparable to 0.5% on a liquid mid-cap."
     },
     {
       "name": "rsi_24",
       "formula": "RSI(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute RSI (24 × 5s bars). NOT blindly scaled from original 14 (which would give 168 bars = 14-min RSI, too slow for 30-90s holds). We want RSI that reflects exhaustion within the last 2 minutes — the timeframe within which we expect the reversion to begin. 24 bars is fast enough to detect the entry signal while avoiding 5-second noise that plagues shorter RSI periods."
+      "purpose": "2-minute RSI (24 \u00d7 5s bars). NOT blindly scaled from original 14 (which would give 168 bars = 14-min RSI, too slow for 30-90s holds). We want RSI that reflects exhaustion within the last 2 minutes \u2014 the timeframe within which we expect the reversion to begin. 24 bars is fast enough to detect the entry signal while avoiding 5-second noise that plagues shorter RSI periods."
     },
     {
       "name": "rsi_slope",
       "formula": "rsi_24[t] - rsi_24[t-6]",
       "lookback": 6,
       "computed_on": "spot",
-      "purpose": "30-second RSI momentum (6 × 5s bars). Adapted from original's 3-bar slope on 1-min bars (= 3 minutes). Compressed to 6 bars (30s) because at 5s resolution we are detecting the TURN within the extreme, not confirming a sustained recovery. A 30s RSI upturn is sufficient confirmation that selling pressure is exhausting."
+      "purpose": "30-second RSI momentum (6 \u00d7 5s bars). Adapted from original's 3-bar slope on 1-min bars (= 3 minutes). Compressed to 6 bars (30s) because at 5s resolution we are detecting the TURN within the extreme, not confirming a sustained recovery. A 30s RSI upturn is sufficient confirmation that selling pressure is exhausting."
     }
   ],
   "entry": {
@@ -58,9 +67,9 @@
         "rsi_24 < 30 (2-min RSI in oversold territory)",
         "rsi_slope > 0 (RSI turning up within the oversold zone)",
         "close > open on current 5s bar (bullish candle confirming buying pressure)",
-        "VIX < 22 (panic markets produce false confluence — VWAP overshoots don't revert cleanly)"
+        "VIX < 22 (panic markets produce false confluence \u2014 VWAP overshoots don't revert cleanly)"
       ],
-      "confirmation": "RSI slope positive AND bullish candle — both must be true on same bar"
+      "confirmation": "RSI slope positive AND bullish candle \u2014 both must be true on same bar"
     },
     "buy_pe": {
       "conditions": [
@@ -68,46 +77,51 @@
         "rsi_24 > 70 (2-min RSI in overbought territory)",
         "rsi_slope < 0 (RSI turning down within overbought zone)",
         "close < open on current 5s bar (bearish candle confirming selling pressure)",
-        "VIX < 22 (same rationale — extreme VIX distorts VWAP mean-reversion reliability)"
+        "VIX < 22 (same rationale \u2014 extreme VIX distorts VWAP mean-reversion reliability)"
       ],
-      "confirmation": "RSI slope negative AND bearish candle — both must be true on same bar"
+      "confirmation": "RSI slope negative AND bearish candle \u2014 both must be true on same bar"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts ≈ 8 NIFTY spot points at delta 0.5. If NIFTY deepens another 8 pts from entry while already at a 0.3% VWAP deviation, the mean-reversion thesis is invalidated — this is a genuine directional move, not a temporary overshoot. NIFTY 30-second typical move is 2-5 pts; 4 pts is 1x-2x the expected background noise, giving the signal room while cutting losses before thesis failure.",
-    "target_points": 7,
-    "target_rationale": "7 option pts ≈ 14 NIFTY spot points at delta 0.5. NIFTY confluent VWAP+RSI extremes at 0.3% deviation typically revert 15-25 spot points within 60-90 seconds as both institutional VWAP buyers and MM delta-hedgers unwind. Targeting 14 pts captures ~70% of the median reversion, maintaining 1:1.75 risk-reward while staying within achievable move sizes for a 90-second hold.",
+    "stop_points": 3.0,
+    "stop_rationale": "4 option pts \u2248 8 NIFTY spot points at delta 0.5. If NIFTY deepens another 8 pts from entry while already at a 0.3% VWAP deviation, the mean-reversion thesis is invalidated \u2014 this is a genuine directional move, not a temporary overshoot. NIFTY 30-second typical move is 2-5 pts; 4 pts is 1x-2x the expected background noise, giving the signal room while cutting losses before thesis failure.",
+    "target_points": 6.0,
+    "target_rationale": "7 option pts \u2248 14 NIFTY spot points at delta 0.5. NIFTY confluent VWAP+RSI extremes at 0.3% deviation typically revert 15-25 spot points within 60-90 seconds as both institutional VWAP buyers and MM delta-hedgers unwind. Targeting 14 pts captures ~70% of the median reversion, maintaining 1:1.75 risk-reward while staying within achievable move sizes for a 90-second hold.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "VIX < 22 — above 22, panic selling overwhelms VWAP mean-reversion; VWAP deviations persist for minutes rather than reverting in seconds",
-    "time_filter": "09:30-15:20 IST — skip 09:15-09:30 because RSI needs 24-bar warmup and opening volatility produces false confluences",
-    "volume_filter": "none explicit — NIFTY index volume is always liquid; individual stock volume filter not applicable",
-    "trend_filter": "none — pure mean reversion, no trend overlay needed; VIX filter handles catastrophic trend days",
-    "spread_filter": "not applicable — limit order execution at 5s candle close prices, no bid-ask spread cost"
+    "vix_filter": "VIX < 22 \u2014 above 22, panic selling overwhelms VWAP mean-reversion; VWAP deviations persist for minutes rather than reverting in seconds",
+    "time_filter": "09:30-15:20 IST \u2014 skip 09:15-09:30 because RSI needs 24-bar warmup and opening volatility produces false confluences",
+    "volume_filter": "none explicit \u2014 NIFTY index volume is always liquid; individual stock volume filter not applicable",
+    "trend_filter": "none \u2014 pure mean reversion, no trend overlay needed; VIX filter handles catastrophic trend days",
+    "spread_filter": "not applicable \u2014 limit order execution at 5s candle close prices, no bid-ask spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.58,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.4,
-    "edge_decay_risk": "moderate — VWAP+RSI confluence is well-known but rare enough on indices to avoid heavy arbitrage; risk is that HFT desks front-run the confluence signals, reducing the first leg of reversion that we depend on"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.76,
+    "edge_decay_risk": "moderate \u2014 VWAP+RSI confluence is well-known but rare enough on indices to avoid heavy arbitrage; risk is that HFT desks front-run the confluence signals, reducing the first leg of reversion that we depend on"
   },
-  "adaptation_notes": "Original equity strategy used RSI(14) on 1-min bars (= 14 minutes of data) with a 0.5% VWAP deviation threshold, holding 10-40 minutes for full VWAP reclaim. For 5s NIFTY: (1) RSI compressed to 24 bars (2 min) — we trade the fast first-leg reversion, not the full recovery; (2) VWAP deviation threshold reduced to 0.3% because NIFTY index is smoother than individual stocks — 0.3% is already significant; (3) RSI slope window compressed from 3 min to 30s — detecting the turn within the extreme, not a sustained recovery; (4) Hold time compressed from 10-40 min to 30-90s — capturing the institutional demand flush, not waiting for VWAP reclaim; (5) Stop/target in option pts rather than % moves — calibrated to 90-second NIFTY move magnitudes.",
+  "adaptation_notes": "Original equity strategy used RSI(14) on 1-min bars (= 14 minutes of data) with a 0.5% VWAP deviation threshold, holding 10-40 minutes for full VWAP reclaim. For 5s NIFTY: (1) RSI compressed to 24 bars (2 min) \u2014 we trade the fast first-leg reversion, not the full recovery; (2) VWAP deviation threshold reduced to 0.3% because NIFTY index is smoother than individual stocks \u2014 0.3% is already significant; (3) RSI slope window compressed from 3 min to 30s \u2014 detecting the turn within the extreme, not a sustained recovery; (4) Hold time compressed from 10-40 min to 30-90s \u2014 capturing the institutional demand flush, not waiting for VWAP reclaim; (5) Stop/target in option pts rather than % moves \u2014 calibrated to 90-second NIFTY move magnitudes.",
   "weaknesses": [
-    "RSI(24) on 5s bars is still relatively fast — at very low volatility sessions, RSI rarely touches 30/70, producing few signals",
-    "Double confirmation (RSI extreme + VWAP deviation) is rare on NIFTY which is smoother than individual stocks — may generate only 1-3 signals per day",
-    "Strong directional days (macro events, RBI policy) can sustain VWAP deviations without reverting — VIX filter helps but does not eliminate this risk",
+    "RSI(24) on 5s bars is still relatively fast \u2014 at very low volatility sessions, RSI rarely touches 30/70, producing few signals",
+    "Double confirmation (RSI extreme + VWAP deviation) is rare on NIFTY which is smoother than individual stocks \u2014 may generate only 1-3 signals per day",
+    "Strong directional days (macro events, RBI policy) can sustain VWAP deviations without reverting \u2014 VIX filter helps but does not eliminate this risk",
     "NIFTY's 5s candles have low individual-bar signal; the bullish/bearish candle confirmation adds noise reduction but can delay entry slightly"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_146.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-40 minutes",
-    "original_indicators": ["VWAP (cumulative)", "RSI(14)", "RSI_slope(3-bar)", "ATR(14)"],
+    "original_indicators": [
+      "VWAP (cumulative)",
+      "RSI(14)",
+      "RSI_slope(3-bar)",
+      "ATR(14)"
+    ],
     "original_stop": "0.4% from entry price",
     "original_target": "VWAP reclaim (vwap_dev_pct crosses 0) or RSI crosses 50"
   }

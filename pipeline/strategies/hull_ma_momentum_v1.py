@@ -51,8 +51,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("hma_threshold", 0.5, 0.1, 2.0),   # min abs HMA slope (index pts)
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -114,8 +114,8 @@ class Strategy(BaseStrategy):
 
         # ── Parameters ────────────────────────────────────────────────────────
         hma_threshold = params.get("hma_threshold", 0.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Filters ───────────────────────────────────────────────────────────
         in_session = (time_min >= self.session_start_minutes) & (

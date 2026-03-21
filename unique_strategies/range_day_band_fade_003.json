@@ -2,14 +2,23 @@
   "name": "range_day_band_fade_003",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "range_day", "vwap", "bands", "mfi"],
+  "tags": [
+    "mean_reversion",
+    "range_day",
+    "vwap",
+    "bands",
+    "mfi"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_132.json",
   "original_name": "range_day_band_fade_003",
-  "mechanism": "On NIFTY, range-bound sessions (ADX < 20, flat 5-minute VWAP slope) create a microstructure where VWAP-benchmarked institutional algorithms aggressively defend prices that deviate 0.05-0.10% from session VWAP — they treat every tick away from benchmark as a free fill opportunity and immediately place opposing limit orders. When 1-minute MFI simultaneously reaches extreme (≤22 or ≥78), it confirms that short-term buying or selling pressure has exhausted available counterparty interest, leaving only the VWAP algos on one side of the book. The 20-minute Bollinger band acts as a safety filter: if price has already pierced the band, the move is a regime break rather than an overreaction, and the fade is skipped. At 5-second resolution we enter the moment MFI exhaustion prints with a bullish/bearish close bar, capturing 5-8 option points of the first-leg VWAP reversion before the next directional impulse.",
+  "mechanism": "On NIFTY, range-bound sessions (ADX < 20, flat 5-minute VWAP slope) create a microstructure where VWAP-benchmarked institutional algorithms aggressively defend prices that deviate 0.05-0.10% from session VWAP \u2014 they treat every tick away from benchmark as a free fill opportunity and immediately place opposing limit orders. When 1-minute MFI simultaneously reaches extreme (\u226422 or \u226578), it confirms that short-term buying or selling pressure has exhausted available counterparty interest, leaving only the VWAP algos on one side of the book. The 20-minute Bollinger band acts as a safety filter: if price has already pierced the band, the move is a regime break rather than an overreaction, and the fade is skipped. At 5-second resolution we enter the moment MFI exhaustion prints with a bullish/bearish close bar, capturing 5-8 option points of the first-leg VWAP reversion before the next directional impulse.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "10:15-14:15 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -27,28 +36,28 @@
       "formula": "VWAP() cumulative from session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative from session open — no lookback needed. NIFTY's session VWAP is the primary institutional benchmark; every TWAP/VWAP algo executes relative to this level."
+      "purpose": "Cumulative from session open \u2014 no lookback needed. NIFTY's session VWAP is the primary institutional benchmark; every TWAP/VWAP algo executes relative to this level."
     },
     {
       "name": "adx_120",
       "formula": "ADX(high, low, close, 120)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "ADX over 120 bars = 10 minutes. Original used ADX(14) on 1-min = 14-minute ADX as a CONTEXT FILTER — detecting range vs trend regime. We use the same 10-minute window (not 12x blind scaling) because this is about detecting the intraday regime of the current session, not the trade trigger itself. Warmup requires 2× period = 240 bars."
+      "purpose": "ADX over 120 bars = 10 minutes. Original used ADX(14) on 1-min = 14-minute ADX as a CONTEXT FILTER \u2014 detecting range vs trend regime. We use the same 10-minute window (not 12x blind scaling) because this is about detecting the intraday regime of the current session, not the trade trigger itself. Warmup requires 2\u00d7 period = 240 bars."
     },
     {
       "name": "bb_upper_240",
       "formula": "SMA(close, 240) + 2.2 * STDDEV(close, 240)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Bollinger upper band over 240 bars = 20 minutes. Same TIME window as the original (20 × 1-min = 20 min). The BB is a safety filter: if NIFTY price is OUTSIDE the 20-min band, the move is a genuine breakout, not overreaction. We only fade moves that are inside the band (i.e., normal range-day oscillation)."
+      "purpose": "Bollinger upper band over 240 bars = 20 minutes. Same TIME window as the original (20 \u00d7 1-min = 20 min). The BB is a safety filter: if NIFTY price is OUTSIDE the 20-min band, the move is a genuine breakout, not overreaction. We only fade moves that are inside the band (i.e., normal range-day oscillation)."
     },
     {
       "name": "bb_lower_240",
       "formula": "SMA(close, 240) - 2.2 * STDDEV(close, 240)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Bollinger lower band — same rationale as bb_upper_240."
+      "purpose": "Bollinger lower band \u2014 same rationale as bb_upper_240."
     },
     {
       "name": "vwap_slope_60",
@@ -62,17 +71,17 @@
       "formula": "MFI(high, low, close, volume, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "MFI over 12 bars = 1 minute. Original used MFI(5) on 1-min = 5 minutes. Compressed to 1 minute because at 5-second resolution we are looking for FAST exhaustion — a climax print in 12 bars (1 minute) means the short-term pressure just peaked. A 5-minute MFI would be a lagging signal by the time exhaustion resolves, missing the entry window."
+      "purpose": "MFI over 12 bars = 1 minute. Original used MFI(5) on 1-min = 5 minutes. Compressed to 1 minute because at 5-second resolution we are looking for FAST exhaustion \u2014 a climax print in 12 bars (1 minute) means the short-term pressure just peaked. A 5-minute MFI would be a lagging signal by the time exhaustion resolves, missing the entry window."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "adx_120 < adx_threshold (default 20.0)",
-        "vwap_slope_60 < vwap_slope_threshold (default 0.06 × ATR)",
+        "vwap_slope_60 < vwap_slope_threshold (default 0.06 \u00d7 ATR)",
         "(close - vwap) / vwap <= -vwap_dev_threshold (default -0.0005, i.e. ~11 pts below VWAP on NIFTY 23000)",
         "close > bb_lower_240 (not a breakdown, just a range-day dip)",
-        "mfi_12 <= mfi_low (default 22 — exhausted selling pressure)",
+        "mfi_12 <= mfi_low (default 22 \u2014 exhausted selling pressure)",
         "close > open (bullish close bar confirms start of reversion)"
       ],
       "confirmation": "Bullish close bar (close > open) confirming the first-tick reversion from oversold extreme"
@@ -80,10 +89,10 @@
     "buy_pe": {
       "conditions": [
         "adx_120 < adx_threshold (default 20.0)",
-        "vwap_slope_60 < vwap_slope_threshold (default 0.06 × ATR)",
+        "vwap_slope_60 < vwap_slope_threshold (default 0.06 \u00d7 ATR)",
         "(close - vwap) / vwap >= +vwap_dev_threshold (default +0.0005, i.e. ~11 pts above VWAP on NIFTY 23000)",
         "close < bb_upper_240 (not a breakout, just range-day overshoot)",
-        "mfi_12 >= mfi_high (default 78 — exhausted buying pressure)",
+        "mfi_12 >= mfi_high (default 78 \u2014 exhausted buying pressure)",
         "close < open (bearish close bar confirms start of fade)"
       ],
       "confirmation": "Bearish close bar (close < open) confirming the first-tick rejection from overbought extreme"
@@ -91,10 +100,10 @@
     "entry_price": "close of signal bar (limit order)"
   },
   "exit": {
-    "stop_points": 4.0,
+    "stop_points": 3.0,
     "stop_rationale": "4 option points = ~8 NIFTY spot points adverse move. On a confirmed range day (ADX < 20), a move of >8 spot points in one direction from entry indicates the range structure is breaking into a trend; this is the thesis invalidation point and we exit before momentum algos compound the move further.",
-    "target_points": 7.0,
-    "target_rationale": "7 option points = ~14 NIFTY spot points towards VWAP. When NIFTY is 11-20 pts from VWAP on a range day, partial VWAP reversion of 14 pts captures 70-130% of the initial gap in the first 30-90 seconds — consistent with the 1-minute VWAP-algo accumulation pattern. This gives a 1:1.75 R:R at symmetric stop.",
+    "target_points": 6.0,
+    "target_rationale": "7 option points = ~14 NIFTY spot points towards VWAP. When NIFTY is 11-20 pts from VWAP on a range day, partial VWAP reversion of 14 pts captures 70-130% of the initial gap in the first 30-90 seconds \u2014 consistent with the 1-minute VWAP-algo accumulation pattern. This gives a 1:1.75 R:R at symmetric stop.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 14:15 IST"
   },
@@ -108,23 +117,32 @@
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.58,
-    "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 2.07,
-    "edge_decay_risk": "medium — regime dependent; works only on range days which occur 40-60% of sessions"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.76,
+    "edge_decay_risk": "medium \u2014 regime dependent; works only on range days which occur 40-60% of sessions"
   },
-  "adaptation_notes": "Original was a cross-sectional nifty200 equity strategy. Converted to single-instrument NIFTY index. Key changes: (1) VWAP deviation threshold compressed from 0.7% (stocks can deviate this far) to 0.05% default (NIFTY index rarely deviates more than 0.3% on a range day); (2) MFI period compressed from 5-min to 1-min because we want FAST exhaustion at the entry bar not lagging confirmation; (3) ADX period recalibrated to 10-minute window (120 bars) maintaining same time duration as original 14-min ADX; (4) BB period kept at 20 minutes = 240 bars (same time window — this is a fixed-time filter, not a lookback-scaled one); (5) VWAP slope reduced from 10-min to 5-min window for tighter flatness requirement; (6) Hold time compressed from 5-22 min to 15-120 seconds; (7) No volume filter — replaced by MFI exhaustion which is inherently volume-weighted.",
+  "adaptation_notes": "Original was a cross-sectional nifty200 equity strategy. Converted to single-instrument NIFTY index. Key changes: (1) VWAP deviation threshold compressed from 0.7% (stocks can deviate this far) to 0.05% default (NIFTY index rarely deviates more than 0.3% on a range day); (2) MFI period compressed from 5-min to 1-min because we want FAST exhaustion at the entry bar not lagging confirmation; (3) ADX period recalibrated to 10-minute window (120 bars) maintaining same time duration as original 14-min ADX; (4) BB period kept at 20 minutes = 240 bars (same time window \u2014 this is a fixed-time filter, not a lookback-scaled one); (5) VWAP slope reduced from 10-min to 5-min window for tighter flatness requirement; (6) Hold time compressed from 5-22 min to 15-120 seconds; (7) No volume filter \u2014 replaced by MFI exhaustion which is inherently volume-weighted.",
   "weaknesses": [
-    "Range days that appear to be low-ADX at session start can break into trends intraday — ADX lags regime changes by 5-10 minutes.",
+    "Range days that appear to be low-ADX at session start can break into trends intraday \u2014 ADX lags regime changes by 5-10 minutes.",
     "NIFTY index VWAP deviation of 0.05% may generate too-frequent signals on days with continuous drift; vwap_slope filter is critical to avoid.",
     "MFI(12) on 5-second NIFTY bars can be noisy due to index volume aggregation methodology.",
-    "Effective only on 40-60% of sessions (range days) — dead capital on trend days."
+    "Effective only on 40-60% of sessions (range days) \u2014 dead capital on trend days."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_132.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-22 bars (5-22 min)",
-    "original_indicators": ["vwap", "atr_14", "adx_14", "vwap_slope_10", "bb_upper_20", "bb_lower_20", "mfi_5"],
-    "original_stop": "0.45% from entry or 0.6 × atr_14 beyond signal extreme",
+    "original_indicators": [
+      "vwap",
+      "atr_14",
+      "adx_14",
+      "vwap_slope_10",
+      "bb_upper_20",
+      "bb_lower_20",
+      "mfi_5"
+    ],
+    "original_stop": "0.45% from entry or 0.6 \u00d7 atr_14 beyond signal extreme",
     "original_target": "session VWAP or middle Bollinger band"
-  }
+  },
+  "vix_agnostic": true
 }

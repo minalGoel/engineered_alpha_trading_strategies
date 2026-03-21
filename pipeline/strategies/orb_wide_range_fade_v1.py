@@ -72,8 +72,8 @@ class Strategy(BaseStrategy):
             TunableParam("orb_entry_pct", 0.15, 0.08, 0.25),
             TunableParam("rsi_overbought", 70.0, 60.0, 80.0),
             TunableParam("rsi_oversold", 30.0, 20.0, 40.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -96,8 +96,8 @@ class Strategy(BaseStrategy):
         orb_entry_pct = params.get("orb_entry_pct", 0.15)
         rsi_overbought = params.get("rsi_overbought", 70.0)
         rsi_oversold = params.get("rsi_oversold", 30.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ORB window: 09:15–09:30 IST (minutes 555 to 570)
         ORB_START = 555   # inclusive

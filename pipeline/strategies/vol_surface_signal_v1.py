@@ -43,7 +43,7 @@ class Strategy(BaseStrategy):
     underlying = "NIFTY"
     session_start_minutes = 570   # 09:30 IST — let post-open option pricing settle
     session_end_minutes = 920     # 15:20 IST
-    max_trades_per_day = 5
+    max_trades_per_day = 6
     max_lookback = 360            # 30 min warmup (240 z-score window + buffer)
 
     def tunable_params(self) -> list[TunableParam]:

@@ -2,14 +2,23 @@
   "name": "previous_day_hl_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["breakout", "previous-day", "level-based", "institutional-flow", "intraday"],
+  "tags": [
+    "breakout",
+    "previous-day",
+    "level-based",
+    "institutional-flow",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_181.json",
   "original_name": "previous_day_hl_breakout_v1",
-  "mechanism": "When NIFTY breaks above its previous session high on 5-second bars with a >2.5x volume surge (vs 5-minute rolling average), VWAP-benchmarked institutional algorithms and delta-hedgers covering shorts near PDH strike clusters drive an immediate 8-15 spot point impulse within the first 60-90 seconds. The 3-bar (15-second) confirmation filter distinguishes sustained institutional breakouts from stop-hunt spikes that reverse within one or two bars — genuine PDH breaks on NIFTY sustain above the level because the buy-side order flow exceeds remaining supply at that price. The same logic applies inversely for PDL breaks: every seller from yesterday is at a loss and fresh stop-cascades accelerate the sell-off.",
+  "mechanism": "When NIFTY breaks above its previous session high on 5-second bars with a >2.5x volume surge (vs 5-minute rolling average), VWAP-benchmarked institutional algorithms and delta-hedgers covering shorts near PDH strike clusters drive an immediate 8-15 spot point impulse within the first 60-90 seconds. The 3-bar (15-second) confirmation filter distinguishes sustained institutional breakouts from stop-hunt spikes that reverse within one or two bars \u2014 genuine PDH breaks on NIFTY sustain above the level because the buy-side order flow exceeds remaining supply at that price. The same logic applies inversely for PDL breaks: every seller from yesterday is at a loss and fresh stop-cascades accelerate the sell-off.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:00 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "0-4",
   "max_trades_per_day": 4,
@@ -19,29 +28,32 @@
     "vix": false,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["previous_day_high", "previous_day_low"]
+    "other": [
+      "previous_day_high",
+      "previous_day_low"
+    ]
   },
   "indicators": [
     {
       "name": "pdh",
       "formula": "previous session max(high)",
-      "lookback": "prev_day",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Static level computed once per session from prior day's highs. No scaling needed — it's a prior-session anchor, not a rolling window. Valid for the entire current session."
+      "purpose": "Static level computed once per session from prior day's highs. No scaling needed \u2014 it's a prior-session anchor, not a rolling window. Valid for the entire current session."
     },
     {
       "name": "pdl",
       "formula": "previous session min(low)",
-      "lookback": "prev_day",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "Same as PDH but for the downside. These two levels bracket where all of yesterday's participants built positions."
     },
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume) from 09:15 per day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session open. Confirms directional bias — PDH breaks valid only when price is already above VWAP (institutional buy-side is in control of the session). No scaling because VWAP is cumulative, not windowed."
+      "purpose": "Cumulative VWAP from session open. Confirms directional bias \u2014 PDH breaks valid only when price is already above VWAP (institutional buy-side is in control of the session). No scaling because VWAP is cumulative, not windowed."
     },
     {
       "name": "volume_ratio",
@@ -55,7 +67,7 @@
     "buy_ce": {
       "conditions": [
         "close[i] > pdh AND close[i-1] > pdh AND close[i-2] > pdh (3 consecutive 5s closes above PDH)",
-        "close[i-3] <= pdh (fresh break — not already above before the 3 confirmation bars)",
+        "close[i-3] <= pdh (fresh break \u2014 not already above before the 3 confirmation bars)",
         "volume_ratio[i-2] > 2.5 (volume surge on the initial break bar)",
         "close[i] > vwap[i] (VWAP context: buy-side controlling the session)",
         "time_minutes in [570, 780) (09:30-13:00 IST: afternoon PDH breaks have lower follow-through)"
@@ -75,40 +87,46 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 5.0,
     "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If NIFTY reverses 8 spot points after confirming a PDH break, the institutional flow has reversed and the breakout has failed; typical false breakouts on NIFTY reverse 6-10 spot points before re-breaking.",
-    "target_points": 7,
+    "target_points": 8.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points. PDH/PDL breakouts on NIFTY produce 12-20 spot point first-leg impulses within 60-90 seconds; 7 pts captures the lower bound of this range (conservative 1:1.75 R:R ensures profitability even at 50% win rate).",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:00 IST"
   },
   "filters": {
     "vix_filter": "none (PDH/PDL are structural breakouts that work across VIX regimes; high VIX actually increases magnitude of PDH breaks)",
-    "time_filter": "09:30-13:00 IST only — afternoon PDH breaks have lower follow-through as institutional algorithms wind down directional orders",
+    "time_filter": "09:30-13:00 IST only \u2014 afternoon PDH breaks have lower follow-through as institutional algorithms wind down directional orders",
     "volume_filter": "volume_ratio > 2.5 on break bar confirms institutional participation vs. retail probing",
     "trend_filter": "VWAP directional filter ensures macro session bias aligns with breakout direction",
-    "spread_filter": "N/A — limit orders at close price"
+    "spread_filter": "N/A \u2014 limit orders at close price"
   },
   "edge": {
     "expected_bps": 35,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.9,
-    "edge_decay_risk": "moderate — PDH/PDL are universally watched levels but volume + time + 3-bar filters add specificity. NIFTY is more efficiently priced than individual stocks, so edge is smaller but more consistent."
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "moderate \u2014 PDH/PDL are universally watched levels but volume + time + 3-bar filters add specificity. NIFTY is more efficiently priced than individual stocks, so edge is smaller but more consistent."
   },
-  "adaptation_notes": "Original targeted NIFTY 200 stocks with 1-min bars and 30-90 min holds. Key changes: (1) Applied to NIFTY index directly — index PDH/PDL are more institutionally relevant than stock-level PDH/PDL; (2) 3-bar confirmation is now 15 seconds instead of 3 minutes — we're catching the initial breakout impulse, not waiting for trend confirmation; (3) Hold time compressed from 30-90 min to 30-90 seconds — capture the first institutional surge, not the full trend; (4) Volume baseline uses 5-min rolling (60 bars at 5s) instead of 20-bar 1-min SMA — same time window, different granularity; (5) Stops/targets converted from % of price to option premium points calibrated to 60-90s NIFTY move magnitudes.",
+  "adaptation_notes": "Original targeted NIFTY 200 stocks with 1-min bars and 30-90 min holds. Key changes: (1) Applied to NIFTY index directly \u2014 index PDH/PDL are more institutionally relevant than stock-level PDH/PDL; (2) 3-bar confirmation is now 15 seconds instead of 3 minutes \u2014 we're catching the initial breakout impulse, not waiting for trend confirmation; (3) Hold time compressed from 30-90 min to 30-90 seconds \u2014 capture the first institutional surge, not the full trend; (4) Volume baseline uses 5-min rolling (60 bars at 5s) instead of 20-bar 1-min SMA \u2014 same time window, different granularity; (5) Stops/targets converted from % of price to option premium points calibrated to 60-90s NIFTY move magnitudes.",
   "weaknesses": [
-    "NIFTY PDH/PDL breaks happen 1-3 times per day at most — very few signals, parameter sensitivity high",
-    "First day of data has no PDH/PDL — warm-up period required",
+    "NIFTY PDH/PDL breaks happen 1-3 times per day at most \u2014 very few signals, parameter sensitivity high",
+    "First day of data has no PDH/PDL \u2014 warm-up period required",
     "Volume ratio noise at 5-second bars may cause spurious surges unrelated to institutional flow",
-    "PDH/PDL levels are the most crowded levels in NIFTY trading — break and reverse patterns are common, requiring strict confirmation"
+    "PDH/PDL levels are the most crowded levels in NIFTY trading \u2014 break and reverse patterns are common, requiring strict confirmation"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_181.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-90 minutes",
-    "original_indicators": ["PDH", "PDL", "VWAP", "volume_ratio_20"],
+    "original_indicators": [
+      "PDH",
+      "PDL",
+      "VWAP",
+      "volume_ratio_20"
+    ],
     "original_stop": "0.3% or back below PDH",
     "original_target": "0.7% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

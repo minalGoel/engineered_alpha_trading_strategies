@@ -27,8 +27,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("bw_pctile_threshold", 20.0, 5.0, 35.0),
             TunableParam("vix_max", 22.0, 16.0, 28.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -40,8 +40,8 @@ class Strategy(BaseStrategy):
 
         bw_pctile_threshold = params.get("bw_pctile_threshold", 20.0)
         vix_max = params.get("vix_max", 22.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX filter ──────────────────────────────────────────────────────
         vix_close = np.full(n, 15.0)

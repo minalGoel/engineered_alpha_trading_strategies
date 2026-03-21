@@ -76,8 +76,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("compression_threshold", 0.55, 0.35, 0.75),
             TunableParam("range_expansion_mult", 1.5, 1.2, 2.2),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -100,8 +100,8 @@ class Strategy(BaseStrategy):
         # ── Parameters ───────────────────────────────────────────────────────
         compression_threshold = params.get("compression_threshold", 0.55)
         range_expansion_mult = params.get("range_expansion_mult", 1.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Log returns (5-second) ────────────────────────────────────────────
         log_ret = np.zeros(n, dtype=np.float64)

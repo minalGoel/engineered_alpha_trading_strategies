@@ -130,7 +130,7 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_oversold",  40.0, 28.0, 50.0),
             TunableParam("rsi_overbought", 60.0, 50.0, 72.0),
             TunableParam("stop_pts",       4.0,  2.0,  8.0),
-            TunableParam("target_pts",     7.0,  4.0, 12.0),
+            TunableParam("target_pts",     8.0,  4.0, 12.0),
             TunableParam("vix_max",       22.0, 15.0, 28.0),
         ]
 
@@ -158,7 +158,7 @@ class Strategy(BaseStrategy):
         rsi_os   = params.get("rsi_oversold",  40.0)
         rsi_ob   = params.get("rsi_overbought", 60.0)
         stop_pts = params.get("stop_pts",        4.0)
-        tgt_pts  = params.get("target_pts",      7.0)
+        tgt_pts  = params.get("target_pts",      8.0)
         vix_max  = params.get("vix_max",        22.0)
 
         # ── VIX filter ────────────────────────────────────────────────────────

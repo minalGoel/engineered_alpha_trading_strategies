@@ -2,14 +2,22 @@
   "name": "fibonacci_intraday_retracement",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "pivots", "fibonacci", "morning_range"],
+  "tags": [
+    "mean_reversion",
+    "pivots",
+    "fibonacci",
+    "morning_range"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_358.json",
   "original_name": "fibonacci_intraday_retracement",
-  "mechanism": "On NIFTY, the 09:15-10:15 opening range crystallizes overnight positioning and early institutional order flow into a single high-low anchor. The 61.8% Fibonacci retracement of this range is pre-loaded into virtually every systematic algo and institutional desk as a standing limit-order cluster — making it a self-fulfilling magnet at the index level (more so than on individual stocks, because more strategies monitor NIFTY Fibonacci levels simultaneously). When NIFTY price wicks into this level mid-session and closes back through it within a 5-second bar, the dense resting order queue at the level provides the microstructure impulse: on the long side, VWAP-benchmarked funds accumulating below their benchmark price absorb the dip aggressively; on the short side, delta-hedging from option sellers adds directional supply at the resistance.",
+  "mechanism": "On NIFTY, the 09:15-10:15 opening range crystallizes overnight positioning and early institutional order flow into a single high-low anchor. The 61.8% Fibonacci retracement of this range is pre-loaded into virtually every systematic algo and institutional desk as a standing limit-order cluster \u2014 making it a self-fulfilling magnet at the index level (more so than on individual stocks, because more strategies monitor NIFTY Fibonacci levels simultaneously). When NIFTY price wicks into this level mid-session and closes back through it within a 5-second bar, the dense resting order queue at the level provides the microstructure impulse: on the long side, VWAP-benchmarked funds accumulating below their benchmark price absorb the dip aggressively; on the short side, delta-hedging from option sellers adds directional supply at the resistance.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "11:00-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "1-3",
   "max_trades_per_day": 4,
@@ -27,7 +35,7 @@
       "formula": "max(high) from 09:15 to 10:15 each session",
       "lookback": 720,
       "computed_on": "spot",
-      "purpose": "Fixed time window: 09:15-10:15 = 720 bars at 5s. NOT scaled from the original's 60 bars — this is the same 60-minute absolute window. The morning range is defined by clock time, not bar count, because it represents information absorption from overnight events. Using the same 60-minute window as the original is correct here."
+      "purpose": "Fixed time window: 09:15-10:15 = 720 bars at 5s. NOT scaled from the original's 60 bars \u2014 this is the same 60-minute absolute window. The morning range is defined by clock time, not bar count, because it represents information absorption from overnight events. Using the same 60-minute window as the original is correct here."
     },
     {
       "name": "morning_low",
@@ -41,72 +49,78 @@
       "formula": "morning_high - (morning_high - morning_low) * 0.618",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "The golden-ratio Fibonacci level between morning_high and morning_low. Acts as support when approached from above (buy CE), resistance when approached from below (buy PE). No lookback — derived from morning_high/low."
+      "purpose": "The golden-ratio Fibonacci level between morning_high and morning_low. Acts as support when approached from above (buy CE), resistance when approached from below (buy PE). No lookback \u2014 derived from morning_high/low."
     },
     {
       "name": "vwap",
       "formula": "cumsum(typical_price * volume) / cumsum(volume) from 09:15 each session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative session VWAP — no scaling needed, it resets each day and is cumulative. Used as directional regime filter: long (buy CE) only when NIFTY is above VWAP (institutional net buyers), short (buy PE) only when below VWAP (institutional net sellers). This prevents trading against the dominant intraday flow."
+      "purpose": "Cumulative session VWAP \u2014 no scaling needed, it resets each day and is cumulative. Used as directional regime filter: long (buy CE) only when NIFTY is above VWAP (institutional net buyers), short (buy PE) only when below VWAP (institutional net sellers). This prevents trading against the dominant intraday flow."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "low <= fib_618 (candle wicked into or below the level — tested as support)",
-        "close > fib_618 (closed back above — bounce confirmed within the 5s bar)",
+        "low <= fib_618 (candle wicked into or below the level \u2014 tested as support)",
+        "close > fib_618 (closed back above \u2014 bounce confirmed within the 5s bar)",
         "close > vwap (institutional regime is net bullish)",
         "morning_range_pct > 0.3% (morning range has at least ~15 NIFTY points of substance)"
       ],
-      "confirmation": "Candle must close above Fibonacci level, not just touch it — the close confirms absorption"
+      "confirmation": "Candle must close above Fibonacci level, not just touch it \u2014 the close confirms absorption"
     },
     "buy_pe": {
       "conditions": [
-        "high >= fib_618 (candle wicked into or above the level — tested as resistance)",
-        "close < fib_618 (closed back below — rejection confirmed within the 5s bar)",
+        "high >= fib_618 (candle wicked into or above the level \u2014 tested as resistance)",
+        "close < fib_618 (closed back below \u2014 rejection confirmed within the 5s bar)",
         "close < vwap (institutional regime is net bearish)",
         "morning_range_pct > 0.3% (morning range has at least ~15 NIFTY points of substance)"
       ],
-      "confirmation": "Candle must close below Fibonacci level — the close confirms rejection"
+      "confirmation": "Candle must close below Fibonacci level \u2014 the close confirms rejection"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
+    "stop_points": 3.0,
     "stop_rationale": "A failed Fibonacci bounce on NIFTY (level breaks definitively) typically sees 8-10 spot points of continuation through the level before reversing; at ATM delta ~0.5, that is 4-5 option points. A 4-point stop gives enough breathing room for noise while limiting damage if the level fails cleanly.",
-    "target_points": 7,
+    "target_points": 6.0,
     "target_rationale": "Successful Fibonacci bounces off NIFTY morning-range levels extend 14-20 spot points in the first 30-60 seconds as resting orders absorb the directional flow; at delta 0.5 that is 7-10 option points. 7 points captures the conservative lower bound of this first impulse leg at a 1:1.75 R:R.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — VIX not used; VWAP direction serves as the regime filter",
+    "vix_filter": "none \u2014 VIX not used; VWAP direction serves as the regime filter",
     "time_filter": "11:00-15:20 IST (morning range fully formed by 10:15, 45-min buffer before trading)",
     "volume_filter": "morning_range_pct > 0.3% ensures range has meaningful NIFTY point depth",
     "trend_filter": "VWAP: long only above VWAP, short only below VWAP",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 28,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — widespread Fibonacci adoption could cause front-running of these levels over time"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.17,
+    "edge_decay_risk": "moderate \u2014 widespread Fibonacci adoption could cause front-running of these levels over time"
   },
-  "adaptation_notes": "Original traded individual nifty100 stocks on 1-min bars with 60-120 minute hold. Converted to NIFTY index at 5s with 15-90 second hold. Core insight (61.8% Fibonacci self-fulfilling prophecy) is STRONGER on the NIFTY index than on individual stocks because the index aggregates more algorithmic participants all watching the same levels simultaneously. Morning range window kept at 60 minutes absolute time (720 bars at 5s) because this is a clock-anchored fixed window, not a bar-count lookback. Stop/target completely recalibrated from percentage-based equity stops (0.4%) to NIFTY option premium points (4/7 pts) calibrated against typical 30-60s moves. VWAP retained as directional filter. VIX dropped — the strategy is about level-based order flow, not volatility regime. Entry logic tightened: require wick + close-back pattern within a single 5s candle to confirm the bounce microstructure.",
+  "adaptation_notes": "Original traded individual nifty100 stocks on 1-min bars with 60-120 minute hold. Converted to NIFTY index at 5s with 15-90 second hold. Core insight (61.8% Fibonacci self-fulfilling prophecy) is STRONGER on the NIFTY index than on individual stocks because the index aggregates more algorithmic participants all watching the same levels simultaneously. Morning range window kept at 60 minutes absolute time (720 bars at 5s) because this is a clock-anchored fixed window, not a bar-count lookback. Stop/target completely recalibrated from percentage-based equity stops (0.4%) to NIFTY option premium points (4/7 pts) calibrated against typical 30-60s moves. VWAP retained as directional filter. VIX dropped \u2014 the strategy is about level-based order flow, not volatility regime. Entry logic tightened: require wick + close-back pattern within a single 5s candle to confirm the bounce microstructure.",
   "weaknesses": [
     "Low-volatility openings produce tiny morning ranges (<0.3%) where Fibonacci levels have no significance",
     "Gap openings can displace price far from the morning range, making the Fibonacci level unreachable for the full session",
-    "Only 1-4 signals per day limits statistical power of backtests — needs many months of data",
+    "Only 1-4 signals per day limits statistical power of backtests \u2014 needs many months of data",
     "Late-session (post 14:00) momentum regimes may override Fibonacci attraction as participants position for close"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_358.json",
     "original_timeframe": "1min",
     "original_hold_time": "60-120 bars (60-120 minutes)",
-    "original_indicators": ["morning_high (60-min lookback)", "morning_low (60-min lookback)", "fib_618", "vwap"],
+    "original_indicators": [
+      "morning_high (60-min lookback)",
+      "morning_low (60-min lookback)",
+      "fib_618",
+      "vwap"
+    ],
     "original_stop": "0.4% from entry",
     "original_target": "morning_high (for long) / morning_low (for short)"
-  }
+  },
+  "vix_agnostic": true
 }

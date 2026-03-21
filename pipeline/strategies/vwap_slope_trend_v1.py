@@ -87,8 +87,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("slope_threshold", 0.08, 0.02, 0.40),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -101,8 +101,8 @@ class Strategy(BaseStrategy):
         time_min = spot_df["time_minutes"].to_numpy()
 
         slope_threshold = float(params.get("slope_threshold", 0.08))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # --- Session VWAP (cumulative, resets each day) ---
         vwap = _compute_vwap(close, volume, day_id)

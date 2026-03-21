@@ -2,14 +2,23 @@
   "name": "atr_channel_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "breakout", "channel", "atr", "momentum"],
+  "tags": [
+    "volatility",
+    "breakout",
+    "channel",
+    "atr",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_45.json",
   "original_name": "atr_channel_breakout_v1",
-  "mechanism": "When NIFTY closes above its 2-minute ATR-adaptive Keltner Channel (EMA_24 + 2×ATR_24) with above-average volume on a 5-second bar, passive sell-side liquidity at that level has been fully absorbed by active institutional buyers. On NIFTY, these breakouts trigger momentum-following algorithms and delta-hedging from option market makers within seconds, producing a 10-20 spot point continuation impulse in the first 30-90 seconds. The ATR-adaptive channel ensures the breakout exceeds current intraday volatility noise, distinguishing genuine institutional flow from routine price oscillation around the channel midline. Low-VIX filter (VIX < 22) excludes stress regimes where breakouts reverse violently due to gap risk.",
+  "mechanism": "When NIFTY closes above its 2-minute ATR-adaptive Keltner Channel (EMA_24 + 2\u00d7ATR_24) with above-average volume on a 5-second bar, passive sell-side liquidity at that level has been fully absorbed by active institutional buyers. On NIFTY, these breakouts trigger momentum-following algorithms and delta-hedging from option market makers within seconds, producing a 10-20 spot point continuation impulse in the first 30-90 seconds. The ATR-adaptive channel ensures the breakout exceeds current intraday volatility noise, distinguishing genuine institutional flow from routine price oscillation around the channel midline. Low-VIX filter (VIX < 22) excludes stress regimes where breakouts reverse violently due to gap risk.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -34,14 +43,14 @@
       "formula": "ATR(high, low, close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "Adaptive channel width based on current NIFTY volatility. 24 bars matches EMA lookback for channel consistency. Original used ATR(20) on 1-min bars (20 min ATR); at 5s bars, a 2-minute ATR captures the current session volatility regime within the same conceptual window as the channel midline — when NIFTY is choppy, the channel widens and fewer breakouts fire, which is the intended behavior."
+      "purpose": "Adaptive channel width based on current NIFTY volatility. 24 bars matches EMA lookback for channel consistency. Original used ATR(20) on 1-min bars (20 min ATR); at 5s bars, a 2-minute ATR captures the current session volatility regime within the same conceptual window as the channel midline \u2014 when NIFTY is choppy, the channel widens and fewer breakouts fire, which is the intended behavior."
     },
     {
       "name": "kc_upper",
       "formula": "ema_24 + kc_multiplier * atr_24",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "Upper channel boundary. Price closing above this on a 5-second bar means the spot move has exceeded the current 2-minute ATR band — a statistically meaningful move for the institutional flow thesis."
+      "purpose": "Upper channel boundary. Price closing above this on a 5-second bar means the spot move has exceeded the current 2-minute ATR band \u2014 a statistically meaningful move for the institutional flow thesis."
     },
     {
       "name": "kc_lower",
@@ -55,7 +64,7 @@
       "formula": "SMA(volume, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute volume baseline (12 bars × 5s). Original used SMA(volume, 20) on 1-min bars (20-min baseline). Compressed to 1 minute because intraday NIFTY volume has strong time-of-day seasonality; a 1-minute baseline adapts faster to session rhythms than a 20-minute window, giving a more accurate 'normal' volume level for the current moment."
+      "purpose": "1-minute volume baseline (12 bars \u00d7 5s). Original used SMA(volume, 20) on 1-min bars (20-min baseline). Compressed to 1 minute because intraday NIFTY volume has strong time-of-day seasonality; a 1-minute baseline adapts faster to session rhythms than a 20-minute window, giving a more accurate 'normal' volume level for the current moment."
     },
     {
       "name": "rel_volume",
@@ -87,31 +96,31 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). A genuine Keltner Channel breakout should not retrace back inside the channel within 30s — 8 spot points is roughly the half-width of the ATR channel during normal sessions, so a stop at 4 option points means 'the breakout was fake and price re-entered the channel.' Consistent with typical 30s NIFTY moves of 2-5 option points: we give one full range of noise before stopping out.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). A genuine Keltner Channel breakout should not retrace back inside the channel within 30s \u2014 8 spot points is roughly the half-width of the ATR channel during normal sessions, so a stop at 4 option points means 'the breakout was fake and price re-entered the channel.' Consistent with typical 30s NIFTY moves of 2-5 option points: we give one full range of noise before stopping out.",
+    "target_points": 8.0,
     "target_rationale": "7 option points (~14 NIFTY spot points at delta 0.5). Confirmed NIFTY Keltner breakouts with volume typically extend 15-25 spot points beyond the channel before first pullback as momentum algorithms amplify the move in the 60-90s window. At 14 spot points we capture ~60% of the median move at a 1:1.75 stop-to-target ratio, which is profitable at 48%+ win rate.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "vix_close < 22.0 (default) — avoids volatile regimes where breakouts reverse due to macro shock risk",
-    "time_filter": "09:25-15:20 IST — skip first 10 min (opening auction noise) and last 10 min (end-of-day unwind)",
-    "volume_filter": "rel_volume > 1.5 — breakout bar must have 1.5x normal 1-minute volume to confirm institutional participation",
-    "trend_filter": "none — channel breakout is self-defining direction",
+    "vix_filter": "vix_close < 22.0 (default) \u2014 avoids volatile regimes where breakouts reverse due to macro shock risk",
+    "time_filter": "09:25-15:20 IST \u2014 skip first 10 min (opening auction noise) and last 10 min (end-of-day unwind)",
+    "volume_filter": "rel_volume > 1.5 \u2014 breakout bar must have 1.5x normal 1-minute volume to confirm institutional participation",
+    "trend_filter": "none \u2014 channel breakout is self-defining direction",
     "spread_filter": "limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.48,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.62,
-    "edge_decay_risk": "low — ATR-adaptive channels self-adjust to regime changes; mechanism depends on institutional momentum flow which is structurally persistent on NIFTY"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.85,
+    "edge_decay_risk": "low \u2014 ATR-adaptive channels self-adjust to regime changes; mechanism depends on institutional momentum flow which is structurally persistent on NIFTY"
   },
-  "adaptation_notes": "Original held 15-45 minutes on 1-min FnO stock bars. Compressed to 30-90 second NIFTY holds on 5-second bars. Key changes: (1) EMA/ATR lookback compressed from 20 min to 2 min — we're catching the immediate breakout impulse, not the multi-minute trend; (2) volume baseline compressed from 20 min to 1 min — adapts to intraday volume rhythm faster; (3) removed VWAP filter (original required close > VWAP) — on NIFTY, intraday momentum can break the channel both above and below VWAP legitimately; (4) removed ATR-based stop (stop at EMA midline) — replaced with fixed option premium points since ATR doesn't apply to option prices; (5) reduced max trades from 5 to 6 (more signals expected at 5-second frequency but capped for risk management); (6) session start moved to 09:25 to skip 10 min of opening noise.",
+  "adaptation_notes": "Original held 15-45 minutes on 1-min FnO stock bars. Compressed to 30-90 second NIFTY holds on 5-second bars. Key changes: (1) EMA/ATR lookback compressed from 20 min to 2 min \u2014 we're catching the immediate breakout impulse, not the multi-minute trend; (2) volume baseline compressed from 20 min to 1 min \u2014 adapts to intraday volume rhythm faster; (3) removed VWAP filter (original required close > VWAP) \u2014 on NIFTY, intraday momentum can break the channel both above and below VWAP legitimately; (4) removed ATR-based stop (stop at EMA midline) \u2014 replaced with fixed option premium points since ATR doesn't apply to option prices; (5) reduced max trades from 5 to 6 (more signals expected at 5-second frequency but capped for risk management); (6) session start moved to 09:25 to skip 10 min of opening noise.",
   "weaknesses": [
-    "At 5-second resolution, many false breakout bars will exceed the channel briefly and reverse — volume filter may not be sufficient to distinguish true breakouts from spikes",
-    "NIFTY channel at 2-minute ATR scale may fire too frequently during trending sessions — max_trades_per_day cap important",
+    "At 5-second resolution, many false breakout bars will exceed the channel briefly and reverse \u2014 volume filter may not be sufficient to distinguish true breakouts from spikes",
+    "NIFTY channel at 2-minute ATR scale may fire too frequently during trending sessions \u2014 max_trades_per_day cap important",
     "Volume data quality at 5-second frequency varies; thin bars near session open/close can generate misleading rel_volume spikes",
     "Low-VIX filter (< 22) means strategy is inactive during exactly the conditions when NIFTY makes its largest moves"
   ],
@@ -119,7 +128,13 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_45.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-45 bars (15-45 minutes)",
-    "original_indicators": ["EMA(20)", "ATR(20)", "Keltner Channel", "rel_volume SMA(20)", "VWAP"],
+    "original_indicators": [
+      "EMA(20)",
+      "ATR(20)",
+      "Keltner Channel",
+      "rel_volume SMA(20)",
+      "VWAP"
+    ],
     "original_stop": "EMA_20 (channel midline)",
     "original_target": "1.5 * ATR_20 from entry"
   }

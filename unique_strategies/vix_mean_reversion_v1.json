@@ -2,14 +2,23 @@
   "name": "vix_mean_reversion_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "vix", "mean_reversion", "fear_spike", "contrarian"],
+  "tags": [
+    "volatility",
+    "vix",
+    "mean_reversion",
+    "fear_spike",
+    "contrarian"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_214.json",
   "original_name": "vix_mean_reversion_v1",
-  "mechanism": "On NIFTY, when India VIX surges >4% within 10 minutes, it reflects panic-driven put buying that temporarily dislocates implied volatility above fair value. The precise entry trigger is the moment VIX stops making new highs (3 consecutive declining 5-second bars) — this signals put-buying saturation. At that inflection point, option market makers who sold the panic puts begin aggressive NIFTY futures purchases to delta-hedge their short-gamma exposure, generating a 10-25 spot-point mean-reversion bounce within 30-90 seconds. The complementary short signal fires when VIX is crushed >3% in 10 minutes at NIFTY highs — complacency at elevated levels where the same MMs delta-hedge the opposite direction as volatility re-prices up.",
+  "mechanism": "On NIFTY, when India VIX surges >4% within 10 minutes, it reflects panic-driven put buying that temporarily dislocates implied volatility above fair value. The precise entry trigger is the moment VIX stops making new highs (3 consecutive declining 5-second bars) \u2014 this signals put-buying saturation. At that inflection point, option market makers who sold the panic puts begin aggressive NIFTY futures purchases to delta-hedge their short-gamma exposure, generating a 10-25 spot-point mean-reversion bounce within 30-90 seconds. The complementary short signal fires when VIX is crushed >3% in 10 minutes at NIFTY highs \u2014 complacency at elevated levels where the same MMs delta-hedge the opposite direction as volatility re-prices up.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-14:00 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "0-3",
   "max_trades_per_day": 3,
@@ -27,21 +36,21 @@
       "formula": "(vix_close - vix_close[120]) / vix_close[120] * 100",
       "lookback": 120,
       "computed_on": "vix",
-      "purpose": "10-minute VIX percentage change. Original used 30-min (360 1-min bars) but at 5-second resolution we hold only 30-120 seconds, so we need the FAST panic signal. A 10-min spike is already large enough to signal genuine panic selling — 30-min would be too slow to enter at the right moment for a 90-second trade."
+      "purpose": "10-minute VIX percentage change. Original used 30-min (360 1-min bars) but at 5-second resolution we hold only 30-120 seconds, so we need the FAST panic signal. A 10-min spike is already large enough to signal genuine panic selling \u2014 30-min would be too slow to enter at the right moment for a 90-second trade."
     },
     {
       "name": "vix_zscore_360",
       "formula": "(vix_close - rolling_mean(vix_close, 360)) / rolling_std(vix_close, 360)",
       "lookback": 360,
       "computed_on": "vix",
-      "purpose": "30-minute rolling VIX z-score for intraday context. Original used 20-day SMA (7500 1-min bars) which captures structural VIX regime but changes too slowly for intraday signals. We use 30-min (360 5s bars) to detect elevation vs the current session's baseline — this is the relevant context for whether today's spike is anomalous or part of an already-elevated day."
+      "purpose": "30-minute rolling VIX z-score for intraday context. Original used 20-day SMA (7500 1-min bars) which captures structural VIX regime but changes too slowly for intraday signals. We use 30-min (360 5s bars) to detect elevation vs the current session's baseline \u2014 this is the relevant context for whether today's spike is anomalous or part of an already-elevated day."
     },
     {
       "name": "vix_declining_3",
       "formula": "vix_close[t] < vix_close[t-1] AND vix_close[t-1] < vix_close[t-2] AND vix_close[t-2] < vix_close[t-3]",
       "lookback": 3,
       "computed_on": "vix",
-      "purpose": "3 consecutive declining VIX bars (15 seconds of deceleration). This is the precise entry trigger copied directly from the original's '3 consecutive declining bars' confirmation — at 5-second resolution this is the earliest detectable sign that put-buying pressure is exhausting and MM delta-hedging is beginning. Cannot use fewer bars (too noisy at 5s)."
+      "purpose": "3 consecutive declining VIX bars (15 seconds of deceleration). This is the precise entry trigger copied directly from the original's '3 consecutive declining bars' confirmation \u2014 at 5-second resolution this is the earliest detectable sign that put-buying pressure is exhausting and MM delta-hedging is beginning. Cannot use fewer bars (too noisy at 5s)."
     },
     {
       "name": "rsi_36",
@@ -59,11 +68,11 @@
         "vix_declining_3 == True (VIX has decelerated for 3 consecutive 5s bars)",
         "rsi_36 < rsi_oversold (NIFTY oversold on 3-min RSI, default 35)"
       ],
-      "confirmation": "All 4 conditions must be True simultaneously. vix_declining_3 is the timing pin — it fires only at the VIX top, not during the spike itself."
+      "confirmation": "All 4 conditions must be True simultaneously. vix_declining_3 is the timing pin \u2014 it fires only at the VIX top, not during the spike itself."
     },
     "buy_pe": {
       "conditions": [
-        "vix_change_120 < -vix_crush_threshold (VIX crushed >3% in last 10 minutes — complacency)",
+        "vix_change_120 < -vix_crush_threshold (VIX crushed >3% in last 10 minutes \u2014 complacency)",
         "vix_zscore_360 < -0.5 (VIX unusually low vs 30-min baseline)",
         "vix_rising_3 == True (VIX has started rising for 3 consecutive 5s bars)",
         "rsi_36 > rsi_overbought (NIFTY overbought on 3-min RSI, default 65)"
@@ -73,39 +82,45 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If NIFTY moves 8 pts further against us after VIX 'tops out', the deceleration signal was false and the spike is continuing — the mean-reversion thesis is wrong. NIFTY 30s typical move is 2-5 option pts; 4 pts is one standard deviation beyond expected noise.",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. If NIFTY moves 8 pts further against us after VIX 'tops out', the deceleration signal was false and the spike is continuing \u2014 the mean-reversion thesis is wrong. NIFTY 30s typical move is 2-5 option pts; 4 pts is one standard deviation beyond expected noise.",
+    "target_points": 6.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. VIX mean-reversion bounces on NIFTY average 15-25 spot points in the first 60-90 seconds post-deceleration. Targeting 14 spot pts captures ~65% of the median first-leg recovery with a 1:1.75 risk-reward ratio.",
     "time_stop_bars": 24,
-    "eod_rule": "flatten at 14:00 IST — VIX spikes after 14:00 have insufficient session time to revert"
+    "eod_rule": "flatten at 14:00 IST \u2014 VIX spikes after 14:00 have insufficient session time to revert"
   },
   "filters": {
-    "vix_filter": "Core signal — requires 10-min VIX spike >4% AND vix_zscore > 1.0 for genuine dislocation",
+    "vix_filter": "Core signal \u2014 requires 10-min VIX spike >4% AND vix_zscore > 1.0 for genuine dislocation",
     "time_filter": "09:20-14:00 IST only. Original explicitly noted post-14:00 spikes are less likely to revert within session; we enforce this as a hard filter.",
-    "volume_filter": "None applied directly — VIX itself is volume-weighted by definition",
+    "volume_filter": "None applied directly \u2014 VIX itself is volume-weighted by definition",
     "trend_filter": "vix_zscore_360 > 1.0 ensures spike is elevated vs current session, not just noise",
-    "spread_filter": "N/A — limit order execution at candle close; no bid-ask spread cost"
+    "spread_filter": "N/A \u2014 limit order execution at candle close; no bid-ask spread cost"
   },
   "edge": {
     "expected_bps": 30,
     "win_rate_estimate": 0.58,
-    "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.85,
-    "edge_decay_risk": "low — VIX mean-reversion is structural (option market-maker gamma hedging) and persists across global markets. The MM delta-hedging mechanism is mechanical, not behavioural."
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.76,
+    "edge_decay_risk": "low \u2014 VIX mean-reversion is structural (option market-maker gamma hedging) and persists across global markets. The MM delta-hedging mechanism is mechanical, not behavioural."
   },
-  "adaptation_notes": "Three major changes from original: (1) VIX spike window compressed from 30-min to 10-min (120 5s bars) to match 30-120s hold time — we trade the FAST reversal, not the slow recovery. (2) VIX z-score shifted from 20-day to 30-min rolling window — intraday baseline is more relevant for same-session reversion thesis. (3) Session cutoff enforced at 14:00 IST (original noted this preference but treated as soft filter; we make it hard). RSI(36) = 3-min retained exactly from original's 14-min RSI logic compressed proportionally to match our hold time.",
+  "adaptation_notes": "Three major changes from original: (1) VIX spike window compressed from 30-min to 10-min (120 5s bars) to match 30-120s hold time \u2014 we trade the FAST reversal, not the slow recovery. (2) VIX z-score shifted from 20-day to 30-min rolling window \u2014 intraday baseline is more relevant for same-session reversion thesis. (3) Session cutoff enforced at 14:00 IST (original noted this preference but treated as soft filter; we make it hard). RSI(36) = 3-min retained exactly from original's 14-min RSI logic compressed proportionally to match our hold time.",
   "weaknesses": [
-    "VIX spike frequency at 10-min window is low (3-5 qualifying signals per week on NIFTY), making this capital-inefficient as a standalone strategy — must be combined",
+    "VIX spike frequency at 10-min window is low (3-5 qualifying signals per week on NIFTY), making this capital-inefficient as a standalone strategy \u2014 must be combined",
     "The VIX-declining-3-bars confirmation adds 15 seconds of lag; on fast spike-and-reverse days, the bounce may be 50% done before entry",
     "During genuine crises (global macro shock, RBI surprise), the VIX spike does NOT revert intraday and the strategy takes the full stop loss",
-    "vix_zscore_360 uses only 30 minutes of session history; in the first 30 minutes of trading, the z-score is unreliable — signal quality is lower in the opening period"
+    "vix_zscore_360 uses only 30 minutes of session history; in the first 30 minutes of trading, the z-score is unreliable \u2014 signal quality is lower in the opening period"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_214.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-150 mins",
-    "original_indicators": ["VIX_30min_change", "VIX_z (20-day)", "NIFTY_drawdown", "NIFTY_RSI_14", "put_call_ratio"],
+    "original_indicators": [
+      "VIX_30min_change",
+      "VIX_z (20-day)",
+      "NIFTY_drawdown",
+      "NIFTY_RSI_14",
+      "put_call_ratio"
+    ],
     "original_stop": "VIX makes new session high OR NIFTY drops another 0.5%",
     "original_target": "VIX reverts 50% of spike OR NIFTY recovers 50% of drawdown"
   }

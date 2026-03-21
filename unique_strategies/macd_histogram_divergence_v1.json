@@ -2,14 +2,22 @@
   "name": "macd_histogram_divergence_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "divergence", "macd", "momentum_exhaustion"],
+  "tags": [
+    "mean_reversion",
+    "divergence",
+    "macd",
+    "momentum_exhaustion"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_88.json",
   "original_name": "macd_histogram_divergence_v1",
-  "mechanism": "When NIFTY experiences a sustained intraday decline, algorithmic momentum sellers execute in sequential waves. Each wave encounters better-rested resting buy orders at each new price low, causing the rate of decline to diminish even as price continues lower. The MACD histogram (12/26/9 on 5s bars ≈ 60s/130s/45s windows) captures this exhaustion precisely: a shallower histogram trough compared to the prior trough, while price prints a new low, reveals that NIFTY's net selling force is contracting. The histogram zero-cross above 0 then confirms that VWAP-benchmarked institutional buyers have begun active accumulation, producing a sharp 15-30 second bounce. The symmetric bearish divergence — higher price highs with lower histogram peaks — flags institutional buy-side exhaustion where resting sell orders at new highs are absorbing demand more effectively, preceding a sharp fade.",
+  "mechanism": "When NIFTY experiences a sustained intraday decline, algorithmic momentum sellers execute in sequential waves. Each wave encounters better-rested resting buy orders at each new price low, causing the rate of decline to diminish even as price continues lower. The MACD histogram (12/26/9 on 5s bars \u2248 60s/130s/45s windows) captures this exhaustion precisely: a shallower histogram trough compared to the prior trough, while price prints a new low, reveals that NIFTY's net selling force is contracting. The histogram zero-cross above 0 then confirms that VWAP-benchmarked institutional buyers have begun active accumulation, producing a sharp 15-30 second bounce. The symmetric bearish divergence \u2014 higher price highs with lower histogram peaks \u2014 flags institutional buy-side exhaustion where resting sell orders at new highs are absorbing demand more effectively, preceding a sharp fade.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -27,7 +35,7 @@
       "formula": "EMA(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "Fast EMA over 12 bars = 60 seconds. NOT scaled from original 12-minute EMA — instead compressed to 60s because our divergence patterns form over 2-4 minutes total (two wave cycles of ~1-2 min each). At 60s, this EMA tracks the fast momentum within each wave."
+      "purpose": "Fast EMA over 12 bars = 60 seconds. NOT scaled from original 12-minute EMA \u2014 instead compressed to 60s because our divergence patterns form over 2-4 minutes total (two wave cycles of ~1-2 min each). At 60s, this EMA tracks the fast momentum within each wave."
     },
     {
       "name": "ema_26",
@@ -41,14 +49,14 @@
       "formula": "EMA(macd_line, 9)",
       "lookback": 9,
       "computed_on": "spot",
-      "purpose": "Signal line over 9 bars = 45 seconds, smoothing out within-wave oscillations. 9-bar at 5s ≈ 45s is the appropriate smoothing window for 30-120s trades."
+      "purpose": "Signal line over 9 bars = 45 seconds, smoothing out within-wave oscillations. 9-bar at 5s \u2248 45s is the appropriate smoothing window for 30-120s trades."
     },
     {
       "name": "macd_hist",
       "formula": "macd_line - macd_signal",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Histogram = rate-of-change of momentum. Positive when fast EMA is rising faster than slow EMA. Divergence occurs when price makes new extreme but histogram does not — confirming that momentum fuel is depleted."
+      "purpose": "Histogram = rate-of-change of momentum. Positive when fast EMA is rising faster than slow EMA. Divergence occurs when price makes new extreme but histogram does not \u2014 confirming that momentum fuel is depleted."
     },
     {
       "name": "pivot_lows",
@@ -82,39 +90,44 @@
     "entry_price": "limit at candle close on zero-cross bar"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "After histogram zero-cross, a continuation of 8+ NIFTY spot points against position (≈4 option pts at delta 0.5) negates the divergence thesis — it means a fresh momentum leg is underway. NIFTY's typical 1-min move is 3-7 option pts; stopping at 4 prevents riding a new trend while allowing normal post-zero-cross noise.",
-    "target_points": 7,
-    "target_rationale": "Divergence-driven bounces on NIFTY typically span 15-25 spot points (≈7-12 option pts at delta 0.5) from histogram zero-cross to the first resistance. Targeting 7 pts captures the first 50-60% of the expected move at 1:1.75 R:R, exiting before the bounce stalls at VWAP or prior pivot.",
+    "stop_points": 3.0,
+    "stop_rationale": "After histogram zero-cross, a continuation of 8+ NIFTY spot points against position (\u22484 option pts at delta 0.5) negates the divergence thesis \u2014 it means a fresh momentum leg is underway. NIFTY's typical 1-min move is 3-7 option pts; stopping at 4 prevents riding a new trend while allowing normal post-zero-cross noise.",
+    "target_points": 6.0,
+    "target_rationale": "Divergence-driven bounces on NIFTY typically span 15-25 spot points (\u22487-12 option pts at delta 0.5) from histogram zero-cross to the first resistance. Targeting 7 pts captures the first 50-60% of the expected move at 1:1.75 R:R, exiting before the bounce stalls at VWAP or prior pivot.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "vix < 22 — high VIX regimes cause divergence failures (panic selling overrides exhaustion signals)",
-    "time_filter": "09:30-15:20 IST — skip first 15 min opening noise and last 10 min closing auction",
-    "volume_filter": "none — NIFTY index volume is synthetic and noisy at 5s",
-    "trend_filter": "none — counter-trend by design, divergence is anti-momentum",
-    "spread_filter": "none — limit order execution at candle close"
+    "vix_filter": "vix < 22 \u2014 high VIX regimes cause divergence failures (panic selling overrides exhaustion signals)",
+    "time_filter": "09:30-15:20 IST \u2014 skip first 15 min opening noise and last 10 min closing auction",
+    "volume_filter": "none \u2014 NIFTY index volume is synthetic and noisy at 5s",
+    "trend_filter": "none \u2014 counter-trend by design, divergence is anti-momentum",
+    "spread_filter": "none \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.35,
-    "edge_decay_risk": "medium — MACD divergence is publicly known but real-time automated pivot detection at 5s on index is uncommon"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.35,
+    "edge_decay_risk": "medium \u2014 MACD divergence is publicly known but real-time automated pivot detection at 5s on index is uncommon"
   },
-  "adaptation_notes": "Original used 12/26/9 on 1-minute bars of individual FNO stocks over 15-60 min holds. Conversion compresses to 5-second bars on NIFTY index with the SAME 12/26/9 bar counts but now representing 60s/130s/45s windows instead of 12/26/9 minutes — correctly calibrated for 30-120s holds. Pivot lookback compressed from 5-bar (5 min each side) to 3-bar (15s each side) to match the faster cadence. The core divergence thesis is identical but now targets micro-wave exhaustion on NIFTY's institutional flow patterns rather than individual stock reversals. VIX filter retained at 22 to skip panic regimes where divergence repeatedly fails.",
+  "adaptation_notes": "Original used 12/26/9 on 1-minute bars of individual FNO stocks over 15-60 min holds. Conversion compresses to 5-second bars on NIFTY index with the SAME 12/26/9 bar counts but now representing 60s/130s/45s windows instead of 12/26/9 minutes \u2014 correctly calibrated for 30-120s holds. Pivot lookback compressed from 5-bar (5 min each side) to 3-bar (15s each side) to match the faster cadence. The core divergence thesis is identical but now targets micro-wave exhaustion on NIFTY's institutional flow patterns rather than individual stock reversals. VIX filter retained at 22 to skip panic regimes where divergence repeatedly fails.",
   "weaknesses": [
-    "Pivot detection at 3-bar (15s) resolution produces many false pivots on NIFTY's continuous tick stream — noise-to-signal ratio is higher than on 1-min stock bars.",
-    "MACD(12,26,9) warm-up at 5s frequency requires only ~30 bars (2.5 min) but genuine divergence requires two pivots separated by meaningful time — early session divergences may be premature.",
-    "Zero-cross entry after divergence adds lag — by the time histogram crosses zero, 30-60% of the first reversal leg may already be captured by faster participants.",
+    "Pivot detection at 3-bar (15s) resolution produces many false pivots on NIFTY's continuous tick stream \u2014 noise-to-signal ratio is higher than on 1-min stock bars.",
+    "MACD(12,26,9) warm-up at 5s frequency requires only ~30 bars (2.5 min) but genuine divergence requires two pivots separated by meaningful time \u2014 early session divergences may be premature.",
+    "Zero-cross entry after divergence adds lag \u2014 by the time histogram crosses zero, 30-60% of the first reversal leg may already be captured by faster participants.",
     "Limited to 6 trades/day given divergence patterns are rare; low trade count limits statistical significance in 12-day backtest window."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_88.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 bars (15-60 min)",
-    "original_indicators": ["MACD(12,26,9)", "price_pivot_low/high (5-bar)", "VWAP", "volume SMA(20)"],
+    "original_indicators": [
+      "MACD(12,26,9)",
+      "price_pivot_low/high (5-bar)",
+      "VWAP",
+      "volume SMA(20)"
+    ],
     "original_stop": "0.3% from entry",
     "original_target": "VWAP touch OR 0.4% from entry"
   }

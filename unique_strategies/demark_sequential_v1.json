@@ -2,14 +2,23 @@
   "name": "demark_sequential_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["exhaustion", "counter_trend", "TD_sequential", "DeMark", "pattern_counting"],
+  "tags": [
+    "exhaustion",
+    "counter_trend",
+    "TD_sequential",
+    "DeMark",
+    "pattern_counting"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_285.json",
   "original_name": "demark_sequential_v1",
-  "mechanism": "On NIFTY at 5-second bars, a TD Sequential buy setup (9 consecutive 5s bars each closing below their 4-bar-ago close) captures a 45-second sustained micro-selldown where incremental sellers dominate at each price step. When the 9-count completes with DeMark perfection (bar 8 or 9 registers a lower low than bar 6 of the setup), the marginal sellers have been absorbed by resting buy orders at progressively deeper levels — supply is structurally exhausted. NIFTY's institutional-driven price discovery then snaps back within 1-3 bars as delta-hedging market makers and VWAP-benchmarked algos resume upward reference price tracking, producing a 10-20 spot point counter-move in the first 30-60 seconds. The sell setup is symmetric: 9 consecutive closes above close[4] with perfected higher high on bar 8 or 9 signals buyer exhaustion, triggering a buy PE.",
+  "mechanism": "On NIFTY at 5-second bars, a TD Sequential buy setup (9 consecutive 5s bars each closing below their 4-bar-ago close) captures a 45-second sustained micro-selldown where incremental sellers dominate at each price step. When the 9-count completes with DeMark perfection (bar 8 or 9 registers a lower low than bar 6 of the setup), the marginal sellers have been absorbed by resting buy orders at progressively deeper levels \u2014 supply is structurally exhausted. NIFTY's institutional-driven price discovery then snaps back within 1-3 bars as delta-hedging market makers and VWAP-benchmarked algos resume upward reference price tracking, producing a 10-20 spot point counter-move in the first 30-60 seconds. The sell setup is symmetric: 9 consecutive closes above close[4] with perfected higher high on bar 8 or 9 signals buyer exhaustion, triggering a buy PE.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,7 +36,7 @@
       "formula": "consecutive count of bars where close < close[4]; reset to 0 on close >= close[4]",
       "lookback": 13,
       "computed_on": "spot",
-      "purpose": "The TD Sequential count mechanism defines its own lookback: minimum 4 bars for the close[4] comparison plus 9 bars to complete a setup = 13 bars = 65 seconds. NOT scaled from original's 1-min bars — the pattern counting logic is timeframe-agnostic. A 9-bar count at 5-second resolution captures a 45-second micro-trend, which is the right scope for a 15-120 second hold: the counter-move should equal or exceed the setup duration in time."
+      "purpose": "The TD Sequential count mechanism defines its own lookback: minimum 4 bars for the close[4] comparison plus 9 bars to complete a setup = 13 bars = 65 seconds. NOT scaled from original's 1-min bars \u2014 the pattern counting logic is timeframe-agnostic. A 9-bar count at 5-second resolution captures a 45-second micro-trend, which is the right scope for a 15-120 second hold: the counter-move should equal or exceed the setup duration in time."
     },
     {
       "name": "td_sell_count",
@@ -55,22 +64,22 @@
       "formula": "RSI(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "12-bar RSI = 60 seconds — slightly longer than the 45-second setup duration to detect cumulative selling/buying pressure that built during the count. NOT the original's RSI(14) on 1-min (which is a 14-minute indicator at that timeframe, or 168 bars at 5s — far too slow). 12 bars covers the full setup cycle plus 3 bars of context, providing an oversold/overbought reading responsive to the same micro-trend the TD count tracked."
+      "purpose": "12-bar RSI = 60 seconds \u2014 slightly longer than the 45-second setup duration to detect cumulative selling/buying pressure that built during the count. NOT the original's RSI(14) on 1-min (which is a 14-minute indicator at that timeframe, or 168 bars at 5s \u2014 far too slow). 12 bars covers the full setup cycle plus 3 bars of context, providing an oversold/overbought reading responsive to the same micro-trend the TD count tracked."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "td_buy_count == 9 (9 consecutive closes below close[4] — 45-second micro-selldown exhaustion)",
-        "td_buy_perfection == 1 (bar 8 or 9 low <= bar 6 low — genuine push to new lows, not sideways drift)",
+        "td_buy_count == 9 (9 consecutive closes below close[4] \u2014 45-second micro-selldown exhaustion)",
+        "td_buy_perfection == 1 (bar 8 or 9 low <= bar 6 low \u2014 genuine push to new lows, not sideways drift)",
         "rsi_12 < 35 (60-second RSI confirms oversold at setup completion)",
-        "vix < 22 (moderate volatility — perfected setups have higher reversal rates below elevated VIX regimes)"
+        "vix < 22 (moderate volatility \u2014 perfected setups have higher reversal rates below elevated VIX regimes)"
       ],
-      "confirmation": "Signal fires at bar 9 close — exhaustion confirmed by count completion and perfection check at that bar"
+      "confirmation": "Signal fires at bar 9 close \u2014 exhaustion confirmed by count completion and perfection check at that bar"
     },
     "buy_pe": {
       "conditions": [
-        "td_sell_count == 9 (9 consecutive closes above close[4] — 45-second micro-rally exhaustion)",
+        "td_sell_count == 9 (9 consecutive closes above close[4] \u2014 45-second micro-rally exhaustion)",
         "td_sell_perfection == 1 (bar 8 or 9 high >= bar 6 high)",
         "rsi_12 > 65 (60-second RSI confirms overbought at setup completion)",
         "vix < 22"
@@ -81,37 +90,43 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5) — if the thesis is correct, a perfected 9-count reversal on NIFTY begins within 1-3 bars; 8 spot points of adverse move means the setup extended (bar 10 still continuing the trend), and count-extension patterns on NIFTY rarely reverse quickly. This keeps losses tight on thesis failures without stopping out normal post-entry noise (1-2 pts intrabar).",
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5) \u2014 if the thesis is correct, a perfected 9-count reversal on NIFTY begins within 1-3 bars; 8 spot points of adverse move means the setup extended (bar 10 still continuing the trend), and count-extension patterns on NIFTY rarely reverse quickly. This keeps losses tight on thesis failures without stopping out normal post-entry noise (1-2 pts intrabar).",
     "target_points": 6,
-    "target_rationale": "6 option points (~12 NIFTY spot points) — perfected TD Sequential reversals on NIFTY produce a 10-20 spot point snap-back within the first 30-60 seconds as exhausted sellers are absorbed; targeting 12 spot points captures the lower bound of this range at high probability, yielding 1:1.5 R:R.",
+    "target_rationale": "6 option points (~12 NIFTY spot points) \u2014 perfected TD Sequential reversals on NIFTY produce a 10-20 spot point snap-back within the first 30-60 seconds as exhausted sellers are absorbed; targeting 12 spot points captures the lower bound of this range at high probability, yielding 1:1.5 R:R.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "India VIX < 22 — in high-VIX trending regimes the count extends (10, 11, 12 bars) before reversing, generating losing counter-trend trades; moderate VIX ensures NIFTY is cycling rather than trending sharply",
-    "time_filter": "09:20-15:25 IST — skip first 5 minutes of open (incomplete setups from pre-session) and last 5 minutes (EOD position unwinding distorts pattern)",
-    "volume_filter": "none — NIFTY index volume at 5-second bars is too noisy to use as a discriminating filter",
-    "trend_filter": "contrarian by design — TD Sequential fades the micro-trend at exhaustion count 9",
-    "spread_filter": "not applicable — limit order execution at candle close prices"
+    "vix_filter": "India VIX < 22 \u2014 in high-VIX trending regimes the count extends (10, 11, 12 bars) before reversing, generating losing counter-trend trades; moderate VIX ensures NIFTY is cycling rather than trending sharply",
+    "time_filter": "09:20-15:25 IST \u2014 skip first 5 minutes of open (incomplete setups from pre-session) and last 5 minutes (EOD position unwinding distorts pattern)",
+    "volume_filter": "none \u2014 NIFTY index volume at 5-second bars is too noisy to use as a discriminating filter",
+    "trend_filter": "contrarian by design \u2014 TD Sequential fades the micro-trend at exhaustion count 9",
+    "spread_filter": "not applicable \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.25,
-    "edge_decay_risk": "Low-Medium — TD Sequential with full perfection rules is rarely implemented correctly on index OHLCV data at 5-second frequency; most algos use simplified RSI-type oversold signals that miss the count precision. The 4-bar comparison offset and perfection check create a multi-step pattern that is complex enough to preserve edge."
+    "profit_factor_estimate": 1.76,
+    "edge_decay_risk": "Low-Medium \u2014 TD Sequential with full perfection rules is rarely implemented correctly on index OHLCV data at 5-second frequency; most algos use simplified RSI-type oversold signals that miss the count precision. The 4-bar comparison offset and perfection check create a multi-step pattern that is complex enough to preserve edge."
   },
-  "adaptation_notes": "Original: 1-min bars on NIFTY50 stock universe + NIFTY index, RSI(14) confirmation, 5-15 min hold, 12 bps stop. Converted: 5-second NIFTY index bars, TD count mechanism preserved exactly (timeframe-agnostic pattern counting), perfection rules preserved exactly. RSI compressed from 14-min (168 bars at 5s) to 60-second (12 bars) to match the 45-second setup duration — blind 12x scaling would give RSI(168) which is a 14-minute indicator, far too slow for a 45-second pattern. Hold time compressed from 5-15 min to 15-120 seconds — the snap-back from a 45-second micro-exhaustion resolves faster than from a 9-minute exhaustion. Stop reduced from 12 bps (~14 NIFTY spot pts) to 4 option pts (~8 spot pts) because at 5-second resolution the first counter-bar immediately signals if the thesis is working.",
+  "adaptation_notes": "Original: 1-min bars on NIFTY50 stock universe + NIFTY index, RSI(14) confirmation, 5-15 min hold, 12 bps stop. Converted: 5-second NIFTY index bars, TD count mechanism preserved exactly (timeframe-agnostic pattern counting), perfection rules preserved exactly. RSI compressed from 14-min (168 bars at 5s) to 60-second (12 bars) to match the 45-second setup duration \u2014 blind 12x scaling would give RSI(168) which is a 14-minute indicator, far too slow for a 45-second pattern. Hold time compressed from 5-15 min to 15-120 seconds \u2014 the snap-back from a 45-second micro-exhaustion resolves faster than from a 9-minute exhaustion. Stop reduced from 12 bps (~14 NIFTY spot pts) to 4 option pts (~8 spot pts) because at 5-second resolution the first counter-bar immediately signals if the thesis is working.",
   "weaknesses": [
     "On strong intraday trend days, the 9-count extends to 10-13 bars before reversing; VIX<22 filter mitigates but does not eliminate; expect higher loss rates on trending macro days.",
     "At 5-second resolution, individual bars can be noisy (1-tick rounding); close[i] vs close[i-4] may flip spuriously, causing count resets that miss valid setups or generating false completions.",
-    "Low trade frequency — a perfected 9-count setup with RSI confirmation occurs 3-6 times per session on NIFTY, limiting statistical confidence at short evaluation windows of 12 days."
+    "Low trade frequency \u2014 a perfected 9-count setup with RSI confirmation occurs 3-6 times per session on NIFTY, limiting statistical confidence at short evaluation windows of 12 days."
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_285.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-15 min",
-    "original_indicators": ["td_buy_setup (count 9)", "td_sell_setup (count 9)", "td_perfection_buy", "td_perfection_sell", "RSI(14)"],
+    "original_indicators": [
+      "td_buy_setup (count 9)",
+      "td_sell_setup (count 9)",
+      "td_perfection_buy",
+      "td_perfection_sell",
+      "RSI(14)"
+    ],
     "original_stop": "12 bps from entry",
     "original_target": "close crosses above close[4] (DeMark-defined reversal)"
   }

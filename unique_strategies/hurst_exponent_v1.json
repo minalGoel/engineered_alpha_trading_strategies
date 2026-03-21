@@ -2,14 +2,24 @@
   "name": "hurst_exponent_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["hurst-exponent", "regime", "persistence", "mean-reversion", "trend-following", "adaptive"],
+  "tags": [
+    "hurst-exponent",
+    "regime",
+    "persistence",
+    "mean_reversion",
+    "trend-following",
+    "adaptive"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_310.json",
   "original_name": "hurst_exponent_v1",
-  "mechanism": "On NIFTY, the Hurst exponent of the 10-minute (120-bar at 5s) log-return series distinguishes two distinct microstructure states: when H > 0.55, large institutional TWAP/VWAP algorithms are executing directional orders, and each 5-second bar absorbs part of that flow — consecutive bars are autocorrelated, creating exploitable momentum over 30-90 seconds. When H < 0.45, NIFTY is oscillating between resting buy and sell limit orders as market makers quote both sides; at this point Bollinger Band touches reliably signal a 30-60 second bounce as those resting orders absorb the directional flow and price reverts. The regime switch is computed over 120 bars to filter noise while remaining responsive to the current session's microstructure — a 5-minute window is too short for reliable Hurst estimation (high variance), while a 30-minute window is too slow to adapt to mid-session regime changes.",
+  "mechanism": "On NIFTY, the Hurst exponent of the 10-minute (120-bar at 5s) log-return series distinguishes two distinct microstructure states: when H > 0.55, large institutional TWAP/VWAP algorithms are executing directional orders, and each 5-second bar absorbs part of that flow \u2014 consecutive bars are autocorrelated, creating exploitable momentum over 30-90 seconds. When H < 0.45, NIFTY is oscillating between resting buy and sell limit orders as market makers quote both sides; at this point Bollinger Band touches reliably signal a 30-60 second bounce as those resting orders absorb the directional flow and price reverts. The regime switch is computed over 120 bars to filter noise while remaining responsive to the current session's microstructure \u2014 a 5-minute window is too short for reliable Hurst estimation (high variance), while a 30-minute window is too slow to adapt to mid-session regime changes.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:25 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,25 +37,25 @@
       "formula": "R/S Hurst exponent on log_returns[-120:]",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "10-minute rolling Hurst exponent. NOT 12x-scaled from original's 60 1-min bars (which would give 720 bars = 60 min — too slow). Instead: 120 bars = 10 min is the shortest window that gives statistically meaningful R/S estimates (variance of Hurst estimator drops sharply with more data) while adapting to intraday regime shifts. Serves as a CONTEXT FILTER, not a trade trigger, consistent with the 10.3 framework for non-trigger indicators."
+      "purpose": "10-minute rolling Hurst exponent. NOT 12x-scaled from original's 60 1-min bars (which would give 720 bars = 60 min \u2014 too slow). Instead: 120 bars = 10 min is the shortest window that gives statistically meaningful R/S estimates (variance of Hurst estimator drops sharply with more data) while adapting to intraday regime shifts. Serves as a CONTEXT FILTER, not a trade trigger, consistent with the 10.3 framework for non-trigger indicators."
     },
     {
       "name": "ema_12",
       "formula": "EMA(close, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute fast EMA for trend entry in persistent regime. Compressed from original's EMA(8) on 1-min bars because at 5s we need a faster trigger — the 1-min EMA captures the same short-term momentum idea but adapted to our 5s bar resolution."
+      "purpose": "1-minute fast EMA for trend entry in persistent regime. Compressed from original's EMA(8) on 1-min bars because at 5s we need a faster trigger \u2014 the 1-min EMA captures the same short-term momentum idea but adapted to our 5s bar resolution."
     },
     {
       "name": "ema_36",
       "formula": "EMA(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute slow EMA for trend direction in persistent regime. Compressed from original's EMA(20) on 1-min bars (20 min) — 36 bars = 3 min is the appropriate slow EMA for confirming that a micro-trend is sustained across multiple 5s bars."
+      "purpose": "3-minute slow EMA for trend direction in persistent regime. Compressed from original's EMA(20) on 1-min bars (20 min) \u2014 36 bars = 3 min is the appropriate slow EMA for confirming that a micro-trend is sustained across multiple 5s bars."
     },
     {
       "name": "bb_24",
-      "formula": "SMA(close, 24) ± 2.0 × STDDEV(close, 24)",
+      "formula": "SMA(close, 24) \u00b1 2.0 \u00d7 STDDEV(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
       "purpose": "2-minute Bollinger Bands for mean-reversion entries in anti-persistent regime. Compressed from original's BB(20) on 1-min bars (20 min). At 5s bars, a 24-bar (2-min) BB captures the short oscillation cycle relevant for our 30-120s hold. Original's 20-min BB would be far too wide relative to our hold time."
@@ -55,7 +65,7 @@
       "formula": "close[i] - close[i-1]",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Single-bar return for direction confirmation in trending regime — ensures we enter in the direction of the current bar's momentum, not against it."
+      "purpose": "Single-bar return for direction confirmation in trending regime \u2014 ensures we enter in the direction of the current bar's momentum, not against it."
     }
   ],
   "entry": {
@@ -77,39 +87,46 @@
   },
   "exit": {
     "stop_points": 4.0,
-    "stop_rationale": "4 points because a NIFTY 5-10 second momentum burst that stalls and reverses past 8 spot points (4 option points at delta ~0.5) signals the institutional flow has absorbed — the Hurst regime signal is wrong and we should exit. Tight enough to protect capital in the fast 5s environment.",
+    "stop_rationale": "4 points because a NIFTY 5-10 second momentum burst that stalls and reverses past 8 spot points (4 option points at delta ~0.5) signals the institutional flow has absorbed \u2014 the Hurst regime signal is wrong and we should exit. Tight enough to protect capital in the fast 5s environment.",
     "target_points": 6.0,
     "target_rationale": "6 points captures ~40% of a typical NIFTY 30-90s momentum continuation (15-20 spot pts in a persistent regime) or ~60% of a mean-reversion bounce from a BB extreme (10-12 spot pts). At 1:1.5 R:R and expected 54% win rate, this is profitable after costs.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "None — VIX not used; Hurst exponent itself implicitly captures volatility regime",
+    "vix_filter": "None \u2014 VIX not used; Hurst exponent itself implicitly captures volatility regime",
     "time_filter": "No entries before 09:30 (need 120 bars from 09:20 open for valid Hurst estimate) or after 15:25",
-    "volume_filter": "None — index volume is noisy at 5s; Hurst computation uses returns, not volume",
+    "volume_filter": "None \u2014 index volume is noisy at 5s; Hurst computation uses returns, not volume",
     "trend_filter": "Hurst exponent itself IS the regime classifier; no separate trend filter needed",
-    "spread_filter": "Not applicable — limit order execution at candle close"
+    "spread_filter": "Not applicable \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.35,
-    "edge_decay_risk": "Low — Hurst exponent regime classification is not widely implemented at 5s intraday frequency; computational complexity deters most participants"
+    "profit_factor_estimate": 1.76,
+    "edge_decay_risk": "Low \u2014 Hurst exponent regime classification is not widely implemented at 5s intraday frequency; computational complexity deters most participants"
   },
-  "adaptation_notes": "Original traded NIFTY50 constituent stocks at 1-min bars with 60-bar Hurst window. Key changes: (1) Moved to NIFTY INDEX — eliminates stock-specific noise and uses the cleaner index price series where Hurst estimation is more reliable. (2) Hurst window: 120 bars (10 min) instead of scaling original's 60 min — 120 bars gives better statistical reliability than 60 bars while being short enough to track intraday regime shifts. (3) Entry indicators compressed to 5s scale: EMA(8/20 min) → EMA(1/3 min); BB(20 min) → BB(2 min). (4) Hold time compressed from 15-45 min to 30-120 seconds; stops/targets recalibrated to 5s option move magnitudes. (5) VWAP filter dropped — at 5s bars, VWAP confirmation would add too much lag; Hurst regime + EMA direction is sufficient.",
+  "adaptation_notes": "Original traded NIFTY50 constituent stocks at 1-min bars with 60-bar Hurst window. Key changes: (1) Moved to NIFTY INDEX \u2014 eliminates stock-specific noise and uses the cleaner index price series where Hurst estimation is more reliable. (2) Hurst window: 120 bars (10 min) instead of scaling original's 60 min \u2014 120 bars gives better statistical reliability than 60 bars while being short enough to track intraday regime shifts. (3) Entry indicators compressed to 5s scale: EMA(8/20 min) \u2192 EMA(1/3 min); BB(20 min) \u2192 BB(2 min). (4) Hold time compressed from 15-45 min to 30-120 seconds; stops/targets recalibrated to 5s option move magnitudes. (5) VWAP filter dropped \u2014 at 5s bars, VWAP confirmation would add too much lag; Hurst regime + EMA direction is sufficient.",
   "weaknesses": [
-    "R/S Hurst estimator has high variance on 120 bars — estimates can be noisy, causing false regime signals",
-    "Hurst computation is O(n × window) — the loop may be slow in pure Python for large datasets, though acceptable in this pipeline",
+    "R/S Hurst estimator has high variance on 120 bars \u2014 estimates can be noisy, causing false regime signals",
+    "Hurst computation is O(n \u00d7 window) \u2014 the loop may be slow in pure Python for large datasets, though acceptable in this pipeline",
     "Regime transitions (H shifting from >0.55 to <0.45) can happen abruptly mid-session, causing whipsaws at the boundary",
-    "Anti-persistent regime (H<0.45) BB signals require price to reach extremes — may generate few signals in quiet sessions"
+    "Anti-persistent regime (H<0.45) BB signals require price to reach extremes \u2014 may generate few signals in quiet sessions"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_310.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-45 min",
-    "original_indicators": ["Hurst_60 (R/S)", "EMA_8", "EMA_20", "BB(20, 2.0)", "VWAP"],
+    "original_indicators": [
+      "Hurst_60 (R/S)",
+      "EMA_8",
+      "EMA_20",
+      "BB(20, 2.0)",
+      "VWAP"
+    ],
     "original_stop": "PERSISTENT: 25 bps; ANTI_PERSIST: 20 bps",
     "original_target": "PERSISTENT: 45 bps; ANTI_PERSIST: BB_mid reversion"
-  }
+  },
+  "vix_agnostic": true
 }

@@ -2,14 +2,23 @@
   "name": "consolidation_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["consolidation", "breakout", "continuation", "volume-confirmation", "pattern-based"],
+  "tags": [
+    "consolidation",
+    "breakout",
+    "continuation",
+    "volume-confirmation",
+    "pattern-based"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_182.json",
   "original_name": "consolidation_breakout_v1",
-  "mechanism": "On NIFTY, after a 15-25 spot point directional move, the index frequently enters a 5-10 minute tight consolidation (< 0.1% range) as institutional participants — index arb desks, FII program algos — place large resting limit orders at the consolidation ceiling and floor, absorbing counter-directional flow while filling their own position. At 5-second resolution, the precise bar where these resting limit orders are exhausted is identifiable: close crosses above the consolidation ceiling (or below the floor) simultaneously with a volume surge (1.5x average), signaling that the absorption side is depleted. In the 30-90 seconds that follow, competing momentum algos recognize the breakout and pile in, sustaining the continuation move for 10-20 NIFTY spot points — capturing the first wave before retracement.",
+  "mechanism": "On NIFTY, after a 15-25 spot point directional move, the index frequently enters a 5-10 minute tight consolidation (< 0.1% range) as institutional participants \u2014 index arb desks, FII program algos \u2014 place large resting limit orders at the consolidation ceiling and floor, absorbing counter-directional flow while filling their own position. At 5-second resolution, the precise bar where these resting limit orders are exhausted is identifiable: close crosses above the consolidation ceiling (or below the floor) simultaneously with a volume surge (1.5x average), signaling that the absorption side is depleted. In the 30-90 seconds that follow, competing momentum algos recognize the breakout and pile in, sustaining the continuation move for 10-20 NIFTY spot points \u2014 capturing the first wave before retracement.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-14:45 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-5",
   "max_trades_per_day": 5,
@@ -27,14 +36,14 @@
       "formula": "max(high) over rolling 120 bars",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "120-bar (10-minute) rolling high defines the consolidation ceiling. Chosen at 10 minutes because that matches the typical institutional order-absorption window before a NIFTY breakout — shorter (5 min) captures noise rather than true absorption; longer (20 min) misses the trade setup by extending the wait too far past entry."
+      "purpose": "120-bar (10-minute) rolling high defines the consolidation ceiling. Chosen at 10 minutes because that matches the typical institutional order-absorption window before a NIFTY breakout \u2014 shorter (5 min) captures noise rather than true absorption; longer (20 min) misses the trade setup by extending the wait too far past entry."
     },
     {
       "name": "roll_low_120",
       "formula": "min(low) over rolling 120 bars",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "Rolling 10-minute low defines the consolidation floor. Symmetric with roll_high_120 — same rationale."
+      "purpose": "Rolling 10-minute low defines the consolidation floor. Symmetric with roll_high_120 \u2014 same rationale."
     },
     {
       "name": "consol_range_pct",
@@ -48,7 +57,7 @@
       "formula": "(close[i-120] - close[i-240]) / close[i-240]",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Return from 20 min ago to 10 min ago — the move that PRECEDED the consolidation. 240-bar lookback is NOT 12x blind scaling: the original used 20-bar 1-min bars (20 minutes) to define a prior move; we use 240 bars (also 20 minutes) because the SAME time window for the prior move creates the same continuation bias. The consolidation lasts 10 min; the prior move should be from the 10 min before that."
+      "purpose": "Return from 20 min ago to 10 min ago \u2014 the move that PRECEDED the consolidation. 240-bar lookback is NOT 12x blind scaling: the original used 20-bar 1-min bars (20 minutes) to define a prior move; we use 240 bars (also 20 minutes) because the SAME time window for the prior move creates the same continuation bias. The consolidation lasts 10 min; the prior move should be from the 10 min before that."
     },
     {
       "name": "vol_sma_120",
@@ -64,7 +73,7 @@
         "consol_range_pct < consol_range_threshold (default 0.001 = 0.1%)",
         "close > roll_high_120 (breakout above consolidation ceiling)",
         "prior_move > prior_move_threshold (default 0.0015 = 0.15% prior up-move)",
-        "volume > vol_sma_120 * vol_ratio_min (default 1.5x — breakout volume confirms)"
+        "volume > vol_sma_120 * vol_ratio_min (default 1.5x \u2014 breakout volume confirms)"
       ],
       "confirmation": "close crosses ABOVE the 10-min ceiling (not just high) to avoid wicks"
     },
@@ -80,39 +89,46 @@
     "entry_price": "limit at candle close"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 spot points retrace. A genuine NIFTY breakout should not retrace more than 8 spot points into the consolidation range within 30 seconds — if it does, the limit orders were NOT exhausted and this is a false break. At delta ~0.5, 8 spot pts = 4 option pts.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option points = ~8 spot points retrace. A genuine NIFTY breakout should not retrace more than 8 spot points into the consolidation range within 30 seconds \u2014 if it does, the limit orders were NOT exhausted and this is a false break. At delta ~0.5, 8 spot pts = 4 option pts.",
+    "target_points": 8.0,
     "target_rationale": "7 option points = ~14 spot points continuation. The first wave after a 10-minute consolidation breakout on NIFTY typically extends 12-20 spot points before the first pause. 14 spot pts captures the lower-end reliable portion (avoiding overshoot risk), giving 1:1.75 R:R.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 14:45 IST"
   },
   "filters": {
-    "vix_filter": "none — consolidation breakouts work across volatility regimes",
+    "vix_filter": "none \u2014 consolidation breakouts work across volatility regimes",
     "time_filter": "09:30-14:45 IST; skip first 15 minutes (max_lookback warmup) and avoid last 45 minutes (EOD noise)",
-    "volume_filter": "breakout bar volume >= 1.5x rolling 10-min average — mandatory for true breakout vs drift",
+    "volume_filter": "breakout bar volume >= 1.5x rolling 10-min average \u2014 mandatory for true breakout vs drift",
     "trend_filter": "continuation bias: buy CE only if prior move was up; buy PE only if prior move was down",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 35,
     "win_rate_estimate": 0.53,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.98,
-    "edge_decay_risk": "medium — as more algos detect consolidation patterns, false breakouts increase; volume filter partially mitigates"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "medium \u2014 as more algos detect consolidation patterns, false breakouts increase; volume filter partially mitigates"
   },
-  "adaptation_notes": "Key changes from original: (1) Universe shifted from NIFTY200 stocks to NIFTY index — institutional flows dominate NIFTY so absorption thesis is stronger, not weaker; (2) Consolidation window compressed from 20 1-min bars (20 min) to 120 5s-bars (10 min) because at 5s we're trading the first breakout wave (30-90s hold), not the sustained 15-45 min continuation; (3) Range threshold halved from 0.2% to 0.1% because NIFTY index is smoother than individual stocks — 0.2% on NIFTY would include normal drift, not just true consolidation; (4) Prior move threshold lowered from 0.5% to 0.15% because NIFTY moves are naturally dampened vs single stocks; (5) Volume filter ratio lowered from 2x to 1.5x because index volume is noisier at 5s granularity.",
+  "adaptation_notes": "Key changes from original: (1) Universe shifted from NIFTY200 stocks to NIFTY index \u2014 institutional flows dominate NIFTY so absorption thesis is stronger, not weaker; (2) Consolidation window compressed from 20 1-min bars (20 min) to 120 5s-bars (10 min) because at 5s we're trading the first breakout wave (30-90s hold), not the sustained 15-45 min continuation; (3) Range threshold halved from 0.2% to 0.1% because NIFTY index is smoother than individual stocks \u2014 0.2% on NIFTY would include normal drift, not just true consolidation; (4) Prior move threshold lowered from 0.5% to 0.15% because NIFTY moves are naturally dampened vs single stocks; (5) Volume filter ratio lowered from 2x to 1.5x because index volume is noisier at 5s granularity.",
   "weaknesses": [
-    "NIFTY index volume at 5-second granularity is noisy — volume filter may not reliably distinguish breakouts from random spikes",
-    "At 5s bars, close > roll_high can occur frequently in trending markets without being a true 'consolidation breakout' — the prior_move continuation filter is critical but imperfect",
+    "NIFTY index volume at 5-second granularity is noisy \u2014 volume filter may not reliably distinguish breakouts from random spikes",
+    "At 5s bars, close > roll_high can occur frequently in trending markets without being a true 'consolidation breakout' \u2014 the prior_move continuation filter is critical but imperfect",
     "10-minute consolidations on NIFTY may coincide with scheduled macro releases (RBI, inflation data) where the breakout is news-driven rather than technical"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_182.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-45 minutes",
-    "original_indicators": ["consol_high (20-bar rolling max)", "consol_low (20-bar rolling min)", "consol_range_pct", "consol_duration", "VWAP"],
+    "original_indicators": [
+      "consol_high (20-bar rolling max)",
+      "consol_low (20-bar rolling min)",
+      "consol_range_pct",
+      "consol_duration",
+      "VWAP"
+    ],
     "original_stop": "opposite side of consolidation range",
     "original_target": "measured move (magnitude of prior move projected from breakout)"
-  }
+  },
+  "vix_agnostic": true
 }

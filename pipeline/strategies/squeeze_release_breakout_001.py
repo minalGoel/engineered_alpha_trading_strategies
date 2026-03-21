@@ -108,8 +108,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("rel_vol_threshold", 1.3, 1.0, 2.0),
             TunableParam("squeeze_min_bars", 3.0, 2.0, 6.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -126,8 +126,8 @@ class Strategy(BaseStrategy):
         # ── Params ────────────────────────────────────────────────────────────
         rel_vol_thr = float(params.get("rel_vol_threshold", 1.3))
         squeeze_min = int(params.get("squeeze_min_bars", 3))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         period = 24  # 2-min squeeze window (24 × 5s bars)
 

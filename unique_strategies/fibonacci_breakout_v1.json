@@ -2,14 +2,23 @@
   "name": "fibonacci_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["fibonacci", "retracement", "mean-reversion", "intraday", "level-based"],
+  "tags": [
+    "fibonacci",
+    "retracement",
+    "mean_reversion",
+    "intraday",
+    "level-based"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_184.json",
   "original_name": "fibonacci_breakout_v1",
   "mechanism": "On NIFTY, intraday swings of 30-80 spot points create strong institutional memory: VWAP-benchmarked desks and quant algos pre-place resting limit orders at 38.2%, 50%, and 61.8% retracement levels of the dominant 5-minute swing. When NIFTY pulls back into one of these precise Fibonacci zones, the concentrated passive buy/sell order clusters absorb directional flow and flip short-term order imbalance within 2-4 bars (10-20 seconds), producing a 15-30 spot-point reversal leg. At 5-second resolution, we can enter the moment the candle closes bullish/bearish within the Fib zone rather than waiting for a full 1-minute bar confirmation, capturing the acceleration phase of the reversal.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-8",
   "max_trades_per_day": 8,
@@ -39,23 +48,23 @@
     {
       "name": "fib_382_bull",
       "formula": "hi_60 - 0.382 * (hi_60 - lo_60)",
-      "lookback": "derived",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "38.2% retracement from the 5-min high — shallowest Fib support level. Most common bounce point when the prior trend is strong."
+      "purpose": "38.2% retracement from the 5-min high \u2014 shallowest Fib support level. Most common bounce point when the prior trend is strong."
     },
     {
       "name": "fib_500_bull",
       "formula": "hi_60 - 0.500 * (hi_60 - lo_60)",
-      "lookback": "derived",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "50% retracement — psychological midpoint. Dense order clustering when trend strength is moderate."
+      "purpose": "50% retracement \u2014 psychological midpoint. Dense order clustering when trend strength is moderate."
     },
     {
       "name": "fib_618_bull",
       "formula": "hi_60 - 0.618 * (hi_60 - lo_60)",
-      "lookback": "derived",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "61.8% retracement — deepest valid Fib support; breach of this level invalidates the uptrend thesis."
+      "purpose": "61.8% retracement \u2014 deepest valid Fib support; breach of this level invalidates the uptrend thesis."
     },
     {
       "name": "mom_3",
@@ -72,7 +81,7 @@
         "close < hi_60 - 0.15 * range_60 (price pulled back at least 15% from the 5-min high)",
         "close >= fib_618_bull - tolerance (not blown through deepest valid Fib level)",
         "range_60 > 0.15% of close (swing is large enough to create meaningful Fib clusters)",
-        "close > open (current 5s bar is bullish — bounce candle forming)",
+        "close > open (current 5s bar is bullish \u2014 bounce candle forming)",
         "mom_3 > 0 (15s momentum confirms reversal has started)"
       ],
       "confirmation": "Bullish candle close within Fibonacci support zone with positive 15s momentum"
@@ -83,7 +92,7 @@
         "close > lo_60 + 0.15 * range_60 (price bounced at least 15% from the 5-min low)",
         "close <= lo_60 + 0.618*range_60 + tolerance (not broken through deepest valid Fib resistance)",
         "range_60 > 0.15% of close (meaningful swing)",
-        "close < open (current 5s bar is bearish — rejection candle forming)",
+        "close < open (current 5s bar is bearish \u2014 rejection candle forming)",
         "mom_3 < 0 (15s momentum confirms reversal)"
       ],
       "confirmation": "Bearish candle close within Fibonacci resistance zone with negative 15s momentum"
@@ -91,40 +100,50 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "A valid Fibonacci bounce on NIFTY should produce at least 8 spot points of initial reversal. If the option premium drops 4 points (equivalent to ~8 spot pts at delta 0.5), the Fib level has failed as support/resistance and the thesis is invalidated. Tighter than mean-reversion stops because Fib bounces are precise — if the level gives way, the move accelerates in the wrong direction.",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "A valid Fibonacci bounce on NIFTY should produce at least 8 spot points of initial reversal. If the option premium drops 4 points (equivalent to ~8 spot pts at delta 0.5), the Fib level has failed as support/resistance and the thesis is invalidated. Tighter than mean-reversion stops because Fib bounces are precise \u2014 if the level gives way, the move accelerates in the wrong direction.",
+    "target_points": 6.0,
     "target_rationale": "A successful Fibonacci bounce from the 38-62% retracement zone on a 30-80pt NIFTY swing typically produces a 15-25 spot point reversal in the first 60-90 seconds. 7 option points (~14 spot pts at delta 0.5) captures ~40-50% of the expected first-leg move at 1:1.75 risk-reward.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — Fibonacci clustering occurs in all volatility regimes",
+    "vix_filter": "none \u2014 Fibonacci clustering occurs in all volatility regimes",
     "time_filter": "09:25-15:20 IST; skip first 10 min to let opening range establish the session's dominant swing",
-    "volume_filter": "implicit — swing range must exceed 0.15% of close to ensure there was real directional activity",
+    "volume_filter": "implicit \u2014 swing range must exceed 0.15% of close to ensure there was real directional activity",
     "trend_filter": "in_retracement filter ensures price is not making a new extreme but reversing from a prior extreme",
-    "spread_filter": "not applicable — limit order execution"
+    "spread_filter": "not applicable \u2014 limit order execution"
   },
   "edge": {
     "expected_bps": 30,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — Fibonacci is widely known; self-fulfilling at scale but crowded. Edge depends on 5-second entry timing advantage over 1-minute bar traders."
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.17,
+    "edge_decay_risk": "moderate \u2014 Fibonacci is widely known; self-fulfilling at scale but crowded. Edge depends on 5-second entry timing advantage over 1-minute bar traders."
   },
-  "adaptation_notes": "Original used 10-bar (10-min) pivot swing detection on 1-min equity bars with 20-60 min hold. Converted to: (1) rolling 60-bar (5-min) max/min instead of explicit pivot detection — simpler and more robust at 5s resolution; (2) replaced volume confirmation with 3-bar momentum (15s) because index volume at 5s is too noisy; (3) compressed hold to 30-90s targeting the acceleration phase of the bounce rather than the full recovery; (4) removed 161.8% extension target (too ambitious at 90s) in favor of fixed 7-pt option premium target; (5) removed trailing stop (not supported in this pipeline). Fibonacci levels remain at 38.2/50/61.8% as they are the institutional standard.",
+  "adaptation_notes": "Original used 10-bar (10-min) pivot swing detection on 1-min equity bars with 20-60 min hold. Converted to: (1) rolling 60-bar (5-min) max/min instead of explicit pivot detection \u2014 simpler and more robust at 5s resolution; (2) replaced volume confirmation with 3-bar momentum (15s) because index volume at 5s is too noisy; (3) compressed hold to 30-90s targeting the acceleration phase of the bounce rather than the full recovery; (4) removed 161.8% extension target (too ambitious at 90s) in favor of fixed 7-pt option premium target; (5) removed trailing stop (not supported in this pipeline). Fibonacci levels remain at 38.2/50/61.8% as they are the institutional standard.",
   "weaknesses": [
-    "Rolling max/min recomputes whenever a new extreme forms — the Fib levels shift continuously rather than anchoring to a completed swing, which dilutes the self-fulfilling clustering effect",
-    "At 5-second resolution, price can briefly touch a Fib level on a wick without a true reversal forming — candle direction filter partially addresses this",
+    "Rolling max/min recomputes whenever a new extreme forms \u2014 the Fib levels shift continuously rather than anchoring to a completed swing, which dilutes the self-fulfilling clustering effect",
+    "At 5-second resolution, price can briefly touch a Fib level on a wick without a true reversal forming \u2014 candle direction filter partially addresses this",
     "NIFTY's first 10-20 minutes have erratic swings; session start filter at 09:25 partially mitigates but large gap days distort 5-minute swing Fib levels",
-    "Fibonacci levels have no mathematical basis in market microstructure — purely behavioral; institutional adoption could decrease if the edge becomes too crowded"
+    "Fibonacci levels have no mathematical basis in market microstructure \u2014 purely behavioral; institutional adoption could decrease if the edge becomes too crowded"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_184.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-60 minutes",
-    "original_indicators": ["swing_high (5-bar pivot)", "swing_low (5-bar pivot)", "fib_382", "fib_500", "fib_618", "fib_ext_1618", "VWAP", "SMA(volume, 20)"],
+    "original_indicators": [
+      "swing_high (5-bar pivot)",
+      "swing_low (5-bar pivot)",
+      "fib_382",
+      "fib_500",
+      "fib_618",
+      "fib_ext_1618",
+      "VWAP",
+      "SMA(volume, 20)"
+    ],
     "original_stop": "next Fibonacci level below entry",
     "original_target": "161.8% Fibonacci extension of original swing"
-  }
+  },
+  "vix_agnostic": true
 }

@@ -2,14 +2,23 @@
   "name": "vwap_volume_divergence_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["vwap", "volume", "divergence", "mean-reversion", "obv"],
+  "tags": [
+    "vwap",
+    "volume",
+    "divergence",
+    "mean_reversion",
+    "obv"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_145.json",
   "original_name": "vwap_volume_divergence_v1",
-  "mechanism": "On NIFTY, when the index drifts 1.5+ standard deviations below session VWAP while 5-second bar volumes are declining (price-volume exhaustion), the directional sell-flow is running out of fuel — retail stops and algo trigger cascades have completed their selling but large VWAP-benchmarked institutions have not yet accumulated enough. The divergence sharpens when OBV over the same 2-minute window is simultaneously rising (buyers absorbing inventory at depressed prices) even as the price is still below VWAP, signaling that net demand is recovering before spot prices visibly inflect. NIFTY then snaps back 8-15 spot points toward VWAP within 30-90 seconds as the algorithmic VWAP buyers push aggressively to close their benchmark gap. Symmetric logic applies for bearish divergence: price above VWAP with declining volume and falling OBV signals distribution exhaustion and downward reversion.",
+  "mechanism": "On NIFTY, when the index drifts 1.5+ standard deviations below session VWAP while 5-second bar volumes are declining (price-volume exhaustion), the directional sell-flow is running out of fuel \u2014 retail stops and algo trigger cascades have completed their selling but large VWAP-benchmarked institutions have not yet accumulated enough. The divergence sharpens when OBV over the same 2-minute window is simultaneously rising (buyers absorbing inventory at depressed prices) even as the price is still below VWAP, signaling that net demand is recovering before spot prices visibly inflect. NIFTY then snaps back 8-15 spot points toward VWAP within 30-90 seconds as the algorithmic VWAP buyers push aggressively to close their benchmark gap. Symmetric logic applies for bearish divergence: price above VWAP with declining volume and falling OBV signals distribution exhaustion and downward reversion.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -25,28 +34,28 @@
     {
       "name": "vwap",
       "formula": "cumulative(typical_price * volume) / cumulative(volume), reset each day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP is the institutional benchmark — no scaling needed, it always anchors to session open regardless of bar size."
+      "purpose": "Cumulative VWAP is the institutional benchmark \u2014 no scaling needed, it always anchors to session open regardless of bar size."
     },
     {
       "name": "vwap_dev_zscore",
       "formula": "(close - vwap) / rolling_std(close - vwap, 120)",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "120-bar (10-min) rolling stddev normalizes VWAP deviation by current session volatility regime. NOT 12x of original 10-bar window (which would give 120 min — too long). 10 minutes captures enough NIFTY bar-by-bar deviation history to estimate a meaningful standard deviation while remaining sensitive to intraday volatility shifts. The z-score threshold replaces the original's fixed 0.5% because NIFTY's percent deviation changes with overall market vol."
+      "purpose": "120-bar (10-min) rolling stddev normalizes VWAP deviation by current session volatility regime. NOT 12x of original 10-bar window (which would give 120 min \u2014 too long). 10 minutes captures enough NIFTY bar-by-bar deviation history to estimate a meaningful standard deviation while remaining sensitive to intraday volatility shifts. The z-score threshold replaces the original's fixed 0.5% because NIFTY's percent deviation changes with overall market vol."
     },
     {
       "name": "vol_ratio",
       "formula": "volume[i] / mean(volume[i-24:i])",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "24-bar (2-min) volume ratio detects whether current bar is above or below recent average. Scaled from original's 10-bar 1-min window: original measured 10 minutes of volume context for 15-50 min trades. For our 15-90s hold, context should match — ~2 minutes of volume history (24 bars) captures the short-term volume trend driving the exhaustion signal without being polluted by unrelated earlier session flows."
+      "purpose": "24-bar (2-min) volume ratio detects whether current bar is above or below recent average. Scaled from original's 10-bar 1-min window: original measured 10 minutes of volume context for 15-50 min trades. For our 15-90s hold, context should match \u2014 ~2 minutes of volume history (24 bars) captures the short-term volume trend driving the exhaustion signal without being polluted by unrelated earlier session flows."
     },
     {
       "name": "obv",
       "formula": "cumulative OBV (close > prev_close: +volume, else -volume), reset each day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "Session-cumulative OBV resets each day to isolate same-day order flow direction."
     },
@@ -55,15 +64,15 @@
       "formula": "obv[i] - obv[i-24]",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "OBV change over 24 bars (2 min) gives the direction of net order flow in the recent window — same 2-minute window as vol_ratio. When this is positive while price is below VWAP, it signals the volume divergence: buyers are net absorbers even as price is still depressed. The 24-bar window is the same scale as the exhaustion detection window, ensuring both signals describe the same 2-minute price-volume episode."
+      "purpose": "OBV change over 24 bars (2 min) gives the direction of net order flow in the recent window \u2014 same 2-minute window as vol_ratio. When this is positive while price is below VWAP, it signals the volume divergence: buyers are net absorbers even as price is still depressed. The 24-bar window is the same scale as the exhaustion detection window, ensuring both signals describe the same 2-minute price-volume episode."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "vwap_dev_zscore < -vwap_dev_zscore_threshold (price 1.5+ stddevs below VWAP)",
-        "vol_ratio < vol_ratio_threshold (current bar volume below 85% of 2-min SMA — selling exhaustion)",
-        "obv_slope_24 > 0 (OBV rising over last 2 min — buyers absorbing despite low price)",
+        "vol_ratio < vol_ratio_threshold (current bar volume below 85% of 2-min SMA \u2014 selling exhaustion)",
+        "obv_slope_24 > 0 (OBV rising over last 2 min \u2014 buyers absorbing despite low price)",
         "close > open on entry bar (intrabar reversal beginning)"
       ],
       "confirmation": "All 4 conditions simultaneously true on same 5-second bar"
@@ -71,8 +80,8 @@
     "buy_pe": {
       "conditions": [
         "vwap_dev_zscore > +vwap_dev_zscore_threshold (price 1.5+ stddevs above VWAP)",
-        "vol_ratio < vol_ratio_threshold (current bar volume below 85% of 2-min SMA — buying exhaustion)",
-        "obv_slope_24 < 0 (OBV falling over last 2 min — sellers absorbing despite high price)",
+        "vol_ratio < vol_ratio_threshold (current bar volume below 85% of 2-min SMA \u2014 buying exhaustion)",
+        "obv_slope_24 < 0 (OBV falling over last 2 min \u2014 sellers absorbing despite high price)",
         "close < open on entry bar (intrabar distribution beginning)"
       ],
       "confirmation": "All 4 conditions simultaneously true on same 5-second bar"
@@ -80,9 +89,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If price deepens another 8 spot pts away from VWAP after entry, the exhaustion thesis is wrong — the deviation is extending, not reverting. For 15-90s holds, a 4-pt stop preserves capital while allowing for the normal ±2-3 pt noise in 5s NIFTY bars.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If price deepens another 8 spot pts away from VWAP after entry, the exhaustion thesis is wrong \u2014 the deviation is extending, not reverting. For 15-90s holds, a 4-pt stop preserves capital while allowing for the normal \u00b12-3 pt noise in 5s NIFTY bars.",
+    "target_points": 8.0,
     "target_rationale": "7 option points (~14 NIFTY spot points). From a 1.5 stddev VWAP deviation, the initial snap-back before mean-reversion slows typically covers 10-18 spot points in 30-90 seconds based on NIFTY's 1-min typical range of 3-7 option pts. Targeting 7 pts captures the bulk of the first leg at 1:1.75 R:R without waiting for full VWAP reversion (which could take minutes and stall).",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
@@ -91,28 +100,35 @@
     "vix_filter": "India VIX < 25 (above 25, index gaps and tail moves dominate; VWAP mean-reversion fails as regime becomes trending-volatile)",
     "time_filter": "no entries before 09:30 IST (first 15 min for price discovery noise) or after 15:20 IST",
     "volume_filter": "bar volume > 0 (skip zero-volume bars)",
-    "trend_filter": "none — this is a reversal signal by design",
-    "spread_filter": "not applicable — limit orders at close prices"
+    "trend_filter": "none \u2014 this is a reversal signal by design",
+    "spread_filter": "not applicable \u2014 limit orders at close prices"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.71,
-    "edge_decay_risk": "medium — as VWAP strategies proliferate, divergence windows may narrow; but volume-OBV combination is less commonly automated than pure price deviation triggers"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.35,
+    "edge_decay_risk": "medium \u2014 as VWAP strategies proliferate, divergence windows may narrow; but volume-OBV combination is less commonly automated than pure price deviation triggers"
   },
-  "adaptation_notes": "Original used 1-min bars on individual NIFTY200 stocks (15-50 min hold) with bid-ask spread costs. Converted to 5-second NIFTY index bars with limit order execution and 15-90s hold. Key changes: (1) Fixed 0.5% price deviation replaced by rolling z-score to adapt to intraday volatility regimes. (2) Volume lookback compressed from 10-min to 2-min (24 bars) to match faster hold time. (3) OBV slope simplified to direction over 24 bars rather than tracking absolute slope deceleration — sufficient for a 5-second bar signal. (4) Added intrabar close>open confirmation to replace the original's next-bar confirmation which is too slow at 5s. (5) Full VWAP reversion target replaced by partial 7-pt target because 90-second holds cannot wait for complete reversion. Stock-specific filters (delivery %, earnings blackout, spread filter) dropped as they don't apply to an index.",
+  "adaptation_notes": "Original used 1-min bars on individual NIFTY200 stocks (15-50 min hold) with bid-ask spread costs. Converted to 5-second NIFTY index bars with limit order execution and 15-90s hold. Key changes: (1) Fixed 0.5% price deviation replaced by rolling z-score to adapt to intraday volatility regimes. (2) Volume lookback compressed from 10-min to 2-min (24 bars) to match faster hold time. (3) OBV slope simplified to direction over 24 bars rather than tracking absolute slope deceleration \u2014 sufficient for a 5-second bar signal. (4) Added intrabar close>open confirmation to replace the original's next-bar confirmation which is too slow at 5s. (5) Full VWAP reversion target replaced by partial 7-pt target because 90-second holds cannot wait for complete reversion. Stock-specific filters (delivery %, earnings blackout, spread filter) dropped as they don't apply to an index.",
   "weaknesses": [
-    "At 5-second frequency, OBV slope over 24 bars is noisy — a single large-volume bar can flip the signal",
+    "At 5-second frequency, OBV slope over 24 bars is noisy \u2014 a single large-volume bar can flip the signal",
     "NIFTY volume is quoted in derivative-equivalent lots and can have microstructure spikes that trigger false vol_ratio drops",
-    "In low-volatility sessions, stddev of VWAP deviation compresses and the 1.5 z-score threshold may never trigger — zero trades on such days",
+    "In low-volatility sessions, stddev of VWAP deviation compresses and the 1.5 z-score threshold may never trigger \u2014 zero trades on such days",
     "The same 2-minute window for both vol_ratio and OBV_slope means a correlated spike affects both filters simultaneously"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_145.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-50 minutes",
-    "original_indicators": ["VWAP (cumulative)", "vwap_dev_pct", "vol_sma_10", "vol_slope (linreg, 10)", "OBV_slope (linreg, 10)", "ATR(14)"],
+    "original_indicators": [
+      "VWAP (cumulative)",
+      "vwap_dev_pct",
+      "vol_sma_10",
+      "vol_slope (linreg, 10)",
+      "OBV_slope (linreg, 10)",
+      "ATR(14)"
+    ],
     "original_stop": "1.5 * ATR(14) from entry",
     "original_target": "VWAP (full reversion)"
   }

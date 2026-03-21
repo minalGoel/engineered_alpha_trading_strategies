@@ -2,14 +2,23 @@
   "name": "macd_signal_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["macd", "histogram-acceleration", "momentum", "institutional-flow", "intraday"],
+  "tags": [
+    "macd",
+    "histogram-acceleration",
+    "momentum",
+    "institutional-flow",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_160.json",
   "original_name": "macd_signal_momentum_v1",
-  "mechanism": "On NIFTY, large institutional TWAP/VWAP execution algorithms running directional orders create persistent EMA divergence that is visible in MACD at any timescale. When the MACD histogram (EMA_24 minus EMA_72, net of its 18-bar EMA) accelerates for 3 consecutive 5-second bars — meaning the short-term momentum is compounding rather than plateauing — it signals the institutional order is mid-execution, not near completion. NIFTY's tight liquidity and high notional volume ensure this histogram acceleration reflects genuine cumulative order flow rather than noise. Adding VWAP directional confirmation means we trade only when the institutional momentum aligns with the dominant session benchmark, filtering signals where counter-flow will resist continuation.",
+  "mechanism": "On NIFTY, large institutional TWAP/VWAP execution algorithms running directional orders create persistent EMA divergence that is visible in MACD at any timescale. When the MACD histogram (EMA_24 minus EMA_72, net of its 18-bar EMA) accelerates for 3 consecutive 5-second bars \u2014 meaning the short-term momentum is compounding rather than plateauing \u2014 it signals the institutional order is mid-execution, not near completion. NIFTY's tight liquidity and high notional volume ensure this histogram acceleration reflects genuine cumulative order flow rather than noise. Adding VWAP directional confirmation means we trade only when the institutional momentum aligns with the dominant session benchmark, filtering signals where counter-flow will resist continuation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,21 +36,21 @@
       "formula": "EMA(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute EMA capturing immediate short-term momentum. Original used 12-min EMA (12 bars × 1min); compressed to 2 min because we hold 30-90s not 15-40 min. The fast EMA needs to react within 1-2 hold periods to generate meaningful histogram."
+      "purpose": "2-minute EMA capturing immediate short-term momentum. Original used 12-min EMA (12 bars \u00d7 1min); compressed to 2 min because we hold 30-90s not 15-40 min. The fast EMA needs to react within 1-2 hold periods to generate meaningful histogram."
     },
     {
       "name": "ema_slow_72",
       "formula": "EMA(close, 72)",
       "lookback": 72,
       "computed_on": "spot",
-      "purpose": "6-minute EMA providing trend baseline. Original used 26-min EMA. Scaled to 6 min (not 26 × 12 = 312) because the context window for a 30-90s trade should be ~4x the hold, not 20x. 6 min captures the institutional order's macro direction without excessive lag."
+      "purpose": "6-minute EMA providing trend baseline. Original used 26-min EMA. Scaled to 6 min (not 26 \u00d7 12 = 312) because the context window for a 30-90s trade should be ~4x the hold, not 20x. 6 min captures the institutional order's macro direction without excessive lag."
     },
     {
       "name": "macd_signal_18",
       "formula": "EMA(macd_line, 18)",
       "lookback": 18,
       "computed_on": "spot",
-      "purpose": "1.5-minute EMA of MACD line. Original signal was 9 bars × 1min = 9 min. Compressed to 1.5 min consistent with our faster EMAs. Provides the smoothed baseline against which histogram is measured."
+      "purpose": "1.5-minute EMA of MACD line. Original signal was 9 bars \u00d7 1min = 9 min. Compressed to 1.5 min consistent with our faster EMAs. Provides the smoothed baseline against which histogram is measured."
     },
     {
       "name": "macd_hist",
@@ -60,16 +69,16 @@
     {
       "name": "vwap",
       "formula": "cumulative(sum(close * volume) / sum(volume)) from session open",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP from 09:15. Cumulative measure — no scaling needed. Ensures longs trade above VWAP (institutional benchmark support) and shorts below (benchmark resistance)."
+      "purpose": "Session VWAP from 09:15. Cumulative measure \u2014 no scaling needed. Ensures longs trade above VWAP (institutional benchmark support) and shorts below (benchmark resistance)."
     },
     {
       "name": "vol_sma_60",
       "formula": "SMA(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute rolling volume average. Weak filter to avoid stale/low-activity bars. Not a primary signal — index volume is noisier than single stocks but still a sanity check."
+      "purpose": "5-minute rolling volume average. Weak filter to avoid stale/low-activity bars. Not a primary signal \u2014 index volume is noisier than single stocks but still a sanity check."
     }
   ],
   "entry": {
@@ -77,59 +86,65 @@
       "conditions": [
         "hist[t] > hist[t-1] > hist[t-2]  (3-bar histogram acceleration upward)",
         "hist[t] > 0  (MACD momentum is net positive)",
-        "macd_line > 0  (EMA_24 above EMA_72 — uptrend context)",
+        "macd_line > 0  (EMA_24 above EMA_72 \u2014 uptrend context)",
         "close > VWAP  (above session benchmark)",
         "volume >= 0.8 * vol_sma_60  (not a dead bar)"
       ],
-      "confirmation": "3 consecutive 5-second bars of increasing histogram — MACD spread widening faster, institutional buy flow accelerating mid-execution"
+      "confirmation": "3 consecutive 5-second bars of increasing histogram \u2014 MACD spread widening faster, institutional buy flow accelerating mid-execution"
     },
     "buy_pe": {
       "conditions": [
         "hist[t] < hist[t-1] < hist[t-2]  (3-bar histogram acceleration downward)",
         "hist[t] < 0  (MACD momentum is net negative)",
-        "macd_line < 0  (EMA_24 below EMA_72 — downtrend context)",
+        "macd_line < 0  (EMA_24 below EMA_72 \u2014 downtrend context)",
         "close < VWAP  (below session benchmark)",
         "volume >= 0.8 * vol_sma_60  (not a dead bar)"
       ],
-      "confirmation": "3 consecutive 5-second bars of decreasing histogram — MACD spread widening to downside, institutional sell flow accelerating mid-execution"
+      "confirmation": "3 consecutive 5-second bars of decreasing histogram \u2014 MACD spread widening to downside, institutional sell flow accelerating mid-execution"
     },
     "entry_price": "market (limit order at bar close)"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts ≈ 8 NIFTY spot pts at delta 0.5; if histogram acceleration triggers and then reverses within 30s (6 bars), a spot adverse move of this magnitude means the institutional order completed or reversed — the 3-bar acceleration thesis is wrong and we want out immediately. Calibrated to 30s typical NIFTY range of 2-5 pts.",
-    "target_points": 7,
-    "target_rationale": "7 option pts ≈ 14 NIFTY spot pts; institutional TWAP orders on NIFTY typically run 20-30 spot pt legs within their execution window. 14 pts captures ~50-60% of the expected 25-30 pt continuation, giving 1:1.75 R:R. Consistent with 60-90s NIFTY momentum move range of 5-10 option pts.",
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts \u2248 8 NIFTY spot pts at delta 0.5; if histogram acceleration triggers and then reverses within 30s (6 bars), a spot adverse move of this magnitude means the institutional order completed or reversed \u2014 the 3-bar acceleration thesis is wrong and we want out immediately. Calibrated to 30s typical NIFTY range of 2-5 pts.",
+    "target_points": 8.0,
+    "target_rationale": "7 option pts \u2248 14 NIFTY spot pts; institutional TWAP orders on NIFTY typically run 20-30 spot pt legs within their execution window. 14 pts captures ~50-60% of the expected 25-30 pt continuation, giving 1:1.75 R:R. Consistent with 60-90s NIFTY momentum move range of 5-10 option pts.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "none — strategy does not depend on VIX regime",
-    "time_filter": "09:30–15:20 IST; first 15 minutes skipped to allow MACD EMAs to stabilize",
+    "vix_filter": "none \u2014 strategy does not depend on VIX regime",
+    "time_filter": "09:30\u201315:20 IST; first 15 minutes skipped to allow MACD EMAs to stabilize",
     "volume_filter": "volume >= 0.8x 5-min SMA (soft sanity check, not primary gate)",
     "trend_filter": "VWAP direction (long above VWAP, short below VWAP) and MACD line sign (long when EMA_24 > EMA_72)",
-    "spread_filter": "none — limit order execution at close prices, spread is zero"
+    "spread_filter": "none \u2014 limit order execution at close prices, spread is zero"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.53,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.55,
-    "edge_decay_risk": "moderate — MACD is widely watched, but histogram acceleration at 5s resolution is not commonly traded; algos targeting MACD signals may reduce edge over time if this pattern becomes crowded"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.8,
+    "edge_decay_risk": "moderate \u2014 MACD is widely watched, but histogram acceleration at 5s resolution is not commonly traded; algos targeting MACD signals may reduce edge over time if this pattern becomes crowded"
   },
-  "adaptation_notes": "Original was MACD(12,26,9) on 1-min bars of NIFTY 200 stocks, hold 15-40 min. Three key changes: (1) Timescale compressed: EMAs scaled to 2/6/1.5 min (not 12x blind which gives 312-bar slow EMA — absurd for a 90s hold). Rationale: for a 30-90s hold, context window should be 4-6x hold, not 20x. (2) Universe changed from stocks to NIFTY index: mechanism reframed around institutional TWAP flow rather than single-stock momentum. Index is smoother, more liquid, momentum driven by aggregate flows not earnings/news. (3) Volume filter softened (0.8x SMA, not 1.0x): index volume is noisier intraday than individual stocks; tight volume filter would eliminate too many valid signals. VWAP filter retained — same concept, same implementation (session VWAP), directly applicable to index.",
+  "adaptation_notes": "Original was MACD(12,26,9) on 1-min bars of NIFTY 200 stocks, hold 15-40 min. Three key changes: (1) Timescale compressed: EMAs scaled to 2/6/1.5 min (not 12x blind which gives 312-bar slow EMA \u2014 absurd for a 90s hold). Rationale: for a 30-90s hold, context window should be 4-6x hold, not 20x. (2) Universe changed from stocks to NIFTY index: mechanism reframed around institutional TWAP flow rather than single-stock momentum. Index is smoother, more liquid, momentum driven by aggregate flows not earnings/news. (3) Volume filter softened (0.8x SMA, not 1.0x): index volume is noisier intraday than individual stocks; tight volume filter would eliminate too many valid signals. VWAP filter retained \u2014 same concept, same implementation (session VWAP), directly applicable to index.",
   "weaknesses": [
-    "MACD at 2/6 min EMAs on 5-second bars is still relatively fast — 15-second histogram acceleration (3 bars) can be triggered by single news spike rather than sustained flow",
-    "VWAP filter means no signals when price oscillates near VWAP — misses potential trades in a flat session",
-    "3-bar acceleration filter introduces 15-second entry lag — by the time signal fires on a fast NIFTY move, initial 5-8 pts may already be priced in",
-    "MACD histogram acceleration is a well-documented concept (Elder, Aspray) — institutional algos may generate false patterns"
+    "MACD at 2/6 min EMAs on 5-second bars is still relatively fast \u2014 15-second histogram acceleration (3 bars) can be triggered by single news spike rather than sustained flow",
+    "VWAP filter means no signals when price oscillates near VWAP \u2014 misses potential trades in a flat session",
+    "3-bar acceleration filter introduces 15-second entry lag \u2014 by the time signal fires on a fast NIFTY move, initial 5-8 pts may already be priced in",
+    "MACD histogram acceleration is a well-documented concept (Elder, Aspray) \u2014 institutional algos may generate false patterns"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_160.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-40 minutes",
-    "original_indicators": ["MACD(12,26,9)", "MACD histogram", "VWAP", "Volume SMA(20)"],
+    "original_indicators": [
+      "MACD(12,26,9)",
+      "MACD histogram",
+      "VWAP",
+      "Volume SMA(20)"
+    ],
     "original_stop": "0.25% from entry OR MACD line crosses signal",
     "original_target": "0.4% from entry OR histogram deceleration"
-  }
+  },
+  "vix_agnostic": true
 }

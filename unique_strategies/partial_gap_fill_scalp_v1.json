@@ -75,7 +75,7 @@
     "target_points": 8,
     "target_rationale": "8 option pts ≈ 16 spot pts of gap reversion. A 0.5–1.5% NIFTY gap = 110–330 spot pts; the 50% partial fill target = 55–165 pts. We capture the FIRST leg (~16 pts) of that reversion within 30–300 seconds as VWAP algorithm flow initiates — this is 10–30% of the full partial fill, taken before momentum fades. Consistent with 5-minute NIFTY ATM option typical range of 7–15 pts (at delta 0.5). Risk:reward = 1:1.6.",
     "time_stop_bars": 60,
-    "eod_rule": "flatten at 15:25 IST"
+    "eod_rule": "flatten at 09:45 IST (585 minutes) — gap fill dynamics weaken sharply after 09:45; entries restricted to 09:20-09:45 IST"
   },
   "filters": {
     "vix_filter": "VIX < 22 — in high-volatility environments NIFTY gaps are event-driven and less likely to partially fill on institutional VWAP anchoring alone",

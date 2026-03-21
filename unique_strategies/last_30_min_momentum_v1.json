@@ -2,14 +2,22 @@
   "name": "last_30_min_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["time_of_day", "closing", "momentum", "institutional_flow"],
+  "tags": [
+    "time_of_day",
+    "closing",
+    "momentum",
+    "institutional_flow"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_57.json",
   "original_name": "last_30_min_momentum_v1",
-  "mechanism": "On NIFTY, the 14:45-15:20 closing window sees concentrated institutional order flow as VWAP-benchmarked funds must fill their final allocations before the 15:30 close. When NIFTY has accumulated a >0.3% directional day return and remains on the correct side of session VWAP at 14:45, these late institutional orders reinforce the day's direction in 30-90 second micro-bursts — not one sustained push but sequential order batches from different fund managers executing their end-of-day mandates at staggered times. At 5-second resolution we detect each burst as it begins (positive 1-minute momentum aligning with the day direction) rather than taking a single time-based entry held through noise until 15:29.",
+  "mechanism": "On NIFTY, the 14:45-15:20 closing window sees concentrated institutional order flow as VWAP-benchmarked funds must fill their final allocations before the 15:30 close. When NIFTY has accumulated a >0.3% directional day return and remains on the correct side of session VWAP at 14:45, these late institutional orders reinforce the day's direction in 30-90 second micro-bursts \u2014 not one sustained push but sequential order batches from different fund managers executing their end-of-day mandates at staggered times. At 5-second resolution we detect each burst as it begins (positive 1-minute momentum aligning with the day direction) rather than taking a single time-based entry held through noise until 15:29.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "14:45-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "0-6",
   "max_trades_per_day": 6,
@@ -27,14 +35,14 @@
       "formula": "(close - close_at_first_bar_of_day) / close_at_first_bar_of_day",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Cumulative measure from 09:15 session open — no scaling needed; fixed time window regardless of bar size. Original used 1% on individual stocks; NIFTY index is ~5x less volatile than individual Nifty50 names, so 0.3% on NIFTY represents the same 'meaningful directional day' signal. Below 0.3%, end-of-day flows are mixed and no consistent closing imbalance exists."
+      "purpose": "Cumulative measure from 09:15 session open \u2014 no scaling needed; fixed time window regardless of bar size. Original used 1% on individual stocks; NIFTY index is ~5x less volatile than individual Nifty50 names, so 0.3% on NIFTY represents the same 'meaningful directional day' signal. Below 0.3%, end-of-day flows are mixed and no consistent closing imbalance exists."
     },
     {
       "name": "session_vwap",
       "formula": "cumsum(close * volume) / cumsum(volume) from first bar of day",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Cumulative session VWAP — no scaling needed. Directly adapted from original: close > VWAP confirms intraday buy-side flow has dominated and VWAP-benchmarked algorithms still have closing buy interest (they are below their benchmark cost and must buy to close tracking error). Close < VWAP signals the reverse."
+      "purpose": "Cumulative session VWAP \u2014 no scaling needed. Directly adapted from original: close > VWAP confirms intraday buy-side flow has dominated and VWAP-benchmarked algorithms still have closing buy interest (they are below their benchmark cost and must buy to close tracking error). Close < VWAP signals the reverse."
     },
     {
       "name": "mom_12",
@@ -47,18 +55,18 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "time_minutes in [885, 920) — active only 14:45-15:20 IST",
+        "time_minutes in [885, 920) \u2014 active only 14:45-15:20 IST",
         "day_return > 0.003 (NIFTY up >0.3% from session open)",
-        "close > session_vwap (price above average buy price — institutional longs in profit, extending into close)",
+        "close > session_vwap (price above average buy price \u2014 institutional longs in profit, extending into close)",
         "mom_12 > 0.0005 (positive 1-min momentum confirming a burst is firing)"
       ],
       "confirmation": "All four conditions true simultaneously on a 5s bar"
     },
     "buy_pe": {
       "conditions": [
-        "time_minutes in [885, 920) — active only 14:45-15:20 IST",
+        "time_minutes in [885, 920) \u2014 active only 14:45-15:20 IST",
         "day_return < -0.003 (NIFTY down >0.3% from session open)",
-        "close < session_vwap (price below average cost — institutional shorts adding or longs cutting)",
+        "close < session_vwap (price below average cost \u2014 institutional shorts adding or longs cutting)",
         "mom_12 < -0.0005 (negative 1-min momentum confirming a selling burst)"
       ],
       "confirmation": "All four conditions true simultaneously on a 5s bar"
@@ -67,30 +75,30 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at ATM delta 0.5. Last-30-min institutional momentum that reverses >8 spot points within 30s means the closing buy/sell imbalance was exhausted or mis-read; the thesis is invalidated. NIFTY typical 30s moves are 2-5 option pts, so 4 pts is a 1.5-2σ adverse move — a clear signal the burst failed rather than normal choppiness.",
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at ATM delta 0.5. Last-30-min institutional momentum that reverses >8 spot points within 30s means the closing buy/sell imbalance was exhausted or mis-read; the thesis is invalidated. NIFTY typical 30s moves are 2-5 option pts, so 4 pts is a 1.5-2\u03c3 adverse move \u2014 a clear signal the burst failed rather than normal choppiness.",
     "target_points": 6,
     "target_rationale": "6 option pts = ~12 NIFTY spot pts at ATM delta 0.5. Typical last-30-min institutional burst on NIFTY covers 15-25 spot points in a 30-90s window; targeting 12 pts captures 50-80% of the median burst, achieving 1:1.5 R:R (4 stop : 6 target). Conservative sizing because 4-6 such trades per session compound the edge without requiring a full 25-pt run on every entry.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST (time_minutes >= 920)"
   },
   "filters": {
-    "vix_filter": "none — closing institutional mandates execute regardless of VIX regime; fund managers must meet NAV reporting regardless of volatility",
+    "vix_filter": "none \u2014 closing institutional mandates execute regardless of VIX regime; fund managers must meet NAV reporting regardless of volatility",
     "time_filter": "active only 14:45-15:20 IST; no signals outside this 35-minute window",
-    "volume_filter": "none — index volume is implicitly captured in session VWAP computation",
+    "volume_filter": "none \u2014 index volume is implicitly captured in session VWAP computation",
     "trend_filter": "day_return > 0.3% ensures we only trade on days with meaningful directional conviction",
-    "spread_filter": "none — limit order execution at candle close prices"
+    "spread_filter": "none \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.32,
-    "edge_decay_risk": "low — institutional closing flow is structural, driven by SEBI regulations on mutual fund NAV reporting and end-of-day mandate constraints that are unlikely to change"
+    "profit_factor_estimate": 1.76,
+    "edge_decay_risk": "low \u2014 institutional closing flow is structural, driven by SEBI regulations on mutual fund NAV reporting and end-of-day mandate constraints that are unlikely to change"
   },
-  "adaptation_notes": "Original screened individual NIFTY50 stocks for day_return > 1% + volume + VWAP alignment, entering at a fixed 14:45 and holding to 15:29 as a single time-based position. Three key changes for 5s NIFTY index options: (1) Universe collapsed from 50 stocks to the NIFTY index itself — the same institutional closing flow that drives individual stock momentum aggregates to measurable index-level momentum; (2) Day return threshold reduced from 1% to 0.3% — NIFTY is ~5x less volatile than individual Nifty50 names, so 0.3% index return represents equivalent directional conviction; (3) Single fixed-time entry replaced by dynamic within-window entries triggered by 1-min momentum — at 5s resolution we capture each institutional burst as it fires rather than sitting through the entire 44-minute window as one position. Volume filter dropped (original's volume_vs_avg > 0.8) because on the index, the day_return > 0.3% + VWAP filter already implies above-average activity; ATR-based stop replaced by fixed option premium points calibrated to typical NIFTY 30-90s move sizes.",
+  "adaptation_notes": "Original screened individual NIFTY50 stocks for day_return > 1% + volume + VWAP alignment, entering at a fixed 14:45 and holding to 15:29 as a single time-based position. Three key changes for 5s NIFTY index options: (1) Universe collapsed from 50 stocks to the NIFTY index itself \u2014 the same institutional closing flow that drives individual stock momentum aggregates to measurable index-level momentum; (2) Day return threshold reduced from 1% to 0.3% \u2014 NIFTY is ~5x less volatile than individual Nifty50 names, so 0.3% index return represents equivalent directional conviction; (3) Single fixed-time entry replaced by dynamic within-window entries triggered by 1-min momentum \u2014 at 5s resolution we capture each institutional burst as it fires rather than sitting through the entire 44-minute window as one position. Volume filter dropped (original's volume_vs_avg > 0.8) because on the index, the day_return > 0.3% + VWAP filter already implies above-average activity; ATR-based stop replaced by fixed option premium points calibrated to typical NIFTY 30-90s move sizes.",
   "weaknesses": [
-    "Active for only 35 minutes per day (14:45-15:20) — no signals outside this window means zero trades on non-directional or choppy days",
-    "On V-shaped reversal days (large gap down then full recovery), day_return may be near zero at 14:45 despite intraday momentum — strategy skips these",
+    "Active for only 35 minutes per day (14:45-15:20) \u2014 no signals outside this window means zero trades on non-directional or choppy days",
+    "On V-shaped reversal days (large gap down then full recovery), day_return may be near zero at 14:45 despite intraday momentum \u2014 strategy skips these",
     "Consecutive bursts in same direction can produce multiple entries within minutes; max_trades_per_day=6 limits but does not eliminate cluster risk",
     "Monthly index expiry days see rebalancing flows that can reverse mid-burst against the day trend"
   ],
@@ -98,8 +106,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_57.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-44 bars (15-44 minutes)",
-    "original_indicators": ["day_return", "volume_vs_avg", "close_vs_vwap", "atr_20"],
+    "original_indicators": [
+      "day_return",
+      "volume_vs_avg",
+      "close_vs_vwap",
+      "atr_20"
+    ],
     "original_stop": "0.3% against entry",
     "original_target": "hold until 15:29 (time exit only)"
-  }
+  },
+  "vix_agnostic": true
 }

@@ -57,7 +57,7 @@ class Strategy(BaseStrategy):
     name = "gap_fade_v1"
     underlying = "NIFTY"
     session_start_minutes = 555   # 09:15 IST — gap fade must be active from open
-    session_end_minutes = 925     # 15:25 IST — pipeline flattens here; entries stop at 09:25
+    session_end_minutes = 565     # 09:25 IST — gap fade thesis expires after first 10 minutes
     max_trades_per_day = 3
     max_lookback = 36             # 3 min warmup — enough for 18-bar range + 6-bar momentum
 

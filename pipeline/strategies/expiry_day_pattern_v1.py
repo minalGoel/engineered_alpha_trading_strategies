@@ -96,8 +96,8 @@ class Strategy(BaseStrategy):
         return [
             # Minimum spot-point deviation from max-OI strike to trigger morning signal
             TunableParam("dist_threshold_pts", 30.0, 15.0, 60.0),
-            TunableParam("stop_pts",   4.0,  2.0,  8.0),
-            TunableParam("target_pts", 7.0,  4.0, 12.0),
+            TunableParam("stop_pts",   5.0,  2.0,  8.0),
+            TunableParam("target_pts", 8.0,  4.0, 12.0),
         ]
 
     def compute(
@@ -110,8 +110,8 @@ class Strategy(BaseStrategy):
         n = len(spot_df)
 
         dist_threshold = params.get("dist_threshold_pts", 30.0)
-        stop_pts       = params.get("stop_pts",   4.0)
-        target_pts     = params.get("target_pts", 7.0)
+        stop_pts       = params.get("stop_pts",   5.0)
+        target_pts     = params.get("target_pts", 8.0)
 
         # ── Core spot arrays ──────────────────────────────────────────────────
         close    = spot_df["close"].fill_null(strategy="forward").to_numpy()

@@ -2,14 +2,23 @@
   "name": "gap_continuation_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["gap", "momentum", "continuation", "orb", "opening-range"],
+  "tags": [
+    "gap",
+    "momentum",
+    "continuation",
+    "orb",
+    "opening-range"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_47.json",
   "original_name": "gap_continuation_momentum_v1",
-  "mechanism": "When NIFTY gaps up > 0.4% at open on global cues or FII-driven overnight information, institutions with unfinished buy programs allow price to consolidate during 09:15-09:30 as the opening order queue clears. When NIFTY then closes above the 15-minute post-open range high (ORB high), VWAP-benchmarked algorithms — still below their target allocation — trigger systematic buy orders simultaneously, creating a 30-90 second directional burst. At 5-second resolution we enter at the exact ORB breakout bar rather than waiting for a 1-minute confirmation, capturing the first 10-15 spot points of institutional flow resumption before the burst exhausts. The inverse holds for gap-down: break below ORB low on a gap-down day signals continued institutional selling.",
+  "mechanism": "When NIFTY gaps up > 0.4% at open on global cues or FII-driven overnight information, institutions with unfinished buy programs allow price to consolidate during 09:15-09:30 as the opening order queue clears. When NIFTY then closes above the 15-minute post-open range high (ORB high), VWAP-benchmarked algorithms \u2014 still below their target allocation \u2014 trigger systematic buy orders simultaneously, creating a 30-90 second directional burst. At 5-second resolution we enter at the exact ORB breakout bar rather than waiting for a 1-minute confirmation, capturing the first 10-15 spot points of institutional flow resumption before the burst exhausts. The inverse holds for gap-down: break below ORB low on a gap-down day signals continued institutional selling.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:15-10:30 IST (entries only 09:30-10:30; ORB computed 09:15-09:30)",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "0-3",
   "max_trades_per_day": 4,
@@ -34,7 +43,7 @@
       "formula": "MAX(high, 09:15 to 09:30)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "15-minute opening range high. FIXED TIME WINDOW — same 15 minutes as original regardless of bar timeframe (180 bars at 5s = 15 minutes = 09:15-09:30). This range represents the supply ceiling during morning queue absorption. NOT scaled because the opening range is a clock-based concept, not a bar-count concept."
+      "purpose": "15-minute opening range high. FIXED TIME WINDOW \u2014 same 15 minutes as original regardless of bar timeframe (180 bars at 5s = 15 minutes = 09:15-09:30). This range represents the supply ceiling during morning queue absorption. NOT scaled because the opening range is a clock-based concept, not a bar-count concept."
     },
     {
       "name": "orb_low_15",
@@ -48,7 +57,7 @@
       "formula": "CUMSUM(typical_price * volume) / CUMSUM(volume) from 09:15",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP as institutional benchmark. CUMULATIVE measure — no lookback scaling needed. On a gap-up day, bullish breakout only valid above VWAP (confirms VWAP-benchmarked algos still buying). Below VWAP on a gap-up day suggests the gap is being faded."
+      "purpose": "Session VWAP as institutional benchmark. CUMULATIVE measure \u2014 no lookback scaling needed. On a gap-up day, bullish breakout only valid above VWAP (confirms VWAP-benchmarked algos still buying). Below VWAP on a gap-up day suggests the gap is being faded."
     },
     {
       "name": "vol_sma_60",
@@ -82,15 +91,15 @@
     "entry_price": "limit at candle close"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY reverses back inside the ORB after the breakout, the institutional flow thesis is invalidated — false ORB breakouts typically retrace 6-10 spot pts within 30 seconds. 4 pts allows noise without absorbing a full reversal.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY reverses back inside the ORB after the breakout, the institutional flow thesis is invalidated \u2014 false ORB breakouts typically retrace 6-10 spot pts within 30 seconds. 4 pts allows noise without absorbing a full reversal.",
+    "target_points": 8.0,
     "target_rationale": "7 option points (~14 NIFTY spot points). Post-ORB gap continuation bursts typically extend 15-20 spot points in the first 60-90 seconds as stacked buy orders execute. 7 pts captures the lower end of this extension with 1:1.75 R:R, calibrated to typical NIFTY 1-minute move of 3-7 option pts.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "none — gap continuation persists across vol regimes; high-VIX days have larger gaps that continue more strongly",
+    "vix_filter": "none \u2014 gap continuation persists across vol regimes; high-VIX days have larger gaps that continue more strongly",
     "time_filter": "entry only 09:30-10:30 IST; after 10:30 gap momentum dissipates as VWAP reverts and late participants fade the gap",
     "volume_filter": "volume > 1.2x 5-min rolling SMA at breakout bar",
     "trend_filter": "VWAP filter ensures direction aligns with institutional benchmark",
@@ -99,23 +108,31 @@
   "edge": {
     "expected_bps": 30,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.0,
-    "edge_decay_risk": "low — institutional VWAP-benchmarked algos create structural ORB continuation; index-level flow, not stock-specific news"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.35,
+    "edge_decay_risk": "low \u2014 institutional VWAP-benchmarked algos create structural ORB continuation; index-level flow, not stock-specific news"
   },
-  "adaptation_notes": "Original traded individual Nifty50 stocks gapping > 1.5%. Converted to NIFTY index: (1) gap threshold reduced from 1.5% to 0.4% — index diversification compresses moves ~3-4x, same conviction = smaller index gap; (2) hold time compressed from 15-60 min to 30-90s by entering at the 5-second ORB breakout bar rather than waiting for 1-min confirmation; (3) ORB time window stays at exactly 15 minutes (180 bars at 5s) — clock-based concept, not bar-count; (4) vol_sma window compressed from 10-min to 5-min for faster volume confirmation; (5) stock-level catalysts replaced by index-level overnight information (SGX Nifty, global close, FII positioning).",
+  "adaptation_notes": "Original traded individual Nifty50 stocks gapping > 1.5%. Converted to NIFTY index: (1) gap threshold reduced from 1.5% to 0.4% \u2014 index diversification compresses moves ~3-4x, same conviction = smaller index gap; (2) hold time compressed from 15-60 min to 30-90s by entering at the 5-second ORB breakout bar rather than waiting for 1-min confirmation; (3) ORB time window stays at exactly 15 minutes (180 bars at 5s) \u2014 clock-based concept, not bar-count; (4) vol_sma window compressed from 10-min to 5-min for faster volume confirmation; (5) stock-level catalysts replaced by index-level overnight information (SGX Nifty, global close, FII positioning).",
   "weaknesses": [
-    "NIFTY gaps > 0.4% occur on ~30-40% of trading days — strategy is idle on flat-open days",
-    "Post-ORB breakout on gap days can be false (trapped longs, algo stop hunts) — volume filter reduces but does not eliminate this",
+    "NIFTY gaps > 0.4% occur on ~30-40% of trading days \u2014 strategy is idle on flat-open days",
+    "Post-ORB breakout on gap days can be false (trapped longs, algo stop hunts) \u2014 volume filter reduces but does not eliminate this",
     "Gap continuation tends to work for first 45-60 min; late entries near 10:30 have lower hit rate",
-    "Correlated with global markets — consecutive false breakout days possible during range-bound global sessions"
+    "Correlated with global markets \u2014 consecutive false breakout days possible during range-bound global sessions"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_47.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 bars (15-60 minutes)",
-    "original_indicators": ["gap_pct", "orb_high_15", "orb_low_15", "vwap", "volume_sma_10", "atr_20_daily"],
+    "original_indicators": [
+      "gap_pct",
+      "orb_high_15",
+      "orb_low_15",
+      "vwap",
+      "volume_sma_10",
+      "atr_20_daily"
+    ],
     "original_stop": "orb midpoint",
     "original_target": "0.5 * abs(gap_pct) from entry"
-  }
+  },
+  "vix_agnostic": true
 }

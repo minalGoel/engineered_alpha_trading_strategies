@@ -2,14 +2,23 @@
   "name": "atr_breakout_volatility_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "ATR", "breakout", "intraday", "momentum"],
+  "tags": [
+    "volatility",
+    "ATR",
+    "breakout",
+    "intraday",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_211.json",
   "original_name": "atr_breakout_volatility_v1",
-  "mechanism": "When NIFTY's 5-minute ATR expands above its own 10-minute baseline (ratio > 1.2) and price breaches a 2.0 * ATR channel anchored to the session VWAP, it signals that an institutional directional order — a large TWAP execution or a triggered stop cascade — is actively overwhelming resting passive liquidity. At 5-second resolution we enter within the first 1-2 bars of the breach, before most 1-minute momentum algorithms have confirmed the move on their bar close. The VWAP-anchored channel self-adjusts to the day's realized volatility, so the breakout threshold is statistically significant regardless of whether the session is calm (ATR 8 pts) or volatile (ATR 18 pts).",
+  "mechanism": "When NIFTY's 5-minute ATR expands above its own 10-minute baseline (ratio > 1.2) and price breaches a 2.0 * ATR channel anchored to the session VWAP, it signals that an institutional directional order \u2014 a large TWAP execution or a triggered stop cascade \u2014 is actively overwhelming resting passive liquidity. At 5-second resolution we enter within the first 1-2 bars of the breach, before most 1-minute momentum algorithms have confirmed the move on their bar close. The VWAP-anchored channel self-adjusts to the day's realized volatility, so the breakout threshold is statistically significant regardless of whether the session is calm (ATR 8 pts) or volatile (ATR 18 pts).",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,28 +36,28 @@
       "formula": "Wilder ATR(high, low, close, 60) on 5s bars",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute ATR captures current intraday volatility. Original used ATR(14) on 1-min = 14-min lookback. Compressed to 5 min (60 bars at 5s) because our hold is 15-120s not 15-60 min — ATR must reflect CURRENT short-term volatility, not a 14-min lag. At 5s bars, a 14-min ATR would smooth away the very volatility expansion we are trying to detect."
+      "purpose": "5-minute ATR captures current intraday volatility. Original used ATR(14) on 1-min = 14-min lookback. Compressed to 5 min (60 bars at 5s) because our hold is 15-120s not 15-60 min \u2014 ATR must reflect CURRENT short-term volatility, not a 14-min lag. At 5s bars, a 14-min ATR would smooth away the very volatility expansion we are trying to detect."
     },
     {
       "name": "atr_ratio",
       "formula": "atr_60 / SMA(atr_60, 120)",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "ATR expansion ratio comparing current 5-min ATR to its 10-minute rolling average. When > 1.2, short-term volatility is accelerating — a genuine expansion event, not a random noisy bar. The 120-bar (10-min) baseline is long enough to smooth within-session noise yet short enough to adapt as the day's vol regime shifts."
+      "purpose": "ATR expansion ratio comparing current 5-min ATR to its 10-minute rolling average. When > 1.2, short-term volatility is accelerating \u2014 a genuine expansion event, not a random noisy bar. The 120-bar (10-min) baseline is long enough to smooth within-session noise yet short enough to adapt as the day's vol regime shifts."
     },
     {
       "name": "vwap",
       "formula": "cumsum(close * volume) / cumsum(volume), reset at session open per day",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session open as the ATR channel center. No scaling needed — cumulative measure. Replaces the original's session_mean (simple SMA from open) because VWAP is the actual institutional execution benchmark; ATR channel crossings above/below VWAP have greater order-book significance than crossings of an arbitrary SMA."
+      "purpose": "Cumulative VWAP from session open as the ATR channel center. No scaling needed \u2014 cumulative measure. Replaces the original's session_mean (simple SMA from open) because VWAP is the actual institutional execution benchmark; ATR channel crossings above/below VWAP have greater order-book significance than crossings of an arbitrary SMA."
     },
     {
       "name": "upper_channel",
       "formula": "vwap + 2.0 * atr_60",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Breakout threshold above VWAP. Preserves the original's 2.0 ATR multiplier — statistically 2 ATR from VWAP represents ~2-sigma deviation given the day's volatility, filtering noise-driven crossings."
+      "purpose": "Breakout threshold above VWAP. Preserves the original's 2.0 ATR multiplier \u2014 statistically 2 ATR from VWAP represents ~2-sigma deviation given the day's volatility, filtering noise-driven crossings."
     },
     {
       "name": "lower_channel",
@@ -62,7 +71,7 @@
       "formula": "SMA(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute simple moving average as trend direction filter, replacing the original's ADX(14). ADX at 5-second bar resolution is extremely noisy — the directional index requires 3x smoothing periods and lags too much at this frequency. SMA(60) price position (close above/below) is a robust directional filter: buy CE only when price is in an uptrend at the 5-min scale, buy PE only when in a downtrend."
+      "purpose": "5-minute simple moving average as trend direction filter, replacing the original's ADX(14). ADX at 5-second bar resolution is extremely noisy \u2014 the directional index requires 3x smoothing periods and lags too much at this frequency. SMA(60) price position (close above/below) is a robust directional filter: buy CE only when price is in an uptrend at the 5-min scale, buy PE only when in a downtrend."
     },
     {
       "name": "vol_ratio",
@@ -76,8 +85,8 @@
     "buy_ce": {
       "conditions": [
         "close > upper_channel (price breaches VWAP + 2.0 * ATR_60)",
-        "atr_ratio > 1.2 (ATR expanding above 10-min baseline — vol expansion confirmed)",
-        "close > sma_60 (price above 5-min SMA — uptrend at trigger timeframe)",
+        "atr_ratio > 1.2 (ATR expanding above 10-min baseline \u2014 vol expansion confirmed)",
+        "close > sma_60 (price above 5-min SMA \u2014 uptrend at trigger timeframe)",
         "vol_ratio > 1.3 (breakout bar volume elevated vs 5-min average)"
       ],
       "confirmation": "All four conditions met simultaneously on the same 5s bar close"
@@ -86,7 +95,7 @@
       "conditions": [
         "close < lower_channel (price breaches VWAP - 2.0 * ATR_60)",
         "atr_ratio > 1.2",
-        "close < sma_60 (price below 5-min SMA — downtrend at trigger timeframe)",
+        "close < sma_60 (price below 5-min SMA \u2014 downtrend at trigger timeframe)",
         "vol_ratio > 1.3"
       ],
       "confirmation": "All four conditions met simultaneously on the same 5s bar close"
@@ -94,28 +103,28 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "A valid NIFTY ATR channel breakout should not retrace 8-10 spot points within the first 30 seconds — 4 option points (~8 spot pts at delta 0.5) is the maximum tolerable pullback before declaring the breakout a false signal. Calibrated against typical NIFTY 30s moves of 2-5 option pts; a 4-pt adverse move means the breakout has already fully reversed.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "A valid NIFTY ATR channel breakout should not retrace 8-10 spot points within the first 30 seconds \u2014 4 option points (~8 spot pts at delta 0.5) is the maximum tolerable pullback before declaring the breakout a false signal. Calibrated against typical NIFTY 30s moves of 2-5 option pts; a 4-pt adverse move means the breakout has already fully reversed.",
+    "target_points": 8.0,
     "target_rationale": "First-leg continuation of a NIFTY ATM channel breakout driven by institutional flow typically extends 14-20 spot points within 60-90 seconds; 7 option points (~14 spot pts) captures the median first-leg and gives 1:1.75 risk-reward against the 4-point stop. Consistent with the 1-2 min NIFTY move reference of 3-7 option pts for the stop and 5-10 pts for the full move.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — ATR expansion ratio serves as the internal volatility gate; VIX is externally correlated but not needed",
+    "vix_filter": "none \u2014 ATR expansion ratio serves as the internal volatility gate; VIX is externally correlated but not needed",
     "time_filter": "09:25-15:20 IST; skip 09:15-09:25 for VWAP and ATR warmup",
     "volume_filter": "vol_ratio > 1.3 on the breakout bar",
     "trend_filter": "close vs sma_60 for directional alignment",
-    "spread_filter": "limit orders — no bid-ask spread cost"
+    "spread_filter": "limit orders \u2014 no bid-ask spread cost"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — 2.0x ATR multiplier may need periodic recalibration; ATR expansion ratio filter reduces false breakout rate substantially"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "moderate \u2014 2.0x ATR multiplier may need periodic recalibration; ATR expansion ratio filter reduces false breakout rate substantially"
   },
-  "adaptation_notes": "Original ran on 1-min bars of individual NIFTY 50 equity constituents. Key changes: (1) ATR period compressed from 14-min to 5-min (60 bars at 5s) — our 15-120s hold requires current-regime vol, not a 14-min lag. (2) Channel center changed from session_mean (plain SMA from open) to cumulative VWAP — institutional benchmark is VWAP, not arithmetic mean. (3) ADX(14) trend filter replaced with SMA(60) price position — ADX is unreliable at 5-second frequency. (4) Volume ratio baseline compressed from 20-bar 1-min (20 min) to 60-bar 5s (5 min) to match ATR period. (5) Hold time compressed from 15-60 min to 15-120 seconds — only the initial breakout continuation is captured, not the full trend.",
+  "adaptation_notes": "Original ran on 1-min bars of individual NIFTY 50 equity constituents. Key changes: (1) ATR period compressed from 14-min to 5-min (60 bars at 5s) \u2014 our 15-120s hold requires current-regime vol, not a 14-min lag. (2) Channel center changed from session_mean (plain SMA from open) to cumulative VWAP \u2014 institutional benchmark is VWAP, not arithmetic mean. (3) ADX(14) trend filter replaced with SMA(60) price position \u2014 ADX is unreliable at 5-second frequency. (4) Volume ratio baseline compressed from 20-bar 1-min (20 min) to 60-bar 5s (5 min) to match ATR period. (5) Hold time compressed from 15-60 min to 15-120 seconds \u2014 only the initial breakout continuation is captured, not the full trend.",
   "weaknesses": [
     "NIFTY 5s breakout bars are brief; ATR channel crossings can trigger on single-bar institutional spikes that reverse within 10s before the 5-stop fires",
     "In high-VIX sessions (VIX > 22), the 2.0 * ATR channel widens dramatically and breakout signals become very infrequent, reducing daily trade count",
@@ -125,8 +134,15 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_211.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 mins",
-    "original_indicators": ["ATR_14", "session_mean", "ATR_expansion_ratio", "volume_ratio_20", "ADX_14"],
+    "original_indicators": [
+      "ATR_14",
+      "session_mean",
+      "ATR_expansion_ratio",
+      "volume_ratio_20",
+      "ADX_14"
+    ],
     "original_stop": "1.0 * ATR_14 from entry OR price re-enters channel",
     "original_target": "3.0 * ATR_14 from entry"
-  }
+  },
+  "vix_agnostic": true
 }

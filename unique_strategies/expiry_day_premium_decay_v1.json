@@ -2,14 +2,23 @@
   "name": "expiry_day_premium_decay_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["expiry", "gamma", "mean_reversion", "vwap", "time_of_day"],
+  "tags": [
+    "expiry",
+    "gamma",
+    "mean_reversion",
+    "vwap",
+    "time_of_day"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_55.json",
   "original_name": "expiry_day_premium_decay_v1",
-  "mechanism": "On NIFTY weekly expiry Thursdays, option market makers who have sold near-ATM calls and puts are net short gamma across thousands of crore in notional. As NIFTY deviates from session VWAP — which on expiry days closely tracks the aggregate gamma-neutral pin level — dealers must delta-hedge directionally, amplifying the move beyond what fundamental order flow would justify. Once VIX begins declining from the session open (typically 45-90 minutes after open), gamma exposure has partially decayed and dealer hedge ratios stabilize; at that point, the accumulated overshoot unwinds rapidly over 30-120 seconds as dealers lighten delta hedges. On NIFTY, this produces measurable 15-30 spot point VWAP reversions that begin predictably when a confirmed VIX decline signals gamma pressure is easing and the z-score of deviation from VWAP starts recovering direction.",
+  "mechanism": "On NIFTY weekly expiry Thursdays, option market makers who have sold near-ATM calls and puts are net short gamma across thousands of crore in notional. As NIFTY deviates from session VWAP \u2014 which on expiry days closely tracks the aggregate gamma-neutral pin level \u2014 dealers must delta-hedge directionally, amplifying the move beyond what fundamental order flow would justify. Once VIX begins declining from the session open (typically 45-90 minutes after open), gamma exposure has partially decayed and dealer hedge ratios stabilize; at that point, the accumulated overshoot unwinds rapidly over 30-120 seconds as dealers lighten delta hedges. On NIFTY, this produces measurable 15-30 spot point VWAP reversions that begin predictably when a confirmed VIX decline signals gamma pressure is easing and the z-score of deviation from VWAP starts recovering direction.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "10:00-14:00 IST",
-  "hold_time_seconds": [30, 180],
+  "hold_time_seconds": [
+    30,
+    180
+  ],
   "max_hold_bars": 36,
   "trades_per_day": "1-3 (only on expiry Thursdays)",
   "max_trades_per_day": 3,
@@ -19,7 +28,9 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["is_thursday"]
+    "other": [
+      "is_thursday"
+    ]
   },
   "indicators": [
     {
@@ -27,21 +38,21 @@
       "formula": "cumulative(typical_price * volume) / cumulative(volume) from session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP from 09:15, reset each day. On expiry days this serves as the gamma pin reference level — market makers' aggregate delta hedge is near-neutral at VWAP, so overshoots above/below are the deviation we're fading. Cumulative measure; no scaling needed."
+      "purpose": "Session VWAP from 09:15, reset each day. On expiry days this serves as the gamma pin reference level \u2014 market makers' aggregate delta hedge is near-neutral at VWAP, so overshoots above/below are the deviation we're fading. Cumulative measure; no scaling needed."
     },
     {
       "name": "vwap_zscore",
       "formula": "(close - vwap) / rolling_std(close - vwap, 240)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Z-score of NIFTY deviation from VWAP using a 20-minute (240-bar) rolling std. NOT 60×12=720 bars (60 min). We use 20 min because: (1) pre-10am volatility from gap opens is structurally different from mid-morning trading and would inflate the std estimate, making post-10am deviations look smaller than they are; (2) 240 bars gives enough observations for a stable estimate while reflecting only the current intraday vol regime. We fire at z < -1.5 or z > 1.5 — the typical expiry gamma overshoot produces z-scores of 1.5-3.0."
+      "purpose": "Z-score of NIFTY deviation from VWAP using a 20-minute (240-bar) rolling std. NOT 60\u00d712=720 bars (60 min). We use 20 min because: (1) pre-10am volatility from gap opens is structurally different from mid-morning trading and would inflate the std estimate, making post-10am deviations look smaller than they are; (2) 240 bars gives enough observations for a stable estimate while reflecting only the current intraday vol regime. We fire at z < -1.5 or z > 1.5 \u2014 the typical expiry gamma overshoot produces z-scores of 1.5-3.0."
     },
     {
       "name": "zscore_delta_12",
       "formula": "vwap_zscore[i] - vwap_zscore[i-12]",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "Rate of change of z-score over 60 seconds (12 × 5s bars). Used to confirm the reversal has started — not just a pause but an active recovery of the z-score toward 0. 12-bar window (60s) chosen because: 5s noise produces frequent false z-score ticks that a 6-bar (30s) delta would catch as reversals; 60s gives enough directional confirmation while still entering early in the reversion."
+      "purpose": "Rate of change of z-score over 60 seconds (12 \u00d7 5s bars). Used to confirm the reversal has started \u2014 not just a pause but an active recovery of the z-score toward 0. 12-bar window (60s) chosen because: 5s noise produces frequent false z-score ticks that a 6-bar (30s) delta would catch as reversals; 60s gives enough directional confirmation while still entering early in the reversion."
     },
     {
       "name": "vix_change_from_open",
@@ -54,20 +65,20 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "is_thursday == True — only fire on weekly/monthly NIFTY expiry Thursdays",
-        "time_minutes in [600, 840) — 10:00-14:00 IST, post-first-hour gamma chaos window",
-        "vwap_zscore < -1.5 — NIFTY has overshot 1.5+ std below session VWAP due to gamma-forced selling",
-        "zscore_delta_12 > 0.10 — z-score is actively recovering toward 0 (reversal confirmed over 60s)",
-        "vix_change_from_open < 0 — VIX declining from open, gamma pressure easing"
+        "is_thursday == True \u2014 only fire on weekly/monthly NIFTY expiry Thursdays",
+        "time_minutes in [600, 840) \u2014 10:00-14:00 IST, post-first-hour gamma chaos window",
+        "vwap_zscore < -1.5 \u2014 NIFTY has overshot 1.5+ std below session VWAP due to gamma-forced selling",
+        "zscore_delta_12 > 0.10 \u2014 z-score is actively recovering toward 0 (reversal confirmed over 60s)",
+        "vix_change_from_open < 0 \u2014 VIX declining from open, gamma pressure easing"
       ],
-      "confirmation": "fire on same bar close — 5s resolution lets us enter as the reversion begins"
+      "confirmation": "fire on same bar close \u2014 5s resolution lets us enter as the reversion begins"
     },
     "buy_pe": {
       "conditions": [
         "is_thursday == True",
         "time_minutes in [600, 840)",
-        "vwap_zscore > 1.5 — NIFTY has overshot 1.5+ std above session VWAP",
-        "zscore_delta_12 < -0.10 — z-score actively reverting toward 0",
+        "vwap_zscore > 1.5 \u2014 NIFTY has overshot 1.5+ std above session VWAP",
+        "zscore_delta_12 < -0.10 \u2014 z-score actively reverting toward 0",
         "vix_change_from_open < 0"
       ],
       "confirmation": "fire on same bar close"
@@ -76,31 +87,31 @@
   },
   "exit": {
     "stop_points": 5,
-    "stop_rationale": "5 option pts (~10 NIFTY spot pts at delta 0.5). Expiry-day gamma overshoots on NIFTY typically extend 15-30 spot pts from VWAP; if NIFTY moves a further 10 spot pts against us after entry, the mean reversion thesis is broken — the move has extended into continuation territory beyond typical gamma overshoot exhaustion. At a 2-min NIFTY typical move of 5-10 option pts, this stop triggers only on clear adverse continuation.",
+    "stop_rationale": "5 option pts (~10 NIFTY spot pts at delta 0.5). Expiry-day gamma overshoots on NIFTY typically extend 15-30 spot pts from VWAP; if NIFTY moves a further 10 spot pts against us after entry, the mean reversion thesis is broken \u2014 the move has extended into continuation territory beyond typical gamma overshoot exhaustion. At a 2-min NIFTY typical move of 5-10 option pts, this stop triggers only on clear adverse continuation.",
     "target_points": 9,
     "target_rationale": "9 option pts (~18 NIFTY spot pts). Expiry-day VWAP reversions on NIFTY cover 18-25 spot pts in the first leg within 60-120 seconds once gamma hedge unwinding begins. At delta ~0.5, 18 spot pts = 9 option pts. This captures the first leg at 1:1.8 R:R. Deliberately not targeting the full reversion to 0-z-score (which would be 15-20+ option pts) because second-leg reversions are slower and face mean reversion exhaustion.",
     "time_stop_bars": 36,
-    "eod_rule": "flatten at 14:00 IST — expiry day last hour (14:00-15:30) has chaotic pinning dynamics that invalidate the reversion thesis"
+    "eod_rule": "flatten at 14:00 IST \u2014 expiry day last hour (14:00-15:30) has chaotic pinning dynamics that invalidate the reversion thesis"
   },
   "filters": {
-    "vix_filter": "vix_change_from_open < 0 — only trade when VIX is declining from open (gamma easing); if VIX is still rising, hedging pressure has not peaked and the overshoot may extend further",
+    "vix_filter": "vix_change_from_open < 0 \u2014 only trade when VIX is declining from open (gamma easing); if VIX is still rising, hedging pressure has not peaked and the overshoot may extend further",
     "time_filter": "10:00-14:00 IST only; first 45 min (09:15-10:00) is the chaotic gamma-amplified push window, not the reversion window",
-    "volume_filter": "implicit via VWAP computation — zero-volume bars contribute zero to VWAP deviation",
+    "volume_filter": "implicit via VWAP computation \u2014 zero-volume bars contribute zero to VWAP deviation",
     "trend_filter": "VWAP z-score reversal confirmation via zscore_delta_12 threshold",
-    "spread_filter": "none — limit order execution at candle close prices",
-    "event_filter": "Thursday only (is_thursday check) — strategy fires only on expiry Thursdays (~52 days/year)"
+    "spread_filter": "none \u2014 limit order execution at candle close prices",
+    "event_filter": "Thursday only (is_thursday check) \u2014 strategy fires only on expiry Thursdays (~52 days/year)"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.57,
     "avg_winner_to_loser": 1.4,
-    "profit_factor_estimate": 1.49,
-    "edge_decay_risk": "low — expiry day gamma mechanics are structural to NSE F&O market design; weekly expiries entrench this effect further as more participants trade short-dated options"
+    "profit_factor_estimate": 1.86,
+    "edge_decay_risk": "low \u2014 expiry day gamma mechanics are structural to NSE F&O market design; weekly expiries entrench this effect further as more participants trade short-dated options"
   },
-  "adaptation_notes": "Original traded top-15 Nifty50 constituent stocks on expiry Thursdays at 1-min bars, holding 30-90 minutes. Changes: (1) universe collapsed from stock basket to NIFTY index directly — the gamma exposure that drives individual stock overshoots is even larger at the index level (aggregate option OI on NIFTY far exceeds any single constituent); (2) hold time compressed from 30-90 min to 30-180 seconds — at 5s resolution we enter as the reversion begins rather than waiting for full 1-min bar confirmation; (3) lookback for zscore std window compressed from 60 min (original 60-bar 1min) to 20 min (240 bars at 5s) to avoid inflating the denominator with pre-10am volatile bars; (4) added zscore_delta_12 reversal confirmation — not present in original because 1-min bars already implicitly required multi-5s confirmation; (5) time window slightly extended to 14:00 (original was 14:00 too) but we explicitly exclude 14:00-15:30 which is option pinning chaos; (6) trailing stop and breakeven rules from original dropped per pipeline design.",
+  "adaptation_notes": "Original traded top-15 Nifty50 constituent stocks on expiry Thursdays at 1-min bars, holding 30-90 minutes. Changes: (1) universe collapsed from stock basket to NIFTY index directly \u2014 the gamma exposure that drives individual stock overshoots is even larger at the index level (aggregate option OI on NIFTY far exceeds any single constituent); (2) hold time compressed from 30-90 min to 30-180 seconds \u2014 at 5s resolution we enter as the reversion begins rather than waiting for full 1-min bar confirmation; (3) lookback for zscore std window compressed from 60 min (original 60-bar 1min) to 20 min (240 bars at 5s) to avoid inflating the denominator with pre-10am volatile bars; (4) added zscore_delta_12 reversal confirmation \u2014 not present in original because 1-min bars already implicitly required multi-5s confirmation; (5) time window slightly extended to 14:00 (original was 14:00 too) but we explicitly exclude 14:00-15:30 which is option pinning chaos; (6) trailing stop and breakeven rules from original dropped per pipeline design.",
   "weaknesses": [
-    "Only fires on Thursdays (~52 days/year) — extremely low frequency; 3 trades/day maximum means ~156 trades/year, backtest will be limited",
-    "Weekly vs monthly expiry produce different gamma profiles — monthly expiry last Thursdays have stronger pinning (much larger open interest) but same code treats both identically",
+    "Only fires on Thursdays (~52 days/year) \u2014 extremely low frequency; 3 trades/day maximum means ~156 trades/year, backtest will be limited",
+    "Weekly vs monthly expiry produce different gamma profiles \u2014 monthly expiry last Thursdays have stronger pinning (much larger open interest) but same code treats both identically",
     "If Thursday coincides with RBI policy, budget, or global risk-off event, the directional flow overwhelms gamma hedging and VWAP overshoots continue rather than revert",
     "NIFTY 5s volume data is noisier than 1-min data; VWAP computed on 5s bars may show spurious deviations from zero-volume bars in less liquid periods"
   ],
@@ -108,7 +119,12 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_55.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-90 bars (30-90 min)",
-    "original_indicators": ["vwap_zscore (rolling_std 60 bars)", "first_hour_range", "vix_change", "atr_20"],
+    "original_indicators": [
+      "vwap_zscore (rolling_std 60 bars)",
+      "first_hour_range",
+      "vix_change",
+      "atr_20"
+    ],
     "original_stop": "1.5 * ATR(20) from entry",
     "original_target": "vwap_zscore crosses 0"
   }

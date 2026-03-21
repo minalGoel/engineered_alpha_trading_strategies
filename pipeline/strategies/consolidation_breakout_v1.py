@@ -29,8 +29,8 @@ class Strategy(BaseStrategy):
             TunableParam("prior_move_threshold", 0.0015, 0.0008, 0.003),
             # Breakout bar volume must exceed consolidation avg by this factor
             TunableParam("vol_ratio_min", 1.5, 1.2, 2.5),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -58,8 +58,8 @@ class Strategy(BaseStrategy):
         consol_range_threshold = params.get("consol_range_threshold", 0.001)
         prior_move_threshold = params.get("prior_move_threshold", 0.0015)
         vol_ratio_min = params.get("vol_ratio_min", 1.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         CONSOL_BARS = 120   # 10-min consolidation window
         PRIOR_BARS = 240    # 20-min lookback for the move before consolidation

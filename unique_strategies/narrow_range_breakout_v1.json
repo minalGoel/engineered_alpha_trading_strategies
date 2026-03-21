@@ -2,14 +2,22 @@
   "name": "narrow_range_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["breakout", "volatility_contraction", "momentum", "nr7"],
+  "tags": [
+    "breakout",
+    "volatility_contraction",
+    "momentum",
+    "nr7"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_34.json",
   "original_name": "narrow_range_breakout_v1",
-  "mechanism": "On NIFTY, when any 5-second bar has the narrowest high-low range of the preceding 7 bars (~35 seconds), institutional TWAP/VWAP algorithms have reached momentary equilibrium — neither side is absorbing aggressively. This NR7 bar coils resting limit orders at its high and low. The first subsequent 5-second bar that closes above the NR7 high signals buy-side flow has overwhelmed the resting supply ceiling, triggering momentum algos and delta-hedging rebalances that extend the move 15-25 NIFTY spot points over the next 30-60 seconds. Trading only when the NR7 bar sits above/below EMA(60) filters against counter-trend fakeouts, which dominate when the 5-minute trend is directional and NR bars form against the grain.",
+  "mechanism": "On NIFTY, when any 5-second bar has the narrowest high-low range of the preceding 7 bars (~35 seconds), institutional TWAP/VWAP algorithms have reached momentary equilibrium \u2014 neither side is absorbing aggressively. This NR7 bar coils resting limit orders at its high and low. The first subsequent 5-second bar that closes above the NR7 high signals buy-side flow has overwhelmed the resting supply ceiling, triggering momentum algos and delta-hedging rebalances that extend the move 15-25 NIFTY spot points over the next 30-60 seconds. Trading only when the NR7 bar sits above/below EMA(60) filters against counter-trend fakeouts, which dominate when the 5-minute trend is directional and NR bars form against the grain.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 60],
+  "hold_time_seconds": [
+    15,
+    60
+  ],
   "max_hold_bars": 12,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,76 +35,82 @@
       "formula": "high - low",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Per-bar high-low range — the raw input to the NR7 condition."
+      "purpose": "Per-bar high-low range \u2014 the raw input to the NR7 condition."
     },
     {
       "name": "is_nr7",
       "formula": "bar_range[i] == MIN(bar_range[i-6:i+1])",
       "lookback": 7,
       "computed_on": "spot",
-      "purpose": "7-bar lookback preserved from the original (NOT 12x-scaled). NR7 is a relative measure — 'is this bar narrower than the previous 6?' — which does not depend on bar duration. At 5s, 7 bars = 35 seconds of micro-consolidation, exactly the right coiling window before a 15-60 second breakout hold. Scaling to 84 bars (7 minutes) would detect session-scale consolidation, far too slow for our entry timing."
+      "purpose": "7-bar lookback preserved from the original (NOT 12x-scaled). NR7 is a relative measure \u2014 'is this bar narrower than the previous 6?' \u2014 which does not depend on bar duration. At 5s, 7 bars = 35 seconds of micro-consolidation, exactly the right coiling window before a 15-60 second breakout hold. Scaling to 84 bars (7 minutes) would detect session-scale consolidation, far too slow for our entry timing."
     },
     {
       "name": "ema_60",
       "formula": "EMA(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute EMA as trend context. The original used EMA(20) on 1-min bars = 20-minute EMA. Compressed to 5 minutes (60 bars × 5s) because we hold 15-60 seconds — at that hold horizon, the relevant question is whether the 5-minute trend supports the breakout direction, not the 20-minute trend. A 20-minute EMA (240 bars) would be too slow to react to intraday regime shifts at our holding time."
+      "purpose": "5-minute EMA as trend context. The original used EMA(20) on 1-min bars = 20-minute EMA. Compressed to 5 minutes (60 bars \u00d7 5s) because we hold 15-60 seconds \u2014 at that hold horizon, the relevant question is whether the 5-minute trend supports the breakout direction, not the 20-minute trend. A 20-minute EMA (240 bars) would be too slow to react to intraday regime shifts at our holding time."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "is_nr7[i-1] == True  (previous bar was the narrowest of its 7-bar window)",
-        "close[i] > high[i-1]  (current bar closes above the NR7 bar's high — confirmed upside breakout)",
+        "close[i] > high[i-1]  (current bar closes above the NR7 bar's high \u2014 confirmed upside breakout)",
         "close[i-1] > ema_60[i-1]  (NR7 bar formed in 5-minute uptrend context)"
       ],
-      "confirmation": "Single 5-second bar close above NR7 bar high — no multi-bar confirmation needed because 5s resolution allows us to enter on the first breakout bar rather than waiting."
+      "confirmation": "Single 5-second bar close above NR7 bar high \u2014 no multi-bar confirmation needed because 5s resolution allows us to enter on the first breakout bar rather than waiting."
     },
     "buy_pe": {
       "conditions": [
         "is_nr7[i-1] == True  (previous bar was the narrowest of its 7-bar window)",
-        "close[i] < low[i-1]  (current bar closes below the NR7 bar's low — confirmed downside breakout)",
+        "close[i] < low[i-1]  (current bar closes below the NR7 bar's low \u2014 confirmed downside breakout)",
         "close[i-1] < ema_60[i-1]  (NR7 bar formed in 5-minute downtrend context)"
       ],
-      "confirmation": "Single 5-second bar close below NR7 bar low — same rationale as buy_ce."
+      "confirmation": "Single 5-second bar close below NR7 bar low \u2014 same rationale as buy_ce."
     },
     "entry_price": "limit order at candle close"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta ~0.5. An NR7 breakout that reverses 8 spot points back below the NR7 bar's high has definitively failed — genuine coil breakouts on NIFTY do not immediately retrace more than the NR7 range itself (which at 5s resolution is typically 3-8 spot points). This gives a 1:1.75 risk-reward at the 7-pt target.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta ~0.5. An NR7 breakout that reverses 8 spot points back below the NR7 bar's high has definitively failed \u2014 genuine coil breakouts on NIFTY do not immediately retrace more than the NR7 range itself (which at 5s resolution is typically 3-8 spot points). This gives a 1:1.75 risk-reward at the 7-pt target.",
+    "target_points": 6.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points. The original targeted 2x the NR7 bar range. On NIFTY at 5-second resolution, a genuine NR7 breakout extension (momentum algos and delta-hedgers piling in) typically extends 15-25 spot points in the first 30-60 seconds. 7 pts captures the lower end of this range, consistent with our 60-second time stop (1-min typical move: 3-7 option pts).",
     "time_stop_bars": 12,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "none — NR7 breakouts are regime-independent; tight coils form in both low- and high-vol environments",
-    "time_filter": "09:20-15:25 IST — skip pre-open noise; EMA(60) needs 5 min warmup",
-    "volume_filter": "none — NIFTY 5-second volume is too noisy; the NR7 price condition is sufficient",
-    "trend_filter": "EMA(60) direction — NR7 bar must sit above EMA for CE, below EMA for PE",
-    "spread_filter": "none — limit order execution at candle close prices"
+    "vix_filter": "none \u2014 NR7 breakouts are regime-independent; tight coils form in both low- and high-vol environments",
+    "time_filter": "09:20-15:25 IST \u2014 skip pre-open noise; EMA(60) needs 5 min warmup",
+    "volume_filter": "none \u2014 NIFTY 5-second volume is too noisy; the NR7 price condition is sufficient",
+    "trend_filter": "EMA(60) direction \u2014 NR7 bar must sit above EMA for CE, below EMA for PE",
+    "spread_filter": "none \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "low — volatility clustering is a structural market property; NR7 at 5s is underexplored on NIFTY"
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.63,
+    "edge_decay_risk": "low \u2014 volatility clustering is a structural market property; NR7 at 5s is underexplored on NIFTY"
   },
-  "adaptation_notes": "Key changes from original (Strategy_34.json): (1) Universe changed from top-30 FnO stocks to NIFTY index — smoother, institutional-driven, no single-stock gaps. (2) NR7 lookback kept at 7 bars (not 12x scaled) — the relative-narrowness criterion is bar-size agnostic; 35 seconds of coiling is appropriate for a 15-60s hold. (3) EMA compressed from 20-min (EMA_20 on 1-min) to 5-min (EMA_60 on 5s) to match hold time horizon. (4) ATR declining filter DROPPED — at 5-second resolution, the NR7 condition itself is the volatility contraction signal; adding ATR would double-count. (5) Volume confirmation on breakout bar DROPPED — NIFTY 5s volume is extremely noisy; close above NR7 high is a cleaner signal. (6) Stop/target converted from percentage-of-NR7-range to fixed option premium points calibrated to typical 30-60s NIFTY move magnitudes.",
+  "adaptation_notes": "Key changes from original (Strategy_34.json): (1) Universe changed from top-30 FnO stocks to NIFTY index \u2014 smoother, institutional-driven, no single-stock gaps. (2) NR7 lookback kept at 7 bars (not 12x scaled) \u2014 the relative-narrowness criterion is bar-size agnostic; 35 seconds of coiling is appropriate for a 15-60s hold. (3) EMA compressed from 20-min (EMA_20 on 1-min) to 5-min (EMA_60 on 5s) to match hold time horizon. (4) ATR declining filter DROPPED \u2014 at 5-second resolution, the NR7 condition itself is the volatility contraction signal; adding ATR would double-count. (5) Volume confirmation on breakout bar DROPPED \u2014 NIFTY 5s volume is extremely noisy; close above NR7 high is a cleaner signal. (6) Stop/target converted from percentage-of-NR7-range to fixed option premium points calibrated to typical 30-60s NIFTY move magnitudes.",
   "weaknesses": [
-    "NR7 at 5-second resolution fires frequently (10-20x per session) — many signals during low-liquidity mid-session (12:00-13:00) are fakeouts",
+    "NR7 at 5-second resolution fires frequently (10-20x per session) \u2014 many signals during low-liquidity mid-session (12:00-13:00) are fakeouts",
     "Single-bar coil (35 seconds) is short enough that a single large institutional print can create a false NR7 followed by immediate reversal",
-    "EMA(60) lags in choppy sessions — trend flips every few minutes, reducing the quality of the trend filter"
+    "EMA(60) lags in choppy sessions \u2014 trend flips every few minutes, reducing the quality of the trend filter"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_34.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-30 bars (5-30 min)",
-    "original_indicators": ["is_nr7 (7-bar)", "atr_20", "atr_20_prev", "ema_20"],
+    "original_indicators": [
+      "is_nr7 (7-bar)",
+      "atr_20",
+      "atr_20_prev",
+      "ema_20"
+    ],
     "original_stop": "opposite end of NR7 bar (full NR7 range as risk)",
-    "original_target": "2.0 × NR7 bar range from entry"
-  }
+    "original_target": "2.0 \u00d7 NR7 bar range from entry"
+  },
+  "vix_agnostic": true
 }

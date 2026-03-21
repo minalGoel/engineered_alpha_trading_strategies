@@ -30,7 +30,7 @@ class Strategy(BaseStrategy):
     underlying = "NIFTY"
     session_start_minutes = 560   # 09:20 IST
     session_end_minutes = 925     # 15:25 IST
-    max_trades_per_day = 6
+    max_trades_per_day = 8
     max_lookback = 72             # 6 min warmup — 2x the slow EMA period (36 bars)
 
     def tunable_params(self) -> list[TunableParam]:

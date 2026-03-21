@@ -71,8 +71,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("composite_threshold", 1.5, 0.8, 2.5),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -85,8 +85,8 @@ class Strategy(BaseStrategy):
         day_id = spot_df["day_id"].to_numpy()
 
         threshold = params.get("composite_threshold", 1.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── Signal 1: VWAP z-score ──
         # Cumulative daily VWAP; z-score over 120-bar (10-min) rolling window.

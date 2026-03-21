@@ -2,14 +2,22 @@
   "name": "bollinger_squeeze_breakout_v82",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "breakout", "squeeze", "bollinger"],
+  "tags": [
+    "volatility",
+    "breakout",
+    "squeeze",
+    "bollinger"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_112.json",
   "original_name": "bollinger_squeeze_breakout_v82",
-  "mechanism": "On NIFTY, intraday consolidation phases see order book depth build on both sides as directional participants cancel positions and market makers tighten spreads. This compresses realized volatility, causing 3-minute Bollinger Bands to narrow inside Keltner Channels (the TTM Squeeze). When price pushes above the upper Bollinger Band while the squeeze is still active, it signals that aggressive buyers have begun absorbing the resting offers — the balance tips and algorithmic momentum strategies cascade in, initiating a 15-30 spot point directional push in 30-90 seconds. The asymmetry at entry is that the squeeze constrains the losing scenario (tight bands = limited adverse price range) while the breakout release gives an outsized winner.",
+  "mechanism": "On NIFTY, intraday consolidation phases see order book depth build on both sides as directional participants cancel positions and market makers tighten spreads. This compresses realized volatility, causing 3-minute Bollinger Bands to narrow inside Keltner Channels (the TTM Squeeze). When price pushes above the upper Bollinger Band while the squeeze is still active, it signals that aggressive buyers have begun absorbing the resting offers \u2014 the balance tips and algorithmic momentum strategies cascade in, initiating a 15-30 spot point directional push in 30-90 seconds. The asymmetry at entry is that the squeeze constrains the losing scenario (tight bands = limited adverse price range) while the breakout release gives an outsized winner.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "SMA(close, 36) + 2.0 * STDDEV(close, 36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute upper Bollinger Band. NOT 12x scaled (which would give 20×12=240 bars, a 20-min context window irrelevant to a 15-90s hold). 36 bars (3 min) is chosen because NIFTY micro-squeezes that resolve in 30-90s form over 2-5 minutes — 36 bars is the shortest lookback that gives a stable standard deviation without reacting to individual 5-second spikes."
+      "purpose": "3-minute upper Bollinger Band. NOT 12x scaled (which would give 20\u00d712=240 bars, a 20-min context window irrelevant to a 15-90s hold). 36 bars (3 min) is chosen because NIFTY micro-squeezes that resolve in 30-90s form over 2-5 minutes \u2014 36 bars is the shortest lookback that gives a stable standard deviation without reacting to individual 5-second spikes."
     },
     {
       "name": "bb_lower_36",
@@ -41,7 +49,7 @@
       "formula": "EMA(close, 36) + 1.5 * ATR(36)",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute Keltner Channel upper. ATR(36) measures the current volatility regime at the same 3-minute scale as the BB. The squeeze condition (BB inside Keltner) identifies when statistical volatility (STDDEV-based) is below range volatility (ATR-based) — the classic low-vol compression phase before expansion."
+      "purpose": "3-minute Keltner Channel upper. ATR(36) measures the current volatility regime at the same 3-minute scale as the BB. The squeeze condition (BB inside Keltner) identifies when statistical volatility (STDDEV-based) is below range volatility (ATR-based) \u2014 the classic low-vol compression phase before expansion."
     },
     {
       "name": "kc_lower_36",
@@ -71,30 +79,30 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). A genuine squeeze breakout on NIFTY should not retrace more than 8 spot pts within 30s — that level of reversal means the breakout was a fakeout (common in TTM Squeeze per original's weakness list). Beyond 8 pts the squeeze band itself would start widening, invalidating the trade thesis.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). A genuine squeeze breakout on NIFTY should not retrace more than 8 spot pts within 30s \u2014 that level of reversal means the breakout was a fakeout (common in TTM Squeeze per original's weakness list). Beyond 8 pts the squeeze band itself would start widening, invalidating the trade thesis.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts (~14 NIFTY spot pts at delta 0.5). First-leg squeeze release on NIFTY typically produces a 15-25 spot pt push at the 30-90s horizon (within the 5-10 pt option range for 1-2 minute moves). 7 pts captures ~60% of the median first-leg expansion while keeping the 1:1.75 risk-reward ratio.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "vix < 25 (from original — extreme volatility regimes create false squeezes as bands widen erratically)",
-    "time_filter": "09:20-15:25 IST — skip first 5 min of open (pre-open noise) and last 5 min",
+    "vix_filter": "vix < 25 (from original \u2014 extreme volatility regimes create false squeezes as bands widen erratically)",
+    "time_filter": "09:20-15:25 IST \u2014 skip first 5 min of open (pre-open noise) and last 5 min",
     "volume_filter": "none (index volume is noisy at 5s, not reliable as filter)",
-    "trend_filter": "none — the squeeze itself is the filter; direction determined by breakout side",
+    "trend_filter": "none \u2014 the squeeze itself is the filter; direction determined by breakout side",
     "spread_filter": "none (limit orders, no spread cost)"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.47,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.55,
-    "edge_decay_risk": "medium — behavioral; as more algos run TTM Squeeze the fakeout rate increases"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.42,
+    "edge_decay_risk": "medium \u2014 behavioral; as more algos run TTM Squeeze the fakeout rate increases"
   },
-  "adaptation_notes": "Original used cross-sectional equity universe (NIFTY200 top-50 by volume), 15-min bars, hold 75-225 minutes. Conversion: (1) Universe changed to NIFTY index only — the squeeze breakout thesis applies to the index since NIFTY consolidation and breakouts are driven by the same order flow dynamics; (2) Lookback compressed from 20-bar-at-15min (300 min context) to 36-bar-at-5s (3 min) — we're detecting the fast micro-squeeze that precedes the 30-90s breakout, not the slow daily compression; (3) Stops/targets changed from ATR-based % to fixed option points because index options have different delta/gamma characteristics than equities; (4) VIX filter retained from original (vix < 25) as extreme VIX invalidates the squeeze mechanism; (5) Hold time compressed from 5-15 bars (75-225 min) to 3-18 bars (15-90 s) because at 5s resolution we capture only the INITIAL momentum burst of the squeeze release.",
+  "adaptation_notes": "Original used cross-sectional equity universe (NIFTY200 top-50 by volume), 15-min bars, hold 75-225 minutes. Conversion: (1) Universe changed to NIFTY index only \u2014 the squeeze breakout thesis applies to the index since NIFTY consolidation and breakouts are driven by the same order flow dynamics; (2) Lookback compressed from 20-bar-at-15min (300 min context) to 36-bar-at-5s (3 min) \u2014 we're detecting the fast micro-squeeze that precedes the 30-90s breakout, not the slow daily compression; (3) Stops/targets changed from ATR-based % to fixed option points because index options have different delta/gamma characteristics than equities; (4) VIX filter retained from original (vix < 25) as extreme VIX invalidates the squeeze mechanism; (5) Hold time compressed from 5-15 bars (75-225 min) to 3-18 bars (15-90 s) because at 5s resolution we capture only the INITIAL momentum burst of the squeeze release.",
   "weaknesses": [
-    "NIFTY fakeouts are frequent — price often breaches BB briefly before reversing (acknowledged in original)",
+    "NIFTY fakeouts are frequent \u2014 price often breaches BB briefly before reversing (acknowledged in original)",
     "Squeeze conditions are rare at 3-min lookback on NIFTY; trade frequency may be low in trending sessions",
     "ATR(36) and STDDEV(36) at 5s resolution are noisy during first 3 minutes of session (warmup period)",
     "VIX < 25 filter may exclude profitable periods during high-volatility squeezes"
@@ -103,7 +111,11 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_112.json",
     "original_timeframe": "15min",
     "original_hold_time": "5-15 bars (75-225 min)",
-    "original_indicators": ["BB(20)", "Keltner(20)", "ATR(20)"],
+    "original_indicators": [
+      "BB(20)",
+      "Keltner(20)",
+      "ATR(20)"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "close crosses SMA(close, 20)"
   }

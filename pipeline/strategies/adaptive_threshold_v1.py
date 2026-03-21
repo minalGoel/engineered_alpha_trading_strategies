@@ -31,8 +31,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_pctile_lo", 0.10, 0.03, 0.20),
             TunableParam("rsi_pctile_hi", 0.90, 0.80, 0.97),
             TunableParam("bb_squeeze_pctile", 0.20, 0.05, 0.35),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -51,8 +51,8 @@ class Strategy(BaseStrategy):
         rsi_pctile_lo = params.get("rsi_pctile_lo", 0.10)
         rsi_pctile_hi = params.get("rsi_pctile_hi", 0.90)
         bb_squeeze_pctile = params.get("bb_squeeze_pctile", 0.20)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX filter ────────────────────────────────────────────────────
         vix_close = np.full(n, 15.0)

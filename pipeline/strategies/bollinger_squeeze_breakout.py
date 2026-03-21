@@ -29,8 +29,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("squeeze_threshold", 0.0015, 0.0005, 0.003),
             TunableParam("vol_ratio_threshold", 1.5, 1.1, 2.5),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -44,8 +44,8 @@ class Strategy(BaseStrategy):
 
         squeeze_threshold = params.get("squeeze_threshold", 0.0015)
         vol_ratio_threshold = params.get("vol_ratio_threshold", 1.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         period = 24  # 2-minute Bollinger Band window
 

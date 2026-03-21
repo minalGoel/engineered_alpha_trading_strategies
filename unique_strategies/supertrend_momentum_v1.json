@@ -2,14 +2,23 @@
   "name": "supertrend_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["supertrend", "atr-based", "trend-following", "momentum", "flip-signal"],
+  "tags": [
+    "supertrend",
+    "atr-based",
+    "trend-following",
+    "momentum",
+    "flip-signal"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_172.json",
   "original_name": "supertrend_momentum_v1",
-  "mechanism": "On NIFTY, the 2-minute SuperTrend (ATR period=24 bars at 5s, multiplier=3.0) defines a dynamic ATR-based support/resistance channel. When NIFTY price pierces this channel and SuperTrend flips direction, algorithmic strategies — especially those deployed by retail traders on Zerodha Kite where SuperTrend(10, 3.0) is the platform default indicator — detect the same signal and cascade directional market orders. Since NIFTY futures and options are India's most heavily algo-traded instruments, a SuperTrend flip aligned with VWAP (confirming macro session direction) triggers a self-reinforcing 15-60 second momentum burst as momentum algos pile in before the burst exhausts. We enter at the first 5-second confirmation bar and exit within 90 seconds before mean reversion begins.",
+  "mechanism": "On NIFTY, the 2-minute SuperTrend (ATR period=24 bars at 5s, multiplier=3.0) defines a dynamic ATR-based support/resistance channel. When NIFTY price pierces this channel and SuperTrend flips direction, algorithmic strategies \u2014 especially those deployed by retail traders on Zerodha Kite where SuperTrend(10, 3.0) is the platform default indicator \u2014 detect the same signal and cascade directional market orders. Since NIFTY futures and options are India's most heavily algo-traded instruments, a SuperTrend flip aligned with VWAP (confirming macro session direction) triggers a self-reinforcing 15-60 second momentum burst as momentum algos pile in before the burst exhausts. We enter at the first 5-second confirmation bar and exit within 90 seconds before mean reversion begins.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:25 IST",
-  "hold_time_seconds": [15, 90],
+  "hold_time_seconds": [
+    15,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -24,38 +33,38 @@
   "indicators": [
     {
       "name": "atr_24",
-      "formula": "ATR(high, low, close, period=24) — Wilder's smoothed ATR",
+      "formula": "ATR(high, low, close, period=24) \u2014 Wilder's smoothed ATR",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute ATR window (24 × 5s = 120s). NOT the original's blindly-scaled 10×12=120 bars (10 min). We use 2 minutes because we hold 15-90s — the ATR channel must reflect the CURRENT micro-volatility regime, not a 10-minute history. A 2-min ATR is tight enough to produce flip signals aligned with our hold horizon while being wide enough to avoid single-bar noise."
+      "purpose": "2-minute ATR window (24 \u00d7 5s = 120s). NOT the original's blindly-scaled 10\u00d712=120 bars (10 min). We use 2 minutes because we hold 15-90s \u2014 the ATR channel must reflect the CURRENT micro-volatility regime, not a 10-minute history. A 2-min ATR is tight enough to produce flip signals aligned with our hold horizon while being wide enough to avoid single-bar noise."
     },
     {
       "name": "supertrend_24",
       "formula": "SuperTrend(period=24, multiplier=3.0): final_upper = min(HL2 + 3*ATR, prev_upper) if prev_close <= prev_upper; final_lower = max(HL2 - 3*ATR, prev_lower) if prev_close >= prev_lower; direction=1 when close > final_upper, -1 when close < final_lower",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "SuperTrend direction (1=bullish, -1=bearish) is the primary flip signal. Multiplier=3.0 is preserved exactly from the original — this is the Zerodha Kite default setting, so it maximises the Schelling-point crowd effect. If we used a non-standard multiplier, we would be trading against the crowd rather than with it."
+      "purpose": "SuperTrend direction (1=bullish, -1=bearish) is the primary flip signal. Multiplier=3.0 is preserved exactly from the original \u2014 this is the Zerodha Kite default setting, so it maximises the Schelling-point crowd effect. If we used a non-standard multiplier, we would be trading against the crowd rather than with it."
     },
     {
       "name": "vwap",
       "formula": "VWAP = cumsum(close * volume) / cumsum(volume) reset at 09:15 IST each day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative session VWAP as macro direction filter. Long signals only above VWAP (demand side has dominated since open), short signals only below VWAP (supply side dominant). No lookback scaling needed — VWAP is cumulative and session-anchored by definition."
+      "purpose": "Cumulative session VWAP as macro direction filter. Long signals only above VWAP (demand side has dominated since open), short signals only below VWAP (supply side dominant). No lookback scaling needed \u2014 VWAP is cumulative and session-anchored by definition."
     },
     {
       "name": "volume_ratio_60",
-      "formula": "volume / SMA(volume, 60) — ratio of current 5s bar volume to 5-minute rolling mean",
+      "formula": "volume / SMA(volume, 60) \u2014 ratio of current 5s bar volume to 5-minute rolling mean",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute volume baseline (60 × 5s = 300s) rather than the original's 20-minute baseline. We need to detect elevated volume vs the RECENT past because NIFTY volume has strong intraday patterns (high at open/close, low at midday). A 5-min rolling mean adapts to these patterns and confirms genuine institutional participation on the flip bar."
+      "purpose": "5-minute volume baseline (60 \u00d7 5s = 300s) rather than the original's 20-minute baseline. We need to detect elevated volume vs the RECENT past because NIFTY volume has strong intraday patterns (high at open/close, low at midday). A 5-min rolling mean adapts to these patterns and confirms genuine institutional participation on the flip bar."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
         "st_direction[i] == 1 AND st_direction[i-1] == -1 (SuperTrend just flipped bullish this bar)",
-        "close > vwap (above session anchor — institutional buy-side has been dominant)",
+        "close > vwap (above session anchor \u2014 institutional buy-side has been dominant)",
         "volume_ratio_60 > vol_ratio_threshold (elevated volume confirms participation, not noise flip)"
       ],
       "confirmation": "First 5s bar of bullish SuperTrend flip with VWAP and volume alignment"
@@ -63,7 +72,7 @@
     "buy_pe": {
       "conditions": [
         "st_direction[i] == -1 AND st_direction[i-1] == 1 (SuperTrend just flipped bearish this bar)",
-        "close < vwap (below session anchor — institutional sell-side has been dominant)",
+        "close < vwap (below session anchor \u2014 institutional sell-side has been dominant)",
         "volume_ratio_60 > vol_ratio_threshold (elevated volume confirms participation, not noise flip)"
       ],
       "confirmation": "First 5s bar of bearish SuperTrend flip with VWAP and volume alignment"
@@ -72,28 +81,28 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "If the SuperTrend flip is genuine, NIFTY should not retrace more than 8 spot points within 30s of the flip — that equals ~4 option points at ATM delta 0.5. A 4-pt option loss means an 8-pt spot reversal which signals the ATR channel break was false and the thesis is invalidated.",
+    "stop_rationale": "If the SuperTrend flip is genuine, NIFTY should not retrace more than 8 spot points within 30s of the flip \u2014 that equals ~4 option points at ATM delta 0.5. A 4-pt option loss means an 8-pt spot reversal which signals the ATR channel break was false and the thesis is invalidated.",
     "target_points": 6,
     "target_rationale": "SuperTrend-triggered momentum bursts on NIFTY push 12-18 spot points within 30-60s as cascading algo orders follow the flip. 6 option points (~12 spot pts at delta 0.5) captures the initial burst at 1:1.5 R:R before the move decelerates and mean-reversion pressure builds.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "none — SuperTrend adapts dynamically via ATR, inherently adjusting stop width to volatility regime",
+    "vix_filter": "none \u2014 SuperTrend adapts dynamically via ATR, inherently adjusting stop width to volatility regime",
     "time_filter": "09:20-15:25 IST; first 5 minutes (09:15-09:20) excluded to avoid pre-market gap noise",
     "volume_filter": "volume_ratio_60 > vol_ratio_threshold (default 1.3) on the flip bar",
     "trend_filter": "VWAP alignment: buy CE only when close > VWAP, buy PE only when close < VWAP",
-    "spread_filter": "none — limit order execution at candle close",
-    "whipsaw_filter": "implicit via SuperTrend ATR-band hysteresis — price must cross the full 3*ATR channel to trigger a flip"
+    "spread_filter": "none \u2014 limit order execution at candle close",
+    "whipsaw_filter": "implicit via SuperTrend ATR-band hysteresis \u2014 price must cross the full 3*ATR channel to trigger a flip"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.52,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 1.6,
-    "edge_decay_risk": "Moderate — SuperTrend crowding is real but the VWAP + volume filter removes low-conviction flips, leaving only high-participation flips where the crowd effect is strongest"
+    "edge_decay_risk": "Moderate \u2014 SuperTrend crowding is real but the VWAP + volume filter removes low-conviction flips, leaving only high-participation flips where the crowd effect is strongest"
   },
-  "adaptation_notes": "Original uses SuperTrend(10, 3.0) on 1-min bars of NIFTY200 stocks. Converted to 5s NIFTY index by: (1) ATR period compressed from 10 min to 2 min (24 bars) — we hold 15-90s not 10-30 min, so the channel must reflect current micro-volatility; (2) Universe changed from NIFTY200 stocks to NIFTY index — the Schelling-point effect applies at least as strongly to NIFTY since it is India's most traded instrument by algo count; (3) Volume lookback reduced from 20 min to 5 min (60 bars) — captures recent participation patterns rather than historical baseline; (4) Multiplier 3.0 preserved exactly — this is the Zerodha Kite default and is the specific crowd coordination point; (5) VWAP filter preserved conceptually — same direction-alignment logic.",
+  "adaptation_notes": "Original uses SuperTrend(10, 3.0) on 1-min bars of NIFTY200 stocks. Converted to 5s NIFTY index by: (1) ATR period compressed from 10 min to 2 min (24 bars) \u2014 we hold 15-90s not 10-30 min, so the channel must reflect current micro-volatility; (2) Universe changed from NIFTY200 stocks to NIFTY index \u2014 the Schelling-point effect applies at least as strongly to NIFTY since it is India's most traded instrument by algo count; (3) Volume lookback reduced from 20 min to 5 min (60 bars) \u2014 captures recent participation patterns rather than historical baseline; (4) Multiplier 3.0 preserved exactly \u2014 this is the Zerodha Kite default and is the specific crowd coordination point; (5) VWAP filter preserved conceptually \u2014 same direction-alignment logic.",
   "weaknesses": [
     "At 5s bars, SuperTrend flips can occur multiple times per minute during choppy NIFTY sessions despite the ATR buffer",
     "The retail-crowd self-fulfilling thesis is weaker on NIFTY index than on individual stocks where retail concentration is higher",
@@ -103,8 +112,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_172.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 minutes",
-    "original_indicators": ["SuperTrend(10, 3.0)", "VWAP", "volume_ratio(20)", "ATR(10)"],
+    "original_indicators": [
+      "SuperTrend(10, 3.0)",
+      "VWAP",
+      "volume_ratio(20)",
+      "ATR(10)"
+    ],
     "original_stop": "0.2% from entry or SuperTrend value",
     "original_target": "0.35% from entry"
-  }
+  },
+  "vix_agnostic": true
 }

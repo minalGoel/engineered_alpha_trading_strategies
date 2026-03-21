@@ -2,14 +2,23 @@
   "name": "rsi_connors_pullback_v46",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "pullback", "rsi", "connors", "intraday_trend"],
+  "tags": [
+    "mean_reversion",
+    "pullback",
+    "rsi",
+    "connors",
+    "intraday_trend"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_107.json",
   "original_name": "rsi_connors_pullback_v46",
-  "mechanism": "On NIFTY/BANKNIFTY, micro-corrections within an intraday trend create extreme RSI(2) readings at 5-second resolution. When RSI(2) drops below 20 while the index remains above its 10-minute SMA, two consecutive sell-dominated 5-second bars have absorbed nearby resting buy orders, briefly exhausting immediate demand. Market makers and VWAP-benchmarked algos recognise this as a deviation from the prevailing flow and begin stepping in, snapping the index back within 30-60 seconds as the order book rebalances. The RSI(2) extreme marks local selling exhaustion, not trend reversal — the 10-minute SMA confirms the macro direction remains intact.",
+  "mechanism": "On NIFTY/BANKNIFTY, micro-corrections within an intraday trend create extreme RSI(2) readings at 5-second resolution. When RSI(2) drops below 20 while the index remains above its 10-minute SMA, two consecutive sell-dominated 5-second bars have absorbed nearby resting buy orders, briefly exhausting immediate demand. Market makers and VWAP-benchmarked algos recognise this as a deviation from the prevailing flow and begin stepping in, snapping the index back within 30-60 seconds as the order book rebalances. The RSI(2) extreme marks local selling exhaustion, not trend reversal \u2014 the 10-minute SMA confirms the macro direction remains intact.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -34,21 +43,21 @@
       "formula": "RSI(close, 2)",
       "lookback": 2,
       "computed_on": "spot",
-      "purpose": "Ultra-short 2-bar RSI for micro-exhaustion detection. Original used RSI(2) on 15-min bars (30-minute oscillator). On 5-second bars RSI(2) captures the last 10 seconds of momentum — when it drops below 20, two consecutive 5s bars closed sharply lower than they opened, signalling immediate sell-side exhaustion. The same lookback (2 bars) is intentional: we are detecting the same phenomenon (2-bar extreme), just at a finer time resolution. RSI(2) oscillates widely at 5s, firing signals every 1-3 minutes — appropriate trade frequency for this hold time."
+      "purpose": "Ultra-short 2-bar RSI for micro-exhaustion detection. Original used RSI(2) on 15-min bars (30-minute oscillator). On 5-second bars RSI(2) captures the last 10 seconds of momentum \u2014 when it drops below 20, two consecutive 5s bars closed sharply lower than they opened, signalling immediate sell-side exhaustion. The same lookback (2 bars) is intentional: we are detecting the same phenomenon (2-bar extreme), just at a finer time resolution. RSI(2) oscillates widely at 5s, firing signals every 1-3 minutes \u2014 appropriate trade frequency for this hold time."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "close > sma_120 (index above 10-min SMA — intraday uptrend context)",
-        "rsi_2 < rsi_oversold_threshold (default 20) — 2-bar extreme oversold, selling exhausted"
+        "close > sma_120 (index above 10-min SMA \u2014 intraday uptrend context)",
+        "rsi_2 < rsi_oversold_threshold (default 20) \u2014 2-bar extreme oversold, selling exhausted"
       ],
       "confirmation": "Both conditions must hold on the same 5-second bar close"
     },
     "buy_pe": {
       "conditions": [
-        "close < sma_120 (index below 10-min SMA — intraday downtrend context)",
-        "rsi_2 > rsi_overbought_threshold (default 80) — 2-bar extreme overbought, buying exhausted"
+        "close < sma_120 (index below 10-min SMA \u2014 intraday downtrend context)",
+        "rsi_2 > rsi_overbought_threshold (default 80) \u2014 2-bar extreme overbought, buying exhausted"
       ],
       "confirmation": "Both conditions must hold on the same 5-second bar close"
     },
@@ -56,38 +65,42 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). An RSI(2) extreme pullback within an uptrend should not extend more than 6-8 spot points further before snapping back — if it does, the trend itself is breaking, not just a micro-correction occurring. A 4-pt stop captures this: it allows normal 2-5 pt 30s NIFTY moves but cuts losing trades where the pullback deepens into a trend reversal.",
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). An RSI(2) extreme pullback within an uptrend should not extend more than 6-8 spot points further before snapping back \u2014 if it does, the trend itself is breaking, not just a micro-correction occurring. A 4-pt stop captures this: it allows normal 2-5 pt 30s NIFTY moves but cuts losing trades where the pullback deepens into a trend reversal.",
     "target_points": 6,
     "target_rationale": "6 option pts (~12 NIFTY spot pts). RSI(2) exhaustion snap-backs on NIFTY typically produce 10-20 spot pt bounces within 60 seconds as market makers and trend-followers re-enter. 6 pts captures roughly 50-60% of the median bounce, balancing hit rate against average winner size. Gives 1:1.5 R:R vs the 4-pt stop.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — VIX not used; RSI(2) already adapts to regime via speed of oscillation",
+    "vix_filter": "none \u2014 VIX not used; RSI(2) already adapts to regime via speed of oscillation",
     "time_filter": "09:20-15:20 IST; avoid first 2 minutes of open (09:15-09:20) for SMA warmup",
     "volume_filter": "none",
     "trend_filter": "SMA(120) direction filter embedded in entry conditions",
-    "spread_filter": "none — limit order execution"
+    "spread_filter": "none \u2014 limit order execution"
   },
   "edge": {
     "expected_bps": 18,
     "win_rate_estimate": 0.58,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 2.07,
-    "edge_decay_risk": "medium — behavioral (RSI extremes are widely known); index version less crowded than stock version"
+    "edge_decay_risk": "medium \u2014 behavioral (RSI extremes are widely known); index version less crowded than stock version"
   },
-  "adaptation_notes": "Original traded top-50 NIFTY50 stocks at 15-min bars with multi-day SMA(200) trend filter. Key changes: (1) Universe changed from cross-sectional stocks to NIFTY index — index is far smoother with institutional order flow dominating. (2) SMA period kept at 120 bars but switched from multi-day (200×15min=50hrs) to intraday (120×5s=10min) — we need the current session trend, not overnight bias. (3) RSI(2) lookback kept at 2 bars intentionally — the phenomenon is the same (2-bar exhaustion) at finer resolution. (4) Exit changed from SMA(5) cross to time-stop + fixed points — at 5s bars the original's SMA(5) exit (5×15min=75min) would be 900 bars; instead we use a tight 18-bar (90s) time stop appropriate for the hold horizon. (5) ATR stop replaced by fixed option premium points since we trade the option, not the spot.",
+  "adaptation_notes": "Original traded top-50 NIFTY50 stocks at 15-min bars with multi-day SMA(200) trend filter. Key changes: (1) Universe changed from cross-sectional stocks to NIFTY index \u2014 index is far smoother with institutional order flow dominating. (2) SMA period kept at 120 bars but switched from multi-day (200\u00d715min=50hrs) to intraday (120\u00d75s=10min) \u2014 we need the current session trend, not overnight bias. (3) RSI(2) lookback kept at 2 bars intentionally \u2014 the phenomenon is the same (2-bar exhaustion) at finer resolution. (4) Exit changed from SMA(5) cross to time-stop + fixed points \u2014 at 5s bars the original's SMA(5) exit (5\u00d715min=75min) would be 900 bars; instead we use a tight 18-bar (90s) time stop appropriate for the hold horizon. (5) ATR stop replaced by fixed option premium points since we trade the option, not the spot.",
   "weaknesses": [
-    "RSI(2) on 5s bars generates many signals — requires tight time-stop to avoid accumulating too many concurrent positions",
+    "RSI(2) on 5s bars generates many signals \u2014 requires tight time-stop to avoid accumulating too many concurrent positions",
     "Underperforms in strong persistent momentum where pullbacks keep extending rather than reverting",
-    "SMA(120) as trend filter can lag at turning points — first 10 minutes of each day have no valid SMA"
+    "SMA(120) as trend filter can lag at turning points \u2014 first 10 minutes of each day have no valid SMA"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_107.json",
     "original_timeframe": "15min",
     "original_hold_time": "5-15 bars (75-225 min)",
-    "original_indicators": ["SMA(200)", "RSI(2)"],
+    "original_indicators": [
+      "SMA(200)",
+      "RSI(2)"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "close > SMA(close, 5)"
-  }
+  },
+  "vix_agnostic": true
 }

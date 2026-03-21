@@ -132,11 +132,11 @@ class Strategy(BaseStrategy):
             # Stop: 4 pts = ~8 NIFTY spot pts at delta 0.5.
             # If pullback extends 8 spot pts while above SMA, institutional flow has paused
             # (not pulsed) — exit to avoid riding a deeper correction.
-            stop_points=np.full(n, 4.0),
+            stop_points=np.full(n, 3),
             # Target: 7 pts = ~14 NIFTY spot pts at delta 0.5.
             # Micro-trend resumptions after RSI(12) exhaustion cover 12-20 spot pts in 60-120s;
             # 14 spot pts captures ~60% of the expected move at 1:1.75 risk-reward.
-            target_points=np.full(n, 7.0),
+            target_points=np.full(n, 6),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=24,          # 120 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

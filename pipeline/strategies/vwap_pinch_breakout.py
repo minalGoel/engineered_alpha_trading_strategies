@@ -29,8 +29,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("pinch_threshold", 0.0005, 0.0002, 0.0015),
             TunableParam("vol_multiplier",  1.2,    1.0,    2.5),
-            TunableParam("stop_pts",        4.0,    2.0,    8.0),
-            TunableParam("target_pts",      7.0,    4.0,    14.0),
+            TunableParam("stop_pts",        5.0,    2.0,    8.0),
+            TunableParam("target_pts",      8.0,    4.0,    14.0),
         ]
 
     def compute(
@@ -51,8 +51,8 @@ class Strategy(BaseStrategy):
         # ── Parameters ──────────────────────────────────────────────────────
         pinch_threshold = float(params.get("pinch_threshold", 0.0005))
         vol_multiplier  = float(params.get("vol_multiplier",  1.2))
-        stop_pts        = float(params.get("stop_pts",        4.0))
-        target_pts      = float(params.get("target_pts",      7.0))
+        stop_pts        = float(params.get("stop_pts",        5.0))
+        target_pts      = float(params.get("target_pts",      8.0))
 
         # ── EMA(24) — 2-minute exponential moving average ───────────────────
         # Compressed from original EMA(20) on 1-min bars (= 20 min) to 24 bars

@@ -28,8 +28,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_oversold",   40.0, 25.0, 50.0),
             TunableParam("rsi_overbought", 60.0, 50.0, 75.0),
             TunableParam("vix_cap",        25.0, 20.0, 30.0),
-            TunableParam("stop_pts",        4.0,  2.0,  8.0),
-            TunableParam("target_pts",      7.0,  4.0, 15.0),
+            TunableParam("stop_pts",        3.0,  2.0,  8.0),
+            TunableParam("target_pts",      6.0,  4.0, 15.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -43,8 +43,8 @@ class Strategy(BaseStrategy):
         rsi_oversold   = params.get("rsi_oversold",   40.0)
         rsi_overbought = params.get("rsi_overbought", 60.0)
         vix_cap        = params.get("vix_cap",        25.0)
-        stop_pts       = params.get("stop_pts",        4.0)
-        target_pts     = params.get("target_pts",      7.0)
+        stop_pts       = params.get("stop_pts",        3.0)
+        target_pts     = params.get("target_pts",      6.0)
 
         # ── VIX close aligned to spot bars ─────────────────────────────────────
         vix_close = np.full(n, 15.0)

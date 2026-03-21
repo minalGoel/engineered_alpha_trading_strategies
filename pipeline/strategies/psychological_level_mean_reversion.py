@@ -64,8 +64,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_oversold", 35.0, 25.0, 45.0),
             TunableParam("rsi_overbought", 65.0, 55.0, 75.0),
             # Stop/target in option premium points
-            TunableParam("stop_pts", 4.0, 3.0, 7.0),
-            TunableParam("target_pts", 7.0, 5.0, 12.0),
+            TunableParam("stop_pts", 3.0, 3.0, 7.0),
+            TunableParam("target_pts", 6.0, 5.0, 12.0),
         ]
 
     def compute(
@@ -84,8 +84,8 @@ class Strategy(BaseStrategy):
         pierce_pct = params.get("pierce_threshold_pct", 0.0006)
         rsi_oversold = params.get("rsi_oversold", 35.0)
         rsi_overbought = params.get("rsi_overbought", 65.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # Nearest 100-multiple psychological level (e.g. 24000, 24100, 23900)
         safe_close = np.where(close > 0, close, 1.0)

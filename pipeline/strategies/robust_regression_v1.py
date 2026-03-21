@@ -126,8 +126,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("t_stat_threshold", 2.0, 1.5, 3.5),
             TunableParam("mad_limit", 2.0, 1.5, 3.0),
-            TunableParam("stop_pts", 4.0, 2.0, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 7.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -148,8 +148,8 @@ class Strategy(BaseStrategy):
         # --- Parameters ---
         t_thresh = float(params.get("t_stat_threshold", 2.0))
         mad_limit = float(params.get("mad_limit", 2.0))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # --- VIX filter ---
         vix_close = np.full(n, 15.0)

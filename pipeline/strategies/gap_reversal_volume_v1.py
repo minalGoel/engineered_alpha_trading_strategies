@@ -42,7 +42,7 @@ class Strategy(BaseStrategy):
             TunableParam("gap_threshold_pct", 0.003, 0.002, 0.010),
             TunableParam("pressure_threshold", 0.15, 0.05, 0.40),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -58,7 +58,7 @@ class Strategy(BaseStrategy):
         gap_threshold = params.get("gap_threshold_pct", 0.003)
         pressure_threshold = params.get("pressure_threshold", 0.15)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 8.0)
 
         GAP_MAX = 0.015  # ignore extreme gaps >1.5% (news-driven)
         SIGNAL_WINDOW = 12  # 1 minute of 5-second bars

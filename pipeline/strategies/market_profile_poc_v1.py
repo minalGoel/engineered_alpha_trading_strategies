@@ -47,20 +47,18 @@ def _compute_market_profile(
         if len(day_indices) == 0:
             continue
 
-        # Use full day's range to size bins (backtest context — all bars available)
-        day_lo = np.nanmin(low[day_indices])
-        day_hi = np.nanmax(high[day_indices])
-        if np.isnan(day_lo) or np.isnan(day_hi) or day_hi <= day_lo:
-            continue
+        # Bin grid state — initialized lazily from the first in-session bar seen,
+        # then expanded (and volume rebinned) if the range grows beyond the grid.
+        # This eliminates look-ahead: we never use high/low from future bars to
+        # size the initial grid.
+        bin_min: float = 0.0
+        bin_max: float = 0.0
+        nbins: int = 0
+        bins: np.ndarray = np.empty(0)
+        bin_centers: np.ndarray = np.empty(0)
+        vol_at_price: np.ndarray = np.empty(0)
+        grid_initialised = False
 
-        margin = bin_size * 3
-        bin_min = day_lo - margin
-        bin_max = day_hi + margin
-        nbins = max(int((bin_max - bin_min) / bin_size) + 1, 10)
-        bins = np.linspace(bin_min, bin_max, nbins + 1)
-        bin_centers = (bins[:-1] + bins[1:]) / 2
-
-        vol_at_price = np.zeros(nbins)
         bars_in_session = 0
 
         for idx in day_indices:
@@ -72,11 +70,49 @@ def _compute_market_profile(
                 va_low_arr[idx] = close[idx]
                 continue
 
-            # Distribute this bar's volume uniformly across its high-low range
             lo_p = low[idx] if not np.isnan(low[idx]) else close[idx]
             hi_p = high[idx] if not np.isnan(high[idx]) else close[idx]
             vol_p = volume[idx] if not np.isnan(volume[idx]) else 0.0
 
+            # ── Initialise or expand the bin grid using only current-bar range ──
+            if not grid_initialised:
+                margin = bin_size * 3
+                bin_min = lo_p - margin
+                bin_max = hi_p + margin
+                if bin_max <= bin_min:
+                    bin_max = bin_min + bin_size * 10
+                nbins = max(int((bin_max - bin_min) / bin_size) + 1, 10)
+                bins = np.linspace(bin_min, bin_max, nbins + 1)
+                bin_centers = (bins[:-1] + bins[1:]) / 2
+                vol_at_price = np.zeros(nbins)
+                grid_initialised = True
+            else:
+                # Expand grid if current bar's range falls outside existing grid
+                needs_expand = (lo_p < bin_min + bin_size) or (hi_p > bin_max - bin_size)
+                if needs_expand:
+                    margin = bin_size * 3
+                    new_bin_min = min(bin_min, lo_p - margin)
+                    new_bin_max = max(bin_max, hi_p + margin)
+                    new_nbins = max(int((new_bin_max - new_bin_min) / bin_size) + 1, 10)
+                    new_bins = np.linspace(new_bin_min, new_bin_max, new_nbins + 1)
+                    new_bin_centers = (new_bins[:-1] + new_bins[1:]) / 2
+                    # Rebin existing vol_at_price into the expanded grid
+                    new_vol_at_price = np.zeros(new_nbins)
+                    for b in range(nbins):
+                        if vol_at_price[b] == 0.0:
+                            continue
+                        old_center = bin_centers[b]
+                        new_b = int((old_center - new_bin_min) / bin_size)
+                        new_b = max(0, min(new_nbins - 1, new_b))
+                        new_vol_at_price[new_b] += vol_at_price[b]
+                    bin_min = new_bin_min
+                    bin_max = new_bin_max
+                    nbins = new_nbins
+                    bins = new_bins
+                    bin_centers = new_bin_centers
+                    vol_at_price = new_vol_at_price
+
+            # Distribute this bar's volume uniformly across its high-low range
             if hi_p > lo_p and vol_p > 0.0:
                 lo_bin = max(0, int((lo_p - bin_min) / bin_size))
                 hi_bin = min(nbins - 1, int((hi_p - bin_min) / bin_size) + 1)
@@ -206,6 +242,12 @@ class Strategy(BaseStrategy):
         probed_below = roll_min < va_low          # had a close below VA_low recently
         back_in_va_bull = close > va_low           # now back inside VA (failed breakdown)
         below_poc = close < poc                    # below POC — directional pull is upward
+        # Confirmation: current bar close > previous bar close (buying pressure at VA re-entry)
+        prev_close = np.empty(n)
+        prev_close[0] = close[0]
+        prev_close[1:] = close[:-1]
+        close_up = close > prev_close
+        close_dn = close < prev_close
 
         buy_ce = (
             in_session
@@ -215,6 +257,7 @@ class Strategy(BaseStrategy):
             & below_poc
             & (poc_dist_bps > poc_distance_bps)
             & (vix_close < vix_threshold)
+            & close_up
         )
 
         # ── Bearish entry: price probed above VA_high then re-entered ──
@@ -231,6 +274,7 @@ class Strategy(BaseStrategy):
             & above_poc
             & (poc_dist_bps > poc_distance_bps)
             & (vix_close < vix_threshold)
+            & close_dn
         )
 
         # Resolve simultaneous signals (shouldn't happen, but be safe)
@@ -245,8 +289,8 @@ class Strategy(BaseStrategy):
             sell_pe=np.zeros(n, dtype=bool),
             # Stop: 4 pts = ~8 NIFTY spot pts; if price extends further from POC, thesis failed
             # Target: 7 pts = ~14 NIFTY spot pts; captures 50-60% of expected POC reversion (1:1.75 R:R)
-            stop_points=np.full(n, 4.0),
-            target_points=np.full(n, 7.0),
+            stop_points=np.full(n, 3),
+            target_points=np.full(n, 6),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,              # 90 seconds — POC reversion must manifest quickly
             max_trades_per_day=self.max_trades_per_day,

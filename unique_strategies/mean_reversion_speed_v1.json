@@ -2,14 +2,23 @@
   "name": "mean_reversion_speed_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean-reversion", "vwap", "ou-process", "speed-estimation", "quantitative"],
+  "tags": [
+    "mean_reversion",
+    "vwap",
+    "ou-process",
+    "speed-estimation",
+    "quantitative"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_317.json",
   "original_name": "mean_reversion_speed_v1",
-  "mechanism": "On NIFTY, institutional VWAP algorithms (MF/pension fund TWAP orders, large-basket executions) continuously benchmark to session VWAP, creating a measurable mean-reverting force on price deviations. By fitting an Ornstein-Uhlenbeck process to the rolling 5-minute VWAP deviation series via OLS, we estimate theta — the per-bar reversion speed. When theta > 0.05 per 5-second bar (half-life ≈ 69 seconds), it signals that active absorption is occurring: multiple institutional orders are chasing the VWAP simultaneously, and the 60-80 spot-point oscillations get pulled back to VWAP within 1-2 minutes. We enter only when theta is both high AND stable for 10+ bars, eliminating transient spikes, then trade the OU z-score extremes where the deviation has overshot the equilibrium distribution.",
+  "mechanism": "On NIFTY, institutional VWAP algorithms (MF/pension fund TWAP orders, large-basket executions) continuously benchmark to session VWAP, creating a measurable mean-reverting force on price deviations. By fitting an Ornstein-Uhlenbeck process to the rolling 5-minute VWAP deviation series via OLS, we estimate theta \u2014 the per-bar reversion speed. When theta > 0.05 per 5-second bar (half-life \u2248 69 seconds), it signals that active absorption is occurring: multiple institutional orders are chasing the VWAP simultaneously, and the 60-80 spot-point oscillations get pulled back to VWAP within 1-2 minutes. We enter only when theta is both high AND stable for 10+ bars, eliminating transient spikes, then trade the OU z-score extremes where the deviation has overshot the equilibrium distribution.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -25,23 +34,23 @@
     {
       "name": "vwap_session",
       "formula": "cumsum(close * volume) / cumsum(volume), reset each session_date",
-      "lookback": "session-cumulative",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP — no scaling needed since it is cumulative from open. The VWAP anchor is the same regardless of bar size."
+      "purpose": "Session VWAP \u2014 no scaling needed since it is cumulative from open. The VWAP anchor is the same regardless of bar size."
     },
     {
       "name": "vwap_dev_bps",
       "formula": "(close - vwap_session) / vwap_session * 10000",
-      "lookback": "session-cumulative",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "VWAP deviation normalized in bps to make OU theta dimensionless and comparable across price levels. NIFTY at 22000 — 200bps = 44 pts deviation."
+      "purpose": "VWAP deviation normalized in bps to make OU theta dimensionless and comparable across price levels. NIFTY at 22000 \u2014 200bps = 44 pts deviation."
     },
     {
       "name": "ou_theta",
       "formula": "OLS: delta(vwap_dev_bps)[t] = -theta * vwap_dev_bps[t-1] + intercept; theta = -slope. Window=60 bars.",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "60 bars = 5 minutes at 5s resolution. This is the minimum for OLS reliability (58 observations for 2-parameter fit) while being short enough to detect intraday regime changes. The original used 60 1-min bars (60 min) — we compress because we hold 30-120s, not 10-30 min. The OU estimation must match our hold horizon: if half-life >> hold time, we cannot profit from the reversion."
+      "purpose": "60 bars = 5 minutes at 5s resolution. This is the minimum for OLS reliability (58 observations for 2-parameter fit) while being short enough to detect intraday regime changes. The original used 60 1-min bars (60 min) \u2014 we compress because we hold 30-120s, not 10-30 min. The OU estimation must match our hold horizon: if half-life >> hold time, we cannot profit from the reversion."
     },
     {
       "name": "ou_sigma",
@@ -55,7 +64,7 @@
       "formula": "vwap_dev_bps / (ou_sigma / sqrt(2 * ou_theta))",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "Z-score normalized by the OU equilibrium distribution — NOT a simple rolling z-score. When ou_theta is high, the equilibrium std is small, making the z-score larger for the same absolute deviation. This ensures we only trade when deviation is extreme RELATIVE TO the current reversion regime."
+      "purpose": "Z-score normalized by the OU equilibrium distribution \u2014 NOT a simple rolling z-score. When ou_theta is high, the equilibrium std is small, making the z-score larger for the same absolute deviation. This ensures we only trade when deviation is extreme RELATIVE TO the current reversion regime."
     },
     {
       "name": "theta_stable_10",
@@ -68,7 +77,7 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "ou_theta > theta_min (default 0.05 per 5s bar → half-life ≈ 69s, within hold horizon)",
+        "ou_theta > theta_min (default 0.05 per 5s bar \u2192 half-life \u2248 69s, within hold horizon)",
         "theta_stable_10: theta > theta_min*0.6 for all 10 preceding bars (regime stability)",
         "ou_zscore < -zscore_entry (default -2.0: price significantly below VWAP in OU model terms)",
         "vix < 22 (mean-reversion breaks down in high-volatility regimes)",
@@ -90,38 +99,45 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option pts (≈8 NIFTY spot pts at delta 0.5). If ou_zscore worsens toward 3.0 from an entry at 2.0, the deviation has increased by ~50% of the entry level — meaning the OU model is wrong about current theta or the process is not mean-reverting right now. NIFTY's typical 1-minute move of 3-7 option pts calibrates 4 pts as tight but not hair-trigger.",
+    "stop_rationale": "4 option pts (\u22488 NIFTY spot pts at delta 0.5). If ou_zscore worsens toward 3.0 from an entry at 2.0, the deviation has increased by ~50% of the entry level \u2014 meaning the OU model is wrong about current theta or the process is not mean-reverting right now. NIFTY's typical 1-minute move of 3-7 option pts calibrates 4 pts as tight but not hair-trigger.",
     "target_points": 6,
-    "target_rationale": "6 option pts (≈12 NIFTY spot pts). A z-score of 2.0 in OU equilibrium terms corresponds to ~15-25 bps VWAP deviation on NIFTY (~33-55 spot pts). Full reversion to z=0 covers the full deviation; we target 6 pts capturing ~50% of the expected move at 1:1.5 R:R, allowing 4-6 trades/day.",
+    "target_rationale": "6 option pts (\u224812 NIFTY spot pts). A z-score of 2.0 in OU equilibrium terms corresponds to ~15-25 bps VWAP deviation on NIFTY (~33-55 spot pts). Full reversion to z=0 covers the full deviation; we target 6 pts capturing ~50% of the expected move at 1:1.5 R:R, allowing 4-6 trades/day.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "VIX < 22 — mean-reversion breaks down when VIX is high (trend dominates, VWAP attraction weakens)",
-    "time_filter": "Session 09:30-15:20 IST — skip 09:15-09:29 (need 60-bar warmup for OLS + 10 bars theta stability = 70 bars = ~5.8 min after session open)",
-    "volume_filter": "None explicitly — NIFTY index volume on 5s bars is inherently liquid",
-    "trend_filter": "None — theta stability acts as implicit trend filter: in strong trends, OU theta drops (mean-reversion force weakens) and we don't trade",
-    "spread_filter": "Not applicable — limit order execution at candle close prices"
+    "vix_filter": "VIX < 22 \u2014 mean-reversion breaks down when VIX is high (trend dominates, VWAP attraction weakens)",
+    "time_filter": "Session 09:30-15:20 IST \u2014 skip 09:15-09:29 (need 60-bar warmup for OLS + 10 bars theta stability = 70 bars = ~5.8 min after session open)",
+    "volume_filter": "None explicitly \u2014 NIFTY index volume on 5s bars is inherently liquid",
+    "trend_filter": "None \u2014 theta stability acts as implicit trend filter: in strong trends, OU theta drops (mean-reversion force weakens) and we don't trade",
+    "spread_filter": "Not applicable \u2014 limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.57,
     "avg_winner_to_loser": 1.2,
     "profit_factor_estimate": 1.59,
-    "edge_decay_risk": "Low — OU theta estimation for reversion speed is quantitatively distinct from the existing vwap_mean_reversion_v18/v19 (which use static z-scores). The conditional entry (only trade when theta is high AND stable) should reduce false positives significantly."
+    "edge_decay_risk": "Low \u2014 OU theta estimation for reversion speed is quantitatively distinct from the existing vwap_mean_reversion_v18/v19 (which use static z-scores). The conditional entry (only trade when theta is high AND stable) should reduce false positives significantly."
   },
-  "adaptation_notes": "1. Timeframe compressed from 1-min to 5s, hold from 10-30 min to 30-120s. OU window compressed from 60 min to 5 min (60 bars at 5s) because we hold 1-2 minutes, not 15-30 min — the estimation window must match our profit horizon. 2. Underlying changed from Nifty50+Next50 stock universe to NIFTY index — the VWAP mean-reversion mechanism is actually STRONGER on the index because institutional VWAP algorithms execute on the index directly (futures/options), not just individual stocks. 3. theta_min NOT directly scaled from original (0.05/1min → 0.004/5s via time-scaling would be wrong): at 5s bars we want theta that implies half-life ~60-90s (within our hold). OU half-life = ln(2)/theta_5s ≈ 69s at theta=0.01 per 5s bar. We use 0.05 as default — note the OLS estimate of theta depends on the UNITS of vwap_dev (bps here) and the bar size; this default is a starting point for optimization. 4. Z-score entry threshold kept at 2.0 — the OU z-score is dimensionless and interpretable regardless of timeframe. 5. VIX filter retained at 22 — consistent with original and appropriate for 5s index options.",
+  "adaptation_notes": "1. Timeframe compressed from 1-min to 5s, hold from 10-30 min to 30-120s. OU window compressed from 60 min to 5 min (60 bars at 5s) because we hold 1-2 minutes, not 15-30 min \u2014 the estimation window must match our profit horizon. 2. Underlying changed from Nifty50+Next50 stock universe to NIFTY index \u2014 the VWAP mean-reversion mechanism is actually STRONGER on the index because institutional VWAP algorithms execute on the index directly (futures/options), not just individual stocks. 3. theta_min NOT directly scaled from original (0.05/1min \u2192 0.004/5s via time-scaling would be wrong): at 5s bars we want theta that implies half-life ~60-90s (within our hold). OU half-life = ln(2)/theta_5s \u2248 69s at theta=0.01 per 5s bar. We use 0.05 as default \u2014 note the OLS estimate of theta depends on the UNITS of vwap_dev (bps here) and the bar size; this default is a starting point for optimization. 4. Z-score entry threshold kept at 2.0 \u2014 the OU z-score is dimensionless and interpretable regardless of timeframe. 5. VIX filter retained at 22 \u2014 consistent with original and appropriate for 5s index options.",
   "weaknesses": [
-    "OU theta estimation via OLS on only 60 bars is noisy — parameter uncertainty is high, especially when theta is near the threshold",
+    "OU theta estimation via OLS on only 60 bars is noisy \u2014 parameter uncertainty is high, especially when theta is near the threshold",
     "On NIFTY, the 5-minute window may be too short to estimate OU parameters reliably during low-volatility sessions where VWAP deviations are very small",
     "theta_stable_10 filter (10 bars = 50s) adds significant lag and may miss the best entry point for fast reversions",
-    "The OU model assumes constant theta and sigma within each 60-bar window — intraday, both parameters can change rapidly around news events"
+    "The OU model assumes constant theta and sigma within each 60-bar window \u2014 intraday, both parameters can change rapidly around news events"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_317.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 min (inversely proportional to theta)",
-    "original_indicators": ["VWAP_Dev", "VWAP_Dev_Norm", "OU_Theta (OLS, 60 1-min bars)", "OU_Sigma", "Expected_HL", "Z_Score_VWAP"],
+    "original_indicators": [
+      "VWAP_Dev",
+      "VWAP_Dev_Norm",
+      "OU_Theta (OLS, 60 1-min bars)",
+      "OU_Sigma",
+      "Expected_HL",
+      "Z_Score_VWAP"
+    ],
     "original_stop": "Z_Score_VWAP reaches 3.0",
     "original_target": "Z_Score_VWAP crosses zero (full VWAP reversion)"
   }

@@ -2,14 +2,23 @@
   "name": "pivot_point_breakout_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["pivot-points", "support-resistance", "breakout", "intraday", "momentum"],
+  "tags": [
+    "pivot-points",
+    "support-resistance",
+    "breakout",
+    "intraday",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_180.json",
   "original_name": "pivot_point_breakout_v1",
-  "mechanism": "On NIFTY, the previous session's R1 and S1 pivot levels are pre-loaded by thousands of retail platforms (Zerodha, Upstox) and institutional execution algorithms before each open. When NIFTY closes a 5-second bar above R1, every long-only algo with a pivot-based entry receives a simultaneous signal — the collective institutional and retail response creates a compressed burst of 15-25 spot points within the next 60-90 seconds. At 5-second resolution we enter at the exact R1 crossover bar rather than waiting for 1-minute bar confirmation, capturing the leading edge of this pile-on rather than chasing it. The opposite applies for S1 breaks: stop-losses triggered below S1 cascade selling within 30-60 seconds.",
+  "mechanism": "On NIFTY, the previous session's R1 and S1 pivot levels are pre-loaded by thousands of retail platforms (Zerodha, Upstox) and institutional execution algorithms before each open. When NIFTY closes a 5-second bar above R1, every long-only algo with a pivot-based entry receives a simultaneous signal \u2014 the collective institutional and retail response creates a compressed burst of 15-25 spot points within the next 60-90 seconds. At 5-second resolution we enter at the exact R1 crossover bar rather than waiting for 1-minute bar confirmation, capturing the leading edge of this pile-on rather than chasing it. The opposite applies for S1 breaks: stop-losses triggered below S1 cascade selling within 30-60 seconds.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-15:20 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -19,27 +28,31 @@
     "vix": false,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["prev_day_high", "prev_day_low", "prev_day_close"]
+    "other": [
+      "prev_day_high",
+      "prev_day_low",
+      "prev_day_close"
+    ]
   },
   "indicators": [
     {
       "name": "pivot_R1",
       "formula": "R1 = 2 * ((prev_H + prev_L + prev_C) / 3) - prev_L",
-      "lookback": "prev_day",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Fixed daily reference level derived from the previous session's OHLC. No scaling — pivot levels are day-anchored time windows, not rolling lookbacks. The level is constant for the whole session and recomputed daily."
+      "purpose": "Fixed daily reference level derived from the previous session's OHLC. No scaling \u2014 pivot levels are day-anchored time windows, not rolling lookbacks. The level is constant for the whole session and recomputed daily."
     },
     {
       "name": "pivot_S1",
       "formula": "S1 = 2 * ((prev_H + prev_L + prev_C) / 3) - prev_H",
-      "lookback": "prev_day",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "Mirror of R1. When NIFTY breaks below S1 with VWAP also below, it signals value destruction below the prior session's support range."
     },
     {
       "name": "vwap",
       "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each day at 09:15",
-      "lookback": "session_cumulative",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "VWAP acts as the session's institutional average cost. A pivot break with close above VWAP confirms institutions are net buyers. This filters pivot breaks that occur below the institutional cost basis (more likely to fail)."
     },
@@ -48,7 +61,7 @@
       "formula": "SMA(volume, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "60-bar (5-min) volume baseline. Original used 20-bar on 1-min = 20 min; we compress to 5 min because at 5s resolution we want to detect current-session volume surges relative to recent activity, not hour-old baselines. Volume on 5s bars is noisy — 5-min baseline provides enough stability."
+      "purpose": "60-bar (5-min) volume baseline. Original used 20-bar on 1-min = 20 min; we compress to 5 min because at 5s resolution we want to detect current-session volume surges relative to recent activity, not hour-old baselines. Volume on 5s bars is noisy \u2014 5-min baseline provides enough stability."
     }
   ],
   "entry": {
@@ -58,7 +71,7 @@
         "close > vwap (above institutional cost basis)",
         "volume > vol_ma_60 * 1.5 (volume confirms participation)"
       ],
-      "confirmation": "Single-bar crossover at 5s is sufficient — 2-bar confirmation from 1-min original is already satisfied by entering on the crossover bar itself at 5s resolution"
+      "confirmation": "Single-bar crossover at 5s is sufficient \u2014 2-bar confirmation from 1-min original is already satisfied by entering on the crossover bar itself at 5s resolution"
     },
     "buy_pe": {
       "conditions": [
@@ -71,40 +84,49 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "A failed R1 break on NIFTY typically stalls and reverses 8-12 spot points within 30 seconds; at delta ~0.5 that is 4-6 option points. 4 pts covers noise without letting a clear failure run — if the breakout reverses 8 NIFTY pts back through R1, the thesis is definitively wrong.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "A failed R1 break on NIFTY typically stalls and reverses 8-12 spot points within 30 seconds; at delta ~0.5 that is 4-6 option points. 4 pts covers noise without letting a clear failure run \u2014 if the breakout reverses 8 NIFTY pts back through R1, the thesis is definitively wrong.",
+    "target_points": 8.0,
     "target_rationale": "First-leg continuation after an R1 break on NIFTY extends 15-25 spot points before stalling at R2 or consolidation; 7 option pts captures ~50% of that expected 14-pt lower bound, giving 1:1.75 R:R. Consistent with the orb_momentum gold-standard target of 8 pts for similar breakout continuation.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — pivot levels are structural and work across VIX regimes",
+    "vix_filter": "none \u2014 pivot levels are structural and work across VIX regimes",
     "time_filter": "09:20-15:20 IST; skip first 5 minutes to avoid pre-open noise before pivots are clean",
     "volume_filter": "volume > 1.5x 5-min vol_ma_60 on break bar",
-    "trend_filter": "VWAP alignment required — only take R1 breaks above VWAP, S1 breaks below VWAP",
-    "spread_filter": "N/A — limit orders"
+    "trend_filter": "VWAP alignment required \u2014 only take R1 breaks above VWAP, S1 breaks below VWAP",
+    "spread_filter": "N/A \u2014 limit orders"
   },
   "edge": {
     "expected_bps": 25,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "moderate — pivot levels are universally known; edge depends entirely on VWAP + volume filter quality. If too many false breaks occur near R1 in choppy markets, win rate drops below 50%."
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "moderate \u2014 pivot levels are universally known; edge depends entirely on VWAP + volume filter quality. If too many false breaks occur near R1 in choppy markets, win rate drops below 50%."
   },
-  "adaptation_notes": "Original was NIFTY 200 equity stocks on 1-min bars with 2-bar confirmation and R2/S2 targets. Key changes: (1) universe narrowed to NIFTY index itself — pivot levels on indices are more respected because they reflect the full market's prior session; (2) hold time compressed from 20-60 min to 30-90s — we capture only the first burst, not the full R1→R2 extension; (3) 2-bar confirmation dropped because at 5s a single crossover bar IS the fast confirmation (2 bars at 1min = 120s; 1 bar at 5s = 5s, the crossover already provides directional information); (4) volume SMA compressed from 20×1min=20min to 60×5s=5min for responsiveness; (5) R2/S2 targets replaced with fixed 7 option-point targets since R1→R2 spread is typically 80-150 NIFTY pts, far too wide for a 90s hold.",
+  "adaptation_notes": "Original was NIFTY 200 equity stocks on 1-min bars with 2-bar confirmation and R2/S2 targets. Key changes: (1) universe narrowed to NIFTY index itself \u2014 pivot levels on indices are more respected because they reflect the full market's prior session; (2) hold time compressed from 20-60 min to 30-90s \u2014 we capture only the first burst, not the full R1\u2192R2 extension; (3) 2-bar confirmation dropped because at 5s a single crossover bar IS the fast confirmation (2 bars at 1min = 120s; 1 bar at 5s = 5s, the crossover already provides directional information); (4) volume SMA compressed from 20\u00d71min=20min to 60\u00d75s=5min for responsiveness; (5) R2/S2 targets replaced with fixed 7 option-point targets since R1\u2192R2 spread is typically 80-150 NIFTY pts, far too wide for a 90s hold.",
   "weaknesses": [
-    "On narrow-range days (prev_H - prev_L < 100 pts), R1 and S1 are close to open — high false break rate",
-    "Post-event sessions (budget, RBI policy): pivots are blown through on news, not microstructure — volume filter may not catch this",
-    "NIFTY is index, not a single stock — pivot levels aggregated across 50 stocks may be less 'clean' than individual stock pivots",
+    "On narrow-range days (prev_H - prev_L < 100 pts), R1 and S1 are close to open \u2014 high false break rate",
+    "Post-event sessions (budget, RBI policy): pivots are blown through on news, not microstructure \u2014 volume filter may not catch this",
+    "NIFTY is index, not a single stock \u2014 pivot levels aggregated across 50 stocks may be less 'clean' than individual stock pivots",
     "Volume on 5s NIFTY bars is noisy; 1.5x threshold may fire too often in high-activity sessions"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_180.json",
     "original_timeframe": "1min",
     "original_hold_time": "20-60 minutes",
-    "original_indicators": ["Pivot (P)", "R1", "R2", "S1", "S2", "VWAP", "SMA(volume, 20)"],
+    "original_indicators": [
+      "Pivot (P)",
+      "R1",
+      "R2",
+      "S1",
+      "S2",
+      "VWAP",
+      "SMA(volume, 20)"
+    ],
     "original_stop": "Pivot point P (if price drops back from R1 to P)",
     "original_target": "R2 for longs, S2 for shorts (next pivot level)"
-  }
+  },
+  "vix_agnostic": true
 }

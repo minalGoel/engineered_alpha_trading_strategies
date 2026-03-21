@@ -2,14 +2,23 @@
   "name": "bollinger_squeeze_breakout",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility", "momentum", "breakout", "bollinger", "squeeze"],
+  "tags": [
+    "volatility",
+    "momentum",
+    "breakout",
+    "bollinger",
+    "squeeze"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_345.json",
   "original_name": "bollinger_squeeze_breakout",
   "mechanism": "On NIFTY, micro-consolidation periods lasting 1-3 minutes produce a measurable Bollinger Band width compression (2-minute rolling std at session lows) as institutional algorithms pause directional flow and resting limit orders accumulate on both sides of the range. When price breaks above the upper band on a simultaneous volume spike, net buy-side order flow has absorbed the accumulated sell-side resting orders at the squeeze ceiling. This initiates a stop-cascade above the range (stops placed by participants who shorted the squeeze boundary) and VWAP-chasing algorithms pile in, producing a 10-20 NIFTY spot-point directional move in the subsequent 30-90 seconds before the momentum exhausts.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -34,7 +43,7 @@
       "formula": "4 * std(close, 24) / sma(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "Normalized band width = (upper - lower) / mid = 4 * rolling_std / sma. At NIFTY ~22000, threshold 0.0015 means 4*std < 33 pts, i.e., std < 8 pts per 5s bar — characteristic of a quiet 2-minute consolidation. The 24-bar window matches the hold time so the squeeze preceding the trade is visible at the same resolution."
+      "purpose": "Normalized band width = (upper - lower) / mid = 4 * rolling_std / sma. At NIFTY ~22000, threshold 0.0015 means 4*std < 33 pts, i.e., std < 8 pts per 5s bar \u2014 characteristic of a quiet 2-minute consolidation. The 24-bar window matches the hold time so the squeeze preceding the trade is visible at the same resolution."
     },
     {
       "name": "upper_bb_24",
@@ -61,57 +70,61 @@
   "entry": {
     "buy_ce": {
       "conditions": [
-        "bb_width_24 < squeeze_threshold (default 0.0015) — currently in micro-compression",
-        "close > upper_bb_24 — price just broke above the squeeze ceiling",
-        "vol_ratio_24 >= vol_ratio_threshold (default 1.5) — volume confirming the breakout"
+        "bb_width_24 < squeeze_threshold (default 0.0015) \u2014 currently in micro-compression",
+        "close > upper_bb_24 \u2014 price just broke above the squeeze ceiling",
+        "vol_ratio_24 >= vol_ratio_threshold (default 1.5) \u2014 volume confirming the breakout"
       ],
-      "confirmation": "All three conditions must be true on the same 5s bar. The simultaneous squeeze + breakout fires at the first bar where the compression is visibly releasing — before subsequent bars widen the band."
+      "confirmation": "All three conditions must be true on the same 5s bar. The simultaneous squeeze + breakout fires at the first bar where the compression is visibly releasing \u2014 before subsequent bars widen the band."
     },
     "buy_pe": {
       "conditions": [
-        "bb_width_24 < squeeze_threshold (default 0.0015) — currently in micro-compression",
-        "close < lower_bb_24 — price just broke below the squeeze floor",
-        "vol_ratio_24 >= vol_ratio_threshold (default 1.5) — volume confirming the breakdown"
+        "bb_width_24 < squeeze_threshold (default 0.0015) \u2014 currently in micro-compression",
+        "close < lower_bb_24 \u2014 price just broke below the squeeze floor",
+        "vol_ratio_24 >= vol_ratio_threshold (default 1.5) \u2014 volume confirming the breakdown"
       ],
       "confirmation": "Mirror of buy_ce. Bearish squeeze releases happen when resting buy orders are absorbed."
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If a genuine squeeze breakout retraces 8 spot points back into the squeeze range, the thesis has failed — the break was absorbed. NIFTY micro-consolidation breakouts should not retrace more than 8 spot pts within 60 seconds if real institutional follow-through is present. Using half the expected move as the stop gives 1:1.75 R:R.",
-    "target_points": 7,
+    "stop_points": 5.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If a genuine squeeze breakout retraces 8 spot points back into the squeeze range, the thesis has failed \u2014 the break was absorbed. NIFTY micro-consolidation breakouts should not retrace more than 8 spot pts within 60 seconds if real institutional follow-through is present. Using half the expected move as the stop gives 1:1.75 R:R.",
+    "target_points": 8.0,
     "target_rationale": "7 option points (~14 NIFTY spot points at delta 0.5). The initial directional leg from a 2-minute squeeze breakout on NIFTY extends 12-20 spot points in 30-90 seconds before the first pullback. Targeting 14 spot points captures the conservative end of this range, ensuring high win probability on the initial impulse leg rather than waiting for full continuation.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — squeeze breakout is structural and not VIX-regime dependent at 5-second resolution",
-    "time_filter": "09:25-15:20 IST — skip first 10 minutes of session (pre-open noise and initial volatility settling)",
-    "volume_filter": "vol_ratio_24 >= 1.5 — mandatory breakout volume confirmation",
-    "trend_filter": "none — squeeze resolves in either direction; strategy is symmetric",
-    "spread_filter": "none — NIFTY is ultra-liquid, limit orders execute at candle close"
+    "vix_filter": "none \u2014 squeeze breakout is structural and not VIX-regime dependent at 5-second resolution",
+    "time_filter": "09:25-15:20 IST \u2014 skip first 10 minutes of session (pre-open noise and initial volatility settling)",
+    "volume_filter": "vol_ratio_24 >= 1.5 \u2014 mandatory breakout volume confirmation",
+    "trend_filter": "none \u2014 squeeze resolves in either direction; strategy is symmetric",
+    "spread_filter": "none \u2014 NIFTY is ultra-liquid, limit orders execute at candle close"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.52,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.89,
-    "edge_decay_risk": "medium — Bollinger Squeeze is widely known; but at 5-second resolution the pattern is less crowded than on 1-minute bars"
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "medium \u2014 Bollinger Squeeze is widely known; but at 5-second resolution the pattern is less crowded than on 1-minute bars"
   },
-  "adaptation_notes": "Original held 30-100 minutes on 1-min equity bars (nifty100 stocks). Converted to NIFTY index at 5-second bars with 30-120 second holds. Key changes: (1) Lookback compressed from 20 minutes to 2 minutes (24 bars) to match the intraday micro-consolidation timescale — the thesis is the same but the compression window must match hold time. (2) Volume filter is relative to 2-min mean rather than prev-bar comparison, more robust on index volume. (3) Keltner Channel removed — it added noise on the original but for 5s index we only need the BB width threshold directly. (4) Stops/targets in option points calibrated to 30-90s NIFTY move magnitudes, not the original's ATR(20) on equity. (5) Trailing stop removed — too complex for 30-120s option holds, fixed stop/target only.",
+  "adaptation_notes": "Original held 30-100 minutes on 1-min equity bars (nifty100 stocks). Converted to NIFTY index at 5-second bars with 30-120 second holds. Key changes: (1) Lookback compressed from 20 minutes to 2 minutes (24 bars) to match the intraday micro-consolidation timescale \u2014 the thesis is the same but the compression window must match hold time. (2) Volume filter is relative to 2-min mean rather than prev-bar comparison, more robust on index volume. (3) Keltner Channel removed \u2014 it added noise on the original but for 5s index we only need the BB width threshold directly. (4) Stops/targets in option points calibrated to 30-90s NIFTY move magnitudes, not the original's ATR(20) on equity. (5) Trailing stop removed \u2014 too complex for 30-120s option holds, fixed stop/target only.",
   "weaknesses": [
-    "Squeeze on 2-minute window may still be inside a larger trend move — no higher-timeframe filter means some breakouts go against the dominant session direction",
-    "NIFTY volume data at 5-second resolution can be sparse/zero during low-activity periods, making vol_ratio unreliable — strategy may miss some valid breakouts",
+    "Squeeze on 2-minute window may still be inside a larger trend move \u2014 no higher-timeframe filter means some breakouts go against the dominant session direction",
+    "NIFTY volume data at 5-second resolution can be sparse/zero during low-activity periods, making vol_ratio unreliable \u2014 strategy may miss some valid breakouts",
     "False breakouts (price crosses band then immediately reverts) are the primary failure mode; the volume filter helps but does not eliminate them",
-    "At session open (09:15-09:25 filtered out) the most volatile breakouts occur — filtering this window reduces trade count but misses high-magnitude moves"
+    "At session open (09:15-09:25 filtered out) the most volatile breakouts occur \u2014 filtering this window reduces trade count but misses high-magnitude moves"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_345.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-100 bars (30-100 min)",
-    "original_indicators": ["bb_width(20, 2)", "keltner_mid EMA(20)"],
+    "original_indicators": [
+      "bb_width(20, 2)",
+      "keltner_mid EMA(20)"
+    ],
     "original_stop": "SMA(close, 20)",
     "original_target": "2.5 * ATR(20) from entry"
-  }
+  },
+  "vix_agnostic": true
 }

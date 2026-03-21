@@ -72,8 +72,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("keltner_mult", 1.5, 1.0, 2.5),
             TunableParam("bb_mult", 2.0, 1.5, 2.5),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
             TunableParam("vix_max", 25.0, 18.0, 35.0),
         ]
 
@@ -95,8 +95,8 @@ class Strategy(BaseStrategy):
         # ── parameters ───────────────────────────────────────────────────
         keltner_mult = params.get("keltner_mult", 1.5)
         bb_mult      = params.get("bb_mult", 2.0)
-        stop_pts     = params.get("stop_pts", 4.0)
-        target_pts   = params.get("target_pts", 7.0)
+        stop_pts     = params.get("stop_pts", 5.0)
+        target_pts   = params.get("target_pts", 8.0)
         vix_max      = params.get("vix_max", 25.0)
 
         period = 36  # 3-minute lookback — see mechanism comment above

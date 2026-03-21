@@ -2,14 +2,24 @@
   "name": "vol_regime_adaptive_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["volatility-regime", "adaptive", "mean-reversion", "momentum", "ATR-regime", "BB"],
+  "tags": [
+    "volatility-regime",
+    "adaptive",
+    "mean_reversion",
+    "momentum",
+    "ATR-regime",
+    "BB"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_305.json",
   "original_name": "vol_regime_adaptive_v1",
-  "mechanism": "On NIFTY, intraday volatility clusters in two structurally distinct regimes visible at 5-second resolution. In LOW-vol regimes (ATR-14 below the 30th percentile of the rolling 240-bar intraday distribution), passive market makers dominate order flow — small Bollinger Band deviations below VWAP attract aggressive limit-order replenishment within 15-30 seconds because every algo benchmarked to VWAP has favorable fills; the bounce is mechanical. In HIGH-vol regimes (ATR-14 above the 70th percentile), institutional TWAP and momentum algos are simultaneously working larger directional orders, creating EMA-aligned bursts that persist 30-90 seconds because the underlying institutional queue is only 30-50% filled on the first visible bar — selling begets selling, buying begets buying. The strategy is flat in ambiguous MED-vol transitions where neither mechanism dominates.",
+  "mechanism": "On NIFTY, intraday volatility clusters in two structurally distinct regimes visible at 5-second resolution. In LOW-vol regimes (ATR-14 below the 30th percentile of the rolling 240-bar intraday distribution), passive market makers dominate order flow \u2014 small Bollinger Band deviations below VWAP attract aggressive limit-order replenishment within 15-30 seconds because every algo benchmarked to VWAP has favorable fills; the bounce is mechanical. In HIGH-vol regimes (ATR-14 above the 70th percentile), institutional TWAP and momentum algos are simultaneously working larger directional orders, creating EMA-aligned bursts that persist 30-90 seconds because the underlying institutional queue is only 30-50% filled on the first visible bar \u2014 selling begets selling, buying begets buying. The strategy is flat in ambiguous MED-vol transitions where neither mechanism dominates.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:10 IST",
-  "hold_time_seconds": [15, 60],
+  "hold_time_seconds": [
+    15,
+    60
+  ],
   "max_hold_bars": 12,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,21 +37,21 @@
       "formula": "ATR(high, low, close, 14)",
       "lookback": 14,
       "computed_on": "spot",
-      "purpose": "14 bars × 5s = 70 seconds of range data — enough to detect whether the current NIFTY volatility spike is genuine (multiple bars of large range) vs. a single-bar outlier. We use 14 bars to match the original's ATR(14) time concept but compress from 14-min to 70s to reflect that at 5s we care about NOW, not yesterday's regime."
+      "purpose": "14 bars \u00d7 5s = 70 seconds of range data \u2014 enough to detect whether the current NIFTY volatility spike is genuine (multiple bars of large range) vs. a single-bar outlier. We use 14 bars to match the original's ATR(14) time concept but compress from 14-min to 70s to reflect that at 5s we care about NOW, not yesterday's regime."
     },
     {
       "name": "ATR_Percentile_Rank",
       "formula": "percentile_rank(ATR_14[i], ATR_14[i-240:i])",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "240 bars = 20-minute rolling window to compute intraday ATR percentile. The original used a 5-day cross-session distribution; we switch to intraday 20-minute because NIFTY's vol regime is session-specific — pre-noon and post-noon regimes differ, and yesterday's vol distribution adds noise. 20 minutes gives enough sample (240 points) for a meaningful percentile without leaking yesterday's regime."
+      "purpose": "240 bars = 20-minute rolling window to compute intraday ATR percentile. The original used a 5-day cross-session distribution; we switch to intraday 20-minute because NIFTY's vol regime is session-specific \u2014 pre-noon and post-noon regimes differ, and yesterday's vol distribution adds noise. 20 minutes gives enough sample (240 points) for a meaningful percentile without leaking yesterday's regime."
     },
     {
       "name": "BB_upper",
       "formula": "SMA(close, 20) + bb_std * STDDEV(close, 20)",
       "lookback": 20,
       "computed_on": "spot",
-      "purpose": "20 bars × 5s = 100 seconds — the trigger for LOW-vol mean reversion entries. At 5s resolution, a 100-second BB captures micro-range deviations. Original used 20-bar 1-min BB (20 minutes); we compress to 100s because we are trading the first 15-60 seconds of a bounce, not the 10-30 minute reversion."
+      "purpose": "20 bars \u00d7 5s = 100 seconds \u2014 the trigger for LOW-vol mean reversion entries. At 5s resolution, a 100-second BB captures micro-range deviations. Original used 20-bar 1-min BB (20 minutes); we compress to 100s because we are trading the first 15-60 seconds of a bounce, not the 10-30 minute reversion."
     },
     {
       "name": "BB_lower",
@@ -55,21 +65,21 @@
       "formula": "EMA(close, 9)",
       "lookback": 9,
       "computed_on": "spot",
-      "purpose": "9 bars × 5s = 45 seconds — the fast EMA for HIGH-vol momentum detection. Original used EMA(9) on 1-min bars (9 minutes). We keep 9 bars because 45s is long enough to distinguish genuine momentum from noise at 5s resolution, and the EMA9/EMA21 CROSSOVER is the signal, not the absolute level. Same bar count, different time compression."
+      "purpose": "9 bars \u00d7 5s = 45 seconds \u2014 the fast EMA for HIGH-vol momentum detection. Original used EMA(9) on 1-min bars (9 minutes). We keep 9 bars because 45s is long enough to distinguish genuine momentum from noise at 5s resolution, and the EMA9/EMA21 CROSSOVER is the signal, not the absolute level. Same bar count, different time compression."
     },
     {
       "name": "EMA_21",
       "formula": "EMA(close, 21)",
       "lookback": 21,
       "computed_on": "spot",
-      "purpose": "21 bars × 5s = 105 seconds — the slow EMA for HIGH-vol momentum confirmation. The EMA9/EMA21 gap in HIGH-vol regimes on NIFTY represents 2-4 minutes of institutional order flow confirmation; 105s slow EMA captures that without introducing excessive lag."
+      "purpose": "21 bars \u00d7 5s = 105 seconds \u2014 the slow EMA for HIGH-vol momentum confirmation. The EMA9/EMA21 gap in HIGH-vol regimes on NIFTY represents 2-4 minutes of institutional order flow confirmation; 105s slow EMA captures that without introducing excessive lag."
     },
     {
       "name": "VWAP",
       "formula": "cumulative(close * volume) / cumulative(volume) from session open",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative from 09:15 — no lookback scaling needed. VWAP is the institutional benchmark; deviations below (LOW-vol) or confirmation above (HIGH-vol) add directional conviction to either regime's signal."
+      "purpose": "Cumulative from 09:15 \u2014 no lookback scaling needed. VWAP is the institutional benchmark; deviations below (LOW-vol) or confirmation above (HIGH-vol) add directional conviction to either regime's signal."
     }
   ],
   "entry": {
@@ -78,7 +88,7 @@
         "LOW-VOL: stable_low (ATR_pct < 30 for 10 consecutive bars) AND close < BB_lower AND close < VWAP",
         "HIGH-VOL: stable_high (ATR_pct > 70 for 10 consecutive bars) AND EMA9 > EMA21 AND close > VWAP AND volume > 1.5 * SMA(volume, 20)"
       ],
-      "confirmation": "Signal fires on current bar close; no next-bar confirmation needed at 5s (original's 'next bar' was 1 min which is 12 bars here — too slow)"
+      "confirmation": "Signal fires on current bar close; no next-bar confirmation needed at 5s (original's 'next bar' was 1 min which is 12 bars here \u2014 too slow)"
     },
     "buy_pe": {
       "conditions": [
@@ -91,38 +101,46 @@
   },
   "exit": {
     "stop_points": 3,
-    "stop_rationale": "LOW-VOL: NIFTY BB deviations in calm periods are ~10-20 spot pts; an ATM CE/PE at delta 0.5 gains ~5-10 pts on the bounce — stop at 3 pts gives 1:1.67 R:R and allows for 5-10 spot pt reversion before declaring the thesis wrong. HIGH-VOL: 5 pts because momentum runs 20-40 spot pts; if NIFTY reverses 10+ spot pts immediately against our momentum entry, the regime classification was wrong.",
+    "stop_rationale": "LOW-VOL: NIFTY BB deviations in calm periods are ~10-20 spot pts; an ATM CE/PE at delta 0.5 gains ~5-10 pts on the bounce \u2014 stop at 3 pts gives 1:1.67 R:R and allows for 5-10 spot pt reversion before declaring the thesis wrong. HIGH-VOL: 5 pts because momentum runs 20-40 spot pts; if NIFTY reverses 10+ spot pts immediately against our momentum entry, the regime classification was wrong.",
     "target_points": 5,
-    "target_rationale": "LOW-VOL: 5 pts = ~10 spot pt bounce, which is the median reversion from a BB-lower touch in calm NIFTY sessions (per Section 10.4, 30s moves are 2-5 option pts, 1-min 3-7 pts — our 60s hold targets the lower end of 1-min expected moves). HIGH-VOL: 8 pts = ~16 spot pt continuation, consistent with NIFTY momentum bursts in high-ATR regimes where 20-40 spot pt moves are common (Section 10.4: 2-min = 5-10 pts for NIFTY).",
+    "target_rationale": "LOW-VOL: 5 pts = ~10 spot pt bounce, which is the median reversion from a BB-lower touch in calm NIFTY sessions (per Section 10.4, 30s moves are 2-5 option pts, 1-min 3-7 pts \u2014 our 60s hold targets the lower end of 1-min expected moves). HIGH-VOL: 8 pts = ~16 spot pt continuation, consistent with NIFTY momentum bursts in high-ATR regimes where 20-40 spot pt moves are common (Section 10.4: 2-min = 5-10 pts for NIFTY).",
     "time_stop_bars": 12,
     "eod_rule": "flatten at 15:10"
   },
   "filters": {
-    "vix_filter": "India VIX < 28 (extreme tail risk — above 28 NIFTY becomes ungovernable for ATR regime buckets; shift thresholds up by 10 pct if VIX > 22)",
+    "vix_filter": "India VIX < 28 (extreme tail risk \u2014 above 28 NIFTY becomes ungovernable for ATR regime buckets; shift thresholds up by 10 pct if VIX > 22)",
     "time_filter": "No entries before 09:25 (skip pre-open noise) or after 15:10",
     "volume_filter": "HIGH-VOL entries: volume > 1.5x SMA(volume, 20); LOW-VOL entries: no volume filter (passive accumulation is low-volume by nature)",
-    "trend_filter": "Regime stability: must be in same regime (ATR pct) for 10 consecutive bars before entry — prevents whipsaw at regime transitions",
-    "spread_filter": "None — limit order execution at candle close prices, no spread cost"
+    "trend_filter": "Regime stability: must be in same regime (ATR pct) for 10 consecutive bars before entry \u2014 prevents whipsaw at regime transitions",
+    "spread_filter": "None \u2014 limit order execution at candle close prices, no spread cost"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.55,
-    "avg_winner_to_loser": 1.40,
+    "avg_winner_to_loser": 1.4,
     "profit_factor_estimate": 1.71,
-    "edge_decay_risk": "Medium — adaptive regime switching is conceptually well-known; the 5s implementation with intraday ATR percentile (vs. cross-session) is the differentiator. Regime windows and stability filters are the key knobs."
+    "edge_decay_risk": "Medium \u2014 adaptive regime switching is conceptually well-known; the 5s implementation with intraday ATR percentile (vs. cross-session) is the differentiator. Regime windows and stability filters are the key knobs."
   },
-  "adaptation_notes": "Three core changes from the original: (1) Universe changed from NIFTY50 stocks to NIFTY index — removes single-stock earnings/event risk and leverage the index's institutional flow dominance. (2) ATR percentile window compressed from 5-day to 240-bar (20-min) intraday — original's cross-session distribution is inappropriate for 5s intraday regime detection; today's regime can differ structurally from yesterday's. (3) Next-bar confirmation removed — at 1-min bars, next-bar confirmation was 1 minute; at 5s bars, waiting 5 seconds adds negligible conviction but costs premium time value. The regime stability requirement (10 consecutive bars) replaces the confirmation function. (4) Hold time compressed from 10-60 min to 15-60 seconds — capturing the first leg only.",
+  "adaptation_notes": "Three core changes from the original: (1) Universe changed from NIFTY50 stocks to NIFTY index \u2014 removes single-stock earnings/event risk and leverage the index's institutional flow dominance. (2) ATR percentile window compressed from 5-day to 240-bar (20-min) intraday \u2014 original's cross-session distribution is inappropriate for 5s intraday regime detection; today's regime can differ structurally from yesterday's. (3) Next-bar confirmation removed \u2014 at 1-min bars, next-bar confirmation was 1 minute; at 5s bars, waiting 5 seconds adds negligible conviction but costs premium time value. The regime stability requirement (10 consecutive bars) replaces the confirmation function. (4) Hold time compressed from 10-60 min to 15-60 seconds \u2014 capturing the first leg only.",
   "weaknesses": [
-    "MED-vol dead zone (~40% of intraday time) leaves capital idle — same as original but now more visible at 5s resolution where transitions are frequent",
+    "MED-vol dead zone (~40% of intraday time) leaves capital idle \u2014 same as original but now more visible at 5s resolution where transitions are frequent",
     "ATR percentile window of 240 bars can be contaminated by the opening 20 minutes' high-ATR readings, artificially suppressing the rest of the session into LOW-vol regime",
     "EMA crossover in HIGH-vol regime can generate whipsaws during NIFTY news spikes (RBI, US data) where direction reverses within 30 seconds",
-    "Volume proxy for NIFTY index is futures volume — may not align perfectly with index spot movements on expiry days"
+    "Volume proxy for NIFTY index is futures volume \u2014 may not align perfectly with index spot movements on expiry days"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_305.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 min (LOW-VOL), 20-60 min (HIGH-VOL)",
-    "original_indicators": ["ATR(14)", "ATR_Percentile(5-day)", "BB(20,1.5)", "EMA(9)", "EMA(21)", "VWAP", "Volume SMA(20)"],
+    "original_indicators": [
+      "ATR(14)",
+      "ATR_Percentile(5-day)",
+      "BB(20,1.5)",
+      "EMA(9)",
+      "EMA(21)",
+      "VWAP",
+      "Volume SMA(20)"
+    ],
     "original_stop": "LOW-VOL: 15 bps; HIGH-VOL: 30 bps",
     "original_target": "LOW-VOL: 25 bps; HIGH-VOL: 50 bps"
   }

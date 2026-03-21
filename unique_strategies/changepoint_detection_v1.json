@@ -2,14 +2,23 @@
   "name": "changepoint_detection_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["changepoint", "CUSUM", "regime-shift", "structural-break", "momentum"],
+  "tags": [
+    "changepoint",
+    "CUSUM",
+    "regime-shift",
+    "structural-break",
+    "momentum"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_330.json",
   "original_name": "changepoint_detection_v1",
-  "mechanism": "On NIFTY/BANKNIFTY, large institutional TWAP/VWAP execution algorithms and macro news events generate persistent cumulative return deviations that build bar-by-bar before any lagging indicator confirms a trend. CUSUM (Cumulative Sum) control charts accumulate these micro-deviations against a 5-minute rolling baseline: the moment the positive CUSUM first crosses a volatility-scaled threshold, the index has entered a new buying regime where institutional demand is absorbing offers faster than the rolling mean. At 5-second resolution, we enter within the first 15-30 seconds of a new regime — before momentum strategies trigger and price moves further — riding the early continuation of the institutional order flow.",
+  "mechanism": "On NIFTY/BANKNIFTY, large institutional TWAP/VWAP execution algorithms and macro news events generate persistent cumulative return deviations that build bar-by-bar before any lagging indicator confirms a trend. CUSUM (Cumulative Sum) control charts accumulate these micro-deviations against a 5-minute rolling baseline: the moment the positive CUSUM first crosses a volatility-scaled threshold, the index has entered a new buying regime where institutional demand is absorbing offers faster than the rolling mean. At 5-second resolution, we enter within the first 15-30 seconds of a new regime \u2014 before momentum strategies trigger and price moves further \u2014 riding the early continuation of the institutional order flow.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:25-15:25 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,7 +36,7 @@
       "formula": "(close[i] - close[i-1]) / close[i-1]",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "5-second bar return — the raw input to CUSUM accumulation. Not scaled from original (returns are returns regardless of bar size)."
+      "purpose": "5-second bar return \u2014 the raw input to CUSUM accumulation. Not scaled from original (returns are returns regardless of bar size)."
     },
     {
       "name": "roll_mean_60",
@@ -41,19 +50,19 @@
       "formula": "STDEV(ret_1, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute rolling realized volatility — used to scale both CUSUM allowance (k) and detection threshold (h) dynamically. Makes CUSUM self-adjusting to different vol regimes during the day without VIX input."
+      "purpose": "5-minute rolling realized volatility \u2014 used to scale both CUSUM allowance (k) and detection threshold (h) dynamically. Makes CUSUM self-adjusting to different vol regimes during the day without VIX input."
     },
     {
       "name": "cusum_pos",
       "formula": "max(0, cusum_pos[i-1] + ret_1[i] - roll_mean_60[i] - k_mult * roll_std_60[i]); reset to 0 on new session day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "Accumulates positive excess returns above the allowable slack k. Once cusum_pos > h_mult * roll_std_60, a new uptrend regime is declared. Session-level reset prevents stale prior-session CUSUM contaminating new-day signals."
     },
     {
       "name": "cusum_neg",
       "formula": "min(0, cusum_neg[i-1] + ret_1[i] - roll_mean_60[i] + k_mult * roll_std_60[i]); reset to 0 on new session day",
-      "lookback": "session",
+      "lookback": 0,
       "computed_on": "spot",
       "purpose": "Accumulates negative excess returns below the allowable slack. Mirrors cusum_pos for bearish regime detection."
     }
@@ -62,7 +71,7 @@
     "buy_ce": {
       "conditions": [
         "cusum_pos[i] > h_mult * roll_std_60[i]  (positive CUSUM threshold crossed)",
-        "cusum_pos[i-1] <= h_mult * roll_std_60[i-1]  (just crossed — fresh break, not continuation)",
+        "cusum_pos[i-1] <= h_mult * roll_std_60[i-1]  (just crossed \u2014 fresh break, not continuation)",
         "i >= 60  (rolling stats warmed up)",
         "time_minutes in [565, 925)  (09:25-15:25 session)"
       ],
@@ -88,31 +97,38 @@
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
-    "vix_filter": "none — CUSUM threshold is dynamically volatility-scaled via roll_std_60; explicit VIX filter redundant",
+    "vix_filter": "none \u2014 CUSUM threshold is dynamically volatility-scaled via roll_std_60; explicit VIX filter redundant",
     "time_filter": "no entries before 09:25 (need 60 bars for stable rolling statistics); no entries after 15:25",
-    "volume_filter": "none — NIFTY index volume too noisy at 5s for reliable filtering",
-    "trend_filter": "none — CUSUM is itself the regime detector; no additional trend filter needed",
-    "spread_filter": "none — limit order execution, no spread cost"
+    "volume_filter": "none \u2014 NIFTY index volume too noisy at 5s for reliable filtering",
+    "trend_filter": "none \u2014 CUSUM is itself the regime detector; no additional trend filter needed",
+    "spread_filter": "none \u2014 limit order execution, no spread cost"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.53,
     "avg_winner_to_loser": 1.5,
-    "profit_factor_estimate": 1.45,
-    "edge_decay_risk": "Low-medium — CUSUM from quality control (Page 1954) is rarely applied to 5-second financial data; the early detection before lagging indicators is genuine. Edge could decay if high-frequency algos adopt similar real-time CUSUM monitoring."
+    "profit_factor_estimate": 1.69,
+    "edge_decay_risk": "Low-medium \u2014 CUSUM from quality control (Page 1954) is rarely applied to 5-second financial data; the early detection before lagging indicators is genuine. Edge could decay if high-frequency algos adopt similar real-time CUSUM monitoring."
   },
-  "adaptation_notes": "Original strategy traded NIFTY 50 constituent equities on 1-minute bars with a 30-minute rolling baseline (30 bars). For 5-second NIFTY index: (1) Rolling window compressed to 60 bars (5 min), NOT 360 bars (blind 12x) — at 5s the 5-min window captures the current intraday vol regime relevant to 15-120s holds. (2) Stock-specific filters (volume > 1.5x ADV, earnings filter, bid-ask spread < 5 bps) all dropped — NIFTY index is continuously liquid and does not have earnings days. (3) Trend filter ('NIFTY 50 must not have opposing changepoint') inverted into the strategy itself — we ARE trading NIFTY directly. (4) Position sizing removed — standard ₹1L capital per entry. (5) k and h multipliers made tunable since the original's k=0.5*sigma, h=4*sigma were calibrated on equities; index returns have different autocorrelation structure.",
+  "adaptation_notes": "Original strategy traded NIFTY 50 constituent equities on 1-minute bars with a 30-minute rolling baseline (30 bars). For 5-second NIFTY index: (1) Rolling window compressed to 60 bars (5 min), NOT 360 bars (blind 12x) \u2014 at 5s the 5-min window captures the current intraday vol regime relevant to 15-120s holds. (2) Stock-specific filters (volume > 1.5x ADV, earnings filter, bid-ask spread < 5 bps) all dropped \u2014 NIFTY index is continuously liquid and does not have earnings days. (3) Trend filter ('NIFTY 50 must not have opposing changepoint') inverted into the strategy itself \u2014 we ARE trading NIFTY directly. (4) Position sizing removed \u2014 standard \u20b91L capital per entry. (5) k and h multipliers made tunable since the original's k=0.5*sigma, h=4*sigma were calibrated on equities; index returns have different autocorrelation structure.",
   "weaknesses": [
     "CUSUM assumes a step-function shift in mean return; NIFTY regime shifts during high-freq periods can be gradual (ramping), causing cusum to cross threshold late after most of the move has occurred",
-    "At 5-second resolution, microstructure noise can trigger false CUSUM breaks — the 'just crossed' filter helps but cannot eliminate all noise-driven crossings",
+    "At 5-second resolution, microstructure noise can trigger false CUSUM breaks \u2014 the 'just crossed' filter helps but cannot eliminate all noise-driven crossings",
     "Session-level CUSUM reset means early-session signals (09:25-09:35) fire before sufficient history accumulates, potentially lower quality"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_330.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-60 min",
-    "original_indicators": ["Return_1min", "Rolling_Mean_Return(30)", "CUSUM_Pos", "CUSUM_Neg", "CUSUM_Threshold(4*sigma)"],
+    "original_indicators": [
+      "Return_1min",
+      "Rolling_Mean_Return(30)",
+      "CUSUM_Pos",
+      "CUSUM_Neg",
+      "CUSUM_Threshold(4*sigma)"
+    ],
     "original_stop": "25 bps from entry",
     "original_target": "45 bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

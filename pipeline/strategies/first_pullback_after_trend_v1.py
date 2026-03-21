@@ -187,8 +187,8 @@ class Strategy(BaseStrategy):
             buy_pe=buy_pe,
             sell_ce=np.zeros(n, dtype=bool),
             sell_pe=np.zeros(n, dtype=bool),
-            stop_points=np.full(n, 4.0),
-            target_points=np.full(n, 7.0),
+            stop_points=np.full(n, 5),
+            target_points=np.full(n, 8),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=24,        # 120-second max hold
             max_trades_per_day=3,

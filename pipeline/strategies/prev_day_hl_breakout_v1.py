@@ -25,8 +25,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("rel_vol_threshold", 1.5, 1.0, 3.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 15.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 15.0),
             TunableParam("vix_max", 24.0, 16.0, 32.0),
         ]
 
@@ -44,8 +44,8 @@ class Strategy(BaseStrategy):
         time_min = spot_df["time_minutes"].to_numpy()
 
         rel_vol_threshold = params.get("rel_vol_threshold", 1.5)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
         vix_max = params.get("vix_max", 24.0)
 
         # ── Previous day high / low ──────────────────────────────────────────

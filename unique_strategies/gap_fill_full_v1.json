@@ -2,14 +2,23 @@
   "name": "gap_fill_full_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["gap", "gap_fill", "mean_reversion", "opening", "vwap"],
+  "tags": [
+    "gap",
+    "gap_fill",
+    "mean_reversion",
+    "opening",
+    "vwap"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_199.json",
   "original_name": "gap_fill_full_v1",
-  "mechanism": "On NIFTY, overnight gaps of 0.3–1.0% create a marked divergence from the prior session's institutional benchmark levels. VWAP-benchmarked algorithms (mutual funds, FIIs executing large directional mandates) begin accumulating against the gap direction from the first bar, as they receive better-than-VWAP fills when NIFTY is below (gap down) or above (gap up) the intraday VWAP. The first cross of intraday VWAP — typically 15–45 minutes after open — signals that accumulated institutional pressure has overwhelmed retail gap-chasing flow, creating a directional impulse of 15–25 NIFTY spot points over the next 30–90 seconds as momentum followers pile in behind the institutional accumulation. At 5-second resolution we enter exactly at the VWAP cross bar, capturing this first impulse rather than waiting for a full 1-minute bar confirmation.",
+  "mechanism": "On NIFTY, overnight gaps of 0.3\u20131.0% create a marked divergence from the prior session's institutional benchmark levels. VWAP-benchmarked algorithms (mutual funds, FIIs executing large directional mandates) begin accumulating against the gap direction from the first bar, as they receive better-than-VWAP fills when NIFTY is below (gap down) or above (gap up) the intraday VWAP. The first cross of intraday VWAP \u2014 typically 15\u201345 minutes after open \u2014 signals that accumulated institutional pressure has overwhelmed retail gap-chasing flow, creating a directional impulse of 15\u201325 NIFTY spot points over the next 30\u201390 seconds as momentum followers pile in behind the institutional accumulation. At 5-second resolution we enter exactly at the VWAP cross bar, capturing this first impulse rather than waiting for a full 1-minute bar confirmation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:20-10:30 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "1-3",
   "max_trades_per_day": 3,
@@ -19,7 +28,9 @@
     "vix": true,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["prev_day_close"]
+    "other": [
+      "prev_day_close"
+    ]
   },
   "indicators": [
     {
@@ -27,14 +38,14 @@
       "formula": "(today_open - prev_day_close) / prev_day_close",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Day-level gap magnitude. No lookback — computed from first bar's open vs previous session's last close. Filter: 0.3–1.0% gap in either direction. Gaps <0.3% are noise; gaps >1.0% are likely structural news events where institutional fill incentive is overridden by fundamental repricing."
+      "purpose": "Day-level gap magnitude. No lookback \u2014 computed from first bar's open vs previous session's last close. Filter: 0.3\u20131.0% gap in either direction. Gaps <0.3% are noise; gaps >1.0% are likely structural news events where institutional fill incentive is overridden by fundamental repricing."
     },
     {
       "name": "vwap_intraday",
       "formula": "cumsum(close * volume) / cumsum(volume), reset each day from 09:15",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session start. No lookback scaling needed — cumulative measure. Used to detect the first cross which marks inflection of institutional vs retail flow direction."
+      "purpose": "Cumulative VWAP from session start. No lookback scaling needed \u2014 cumulative measure. Used to detect the first cross which marks inflection of institutional vs retail flow direction."
     },
     {
       "name": "rsi_36",
@@ -63,8 +74,8 @@
       "conditions": [
         "gap_pct between -1.0% and -0.3% (gap down day: NIFTY opened below prev close)",
         "vwap_cross_bullish == True (first time NIFTY close crosses above intraday VWAP)",
-        "rsi_36 < 60 (not overbought — cross is not from extreme RSI territory)",
-        "time_minutes in [560, 630] (09:20–10:30 IST: gap fill window, avoid late crosses)",
+        "rsi_36 < 60 (not overbought \u2014 cross is not from extreme RSI territory)",
+        "time_minutes in [560, 630] (09:20\u201310:30 IST: gap fill window, avoid late crosses)",
         "vix_close < 20 (high VIX gaps are more likely structural news repricing, not sentiment)"
       ],
       "confirmation": "Close crosses above VWAP on the current 5-second bar (previous bar was below VWAP)"
@@ -73,8 +84,8 @@
       "conditions": [
         "gap_pct between 0.3% and 1.0% (gap up day: NIFTY opened above prev close)",
         "vwap_cross_bearish == True (first time NIFTY close crosses below intraday VWAP)",
-        "rsi_36 > 40 (not oversold — cross is not from extreme RSI territory)",
-        "time_minutes in [560, 630] (09:20–10:30 IST)",
+        "rsi_36 > 40 (not oversold \u2014 cross is not from extreme RSI territory)",
+        "time_minutes in [560, 630] (09:20\u201310:30 IST)",
         "vix_close < 20"
       ],
       "confirmation": "Close crosses below VWAP on the current 5-second bar (previous bar was above VWAP)"
@@ -82,38 +93,45 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). If the VWAP cross is a genuine gap fill inflection, NIFTY should not fall back more than 8 spot points below the cross level within 2 minutes — deeper retracement signals the institutional accumulation thesis has failed and gap may extend.",
-    "target_points": 7,
-    "target_rationale": "7 option pts (~14 NIFTY spot pts at delta 0.5). The first post-VWAP-cross impulse on a gap fill day covers 15–20 spot points over 30–90 seconds as momentum algos join the institutional flow. 14 pts captures the first leg conservatively (R:R 1:1.75). Full gap fill (0.5% = ~110 pts) takes hours; we only target the first impulse.",
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). If the VWAP cross is a genuine gap fill inflection, NIFTY should not fall back more than 8 spot points below the cross level within 2 minutes \u2014 deeper retracement signals the institutional accumulation thesis has failed and gap may extend.",
+    "target_points": 8.0,
+    "target_rationale": "7 option pts (~14 NIFTY spot pts at delta 0.5). The first post-VWAP-cross impulse on a gap fill day covers 15\u201320 spot points over 30\u201390 seconds as momentum algos join the institutional flow. 14 pts captures the first leg conservatively (R:R 1:1.75). Full gap fill (0.5% = ~110 pts) takes hours; we only target the first impulse.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
   },
   "filters": {
     "vix_filter": "India VIX < 20; VIX >= 20 implies macro-driven gap likely to extend rather than fill",
-    "time_filter": "09:20–10:30 IST only; gap fill momentum crosses outside this window are too late in the session to be reliable",
-    "volume_filter": "none — index volume is noisy; VWAP cross captures volume implicitly",
-    "trend_filter": "none — strategy is inherently counter-trend (fading the gap direction)",
-    "spread_filter": "none — limit order execution at candle close, no spread cost"
+    "time_filter": "09:20\u201310:30 IST only; gap fill momentum crosses outside this window are too late in the session to be reliable",
+    "volume_filter": "none \u2014 index volume is noisy; VWAP cross captures volume implicitly",
+    "trend_filter": "none \u2014 strategy is inherently counter-trend (fading the gap direction)",
+    "spread_filter": "none \u2014 limit order execution at candle close, no spread cost"
   },
   "edge": {
     "expected_bps": 25,
     "win_rate_estimate": 0.58,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.40,
-    "edge_decay_risk": "low — institutional VWAP benchmarking is structural and has persisted for decades; gap fill rates on NIFTY are well-documented at 60-70% for moderate gaps"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.76,
+    "edge_decay_risk": "low \u2014 institutional VWAP benchmarking is structural and has persisted for decades; gap fill rates on NIFTY are well-documented at 60-70% for moderate gaps"
   },
-  "adaptation_notes": "Original traded individual NIFTY50 constituent stocks; this version trades the NIFTY index directly. Key changes: (1) gap_pct computed on NIFTY index open vs prev session close, eliminating cross-sectional stock screening; (2) VWAP cross still used as confirmation entry but now on index VWAP, not stock VWAP; (3) RSI period compressed from 14 (14-min at 1-min bars) to 36 (3-min at 5s bars) to remain responsive at 5s frequency; (4) hold time compressed from 30-180 min to 30-120 sec — we capture the first VWAP-cross impulse only, not the full gap fill journey; (5) stops/targets in option premium points calibrated to 30-90s NIFTY move magnitudes rather than ATR-based. Equity-specific filters (earnings, corporate actions, stock-specific news) removed as irrelevant for index.",
+  "adaptation_notes": "Original traded individual NIFTY50 constituent stocks; this version trades the NIFTY index directly. Key changes: (1) gap_pct computed on NIFTY index open vs prev session close, eliminating cross-sectional stock screening; (2) VWAP cross still used as confirmation entry but now on index VWAP, not stock VWAP; (3) RSI period compressed from 14 (14-min at 1-min bars) to 36 (3-min at 5s bars) to remain responsive at 5s frequency; (4) hold time compressed from 30-180 min to 30-120 sec \u2014 we capture the first VWAP-cross impulse only, not the full gap fill journey; (5) stops/targets in option premium points calibrated to 30-90s NIFTY move magnitudes rather than ATR-based. Equity-specific filters (earnings, corporate actions, stock-specific news) removed as irrelevant for index.",
   "weaknesses": [
     "NIFTY gap fill rate depends on whether the gap is sentiment-driven or structural; no reliable filter to distinguish these at entry time other than VIX",
-    "On 'trending gap' days where NIFTY gaps and continues in the gap direction all day, this strategy can lose repeatedly — the VIX<20 filter partially addresses this but doesn't eliminate it",
+    "On 'trending gap' days where NIFTY gaps and continues in the gap direction all day, this strategy can lose repeatedly \u2014 the VIX<20 filter partially addresses this but doesn't eliminate it",
     "VWAP cross signal can fire multiple times intraday; the time filter (09:20-10:30) attempts to isolate only the first meaningful cross but may still catch false crosses on volatile open"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_199.json",
     "original_timeframe": "1min",
     "original_hold_time": "30-180 mins",
-    "original_indicators": ["gap_pct", "gap_filled_pct", "vwap_dev", "RSI_14", "volume_ratio", "ATR_14"],
+    "original_indicators": [
+      "gap_pct",
+      "gap_filled_pct",
+      "vwap_dev",
+      "RSI_14",
+      "volume_ratio",
+      "ATR_14"
+    ],
     "original_stop": "gap extends by 50% from open OR 0.5 * ATR_14",
     "original_target": "price reaches prev_close (100% gap fill)"
   }

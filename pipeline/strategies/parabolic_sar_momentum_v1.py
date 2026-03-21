@@ -196,9 +196,9 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("adx_threshold", 20.0, 15.0, 30.0),
             TunableParam("vol_mult", 0.8, 0.5, 1.5),
-            TunableParam("max_flips", 3.0, 2.0, 5.0),
-            TunableParam("stop_pts", 4.0, 2.5, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("max_flips", 4.0, 2.0, 5.0),
+            TunableParam("stop_pts", 5.0, 2.5, 7.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -221,9 +221,9 @@ class Strategy(BaseStrategy):
         # ── Parameters ──────────────────────────────────────────────────
         adx_threshold = float(params.get("adx_threshold", 20.0))
         vol_mult = float(params.get("vol_mult", 0.8))
-        max_flips = int(params.get("max_flips", 3))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        max_flips = int(params.get("max_flips", 4))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # ── Indicators ──────────────────────────────────────────────────
         psar_dir = _compute_psar(high, low, af_step=0.02, af_max=0.20)

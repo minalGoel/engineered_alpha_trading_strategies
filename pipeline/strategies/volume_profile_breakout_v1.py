@@ -95,7 +95,7 @@ class Strategy(BaseStrategy):
             TunableParam("vol_ratio_threshold", 1.5, 1.1, 2.5),
             TunableParam("vix_max", 24.0, 18.0, 30.0),
             TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -118,7 +118,7 @@ class Strategy(BaseStrategy):
         vol_ratio_thr = params.get("vol_ratio_threshold", 1.5)
         vix_max_val = params.get("vix_max", 24.0)
         stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX (aligned to spot bars via asof join) ────────────────────────
         vix_close = np.full(n, 15.0)

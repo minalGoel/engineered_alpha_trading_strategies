@@ -27,8 +27,8 @@ class Strategy(BaseStrategy):
             TunableParam("vol_ratio_threshold", 1.3, 0.8, 2.5),
             TunableParam("dc_width_min_pct", 0.15, 0.05, 0.40),
             TunableParam("close_position_threshold", 0.70, 0.50, 0.90),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -46,8 +46,8 @@ class Strategy(BaseStrategy):
         vol_ratio_threshold = params.get("vol_ratio_threshold", 1.3)
         dc_width_min_pct = params.get("dc_width_min_pct", 0.15)
         close_pos_thresh = params.get("close_position_threshold", 0.70)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # --- Donchian Channel (10 minutes = 120 bars at 5s) ---
         # Uses the prior bar's channel to avoid look-ahead: at bar i, compare

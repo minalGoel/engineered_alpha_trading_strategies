@@ -2,14 +2,22 @@
   "name": "vwap_mean_reversion_v19",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "vwap", "market_maker", "microstructure"],
+  "tags": [
+    "mean_reversion",
+    "vwap",
+    "market_maker",
+    "microstructure"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_101.json",
   "original_name": "vwap_mean_reversion_v19",
-  "mechanism": "On NIFTY, moderate 20-35 spot point deviations from session VWAP (z-score roughly -1.4 to -2.0) occur 5-10 times per session. Market makers who are short gamma from weekly ATM option writing are structurally delta-long when the index sells off and must delta-hedge by buying the index within 30-60 seconds — this buying is mechanical, not discretionary. The microstructure signature of impending market-maker hedge flow is a 30-second bar range contraction (the selling wave exhausts: the 6-bar high-low range shrinks relative to the prior 2-minute range) combined with the close near the top of that compressed range (buyers absorbing the last sellers). We enter at the first 5-second bar showing this basing pattern while the VWAP deviation is in the moderate zone, entering faster than v18's dev_momentum approach which waits a full 2 minutes for zscore improvement to confirm.",
+  "mechanism": "On NIFTY, moderate 20-35 spot point deviations from session VWAP (z-score roughly -1.4 to -2.0) occur 5-10 times per session. Market makers who are short gamma from weekly ATM option writing are structurally delta-long when the index sells off and must delta-hedge by buying the index within 30-60 seconds \u2014 this buying is mechanical, not discretionary. The microstructure signature of impending market-maker hedge flow is a 30-second bar range contraction (the selling wave exhausts: the 6-bar high-low range shrinks relative to the prior 2-minute range) combined with the close near the top of that compressed range (buyers absorbing the last sellers). We enter at the first 5-second bar showing this basing pattern while the VWAP deviation is in the moderate zone, entering faster than v18's dev_momentum approach which waits a full 2 minutes for zscore improvement to confirm.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:15 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "4-8",
   "max_trades_per_day": 8,
@@ -27,51 +35,51 @@
       "formula": "cumsum(close * volume) / cumsum(volume), reset each session day",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Session-cumulative VWAP from open — no scaling needed. This is the benchmark that VWAP-mandated institutional and market-maker algos target; its cumulative nature means it naturally integrates the entire session's price-volume history."
+      "purpose": "Session-cumulative VWAP from open \u2014 no scaling needed. This is the benchmark that VWAP-mandated institutional and market-maker algos target; its cumulative nature means it naturally integrates the entire session's price-volume history."
     },
     {
       "name": "vwap_stddev_240",
       "formula": "STDDEV(close - vwap, 240)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Rolling 20-minute (240 bars × 5s) standard deviation of (close - VWAP). Shorter than v18's 360-bar window because moderate deviations are more frequent and we want the z-score threshold responsive to the current intraday volatility regime, not a 30-minute average. The 20-min window reacts to regime changes within roughly 2-3 deviation cycles."
+      "purpose": "Rolling 20-minute (240 bars \u00d7 5s) standard deviation of (close - VWAP). Shorter than v18's 360-bar window because moderate deviations are more frequent and we want the z-score threshold responsive to the current intraday volatility regime, not a 30-minute average. The 20-min window reacts to regime changes within roughly 2-3 deviation cycles."
     },
     {
       "name": "vwap_zscore",
       "formula": "(close - vwap) / max(vwap_stddev_240, 0.5)",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Session-normalized VWAP deviation. Used to gate entry to the moderate deviation zone (z < -1.4 to -2.0 for buy_ce). Replaces the original's raw STDDEV(close, 20) normalization — deviations from VWAP have a more stationary distribution than raw price volatility."
+      "purpose": "Session-normalized VWAP deviation. Used to gate entry to the moderate deviation zone (z < -1.4 to -2.0 for buy_ce). Replaces the original's raw STDDEV(close, 20) normalization \u2014 deviations from VWAP have a more stationary distribution than raw price volatility."
     },
     {
       "name": "bar_range_6",
       "formula": "max(high, 6) - min(low, 6)",
       "lookback": 6,
       "computed_on": "spot",
-      "purpose": "30-second (6 bars × 5s) high-low range. Captures the current selling wave's intensity. Range contraction relative to the 2-minute window signals exhaustion. Chosen at 30 seconds because that is the natural time scale for a single selling wave before a pause in NIFTY's intraday microstructure."
+      "purpose": "30-second (6 bars \u00d7 5s) high-low range. Captures the current selling wave's intensity. Range contraction relative to the 2-minute window signals exhaustion. Chosen at 30 seconds because that is the natural time scale for a single selling wave before a pause in NIFTY's intraday microstructure."
     },
     {
       "name": "bar_range_24",
       "formula": "max(high, 24) - min(low, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute (24 bars × 5s) high-low range as reference baseline. Comparing 30s range to 2-min range isolates RECENT range contraction from longer-term move size. If the last 30 seconds are compressed vs. the last 2 minutes, selling is exhausting."
+      "purpose": "2-minute (24 bars \u00d7 5s) high-low range as reference baseline. Comparing 30s range to 2-min range isolates RECENT range contraction from longer-term move size. If the last 30 seconds are compressed vs. the last 2 minutes, selling is exhausting."
     },
     {
       "name": "close_vs_low_6",
       "formula": "(close - min(low, 6)) / max(bar_range_6, 0.5)",
       "lookback": 6,
       "computed_on": "spot",
-      "purpose": "Close position within the 30-second range (0=at range low, 1=at range high). A value > 0.6 (close in upper 40% of range) while selling pressure is still present signals that buyers are absorbing supply — the classic basing pattern before a bounce."
+      "purpose": "Close position within the 30-second range (0=at range low, 1=at range high). A value > 0.6 (close in upper 40% of range) while selling pressure is still present signals that buyers are absorbing supply \u2014 the classic basing pattern before a bounce."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "close < vwap (index below fair value — precondition for reversion)",
+        "close < vwap (index below fair value \u2014 precondition for reversion)",
         "vwap_zscore < -zscore_thresh (moderate to deep VWAP deviation, default threshold -1.4)",
-        "bar_range_6 / bar_range_24 < range_contraction_ratio (30s range < 70% of 2-min range — selling wave losing momentum)",
-        "close_vs_low_6 > close_position_threshold (close in upper 60% of 30s range — buyers absorbing sellers)"
+        "bar_range_6 / bar_range_24 < range_contraction_ratio (30s range < 70% of 2-min range \u2014 selling wave losing momentum)",
+        "close_vs_low_6 > close_position_threshold (close in upper 60% of 30s range \u2014 buyers absorbing sellers)"
       ],
       "confirmation": "Range contraction + close-near-high jointly signal selling exhaustion and incipient buyer control"
     },
@@ -80,7 +88,7 @@
         "close > vwap (index above fair value)",
         "vwap_zscore > zscore_thresh (moderate to deep positive deviation)",
         "bar_range_6 / bar_range_24 < range_contraction_ratio (buying wave losing momentum)",
-        "close_vs_low_6 < (1 - close_position_threshold) (close in lower 40% of 30s range — sellers absorbing buyers)"
+        "close_vs_low_6 < (1 - close_position_threshold) (close in lower 40% of 30s range \u2014 sellers absorbing buyers)"
       ],
       "confirmation": "Range contraction + close-near-low jointly signal buying exhaustion and incipient seller control"
     },
@@ -88,39 +96,44 @@
   },
   "exit": {
     "stop_points": 4,
-    "stop_rationale": "4 option points = 8 spot points at delta 0.5. Moderate VWAP deviations of 20-35 NIFTY spot points occasionally deepen into v18 territory (40+ pts) if a macro catalyst is present — a 4-pt stop exits at that boundary, before the moderate-deviation thesis is clearly violated. Tighter than v18's 6 pts because if basing detection fires and then price resumes falling past 8 spot pts, the market-maker hedge thesis has failed.",
+    "stop_rationale": "4 option points = 8 spot points at delta 0.5. Moderate VWAP deviations of 20-35 NIFTY spot points occasionally deepen into v18 territory (40+ pts) if a macro catalyst is present \u2014 a 4-pt stop exits at that boundary, before the moderate-deviation thesis is clearly violated. Tighter than v18's 6 pts because if basing detection fires and then price resumes falling past 8 spot pts, the market-maker hedge thesis has failed.",
     "target_points": 6,
     "target_rationale": "6 option points = 12 spot points at delta 0.5. A 20-35 pt NIFTY moderate deviation bounces 40-50% on market-maker hedging (8-17 spot pts); capturing 12 pts targets the lower half of this range for a conservative 1:1.5 R:R, consistent with 4-8 trades per day providing frequency-based edge.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:15 IST"
   },
   "filters": {
-    "vix_filter": "none — moderate deviations occur in all VIX regimes; market-maker delta-hedging is mechanical regardless of VIX",
+    "vix_filter": "none \u2014 moderate deviations occur in all VIX regimes; market-maker delta-hedging is mechanical regardless of VIX",
     "time_filter": "09:30-15:15 IST; skip first 15 minutes for VWAP to establish meaningful baseline",
-    "volume_filter": "none — NIFTY index volume is noisy; basing microstructure (range contraction + close position) is a cleaner signal",
-    "trend_filter": "none — VWAP z-score is session-normalized; handles trending days implicitly through the moderate deviation zone",
-    "spread_filter": "none — limit order execution at candle close, no spread cost"
+    "volume_filter": "none \u2014 NIFTY index volume is noisy; basing microstructure (range contraction + close position) is a cleaner signal",
+    "trend_filter": "none \u2014 VWAP z-score is session-normalized; handles trending days implicitly through the moderate deviation zone",
+    "spread_filter": "none \u2014 limit order execution at candle close, no spread cost"
   },
   "edge": {
     "expected_bps": 14,
     "win_rate_estimate": 0.55,
     "avg_winner_to_loser": 1.5,
     "profit_factor_estimate": 1.84,
-    "edge_decay_risk": "medium — market-maker delta-hedging is structural but moderate deviations occur in both mean-reverting and trending contexts; basing filter reduces but does not eliminate false signals on trending days"
+    "edge_decay_risk": "medium \u2014 market-maker delta-hedging is structural but moderate deviations occur in both mean-reverting and trending contexts; basing filter reduces but does not eliminate false signals on trending days"
   },
-  "adaptation_notes": "Original strategy: nifty50 stocks, 1-min bars, z-score < -2.1, rel_volume > 1.7, 10-30 bar hold. Three key changes: (1) Universe → NIFTY index: market-maker short-gamma hedging is strongest on the index, where a single delta-hedge covers all legs simultaneously. (2) Basing microstructure replaces relative volume: original's rel_volume > 1.7 detects panic selling on individual stocks; on NIFTY index, volume is contaminated by basket/derivatives roll activity. The 30-second range contraction + close position in range is a direct microstructure proxy for the same exhaustion signal. (3) z-score threshold lowered to -1.4 (from -2.1): at 5-second resolution on the index, moderate deviations are tradeable because we can enter when basing begins rather than waiting for the full panic to develop. This differentiates v19 from v18 (deep deviation, dev_momentum confirmation): v19 targets the smaller, more frequent bounces using a leading (microstructure basing) rather than lagging (momentum turning) confirmation. Lookback for stddev shortened to 240 bars (20 min) from v18's 360 for faster regime responsiveness at higher trade frequency.",
+  "adaptation_notes": "Original strategy: nifty50 stocks, 1-min bars, z-score < -2.1, rel_volume > 1.7, 10-30 bar hold. Three key changes: (1) Universe \u2192 NIFTY index: market-maker short-gamma hedging is strongest on the index, where a single delta-hedge covers all legs simultaneously. (2) Basing microstructure replaces relative volume: original's rel_volume > 1.7 detects panic selling on individual stocks; on NIFTY index, volume is contaminated by basket/derivatives roll activity. The 30-second range contraction + close position in range is a direct microstructure proxy for the same exhaustion signal. (3) z-score threshold lowered to -1.4 (from -2.1): at 5-second resolution on the index, moderate deviations are tradeable because we can enter when basing begins rather than waiting for the full panic to develop. This differentiates v19 from v18 (deep deviation, dev_momentum confirmation): v19 targets the smaller, more frequent bounces using a leading (microstructure basing) rather than lagging (momentum turning) confirmation. Lookback for stddev shortened to 240 bars (20 min) from v18's 360 for faster regime responsiveness at higher trade frequency.",
   "weaknesses": [
-    "Strong one-directional trending days will trigger repeated false entries — basing signals occur within a trend, not just at reversals",
+    "Strong one-directional trending days will trigger repeated false entries \u2014 basing signals occur within a trend, not just at reversals",
     "VWAP stddev needs 20 min of warmup; z-scores in first 20 min are unreliable",
     "Bar range contraction can be triggered by low-liquidity periods (lunch, pre-close) rather than genuine exhaustion",
-    "Overlap with v18: when deviations reach v18 territory (>1.7 sigma), both strategies may fire simultaneously — position concentration risk if running both"
+    "Overlap with v18: when deviations reach v18 territory (>1.7 sigma), both strategies may fire simultaneously \u2014 position concentration risk if running both"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_101.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-30 bars (10-30 minutes)",
-    "original_indicators": ["vwap", "vwap_zscore (STDDEV close 20)", "rel_volume (SMA 20)"],
+    "original_indicators": [
+      "vwap",
+      "vwap_zscore (STDDEV close 20)",
+      "rel_volume (SMA 20)"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "VWAP touch"
-  }
+  },
+  "vix_agnostic": true
 }

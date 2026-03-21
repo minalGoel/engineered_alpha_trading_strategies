@@ -150,8 +150,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("adx_threshold", 18.0, 12.0, 30.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -179,8 +179,8 @@ class Strategy(BaseStrategy):
 
         # --- Parameters ---
         adx_threshold = float(params.get("adx_threshold", 18.0))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # --- Indicators ---
         # ADX(36) = 3-minute trend strength

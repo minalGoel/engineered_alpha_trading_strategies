@@ -2,14 +2,22 @@
   "name": "multi_factor_composite_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["composite", "multi_factor", "mean_reversion", "consensus"],
+  "tags": [
+    "composite",
+    "multi_factor",
+    "mean_reversion",
+    "consensus"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_92.json",
   "original_name": "multi_factor_composite_v1",
-  "mechanism": "On NIFTY, sharp 30-90 second institutional selling episodes create a simultaneous multi-signal footprint: price drops below the intraday VWAP (VWAP z-score turns deeply negative), the 2-minute RSI enters oversold territory as the speed of descent triggers fast oscillators, and 3-minute momentum confirms the downward impulse. When all three of these independently-computed signals reach extreme readings simultaneously, it indicates algorithmic stop-loss cascades have temporarily overwhelmed NIFTY's resting buy-side order flow — creating a reversion setup as VWAP-benchmarked algorithms and market makers begin accumulating at far-from-fair-value prices. The volume amplifier ensures we only act on confirmed institutional activity, not noise.",
+  "mechanism": "On NIFTY, sharp 30-90 second institutional selling episodes create a simultaneous multi-signal footprint: price drops below the intraday VWAP (VWAP z-score turns deeply negative), the 2-minute RSI enters oversold territory as the speed of descent triggers fast oscillators, and 3-minute momentum confirms the downward impulse. When all three of these independently-computed signals reach extreme readings simultaneously, it indicates algorithmic stop-loss cascades have temporarily overwhelmed NIFTY's resting buy-side order flow \u2014 creating a reversion setup as VWAP-benchmarked algorithms and market makers begin accumulating at far-from-fair-value prices. The volume amplifier ensures we only act on confirmed institutional activity, not noise.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:25 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-8",
   "max_trades_per_day": 8,
@@ -27,7 +35,7 @@
       "formula": "cumulative(close * volume) / cumulative(volume), reset daily",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Cumulative VWAP from session open — no lookback needed, resets each day. The reference price all institutional algorithms benchmark against."
+      "purpose": "Cumulative VWAP from session open \u2014 no lookback needed, resets each day. The reference price all institutional algorithms benchmark against."
     },
     {
       "name": "vwap_zscore",
@@ -48,14 +56,14 @@
       "formula": "clip(volume / SMA(volume, 120) - 1, -1, 1)",
       "lookback": 120,
       "computed_on": "spot",
-      "purpose": "Relative volume vs 120-bar (10-min) baseline. Original used SMA(20) on 1-min = 20-min baseline. 10 min on 5s bars is comparable — establishes the typical volume level for the current part of the session. Acts as confidence multiplier: signals during high-volume bars are more reliable."
+      "purpose": "Relative volume vs 120-bar (10-min) baseline. Original used SMA(20) on 1-min = 20-min baseline. 10 min on 5s bars is comparable \u2014 establishes the typical volume level for the current part of the session. Acts as confidence multiplier: signals during high-volume bars are more reliable."
     },
     {
       "name": "momentum_36",
       "formula": "(close - close[36]) / close[36]",
       "lookback": 36,
       "computed_on": "spot",
-      "purpose": "3-minute (36-bar) raw return. Replaces the original's index_alignment signal since we ARE trading NIFTY — no need for cross-asset alignment. 3-min momentum captures the directional impulse we are fading: if NIFTY has been falling for 3 min, our oversold buy is more justified. Scaled to [-1,1] by dividing by 0.003 (0.3% = extreme 3-min NIFTY move)."
+      "purpose": "3-minute (36-bar) raw return. Replaces the original\u2019s index_alignment signal since we ARE trading NIFTY \u2014 no need for cross-asset alignment. 3-min momentum captures the directional impulse we are fading: if NIFTY has been falling for 3 min, our oversold buy is more justified. Normalized to [\u22121,1] by dividing by 0.003 (0.3% = extreme 3-min NIFTY move). The consensus sub-signal threshold of \u00b10.05 on the normalized value corresponds to \u00b10.015% raw return \u2014 a mild directional filter intentionally set loose to preserve trade frequency in this mean-reversion strategy."
     },
     {
       "name": "vix_regime_score",
@@ -76,7 +84,7 @@
     "buy_ce": {
       "conditions": [
         "composite_score > composite_threshold (default 1.5)",
-        "at least 2 of 3 directional sub-signals confirm oversold: (vwap_zscore < -0.1) AND/OR (rsi < 50) AND/OR (3-min momentum < -0.05%)",
+        "at least 2 of 3 directional sub-signals confirm oversold: (vwap_zscore < -0.1) AND/OR (rsi < 50) AND/OR (momentum_norm < -0.05) \u2014 where momentum_norm = raw_3min_return / 0.003, so -0.05 normalized corresponds to -0.015% raw 3-minute return (mild directional confirmation, intentionally loose to preserve trade frequency in a mean-reversion strategy)",
         "in_session: 09:30-15:25 IST"
       ],
       "confirmation": "All conditions met simultaneously on a single 5s bar close"
@@ -84,7 +92,7 @@
     "buy_pe": {
       "conditions": [
         "composite_score < -composite_threshold (default -1.5)",
-        "at least 2 of 3 directional sub-signals confirm overbought: (vwap_zscore > 0.1) AND/OR (rsi > 50) AND/OR (3-min momentum > 0.05%)",
+        "at least 2 of 3 directional sub-signals confirm overbought: (vwap_zscore > 0.1) AND/OR (rsi > 50) AND/OR (momentum_norm > 0.05) \u2014 where momentum_norm = raw_3min_return / 0.003, so +0.05 normalized corresponds to +0.015% raw 3-minute return (symmetric with buy_ce threshold)",
         "in_session: 09:30-15:25 IST"
       ],
       "confirmation": "All conditions met simultaneously on a single 5s bar close"
@@ -92,9 +100,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option points = ~8 NIFTY spot points. If a multi-signal oversold reading is genuinely at a reversion point, NIFTY should not continue adverse by >8 spot pts within 15-120s. If it does, the selldown is structural (e.g., macro event) not a fading opportunity — aligned with typical 2-min adverse move of 5-10 pts (Table 10.4).",
-    "target_points": 7,
+    "stop_points": 3.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points. If a multi-signal oversold reading is genuinely at a reversion point, NIFTY should not continue adverse by >8 spot pts within 15-120s. If it does, the selldown is structural (e.g., macro event) not a fading opportunity \u2014 aligned with typical 2-min adverse move of 5-10 pts (Table 10.4).",
+    "target_points": 6.0,
     "target_rationale": "7 option points = ~14 NIFTY spot points. A genuine multi-signal oversold reversion on NIFTY typically bounces 15-25 spot pts in the first 1-2 minutes; 7 option pts captures ~60% of the median bounce at 1:1.75 R:R, leaving upside on the table but ensuring a reasonable hit rate.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25 IST"
@@ -104,28 +112,34 @@
     "time_filter": "09:30-15:25 IST (skip pre-open noise and EOD liquidity squeeze)",
     "volume_filter": "Relative volume amplifier: signal scaled by 1.0 + 0.3 * clip(rel_vol, 0, 1)",
     "trend_filter": "3-min momentum incorporated as directional sub-signal",
-    "spread_filter": "N/A — limit order execution at candle close"
+    "spread_filter": "N/A \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 20,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.31,
-    "edge_decay_risk": "low — multi-factor consensus harder to crowd than single-indicator strategies; mean reversion at extreme readings is a structural market microstructure edge"
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.35,
+    "edge_decay_risk": "low \u2014 multi-factor consensus harder to crowd than single-indicator strategies; mean reversion at extreme readings is a structural market microstructure edge"
   },
-  "adaptation_notes": "Original was on FnO stocks at 1-min bars holding 15-90 min. Three key changes: (1) Replaced index_alignment signal with 3-min NIFTY momentum since we ARE trading the index — no cross-asset alignment needed. (2) Compressed RSI from 14-min to 2-min, and VWAP z-score window from 60-min to 10-min, because our hold time is 15-120s not 15-90 min. (3) The original had trailing stops and composite-cross exits — replaced with fixed stop/target in premium points because 5s holds cannot track composite score evolution. Volume remains as amplifier not consensus signal since at 5s bars NIFTY volume is noisy.",
+  "adaptation_notes": "Original was on FnO stocks at 1-min bars holding 15-90 min. Three key changes: (1) Replaced index_alignment signal with 3-min NIFTY momentum since we ARE trading the index \u2014 no cross-asset alignment needed. (2) Compressed RSI from 14-min to 2-min, and VWAP z-score window from 60-min to 10-min, because our hold time is 15-120s not 15-90 min. (3) The original had trailing stops and composite-cross exits \u2014 replaced with fixed stop/target in premium points because 5s holds cannot track composite score evolution. Volume remains as amplifier not consensus signal since at 5s bars NIFTY volume is noisy.",
   "weaknesses": [
-    "NIFTY 5s volume is extremely noisy — relative volume signal may fire on cross-exchange arbitrage prints rather than genuine institutional flow",
-    "2-min RSI at 5s resolution has 24 samples — at the edge of statistical reliability for mean-reversion signals",
+    "NIFTY 5s volume is extremely noisy \u2014 relative volume signal may fire on cross-exchange arbitrage prints rather than genuine institutional flow",
+    "2-min RSI at 5s resolution has 24 samples \u2014 at the edge of statistical reliability for mean-reversion signals",
     "Mean reversion trades compete with the same structural edge as many algos; signals may be crowded near VWAP deviation extremes",
-    "VIX dampener introduces regime dependence — strategy will be muted during high-volatility sessions when most mean-reversion setups actually occur"
+    "VIX dampener introduces regime dependence \u2014 strategy will be muted during high-volatility sessions when most mean-reversion setups actually occur"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_92.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-90 bars (15-90 min)",
-    "original_indicators": ["vwap_zscore(60)", "rsi_14_scaled", "rel_volume_scaled(20)", "index_alignment(15)", "vix_regime"],
-    "original_stop": "0.5% from entry OR composite hits ±3.0",
+    "original_indicators": [
+      "vwap_zscore(60)",
+      "rsi_14_scaled",
+      "rel_volume_scaled(20)",
+      "index_alignment(15)",
+      "vix_regime"
+    ],
+    "original_stop": "0.5% from entry OR composite hits \u00b13.0",
     "original_target": "composite_score crosses 0"
   }
 }

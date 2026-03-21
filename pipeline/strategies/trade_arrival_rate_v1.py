@@ -32,8 +32,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("vol_ratio_threshold", 2.0, 1.5, 3.5),
             TunableParam("price_impact_threshold", 0.002, 0.001, 0.005),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 12.0),
         ]
 
     def compute(
@@ -57,8 +57,8 @@ class Strategy(BaseStrategy):
         # ── Parameters ────────────────────────────────────────────────────────
         vol_ratio_thr = float(params.get("vol_ratio_threshold", 2.0))
         price_impact_thr = float(params.get("price_impact_threshold", 0.002))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 5.0))
+        target_pts = float(params.get("target_pts", 8.0))
 
         # ── 1. 3-bar (15s) rolling volume sum ─────────────────────────────────
         vol_15s = np.zeros(n)

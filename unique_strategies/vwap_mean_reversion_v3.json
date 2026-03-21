@@ -2,14 +2,23 @@
   "name": "vwap_mean_reversion_v3",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["mean_reversion", "vwap", "extreme_deviation", "capitulation", "volume_confirmation"],
+  "tags": [
+    "mean_reversion",
+    "vwap",
+    "extreme_deviation",
+    "capitulation",
+    "volume_confirmation"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_93.json",
   "original_name": "vwap_mean_reversion_v3",
-  "mechanism": "On NIFTY, z-score deviations beyond ±2.7 from session VWAP occur roughly once per session and represent capitulation events — retail margin calls and stop-loss cascades push the index 80-120 spot points below VWAP, accompanied by a visible volume surge as forced sellers hit the bid. At this extreme three distinct buyer types converge simultaneously: VWAP-benchmarked institutional algorithms crossing their urgency threshold, options dealers short puts who must buy delta as gamma accelerates, and stat-arb desks exploiting index mispricing vs. component futures. The snap-back is sharp (20-40 spot points in 30-90 seconds) because supply thin out immediately after the panic flush. The volume surge confirmation distinguishes genuine capitulation from slow directional drift that can continue.",
+  "mechanism": "On NIFTY, z-score deviations beyond \u00b12.7 from session VWAP occur roughly once per session and represent capitulation events \u2014 retail margin calls and stop-loss cascades push the index 80-120 spot points below VWAP, accompanied by a visible volume surge as forced sellers hit the bid. At this extreme three distinct buyer types converge simultaneously: VWAP-benchmarked institutional algorithms crossing their urgency threshold, options dealers short puts who must buy delta as gamma accelerates, and stat-arb desks exploiting index mispricing vs. component futures. The snap-back is sharp (20-40 spot points in 30-90 seconds) because supply thin out immediately after the panic flush. The volume surge confirmation distinguishes genuine capitulation from slow directional drift that can continue.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:20 IST",
-  "hold_time_seconds": [30, 120],
+  "hold_time_seconds": [
+    30,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "1-4",
   "max_trades_per_day": 6,
@@ -27,7 +36,7 @@
       "formula": "cumulative_sum(typical_price * volume) / cumulative_sum(volume), reset at session open",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Session VWAP is cumulative — no scaling needed. Acts as the institutional benchmark that algorithmic buyers defend."
+      "purpose": "Session VWAP is cumulative \u2014 no scaling needed. Acts as the institutional benchmark that algorithmic buyers defend."
     },
     {
       "name": "vwap_stddev_360",
@@ -41,7 +50,7 @@
       "formula": "volume[i] / mean(volume[i-24:i])",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute relative volume (24 bars) to detect panic-driven volume surges. The original used 10-bar 1-min (10 min average), but at 5s bars a 10-min average baseline misses intra-session surges. 2-min (24 bars) captures the specific micro-panic burst right around the capitulation candles — which is the distinguishing signal between genuine panic and slow drift to VWAP extreme."
+      "purpose": "2-minute relative volume (24 bars) to detect panic-driven volume surges. The original used 10-bar 1-min (10 min average), but at 5s bars a 10-min average baseline misses intra-session surges. 2-min (24 bars) captures the specific micro-panic burst right around the capitulation candles \u2014 which is the distinguishing signal between genuine panic and slow drift to VWAP extreme."
     }
   ],
   "entry": {
@@ -69,37 +78,42 @@
     "stop_points": 7,
     "stop_rationale": "7 option pts (~14 spot pts at delta 0.5) because at z-score -2.7 the expected snap-back is 20-40 spot pts; a continued decline of 14+ spot pts post-entry signals this is a trending/structural move not a capitulation overshoot, invalidating the thesis. Wider than v18 (stop=6) to accommodate the rarer, more volatile extreme events targeted here.",
     "target_points": 12,
-    "target_rationale": "12 option pts (~24 spot pts) captures roughly 25-30% of the expected 80-120 spot pt deviation reversion in the first 30-90 seconds. Conservative capture ratio (vs. full reversion to VWAP) because mean reversion on NIFTY rarely completes in a single burst — we take the fast first leg. Gives 1:1.7 R:R.",
+    "target_rationale": "12 option pts (~24 spot pts) captures roughly 25-30% of the expected 80-120 spot pt deviation reversion in the first 30-90 seconds. Conservative capture ratio (vs. full reversion to VWAP) because mean reversion on NIFTY rarely completes in a single burst \u2014 we take the fast first leg. Gives 1:1.7 R:R.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:20 IST"
   },
   "filters": {
-    "vix_filter": "none — extreme VWAP deviations occur in both high and low VIX regimes; applying VIX filter would reduce an already-rare signal",
+    "vix_filter": "none \u2014 extreme VWAP deviations occur in both high and low VIX regimes; applying VIX filter would reduce an already-rare signal",
     "time_filter": "09:30-15:20 IST only; first 15 minutes excluded to allow VWAP and stddev to stabilize",
-    "volume_filter": "rel_volume_24 > 1.7 is the core volume confirmation — distinguishes panic from drift",
-    "trend_filter": "none — this strategy FADES the extreme move, trend alignment would contradict the thesis",
-    "spread_filter": "none — limit order execution at close prices"
+    "volume_filter": "rel_volume_24 > 1.7 is the core volume confirmation \u2014 distinguishes panic from drift",
+    "trend_filter": "none \u2014 this strategy FADES the extreme move, trend alignment would contradict the thesis",
+    "spread_filter": "none \u2014 limit order execution at close prices"
   },
   "edge": {
     "expected_bps": 25,
-    "win_rate_estimate": 0.60,
+    "win_rate_estimate": 0.6,
     "avg_winner_to_loser": 1.7,
     "profit_factor_estimate": 2.55,
-    "edge_decay_risk": "medium — behavioral panic patterns are persistent but SEBI circuit breakers and algo risk controls may reduce extreme deviations over time"
+    "edge_decay_risk": "medium \u2014 behavioral panic patterns are persistent but SEBI circuit breakers and algo risk controls may reduce extreme deviations over time"
   },
   "adaptation_notes": "Differentiated from vwap_mean_reversion_v18 (deep reversion, z<-1.7, dev_momentum trigger, stop=6/target=10) and vwap_mean_reversion_v19 (moderate 20-35pt deviations, microstructure basing with bar_range + close_vs_low, stop=4/target=6). This v3 targets the rarest, most extreme deviations (z<-2.7) with a VOLUME SURGE confirmation that is absent from both prior versions. The mechanism is multi-buyer convergence rather than single-institution accumulation (v18) or gamma-hedger fade (v19). Wider stop (7 vs 6) and larger target (12 vs 10) reflect the more explosive but less frequent nature of 2.7-sigma events. lookback_std compressed from 50 1-min bars (50 min) to 360 5s bars (30 min) for session responsiveness. rel_volume lookback compressed from 10 1-min bars (10 min) to 24 5s bars (2 min) to detect the acute burst rather than a 10-minute baseline.",
   "weaknesses": [
-    "Signal fires very rarely (1-4x/day at z>2.7 threshold) — low trade count limits statistical significance in short backtests",
+    "Signal fires very rarely (1-4x/day at z>2.7 threshold) \u2014 low trade count limits statistical significance in short backtests",
     "Flash crashes may gap through stop before execution",
-    "VWAP stddev can be artificially low in the first 30 minutes, inflating z-scores — session start filter mitigates this",
+    "VWAP stddev can be artificially low in the first 30 minutes, inflating z-scores \u2014 session start filter mitigates this",
     "On expiry days, extreme deviations may not revert if caused by options settlement hedging flows"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_93.json",
     "original_timeframe": "1min",
     "original_hold_time": "5-15 bars (5-15 min)",
-    "original_indicators": ["vwap", "vwap_zscore (lookback 50)", "rel_volume (lookback 10)"],
+    "original_indicators": [
+      "vwap",
+      "vwap_zscore (lookback 50)",
+      "rel_volume (lookback 10)"
+    ],
     "original_stop": "1.5 * ATR(14) below entry",
     "original_target": "vwap touch"
-  }
+  },
+  "vix_agnostic": true
 }

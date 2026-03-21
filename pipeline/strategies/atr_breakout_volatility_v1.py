@@ -30,8 +30,8 @@ class Strategy(BaseStrategy):
             TunableParam("atr_multiplier",      2.0, 1.5, 3.0),
             TunableParam("atr_ratio_threshold", 1.2, 1.05, 1.6),
             TunableParam("vol_ratio_threshold", 1.3, 1.1, 2.0),
-            TunableParam("stop_pts",            4.0, 2.0, 8.0),
-            TunableParam("target_pts",          7.0, 4.0, 15.0),
+            TunableParam("stop_pts",            5.0, 2.0, 8.0),
+            TunableParam("target_pts",          8.0, 4.0, 15.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -48,8 +48,8 @@ class Strategy(BaseStrategy):
         atr_mult        = params.get("atr_multiplier",      2.0)
         atr_ratio_thresh = params.get("atr_ratio_threshold", 1.2)
         vol_ratio_thresh = params.get("vol_ratio_threshold", 1.3)
-        stop_pts        = params.get("stop_pts",            4.0)
-        target_pts      = params.get("target_pts",          7.0)
+        stop_pts        = params.get("stop_pts",            5.0)
+        target_pts      = params.get("target_pts",          8.0)
 
         # ── True Range ───────────────────────────────────────────────────────
         tr = np.empty(n)

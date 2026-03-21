@@ -2,14 +2,23 @@
   "name": "gap_to_vwap_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["gap", "vwap", "mean_reversion", "institutional_flow", "intraday"],
+  "tags": [
+    "gap",
+    "vwap",
+    "mean_reversion",
+    "institutional_flow",
+    "intraday"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_204.json",
   "original_name": "gap_to_vwap_v1",
-  "mechanism": "When NIFTY gaps and continues to deviate 20+ basis points below (or above) the developing session VWAP, VWAP-benchmarked institutional algorithms — index fund rebalancers, derivatives book delta-hedgers, and program traders tracking VWAP as their execution benchmark — begin accumulating against the gap direction to keep fills close to their VWAP target. On NIFTY, where these institutional flows are dominant and continuous, this creates a measurable first convergence thrust of 15-25 spot points within 60-90 seconds once RSI exhaustion signals the selling (or buying) pressure has peaked. At 5-second resolution we enter as the EMA(5) micro-cross confirms the institutional absorption has begun, capturing the first leg rather than waiting for the full VWAP touch. NIFTY's high liquidity and continuous two-sided institutional order flow make these reversion thrusts faster and more reliable than the original single-stock implementation.",
+  "mechanism": "When NIFTY gaps and continues to deviate 20+ basis points below (or above) the developing session VWAP, VWAP-benchmarked institutional algorithms \u2014 index fund rebalancers, derivatives book delta-hedgers, and program traders tracking VWAP as their execution benchmark \u2014 begin accumulating against the gap direction to keep fills close to their VWAP target. On NIFTY, where these institutional flows are dominant and continuous, this creates a measurable first convergence thrust of 15-25 spot points within 60-90 seconds once RSI exhaustion signals the selling (or buying) pressure has peaked. At 5-second resolution we enter as the EMA(5) micro-cross confirms the institutional absorption has begun, capturing the first leg rather than waiting for the full VWAP touch. NIFTY's high liquidity and continuous two-sided institutional order flow make these reversion thrusts faster and more reliable than the original single-stock implementation.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-14:15 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "2-6",
   "max_trades_per_day": 6,
@@ -27,7 +36,7 @@
       "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP is cumulative — no lookback period. This is the gravitational attractor that institutional VWAP-benchmarked orders target. Cumulative from 09:15 IST each day."
+      "purpose": "Session VWAP is cumulative \u2014 no lookback period. This is the gravitational attractor that institutional VWAP-benchmarked orders target. Cumulative from 09:15 IST each day."
     },
     {
       "name": "vwap_dev_bps",
@@ -80,9 +89,9 @@
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 4,
-    "stop_rationale": "4 option pts = ~8 spot pts further deviation from VWAP at delta 0.5. If NIFTY moves 8 more spot pts away from VWAP after entry, the institutional VWAP reversion we are betting on is not materializing on our timescale — the gap is extending into a trend and we must exit. Typical NIFTY 30-60s move is 2-5 option pts, so 4 pts gives enough room for one failed attempt while capping tail risk.",
-    "target_points": 7,
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts = ~8 spot pts further deviation from VWAP at delta 0.5. If NIFTY moves 8 more spot pts away from VWAP after entry, the institutional VWAP reversion we are betting on is not materializing on our timescale \u2014 the gap is extending into a trend and we must exit. Typical NIFTY 30-60s move is 2-5 option pts, so 4 pts gives enough room for one failed attempt while capping tail risk.",
+    "target_points": 8.0,
     "target_rationale": "7 option pts = ~14 spot pts convergence toward VWAP at delta 0.5. On NIFTY, the first institutional absorption thrust from a 20+ bps gap deviation typically covers 15-25 spot pts within 60-90 seconds. Targeting 14 spot pts (7 option pts) captures ~70% of the median first leg, well within the 1-2 minute typical convergence window. This gives a 1:1.75 risk-reward at the 4 pt stop.",
     "time_stop_bars": 18,
     "eod_rule": "flatten at 14:15 IST"
@@ -90,18 +99,18 @@
   "filters": {
     "vix_filter": "India VIX < 20; above 20, VWAP deviations widen and mean reversion takes longer than 90s, degrading the time-stop performance",
     "time_filter": "09:30-14:15 IST; first 15 min excluded because developing VWAP is VWAP heavily biased by gap open volume; afternoon excluded because gap-driven institutional VWAP pressure dissipates after 14:00",
-    "volume_filter": "none — NIFTY index volume is consistently liquid intraday",
-    "trend_filter": "implicitly handled by vwap_dev_bps condition — if NIFTY has been trending away from VWAP all day, the deviation threshold will be exceeded for hours and no entry will fire without RSI exhaustion",
-    "spread_filter": "not applicable — limit orders at candle close"
+    "volume_filter": "none \u2014 NIFTY index volume is consistently liquid intraday",
+    "trend_filter": "implicitly handled by vwap_dev_bps condition \u2014 if NIFTY has been trending away from VWAP all day, the deviation threshold will be exceeded for hours and no entry will fire without RSI exhaustion",
+    "spread_filter": "not applicable \u2014 limit orders at candle close"
   },
   "edge": {
     "expected_bps": 18,
-    "win_rate_estimate": 0.60,
-    "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 2.63,
-    "edge_decay_risk": "low — VWAP benchmarking is structural to institutional execution and will persist; gap-to-VWAP on NIFTY index is driven by program trading flows that are algorithmic and persistent"
+    "win_rate_estimate": 0.6,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 3.0,
+    "edge_decay_risk": "low \u2014 VWAP benchmarking is structural to institutional execution and will persist; gap-to-VWAP on NIFTY index is driven by program trading flows that are algorithmic and persistent"
   },
-  "adaptation_notes": "Original was stock-universe with 1-min bars, 10-60 min hold. Key changes: (1) Applied to NIFTY index only — the institutional VWAP-benchmark flow is even stronger on the index than individual stocks because index funds and futures arbitrageurs must execute against NIFTY VWAP constantly; (2) Hold time compressed from 10-60 min to 30-90s — we capture only the FIRST leg of reversion, entering earlier via the EMA(5) micro-cross rather than waiting for a full 1-min bar confirmation; (3) RSI compressed from 10-period 1-min bars to 12-period 5s bars (= 60s RSI) to match our trigger timescale; (4) EMA compressed from 5-period 1-min to 5-period 5s bars (25s) for fastest reliable micro-cross; (5) VIX filter strengthened to 20 (original allowed 20) because at 5s bars, high VIX sessions produce slow, grinding reversion not fast 90s thrusts; (6) Session window narrowed to 09:30-14:15 IST — first 15 min excluded because early VWAP is unreliable (original identified same weakness), afternoon excluded because gap institutional urgency dissipates.",
+  "adaptation_notes": "Original was stock-universe with 1-min bars, 10-60 min hold. Key changes: (1) Applied to NIFTY index only \u2014 the institutional VWAP-benchmark flow is even stronger on the index than individual stocks because index funds and futures arbitrageurs must execute against NIFTY VWAP constantly; (2) Hold time compressed from 10-60 min to 30-90s \u2014 we capture only the FIRST leg of reversion, entering earlier via the EMA(5) micro-cross rather than waiting for a full 1-min bar confirmation; (3) RSI compressed from 10-period 1-min bars to 12-period 5s bars (= 60s RSI) to match our trigger timescale; (4) EMA compressed from 5-period 1-min to 5-period 5s bars (25s) for fastest reliable micro-cross; (5) VIX filter strengthened to 20 (original allowed 20) because at 5s bars, high VIX sessions produce slow, grinding reversion not fast 90s thrusts; (6) Session window narrowed to 09:30-14:15 IST \u2014 first 15 min excluded because early VWAP is unreliable (original identified same weakness), afternoon excluded because gap institutional urgency dissipates.",
   "weaknesses": [
     "On strong trend days where NIFTY opens gap-down and keeps falling, institutional VWAP algos may be overridden by directional macro flow, producing false reversion signals",
     "The EMA(5) micro-cross at 25 seconds can fire multiple times in consolidation, triggering multiple entries before the real reversion begins; max_trades_per_day=6 limits damage",
@@ -112,7 +121,14 @@
     "original_file": "trading_strategies/unique_strategies_all/Strategy_204.json",
     "original_timeframe": "1min",
     "original_hold_time": "10-60 mins",
-    "original_indicators": ["vwap", "vwap_dev_bps", "RSI_10", "EMA_5", "vwap_slope", "gap_pct"],
+    "original_indicators": [
+      "vwap",
+      "vwap_dev_bps",
+      "RSI_10",
+      "EMA_5",
+      "vwap_slope",
+      "gap_pct"
+    ],
     "original_stop": "vwap_dev_bps exceeds 40bps against position OR 0.4% from entry",
     "original_target": "price touches VWAP (vwap_dev_bps crosses 0)"
   }

@@ -156,8 +156,8 @@ class Strategy(BaseStrategy):
             TunableParam("rsi_low", 15.0, 8.0, 25.0),
             TunableParam("rsi_high", 85.0, 75.0, 92.0),
             TunableParam("adx_max", 22.0, 15.0, 30.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -175,8 +175,8 @@ class Strategy(BaseStrategy):
         rsi_low = params.get("rsi_low", 15.0)
         rsi_high = params.get("rsi_high", 85.0)
         adx_max = params.get("adx_max", 22.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # Session VWAP deviation — cumulative, resets each day
         vwap_dev = _compute_vwap_deviation(close, volume, day_id)

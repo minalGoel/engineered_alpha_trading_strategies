@@ -78,8 +78,8 @@ class Strategy(BaseStrategy):
         return [
             TunableParam("vol_expansion_threshold", 2.0, 1.5, 3.0),
             TunableParam("rel_volume_threshold", 1.8, 1.2, 3.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
             TunableParam("vix_max", 26.0, 18.0, 35.0),
         ]
 
@@ -104,8 +104,8 @@ class Strategy(BaseStrategy):
         # ── Parameters ───────────────────────────────────────────────────────
         exp_thresh = params.get("vol_expansion_threshold", 2.0)
         vol_thresh = params.get("rel_volume_threshold", 1.8)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
         vix_max = params.get("vix_max", 26.0)
 
         # ── VIX (aligned to spot bars) ────────────────────────────────────────

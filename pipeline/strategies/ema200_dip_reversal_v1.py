@@ -136,8 +136,8 @@ class Strategy(BaseStrategy):
             sell_pe=np.zeros(n, dtype=bool),
             # stop=4pts (~8 NIFTY spot pts): EMA definitively broken if price falls 8pts below touch
             # target=7pts (~14 NIFTY spot pts): conservative lower bound of typical EMA-bounce return
-            stop_points=np.full(n, 4.0),
-            target_points=np.full(n, 7.0),
+            stop_points=np.full(n, 3),
+            target_points=np.full(n, 6),
             strike_offset=np.zeros(n, dtype=np.int32),
             time_stop_bars=18,        # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,

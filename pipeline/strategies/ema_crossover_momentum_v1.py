@@ -120,8 +120,8 @@ class Strategy(BaseStrategy):
     def tunable_params(self) -> list[TunableParam]:
         return [
             TunableParam("adx_threshold", 20.0, 15.0, 30.0),
-            TunableParam("stop_pts",       4.0,   2.0,  8.0),
-            TunableParam("target_pts",     7.0,   4.0, 12.0),
+            TunableParam("stop_pts",       5.0,   2.0,  8.0),
+            TunableParam("target_pts",     8.0,   4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -134,8 +134,8 @@ class Strategy(BaseStrategy):
         time_min = spot_df["time_minutes"].to_numpy()
 
         adx_threshold = params.get("adx_threshold", 20.0)
-        stop_pts      = params.get("stop_pts",       4.0)
-        target_pts    = params.get("target_pts",     7.0)
+        stop_pts      = params.get("stop_pts",       5.0)
+        target_pts    = params.get("target_pts",     8.0)
 
         # ── Indicators ────────────────────────────────────────────────────────
         # EMA(12): 1-min fast EMA — spans approx one hold period (60s)

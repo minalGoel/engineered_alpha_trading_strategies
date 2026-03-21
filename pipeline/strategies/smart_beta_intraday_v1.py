@@ -99,8 +99,8 @@ class Strategy(BaseStrategy):
             TunableParam("range_ratio_threshold", 1.5, 1.1, 2.5),
             TunableParam("vol_pct_threshold", 0.30, 0.15, 0.45),
             TunableParam("momentum_threshold", 0.0003, 0.0001, 0.0010),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -122,8 +122,8 @@ class Strategy(BaseStrategy):
         range_thr = params.get("range_ratio_threshold", 1.5)
         vol_pct_thr = params.get("vol_pct_threshold", 0.30)
         mom_thr = params.get("momentum_threshold", 0.0003)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Keltner Channel: EMA(60) ± 1.5 × ATR(60) ─────────────────────────
         # 60 bars = 5 minutes — captures recent micro-trend as context

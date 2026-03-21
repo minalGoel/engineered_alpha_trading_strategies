@@ -2,14 +2,22 @@
   "name": "gap_momentum_continuation",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["momentum", "gap", "opening_range", "breakout"],
+  "tags": [
+    "momentum",
+    "gap",
+    "opening_range",
+    "breakout"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_349.json",
   "original_name": "gap_momentum_continuation",
-  "mechanism": "When NIFTY gaps >0.3% at the open due to overnight global cues (SGX Nifty, US futures, Asia markets), institutional desks carry a directional bias established before the bell. The first 15 minutes (09:15-09:30) acts as a price-discovery absorption window where algos benchmark against overnight gamma. When price breaks above the 15-minute opening range high on a bullish gap (or below the range low on a bearish gap) accompanied by a volume surge, it signals that resting institutional buy (or sell) interest has overwhelmed the supply ceiling, and TWAP/VWAP algorithms begin chasing fills — creating a 30-90 second momentum continuation window. At 5-second resolution, we can enter at the breakout bar itself rather than waiting for a full minute confirmation, capturing the first 15-20 NIFTY spot points of institutional flow.",
+  "mechanism": "When NIFTY gaps >0.3% at the open due to overnight global cues (SGX Nifty, US futures, Asia markets), institutional desks carry a directional bias established before the bell. The first 15 minutes (09:15-09:30) acts as a price-discovery absorption window where algos benchmark against overnight gamma. When price breaks above the 15-minute opening range high on a bullish gap (or below the range low on a bearish gap) accompanied by a volume surge, it signals that resting institutional buy (or sell) interest has overwhelmed the supply ceiling, and TWAP/VWAP algorithms begin chasing fills \u2014 creating a 30-90 second momentum continuation window. At 5-second resolution, we can enter at the breakout bar itself rather than waiting for a full minute confirmation, capturing the first 15-20 NIFTY spot points of institutional flow.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-11:30 IST",
-  "hold_time_seconds": [30, 90],
+  "hold_time_seconds": [
+    30,
+    90
+  ],
   "max_hold_bars": 18,
   "trades_per_day": "1-4",
   "max_trades_per_day": 4,
@@ -27,14 +35,14 @@
       "formula": "(session_first_open - prev_session_last_close) / prev_session_last_close",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Daily scalar measuring the overnight gap. Same as original — gap is a day-level measure computed from previous close to current open, requiring only 1 prior bar. The 0.3% threshold is calibrated for index (not stock): NIFTY gaps >0.3% roughly 2-3 times per week based on meaningful global cue divergence; the original's 2% is stock-specific (earnings) and would be near-never on NIFTY."
+      "purpose": "Daily scalar measuring the overnight gap. Same as original \u2014 gap is a day-level measure computed from previous close to current open, requiring only 1 prior bar. The 0.3% threshold is calibrated for index (not stock): NIFTY gaps >0.3% roughly 2-3 times per week based on meaningful global cue divergence; the original's 2% is stock-specific (earnings) and would be near-never on NIFTY."
     },
     {
       "name": "orb_high_180",
       "formula": "max(high) for bars where time_min in [555, 569]",
       "lookback": 180,
       "computed_on": "spot",
-      "purpose": "Opening range high over first 15 minutes (09:15-09:30 = 180 bars at 5s). NOT scaled from original — the time window is the same 15 minutes regardless of bar size. This is a FIXED TIME WINDOW (see Lookback Framework rule 1). The 15-min window is the standard institutional absorption period on NSE."
+      "purpose": "Opening range high over first 15 minutes (09:15-09:30 = 180 bars at 5s). NOT scaled from original \u2014 the time window is the same 15 minutes regardless of bar size. This is a FIXED TIME WINDOW (see Lookback Framework rule 1). The 15-min window is the standard institutional absorption period on NSE."
     },
     {
       "name": "orb_low_180",
@@ -48,7 +56,7 @@
       "formula": "volume[i] / mean(volume[i-240:i])",
       "lookback": 240,
       "computed_on": "spot",
-      "purpose": "Relative volume: current 5s bar volume vs 20-min rolling average (240 bars = same 20-min duration as original's sma(volume, 20) on 1-min bars). A surge >1.5x at the breakout bar confirms that the move is order-flow driven (not a thin-market spike). Original used the same 1.5x multiplier; kept because the threshold tests the same economic condition — outsized participation at the breakout moment."
+      "purpose": "Relative volume: current 5s bar volume vs 20-min rolling average (240 bars = same 20-min duration as original's sma(volume, 20) on 1-min bars). A surge >1.5x at the breakout bar confirms that the move is order-flow driven (not a thin-market spike). Original used the same 1.5x multiplier; kept because the threshold tests the same economic condition \u2014 outsized participation at the breakout moment."
     }
   ],
   "entry": {
@@ -57,7 +65,7 @@
         "gap_pct > gap_thresh (default 0.003 = 0.3%)",
         "time_minutes >= 570 (09:30 IST, after ORB window closes)",
         "time_minutes < 690 (11:30 IST, before gap momentum fades)",
-        "close crosses above orb_high_180 (first cross only — prev bar was below)",
+        "close crosses above orb_high_180 (first cross only \u2014 prev bar was below)",
         "volume > vol_ma_240 * vol_mult (default 1.5)"
       ],
       "confirmation": "First-cross filter: previous bar must be at or below ORB high to avoid chasing re-entries on stale breakouts"
@@ -67,7 +75,7 @@
         "gap_pct < -gap_thresh (default -0.003 = -0.3%)",
         "time_minutes >= 570 (09:30 IST)",
         "time_minutes < 690 (11:30 IST)",
-        "close crosses below orb_low_180 (first cross only — prev bar was above)",
+        "close crosses below orb_low_180 (first cross only \u2014 prev bar was above)",
         "volume > vol_ma_240 * vol_mult (default 1.5)"
       ],
       "confirmation": "First-cross filter: previous bar must be at or above ORB low"
@@ -78,37 +86,42 @@
     "stop_points": 5,
     "stop_rationale": "5 option pts corresponds to ~10 NIFTY spot pts adverse move from breakout. If the ORB breakout reverses 10 spot pts, price has re-entered the opening range and the institutional continuation thesis is invalidated; typical 30-60s adverse moves post-false-breakout are 8-12 spot pts (4-6 option pts), so 5 pts gives a small buffer above the false-signal noise floor.",
     "target_points": 8,
-    "target_rationale": "8 option pts ≈ 16 NIFTY spot pts at delta ~0.5. On a genuine gap + ORB breakout day, the first continuation leg typically extends 15-25 spot pts within 60-90 seconds as TWAP algorithms chase fills; 8 pts captures the lower bound of this range with a 1:1.6 risk-reward ratio.",
+    "target_rationale": "8 option pts \u2248 16 NIFTY spot pts at delta ~0.5. On a genuine gap + ORB breakout day, the first continuation leg typically extends 15-25 spot pts within 60-90 seconds as TWAP algorithms chase fills; 8 pts captures the lower bound of this range with a 1:1.6 risk-reward ratio.",
     "time_stop_bars": 18,
-    "eod_rule": "flatten at 15:25 IST"
+    "eod_rule": "flatten at 11:30 IST (690 minutes) \u2014 gap momentum fades by noon; entries restricted to 09:30-11:30 IST"
   },
   "filters": {
-    "vix_filter": "none — gap momentum works across VIX regimes on index; high VIX = larger moves which helps this strategy",
-    "time_filter": "09:30-11:30 IST only — gap momentum fades by noon as institutional orders complete, mean reversion dominates afternoon",
+    "vix_filter": "none \u2014 gap momentum works across VIX regimes on index; high VIX = larger moves which helps this strategy",
+    "time_filter": "09:30-11:30 IST only \u2014 gap momentum fades by noon as institutional orders complete, mean reversion dominates afternoon",
     "volume_filter": "rel_vol > 1.5 at breakout bar",
     "trend_filter": "gap direction must match breakout direction (bullish gap + upside ORB break, bearish gap + downside ORB break)",
-    "spread_filter": "none — limit order execution"
+    "spread_filter": "none \u2014 limit order execution"
   },
   "edge": {
     "expected_bps": 35,
     "win_rate_estimate": 0.52,
     "avg_winner_to_loser": 1.6,
     "profit_factor_estimate": 1.73,
-    "edge_decay_risk": "low-medium — structural (gap + institutional flow), but NIFTY gap frequency depends on global macro volatility regimes"
+    "edge_decay_risk": "low-medium \u2014 structural (gap + institutional flow), but NIFTY gap frequency depends on global macro volatility regimes"
   },
-  "adaptation_notes": "Three major changes from original: (1) Gap threshold dropped from 2% to 0.3% — stock earnings can gap 5-10%, NIFTY rarely gaps >1% so 0.3% captures the tail of meaningful global-cue-driven gaps without being too selective. (2) Universe changed from nifty200 stocks to NIFTY index — stock-specific gap triggers (earnings, orders) replaced by index-level overnight global cue gaps. The mechanism is the same (institutional bias + ORB confirmation) but the driver changes from fundamentals to macro flows. (3) First-cross filter added (not in original) — at 5s resolution a breakout lasts multiple bars, so we only enter on the actual crossover bar to avoid chasing. Original's 1-min bars naturally provided this by construction. Exit changed from VWAP cross to time_stop (90s) since we are capturing a short momentum burst, not a multi-hour trend.",
+  "adaptation_notes": "Three major changes from original: (1) Gap threshold dropped from 2% to 0.3% \u2014 stock earnings can gap 5-10%, NIFTY rarely gaps >1% so 0.3% captures the tail of meaningful global-cue-driven gaps without being too selective. (2) Universe changed from nifty200 stocks to NIFTY index \u2014 stock-specific gap triggers (earnings, orders) replaced by index-level overnight global cue gaps. The mechanism is the same (institutional bias + ORB confirmation) but the driver changes from fundamentals to macro flows. (3) First-cross filter added (not in original) \u2014 at 5s resolution a breakout lasts multiple bars, so we only enter on the actual crossover bar to avoid chasing. Original's 1-min bars naturally provided this by construction. Exit changed from VWAP cross to time_stop (90s) since we are capturing a short momentum burst, not a multi-hour trend.",
   "weaknesses": [
-    "On days with shallow gaps (0.3-0.5%), the ORB breakout may be a false signal and price reverts quickly — first-cross + volume filter mitigates but does not eliminate",
+    "On days with shallow gaps (0.3-0.5%), the ORB breakout may be a false signal and price reverts quickly \u2014 first-cross + volume filter mitigates but does not eliminate",
     "NIFTY gaps >0.3% occur roughly 2-3 times per week, so trade frequency is low (1-4/day on gap days, 0 on non-gap days)",
-    "If global cues reverse mid-morning (e.g., US futures flip), gap direction bias becomes stale — hard to detect at 5s",
-    "ORB computed on noisy 5s bars — a spike in first 15 min can set a spuriously high range, causing no breakout signal even on strong gap days"
+    "If global cues reverse mid-morning (e.g., US futures flip), gap direction bias becomes stale \u2014 hard to detect at 5s",
+    "ORB computed on noisy 5s bars \u2014 a spike in first 15 min can set a spuriously high range, causing no breakout signal even on strong gap days"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_349.json",
     "original_timeframe": "1min",
     "original_hold_time": "60-120 bars (60-120 minutes)",
-    "original_indicators": ["gap_pct (>2%)", "range_15 (15-min ORB high/low)", "sma(volume,20)"],
+    "original_indicators": [
+      "gap_pct (>2%)",
+      "range_15 (15-min ORB high/low)",
+      "sma(volume,20)"
+    ],
     "original_stop": "0.6% from entry",
     "original_target": "fixed 1.2%"
-  }
+  },
+  "vix_agnostic": true
 }

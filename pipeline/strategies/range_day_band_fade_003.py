@@ -175,8 +175,8 @@ class Strategy(BaseStrategy):
             TunableParam("mfi_low", 22.0, 15.0, 30.0),
             TunableParam("mfi_high", 78.0, 70.0, 85.0),
             TunableParam("vwap_slope_threshold", 0.06, 0.03, 0.12),
-            TunableParam("stop_pts", 4.0, 2.5, 7.0),
-            TunableParam("target_pts", 7.0, 4.0, 12.0),
+            TunableParam("stop_pts", 3.0, 2.5, 7.0),
+            TunableParam("target_pts", 6.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df: pl.DataFrame, option_df: pl.DataFrame,
@@ -198,8 +198,8 @@ class Strategy(BaseStrategy):
         mfi_low_thr = float(params.get("mfi_low", 22.0))
         mfi_high_thr = float(params.get("mfi_high", 78.0))
         slope_thr = float(params.get("vwap_slope_threshold", 0.06))
-        stop_pts = float(params.get("stop_pts", 4.0))
-        target_pts = float(params.get("target_pts", 7.0))
+        stop_pts = float(params.get("stop_pts", 3.0))
+        target_pts = float(params.get("target_pts", 6.0))
 
         # ── Indicators ────────────────────────────────────────────────────
 

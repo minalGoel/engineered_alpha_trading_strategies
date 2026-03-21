@@ -2,14 +2,23 @@
   "name": "fractal_dimension_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["fractal", "regime", "complexity", "trend-filter", "microstructure"],
+  "tags": [
+    "fractal",
+    "regime",
+    "complexity",
+    "trend-filter",
+    "microstructure"
+  ],
   "original_strategy": "trading_strategies/unique_strategies_all/Strategy_311.json",
   "original_name": "fractal_dimension_v1",
-  "mechanism": "When NIFTY's 5-second price series has Higuchi fractal dimension below 1.30 over a 4-minute rolling window, the index is in a low-complexity trending regime where institutional TWAP/VWAP algorithms are systematically absorbing directional flow without adequate counter-pressure. At this FD level, individual 5-second bars show strong autocorrelation — each bar's direction predicts the next with ~55-58% accuracy compared to ~50.5% in the noisy (FD > 1.40) regime seen for roughly 65% of the session. We enter when low-FD trending regime (persistent over 3+ bars, i.e. 15 seconds) coincides with EMA direction confirmation and price above/below session VWAP, then hold 30-120 seconds to capture the persistence of the institutional order flow before the sub-order cycle completes and FD reverts toward 1.5.",
+  "mechanism": "When NIFTY's 5-second price series has Higuchi fractal dimension below 1.30 over a 4-minute rolling window, the index is in a low-complexity trending regime where institutional TWAP/VWAP algorithms are systematically absorbing directional flow without adequate counter-pressure. At this FD level, individual 5-second bars show strong autocorrelation \u2014 each bar's direction predicts the next with ~55-58% accuracy compared to ~50.5% in the noisy (FD > 1.40) regime seen for roughly 65% of the session. We enter when low-FD trending regime (persistent over 3+ bars, i.e. 15 seconds) coincides with EMA direction confirmation and price above/below session VWAP, then hold 30-120 seconds to capture the persistence of the institutional order flow before the sub-order cycle completes and FD reverts toward 1.5.",
   "universe": "NIFTY",
   "timeframe": "5s",
   "session": "09:30-15:25 IST",
-  "hold_time_seconds": [15, 120],
+  "hold_time_seconds": [
+    15,
+    120
+  ],
   "max_hold_bars": 24,
   "trades_per_day": "3-6",
   "max_trades_per_day": 6,
@@ -27,53 +36,53 @@
       "formula": "HiguchiFD(close, k_max=6, window=48)",
       "lookback": 48,
       "computed_on": "spot",
-      "purpose": "Detect trending vs noisy regime at the 4-minute scale (48 × 5s). Window=48 chosen because 4 minutes captures one full institutional TWAP sub-order cycle on NIFTY — shorter windows (24 bars) have poor statistical reliability for Higuchi FD estimation with k_max=6 (requires at least 8× k_max data points); longer windows (120 bars) react too slowly to be useful for 15-120 second holds. NOT a blind 12x scale: original used 40 bars on 1-minute data (40 min lookback) to identify macro regime; here we target 4-minute micro-regime relevant to our hold duration."
+      "purpose": "Detect trending vs noisy regime at the 4-minute scale (48 \u00d7 5s). Window=48 chosen because 4 minutes captures one full institutional TWAP sub-order cycle on NIFTY \u2014 shorter windows (24 bars) have poor statistical reliability for Higuchi FD estimation with k_max=6 (requires at least 8\u00d7 k_max data points); longer windows (120 bars) react too slowly to be useful for 15-120 second holds. NOT a blind 12x scale: original used 40 bars on 1-minute data (40 min lookback) to identify macro regime; here we target 4-minute micro-regime relevant to our hold duration."
     },
     {
       "name": "ema_fast_24",
       "formula": "EMA(close, 24)",
       "lookback": 24,
       "computed_on": "spot",
-      "purpose": "2-minute fast EMA as directional trigger. Period=24 (2 min) chosen to match the lower end of our hold time (15-120s) — if we're holding 30-60 seconds, the trigger must reflect price action at the 2-minute scale. NOT 12x of original EMA(10) = 120 bars (10 min), which would be too slow for our entry timing."
+      "purpose": "2-minute fast EMA as directional trigger. Period=24 (2 min) chosen to match the lower end of our hold time (15-120s) \u2014 if we're holding 30-60 seconds, the trigger must reflect price action at the 2-minute scale. NOT 12x of original EMA(10) = 120 bars (10 min), which would be too slow for our entry timing."
     },
     {
       "name": "ema_slow_60",
       "formula": "EMA(close, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute slow EMA as context filter. Period=60 (5 min) tracks the current institutional VWAP sub-interval direction — large TWAP algorithms on NIFTY run in 5-minute tranches, so the 5-min EMA proxies the dominant order flow direction. Replaces original EMA(25) on 1-min bars (25 min macro trend), compressed to match our 15-120s hold horizon."
+      "purpose": "5-minute slow EMA as context filter. Period=60 (5 min) tracks the current institutional VWAP sub-interval direction \u2014 large TWAP algorithms on NIFTY run in 5-minute tranches, so the 5-min EMA proxies the dominant order flow direction. Replaces original EMA(25) on 1-min bars (25 min macro trend), compressed to match our 15-120s hold horizon."
     },
     {
       "name": "vwap",
       "formula": "CumulativeVWAP(session_open)",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Session VWAP from 09:15. No scaling — cumulative measure. Distinguishes whether price is above/below the session benchmark that VWAP-benchmarked institutional flows use. Carried forward from original strategy: the NIFTY index itself is heavily VWAP-benchmarked by mutual funds and FIIs."
+      "purpose": "Session VWAP from 09:15. No scaling \u2014 cumulative measure. Distinguishes whether price is above/below the session benchmark that VWAP-benchmarked institutional flows use. Carried forward from original strategy: the NIFTY index itself is heavily VWAP-benchmarked by mutual funds and FIIs."
     },
     {
       "name": "vwap_slope_12",
       "formula": "VWAP[i] - VWAP[i-12]",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute rate of change in VWAP. Period=12 (1 min) confirms VWAP is actively trending rather than flat — a flattening VWAP at 5-second resolution indicates the institutional order flow is tapering, reducing the directional persistence we need to capture."
+      "purpose": "1-minute rate of change in VWAP. Period=12 (1 min) confirms VWAP is actively trending rather than flat \u2014 a flattening VWAP at 5-second resolution indicates the institutional order flow is tapering, reducing the directional persistence we need to capture."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "HiguchiFD < fd_threshold (1.30) for ≥3 consecutive bars (15 seconds of sustained trending regime)",
-        "EMA_fast(24) > EMA_slow(60) — uptrend confirmed at 2-min vs 5-min scale",
-        "close > VWAP — price above session benchmark (institutional demand side)",
-        "VWAP_slope_12 > 0 — VWAP itself is rising (confirms active institutional buying)"
+        "HiguchiFD < fd_threshold (1.30) for \u22653 consecutive bars (15 seconds of sustained trending regime)",
+        "EMA_fast(24) > EMA_slow(60) \u2014 uptrend confirmed at 2-min vs 5-min scale",
+        "close > VWAP \u2014 price above session benchmark (institutional demand side)",
+        "VWAP_slope_12 > 0 \u2014 VWAP itself is rising (confirms active institutional buying)"
       ],
       "confirmation": "3-bar FD persistence filter (15 seconds) to avoid false regime signals from single-bar Higuchi estimation noise at 5-second frequency"
     },
     "buy_pe": {
       "conditions": [
-        "HiguchiFD < fd_threshold (1.30) for ≥3 consecutive bars",
-        "EMA_fast(24) < EMA_slow(60) — downtrend confirmed",
-        "close < VWAP — price below session benchmark (institutional supply side)",
-        "VWAP_slope_12 < 0 — VWAP itself is declining"
+        "HiguchiFD < fd_threshold (1.30) for \u22653 consecutive bars",
+        "EMA_fast(24) < EMA_slow(60) \u2014 downtrend confirmed",
+        "close < VWAP \u2014 price below session benchmark (institutional supply side)",
+        "VWAP_slope_12 < 0 \u2014 VWAP itself is declining"
       ],
       "confirmation": "Same 3-bar FD persistence filter"
     },
@@ -81,39 +90,45 @@
   },
   "exit": {
     "stop_points": 4.0,
-    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5) — in a confirmed low-FD trending regime on NIFTY, a 30-second retracement exceeding 8 spot points falsifies the regime detection (the FD is a false positive or regime has already flipped); within our 4-minute window, 8 spot points is the 90th percentile retracement magnitude for truly trending segments.",
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5) \u2014 in a confirmed low-FD trending regime on NIFTY, a 30-second retracement exceeding 8 spot points falsifies the regime detection (the FD is a false positive or regime has already flipped); within our 4-minute window, 8 spot points is the 90th percentile retracement magnitude for truly trending segments.",
     "target_points": 7.0,
-    "target_rationale": "7 option points (~14 NIFTY spot points at delta 0.5) — low-FD trending bursts on NIFTY typically extend 15-25 spot points before the sub-order cycle completes and noise returns; capturing 7 pts targets the 50th percentile of expected move magnitude, giving 1:1.75 risk-reward with multi-condition signal filtering.",
+    "target_rationale": "7 option points (~14 NIFTY spot points at delta 0.5) \u2014 low-FD trending bursts on NIFTY typically extend 15-25 spot points before the sub-order cycle completes and noise returns; capturing 7 pts targets the 50th percentile of expected move magnitude, giving 1:1.75 risk-reward with multi-condition signal filtering.",
     "time_stop_bars": 24,
     "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "None — VIX not used; FD itself captures the noise/trend distinction and subsumes volatility regime",
-    "time_filter": "No entries before 09:30 (570 min) — need 10 min of data for EMA_slow warmup; no entries after 15:25",
-    "volume_filter": "None — index volume is noisy at 5-second bars; FD filter is the primary quality gate",
+    "vix_filter": "None \u2014 VIX not used; FD itself captures the noise/trend distinction and subsumes volatility regime",
+    "time_filter": "No entries before 09:30 (570 min) \u2014 need 10 min of data for EMA_slow warmup; no entries after 15:25",
+    "volume_filter": "None \u2014 index volume is noisy at 5-second bars; FD filter is the primary quality gate",
     "trend_filter": "EMA cross (ema_fast vs ema_slow) + VWAP position serves as trend filter",
-    "spread_filter": "Not applicable — limit order execution at candle close"
+    "spread_filter": "Not applicable \u2014 limit order execution at candle close"
   },
   "edge": {
     "expected_bps": 22,
     "win_rate_estimate": 0.54,
     "avg_winner_to_loser": 1.75,
-    "profit_factor_estimate": 1.58,
-    "edge_decay_risk": "Medium — FD-based regime filtering is uncommon in HFT but if widely adopted, the low-FD windows will become contested; also: FD computation is compute-intensive and the 4-minute window may miss fast regime shifts"
+    "profit_factor_estimate": 2.05,
+    "edge_decay_risk": "Medium \u2014 FD-based regime filtering is uncommon in HFT but if widely adopted, the low-FD windows will become contested; also: FD computation is compute-intensive and the 4-minute window may miss fast regime shifts"
   },
-  "adaptation_notes": "Original applies Higuchi FD to NIFTY50 constituent stocks on 1-min bars with 40-bar window (= 40 min macro regime), holding 15-45 min. Converted to NIFTY INDEX at 5-second bars with 4-minute (48-bar) micro-regime window, holding 15-120 seconds. Key changes: (1) Universe collapsed from equity stocks to the NIFTY index itself — no stock-specific data. (2) FD window compressed from 40 min to 4 min — we're detecting the MICRO trending regime relevant for 30-second holds, not the macro trend. (3) EMA periods not blindly scaled 12x: EMA(10) on 1-min → EMA(24) on 5s [2 min, matches hold time]; EMA(25) on 1-min → EMA(60) on 5s [5 min, tracks TWAP sub-interval]. (4) VWAP retained as-is (cumulative, no scaling needed). (5) Removed stock-specific filters: earnings, ADV threshold, bid-ask spread bps, k_max data sufficiency check replaced by fixed 48-bar window guaranteeing 8× k_max data. (6) Added 3-bar FD persistence requirement to counter 5-second estimation noise.",
+  "adaptation_notes": "Original applies Higuchi FD to NIFTY50 constituent stocks on 1-min bars with 40-bar window (= 40 min macro regime), holding 15-45 min. Converted to NIFTY INDEX at 5-second bars with 4-minute (48-bar) micro-regime window, holding 15-120 seconds. Key changes: (1) Universe collapsed from equity stocks to the NIFTY index itself \u2014 no stock-specific data. (2) FD window compressed from 40 min to 4 min \u2014 we're detecting the MICRO trending regime relevant for 30-second holds, not the macro trend. (3) EMA periods not blindly scaled 12x: EMA(10) on 1-min \u2192 EMA(24) on 5s [2 min, matches hold time]; EMA(25) on 1-min \u2192 EMA(60) on 5s [5 min, tracks TWAP sub-interval]. (4) VWAP retained as-is (cumulative, no scaling needed). (5) Removed stock-specific filters: earnings, ADV threshold, bid-ask spread bps, k_max data sufficiency check replaced by fixed 48-bar window guaranteeing 8\u00d7 k_max data. (6) Added 3-bar FD persistence requirement to counter 5-second estimation noise.",
   "weaknesses": [
-    "Higuchi FD with k_max=6 on 48-bar windows has statistical noise at 5-second resolution — single-bar FD estimates can be misleading; partially mitigated by 3-bar persistence filter",
-    "Low-FD regime (< 1.30) is rare on NIFTY — price is 'noisy' (FD > 1.35) for ~60-65% of the session, resulting in 3-6 trades/day at most which limits daily P&L capacity",
-    "FD computation is O(N × k_max) per bar — rolling computation over 48-bar window is CPU-intensive if done naively in Python; must vectorize or pre-compute for backtesting speed",
+    "Higuchi FD with k_max=6 on 48-bar windows has statistical noise at 5-second resolution \u2014 single-bar FD estimates can be misleading; partially mitigated by 3-bar persistence filter",
+    "Low-FD regime (< 1.30) is rare on NIFTY \u2014 price is 'noisy' (FD > 1.35) for ~60-65% of the session, resulting in 3-6 trades/day at most which limits daily P&L capacity",
+    "FD computation is O(N \u00d7 k_max) per bar \u2014 rolling computation over 48-bar window is CPU-intensive if done naively in Python; must vectorize or pre-compute for backtesting speed",
     "The 4-minute micro-regime assumption may not hold on high-volatility days (India VIX > 22) where regime shifts occur within 1-2 minutes"
   ],
   "_source": {
     "original_file": "trading_strategies/unique_strategies_all/Strategy_311.json",
     "original_timeframe": "1min",
     "original_hold_time": "15-45 min",
-    "original_indicators": ["Higuchi_FD(window=40, k_max=8)", "EMA(10)", "EMA(25)", "VWAP_Slope(10)"],
+    "original_indicators": [
+      "Higuchi_FD(window=40, k_max=8)",
+      "EMA(10)",
+      "EMA(25)",
+      "VWAP_Slope(10)"
+    ],
     "original_stop": "25 bps from entry",
     "original_target": "45 bps from entry"
-  }
+  },
+  "vix_agnostic": true
 }

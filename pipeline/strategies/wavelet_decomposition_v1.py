@@ -92,8 +92,8 @@ class Strategy(BaseStrategy):
             TunableParam("slope_threshold_bps", 3.0, 1.0, 8.0),
             # Minimum detail energy (bps) to filter out flat/dead-market crossovers
             TunableParam("min_energy_bps", 2.0, 0.5, 6.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 5.0, 2.0, 8.0),
+            TunableParam("target_pts", 8.0, 4.0, 14.0),
         ]
 
     def compute(
@@ -116,8 +116,8 @@ class Strategy(BaseStrategy):
 
         slope_thresh = params.get("slope_threshold_bps", 3.0)
         energy_thresh = params.get("min_energy_bps", 2.0)
-        stop_pts = params.get("stop_pts", 4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts = params.get("stop_pts", 5.0)
+        target_pts = params.get("target_pts", 8.0)
 
         # ── Wavelet level-3 Haar approximation = 8-bar SMA (40s denoised) ───
         # Zeros out level-1 detail (tick noise, 5–10s) and level-2 detail (10–20s),

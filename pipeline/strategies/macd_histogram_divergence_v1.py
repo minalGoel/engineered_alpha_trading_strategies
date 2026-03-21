@@ -76,8 +76,8 @@ class Strategy(BaseStrategy):
             TunableParam("hist_div_min", 0.3, 0.05, 1.5),
             # Minimum price difference (NIFTY spot pts) between pivot extremes
             TunableParam("price_div_min", 2.0, 0.5, 8.0),
-            TunableParam("stop_pts", 4.0, 2.0, 8.0),
-            TunableParam("target_pts", 7.0, 4.0, 14.0),
+            TunableParam("stop_pts", 3.0, 2.0, 8.0),
+            TunableParam("target_pts", 6.0, 4.0, 14.0),
         ]
 
     def compute(self, spot_df: pl.DataFrame, option_df: pl.DataFrame,
@@ -92,8 +92,8 @@ class Strategy(BaseStrategy):
 
         hist_div_min = params.get("hist_div_min", 0.3)
         price_div_min = params.get("price_div_min", 2.0)
-        stop_pts  = params.get("stop_pts",  4.0)
-        target_pts = params.get("target_pts", 7.0)
+        stop_pts  = params.get("stop_pts",  3.0)
+        target_pts = params.get("target_pts", 6.0)
 
         # ── VIX filter (< 22 to avoid panic-regime divergence failures) ─────
         vix_close = np.full(n, 15.0)

@@ -1,0 +1,112 @@
+{
+  "name": "moc_drift_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "close_auction", "microstructure", "end_of_day", "vwap"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_82.json",
+  "original_name": "moc_drift_v1",
+  "mechanism": "In the 14:30–15:20 IST window, NIFTY experiences systematic directional drift driven by ETF rebalancers, passive-fund TWAP algos, and institutional MOC programs that are pre-committed to executing at or near the close price. When NIFTY has sustained above session VWAP and is up since 14:00 — indicating net afternoon buying pressure — these pre-committed buy programs create 15–30 second momentum bursts as they absorb resting sell liquidity in the order book faster than new sellers replenish it. At 5-second resolution, a 1-minute momentum confirmation (close > 60 seconds ago) signals that an active burst is underway; entering in that direction captures the tail of the institutional flow before it exhausts.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "14:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "0-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative VWAP from session open — no scaling, it is an anchored measure. A sustained VWAP premium signals that net buy flow has dominated all day, making MOC buy-program activity more likely."
+    },
+    {
+      "name": "vwap_dev",
+      "formula": "(close - vwap) / vwap * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "% deviation from VWAP. Threshold ~0.10% on NIFTY (roughly 20-25 spot points at 24000 level) separates noise from genuine afternoon accumulation. Smaller than stock threshold because index mean-reverts faster."
+    },
+    {
+      "name": "return_since_1400",
+      "formula": "(close - close_at_1400) / close_at_1400 * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Afternoon momentum anchored at 14:00. This is a FIXED-TIME anchor, not a rolling window — scaled from original which also used 14:00. Positive reading means buying pressure sustained for 30+ minutes, corroborating that MOC programs will be net buyers."
+    },
+    {
+      "name": "momentum_12",
+      "formula": "(close[i] - close[i-12]) / close[i-12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute momentum (12 × 5s bars). This is the ENTRY TRIGGER — detects that a burst is actively underway. 12 bars chosen because MOC-driven NIFTY bursts typically last 30–90 seconds; confirming at 60s lookback means we are catching an active burst rather than a stale one. Shorter (6 bars) catches noise; longer (24 bars) misses the entry."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes in [870, 920) — window 14:30–15:20 IST only",
+        "vwap_dev > vwap_threshold (default 0.10%) — NIFTY above VWAP",
+        "return_since_1400 > pm_return_threshold (default 0.08%) — afternoon uptrend",
+        "momentum_12 > mom_threshold (default 0.0002) — active 1-minute burst upward"
+      ],
+      "confirmation": "All three conditions true simultaneously at a 5s bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes in [870, 920) — window 14:30–15:20 IST only",
+        "vwap_dev < -vwap_threshold — NIFTY below VWAP",
+        "return_since_1400 < -pm_return_threshold — afternoon downtrend",
+        "momentum_12 < -mom_threshold — active 1-minute burst downward"
+      ],
+      "confirmation": "All three conditions true simultaneously at a 5s bar close"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts corresponds to ~8 NIFTY spot points. A 30-second MOC drift burst should not retrace 8 pts if the thesis is correct — that would mean the institutional flow has reversed, not just paused. At delta ~0.5, 8 spot pts = 4 option pts.",
+    "target_points": 6,
+    "target_rationale": "6 option pts = ~12 NIFTY spot points. A 30–60 second institutional-flow burst in the final hour typically covers 10–15 spot pts before stalling. Capturing 12 pts (80th percentile of 30s move) gives 1:1.5 R:R. With 55% expected win rate, this yields positive expectancy.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST (920 min) — no new entries after 15:20; EOD flatten handles residual"
+  },
+  "filters": {
+    "vix_filter": "vix < 22 — above 22 the end-of-day auction dynamics change (panic selling overrides MOC programs)",
+    "time_filter": "entry only in 14:30–15:20 IST window; strategy inactive outside this window",
+    "volume_filter": "none — index volume filter is noisy at 5s",
+    "trend_filter": "return_since_1400 aligns with vwap_dev direction (both conditions required)",
+    "spread_filter": "none — limit orders at close price"
+  },
+  "edge": {
+    "expected_bps": 15,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.22,
+    "edge_decay_risk": "medium — NSE may tighten close auction mechanics over time; ETF AUM growth could make the effect stronger short-term but more crowded long-term"
+  },
+  "adaptation_notes": "Original traded individual NIFTY50 stocks using stock-level volume_ratio to identify which stocks had large MOC imbalances. Converted to NIFTY index by: (1) replacing stock volume ratio with 3-condition index filter (VWAP dev + afternoon return + 1-min momentum), (2) compressing hold from 40-55 minutes to 30-90 seconds with time_stop_bars=18, (3) replacing stock-specific close_vs_vwap with index VWAP deviation. The nifty_return_since_1400 filter in the original is now the primary signal — the index IS the instrument. Original's entry_at_14:45 window is expanded to the full 14:30-15:20 range because at 5s bars each entry is independent.",
+  "weaknesses": [
+    "NIFTY index MOC drift is weaker than individual stock MOC imbalances — stocks with outsized index-weight rebalancing flow are more predictable than the aggregate index.",
+    "False signals during the 14:30-15:20 window on expiry days when gamma unwind dominates over MOC flow.",
+    "All three conditions firing simultaneously may be too rare — low trade frequency (0-4/day) requires multi-week testing to reach statistical significance.",
+    "Compressing from 55-minute hold to 90-second hold fundamentally changes the risk: original captured full drift; this captures only first micro-burst."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_82.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-55 bars (15-55 min)",
+    "original_indicators": ["close_vs_vwap", "volume_ratio_pm", "return_since_1400", "nifty_return_since_1400"],
+    "original_stop": "0.3% from entry",
+    "original_target": "hold to 15:25 IST"
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "name": "connors_rsi_extreme_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "connors_rsi", "oversold", "oscillator_extreme", "vwap_proximity"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_79.json",
+  "original_name": "connors_rsi_extreme_v1",
+  "mechanism": "On NIFTY, when the Connors RSI composite (averaging RSI(6) of the last 30-second price move, RSI(2) of the consecutive-bar streak, and 100-bar percentile rank of 5-second returns) drops below 10, three independent exhaustion signals converge simultaneously: the 30-second price RSI is deeply oversold, the streak of consecutive down-closes has worsened, and the current bar's return sits in the bottom percentile of the recent intraday distribution. At this confluence, VWAP-benchmarked institutional programs on NIFTY — which benchmark against the current session average — treat sub-VWAP prices at this extreme CRSI depth as below-benchmark accumulation opportunities, initiating buy-side absorption within 15-30 seconds. We enter on the turning bar where CRSI first crosses back above the oversold threshold, confirming the exhaustion is complete rather than catching a falling knife.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rsi_6",
+      "formula": "RSI(close, 6)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "30-second price RSI (6 bars × 5s). Original uses RSI(3) on 1-min bars = 3-minute lookback. We compress to 30 seconds because we hold 15-90s, not 10-45 min. The fast RSI component needs to detect selling exhaustion at the timescale of our trade, not the original's. 3-bar RSI on 5s would be 15s — too twitchy for index-level signal. 6-bar (30s) balances responsiveness with stability on NIFTY."
+    },
+    {
+      "name": "streak",
+      "formula": "consecutive_up_down_count(close)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Counts consecutive up (positive) or down (negative) closes with no lookback. Directly applicable to 5s bars — at 5s resolution, NIFTY naturally accumulates streaks of 3-8 consecutive same-direction closes during momentum moves. A streak of -5 or worse on 5s bars (25 seconds of consecutive down-closes) indicates persistent sell flow."
+    },
+    {
+      "name": "streak_rsi_2",
+      "formula": "RSI(streak, 2)",
+      "lookback": 2,
+      "computed_on": "spot",
+      "purpose": "RSI(2) of the streak series. Same lookback as original (2 bars). At 5s, 2 bars = 10 seconds. This component measures whether the streak is worsening or starting to improve — a streak RSI rising from a low reading indicates the streak is recovering even if still negative. Tiny lookback is intentional: this is meant to be a turning-point detector, not a trend measure."
+    },
+    {
+      "name": "pct_rank_100",
+      "formula": "percentile_rank(1bar_return, 100)",
+      "lookback": 100,
+      "computed_on": "spot",
+      "purpose": "Percentile rank of the current 5-second return within the last 100 bars (8.3 minutes of intraday history). Original uses 100 1-min bars = 100 minutes. We keep 100 bars but in 5s = 8.3 min. This is deliberate: at 5s resolution, 8 minutes of 5s returns gives a rich enough distribution (~100 observations) to rank the current bar's return. Going longer risks mixing different intraday regimes; shorter gives too few observations for a meaningful percentile."
+    },
+    {
+      "name": "crsi",
+      "formula": "(rsi_6 + streak_rsi_2 + pct_rank_100) / 3",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Connors RSI composite. Ranges 0-100. Below 10 = extreme oversold (all three components simultaneously at extremes). Above 90 = extreme overbought. The crossing of 10 from below serves as the entry trigger."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price × volume) / cumulative(volume), reset daily",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as proximity anchor. No scaling needed — cumulative from daily open. We require price to be within 0.3% of VWAP for both long and short to ensure we're trading near the institutional benchmark, not chasing extreme deviations where the bounce horizon is longer than our 90s hold."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "crsi crossed above crsi_oversold threshold (prev bar crsi < threshold, current bar crsi >= threshold)",
+        "close < vwap (price still below benchmark — institutional demand incoming)",
+        "close > vwap * (1 - vwap_band_pct) (within band — not a runaway selloff)",
+        "vix < 22 (index tradeable, not panic regime)"
+      ],
+      "confirmation": "CRSI crossing back above oversold threshold confirms exhaustion complete — same principle as original's 'crsi rises above 10 on next bar' but tightened to an actual cross rather than any rise"
+    },
+    "buy_pe": {
+      "conditions": [
+        "crsi crossed below crsi_overbought threshold (prev bar crsi > threshold, current bar crsi <= threshold)",
+        "close > vwap (price above benchmark)",
+        "close < vwap * (1 + vwap_band_pct) (within band — not a runaway rally)",
+        "vix < 22"
+      ],
+      "confirmation": "CRSI crossing back below overbought threshold confirms upside exhaustion"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (≈8 NIFTY spot points at delta 0.5). A CRSI extreme reversion should not retrace more than 8 spot points within the first 30s if buying pressure is genuinely absorbing. If NIFTY drops 8 more spot points after our entry, the institutional buy flow has not materialized and the thesis is invalidated. Calibrated to the lower end of 30-60s NIFTY typical moves (2-5 option pts) with a modest R buffer.",
+    "target_points": 6,
+    "target_rationale": "6 option points (≈12 NIFTY spot points at delta 0.5). CRSI extreme reversals on NIFTY typically produce a 10-15 spot point bounce to VWAP within 60-90 seconds. 6 option pts captures roughly 50-60% of this expected bounce (1:1.5 R:R), exiting before the move stalls at VWAP resistance.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST (920 min)"
+  },
+  "filters": {
+    "vix_filter": "vix < 22 — above 22 NIFTY moves become gappy and the 90s hold assumption breaks down",
+    "time_filter": "09:25-15:20 IST — skip first 10 min (pre-open noise) and last 10 min (illiquid options)",
+    "volume_filter": "none — NIFTY index volume is always sufficient",
+    "trend_filter": "VWAP proximity band implicitly filters — requires price within 0.3% of VWAP",
+    "spread_filter": "not applicable — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.0,
+    "profit_factor_estimate": 1.33,
+    "edge_decay_risk": "medium — Connors RSI is published and understood, but the 5s index adaptation with VWAP proximity filter is less commonly implemented at this frequency"
+  },
+  "adaptation_notes": "Original was a stock-universe strategy (NIFTY 100 F&O stocks) holding 10-45 min on 1-min bars. Key changes: (1) Universe → single NIFTY index. (2) RSI period compressed from 3 min to 30s (6 bars) to match our 15-90s hold — original was catching 3-min exhaustions, we catch 30-second exhaustions. (3) Percentile rank kept at 100 bars but in 5s = 8.3 min (original = 100 min) — this is appropriate for the intraday distribution at this timescale. (4) Entry changed from 'CRSI < 10 setup then confirmation on next bar' to an actual CRSI cross above/below threshold — cleaner and more directly computable on arrays. (5) Stop/target converted from percentage of entry price to option premium points: original 0.35% stop ≈ 77 spot pts on NIFTY at 22000, far too wide for a 90s hold. Calibrated to 4/6 option pts based on typical 30-60s NIFTY moves.",
+  "weaknesses": [
+    "CRSI on 5-second NIFTY bars may fire too frequently — the 3-bar RSI component oscillates at sub-1-minute scale and can produce spurious extremes during fast trending moves",
+    "VWAP proximity band (0.3%) on NIFTY ≈ 66 pts: during high-volatility sessions NIFTY may gap through this band without a genuine reversal opportunity",
+    "Streak component at 5s resolution may accumulate negative streaks of only 2-3 bars before reversing, making the streak RSI component less informative than on 1-min bars"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_79.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-45 bars (10-45 min)",
+    "original_indicators": ["RSI(3)", "streak", "RSI(streak, 2)", "percentile_rank(return, 100)", "VWAP"],
+    "original_stop": "0.35% from entry",
+    "original_target": "VWAP touch OR CRSI crosses 50"
+  }
+}

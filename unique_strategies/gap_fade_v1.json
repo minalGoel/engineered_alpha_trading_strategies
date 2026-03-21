@@ -1,0 +1,107 @@
+{
+  "name": "gap_fade_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "fade", "mean_reversion", "opening", "congestion"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_9.json",
+  "original_name": "gap_fade_v1",
+  "mechanism": "On NIFTY, large overnight gaps (≥0.5%, ~100+ spot pts) triggered by US equity futures or major macro events cause a 30-60 second burst of retail and short-term algo momentum in the gap direction as the market opens. This burst rapidly exhausts into a narrow congestion band as aggressive gap-chasers get absorbed — institutional VWAP algorithms benchmarked to the previous close now begin working directional flow opposite to the gap. When the 90-second rolling range compresses below 0.07% of spot price (congestion zone confirmed), and 30-second momentum turns opposite to the gap direction, the institutional fade is gaining control and the first 15-25 spot point reversal leg is imminent.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:15-09:25 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "0-3 (only on gap days ≥0.5%, approximately 15% of sessions)",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_close", "day_open"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(day_open - prev_day_close) / prev_day_close",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Daily scalar — no bar-period scaling needed, this is a session-level reference. Threshold recalibrated from original's 1% (individual stocks) to 0.5% for NIFTY index: nifty200 stocks gap 1%+ on ~20% of days while NIFTY index gaps 0.5%+ on only ~15% of sessions. A 0.5% NIFTY gap = ~100 spot pts at 20000, sufficient to trigger the burst-then-congestion pattern this strategy detects. The 1% original threshold collapses to near-zero signal frequency on an index."
+    },
+    {
+      "name": "range_18",
+      "formula": "(max(high[i-18:i]) - min(low[i-18:i])) / close[i]",
+      "lookback": 18,
+      "computed_on": "spot",
+      "purpose": "18 bars = 90-second rolling high-low range as fraction of close. Detects the congestion zone that forms after the initial gap-direction burst. The original strategy entered immediately with no confirmation — at 5-second resolution we can wait for the exhaustion signal. 18 bars chosen because NIFTY congestion zones after large gaps typically take 60-90 seconds to form: shorter (6 bars = 30s) catches too-early noise before institutional absorption begins, longer (36 bars = 3 min) extends past the entry window. Cross-day windows are excluded by same-day check (yields no signal on first bars of each session)."
+    },
+    {
+      "name": "mom_6",
+      "formula": "(close[i] - close[i-6]) / close[i-6]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6 bars = 30-second return. Detects the directional break from the congestion zone: when price exits the congestion zone opposite to the gap direction, institutional fade flow has gained control. 6 bars is the minimum to confirm directionality at 5s without lag — 1-bar returns are noisy, 12-bar (60s) returns overlap too much with the 90-second range window. Not present in original (1-min bars inherently confirmed direction); at 5s we need explicit momentum confirmation to distinguish range-compression wobbles from genuine directional breaks."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct < -gap_threshold (large gap down, e.g., <-0.5% = ~100 NIFTY pts below prev close)",
+        "range_18 < range_threshold AND range_18 > 0 (90-second congestion zone formed, e.g., <0.07% of close)",
+        "same-day check: all 18 bars in window are from today's session",
+        "mom_6 > 0 (30-second momentum turning upward: congestion breaking toward prev close)",
+        "time_minutes in [555, 565) — only in first 10 min of session (09:15-09:25 IST)"
+      ],
+      "confirmation": "Congestion zone compression + upward momentum break signals institutional buying beginning"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct > gap_threshold (large gap up, e.g., >+0.5% = ~100 NIFTY pts above prev close)",
+        "range_18 < range_threshold AND range_18 > 0 (90-second congestion zone formed)",
+        "same-day check: all 18 bars in window are from today's session",
+        "mom_6 < 0 (30-second momentum turning downward: congestion breaking toward prev close)",
+        "time_minutes in [555, 565) — only in first 10 min of session"
+      ],
+      "confirmation": "Congestion zone compression + downward momentum break signals institutional selling beginning"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5.0,
+    "stop_rationale": "5 option points = ~10 NIFTY spot pts at delta 0.5. Large gap days (0.5%+) carry more intraday volatility than small gap days — a 10 spot pt adverse move (vs 8 in gap_fade_reversion_v103) accounts for wider noise within the congestion zone on high-gap-magnitude days. NIFTY 60-second typical move is 3-7 option pts; 5 pts sits at the 70th percentile of that range, cutting only when the thesis is clearly invalidated rather than being stopped by normal oscillation.",
+    "target_points": 9.0,
+    "target_rationale": "9 option points = ~18 NIFTY spot pts. After a large gap (100+ pts), the first congestion-zone breakout leg typically delivers 20-35 spot pts of reversal as VWAP-benchmarked institutional flow absorbs the panic gap. 18 spot pts = ~60% capture of the lower bound of this expected move, giving a 1:1.8 R:R. Larger than gap_fade_reversion_v103's 7 pts because large gaps produce proportionally bigger first-leg reversions — institutional buy/sell pressure is greater when the gap-vs-benchmark deviation is 100+ pts.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 09:25 IST — gap fade thesis expires after first 10 minutes; congestion zones forming after 09:25 no longer reflect the opening gap behavioral pattern"
+  },
+  "filters": {
+    "vix_filter": "none — unlike gap_fade_reversion_v103 and gap_fade_large_v1 which cap VIX at 25, this strategy deliberately targets the high-gap-magnitude regime that includes elevated-VIX sessions; the congestion zone confirmation provides behavioral signal quality regardless of VIX level",
+    "time_filter": "09:15-09:25 IST only — congestion zone forms in the first 60-120 seconds; signals after 09:25 miss the entry window",
+    "volume_filter": "none — index volume is noisy at 5s; range compression and momentum turn are sufficient primary signals",
+    "trend_filter": "gap_pct magnitude (≥0.5%) — sub-0.3% gaps do not produce the burst-then-congestion pattern; they are absorbed too quickly for the zone to form",
+    "spread_filter": "none — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.8,
+    "profit_factor_estimate": 2.0,
+    "edge_decay_risk": "medium — congestion zone detection is structurally robust as long as institutional VWAP benchmarking persists, but on extreme structural gaps (>1%: budget, FII sovereign downgrade) the zone may not form cleanly"
+  },
+  "adaptation_notes": "Original trades nifty200 individual stocks with a simple 1% threshold, entering immediately at the bar after the gap open with no confirmation, targeting 0.5% reversion. Five key changes: (1) Universe collapsed to NIFTY index — gap threshold recalibrated to 0.5% (stocks gap 1%+ more frequently than the index; 0.5% NIFTY ≈ 1% individual stock in frequency). (2) Immediate entry replaced with two-stage congestion-zone detection (range_18 < threshold) — at 5-second resolution we wait for the exhaustion signal rather than entering blind. (3) Momentum confirmation (mom_6 > 0 / < 0) added to detect the directional break from the congestion zone. (4) Hold time compressed from 1-30 minutes to 15-60 seconds — we target only the first reversion leg. (5) No VIX filter — unlike the two other gap fade variants (v103 and gap_fade_large_v1, both capping VIX at 25), this strategy is designed for the high-gap-magnitude, high-VIX regime where the congestion mechanism operates most clearly.",
+  "weaknesses": [
+    "Extreme structural gaps (>1%: budget, war, FII sovereign downgrade) may not form clean congestion zones — price drifts further in gap direction without exhaustion",
+    "range_threshold is sensitive to daily volatility regime — NIFTY morning range width varies significantly; requires parameter tuning per volatility regime",
+    "Very low signal frequency (~0.15 trades/day average, only on gap days which are ~15% of sessions)",
+    "10-minute entry window is strict — a late-forming congestion zone (after 09:25) generates no entry signal even if the pattern is valid"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_9.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "1-30 bars (1-30 min)",
+    "original_indicators": ["open_gap = (open - prev_close) / prev_close"],
+    "original_stop": "0.3% from entry",
+    "original_target": "0.5% from entry"
+  }
+}

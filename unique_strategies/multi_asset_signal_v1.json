@@ -1,0 +1,132 @@
+{
+  "name": "multi_asset_signal_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["cross-asset", "vix-divergence", "macro-signal", "mean-reversion", "regime"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_301.json",
+  "original_name": "multi_asset_signal_v1",
+
+  "mechanism": "On NIFTY/BANKNIFTY, when spot rises for 2 minutes while India VIX simultaneously rises, large institutions are buying protective puts against their long equity exposure even as futures tick higher — internal conflict between directional flow and hedging flow that resolves within 30-90 seconds as the hedge-buying overwhelms the bid and pulls the index down. The reverse pattern (spot falling, VIX also falling) is complacent retail stop-loss selling without institutional panic: resting buy orders from VWAP-benchmarked algorithms absorb the selling and snap the index back up within 60 seconds. This 'same-direction' NIFTY/VIX co-movement is statistically unusual (normal regime is negative correlation: index up, VIX down) and signals the divergence will resolve back toward the expected negative relationship.",
+
+  "universe": "BOTH",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX or NSE:NIFTYBANK-INDEX",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "spot_roc_24",
+      "formula": "(close[i] - close[i-24]) / close[i-24]",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute rate of change on the index. Original uses ROC(15) on 1-minute bars = 15-minute ROC. Compressed to 24 bars (2 min) because we're holding 30-90 seconds and need to detect the CURRENT divergence forming, not a divergence that started 15 minutes ago. A 2-minute window captures the setup phase while still being slow enough to filter 5-second noise. 12x blind scaling would give 180 bars = 15 min ROC on 5s bars, which lags far too much for a 90-second hold."
+    },
+    {
+      "name": "vix_roc_24",
+      "formula": "(vix_close[i] - vix_close[i-24]) / vix_close[i-24]",
+      "lookback": 24,
+      "computed_on": "vix",
+      "purpose": "2-minute VIX rate of change, synchronized window with spot_roc_24. India VIX is updated every 15 seconds, so over a 2-minute (24-bar) window we get approximately 8 VIX data points, sufficient to detect a genuine directional VIX trend as opposed to single-tick noise. Using the same window as spot_roc_24 ensures the divergence measure is comparing contemporaneous moves."
+    },
+    {
+      "name": "divergence_bull",
+      "formula": "(spot_roc_24 < -roc_threshold) AND (vix_roc_24 < -vix_roc_threshold)",
+      "lookback": 24,
+      "computed_on": "spot+vix",
+      "purpose": "Detects complacent dip: NIFTY/BANKNIFTY falling AND VIX also falling (unusual — normal regime would show VIX rising on spot declines). Bullish reversal signal."
+    },
+    {
+      "name": "divergence_bear",
+      "formula": "(spot_roc_24 > roc_threshold) AND (vix_roc_24 > vix_roc_threshold)",
+      "lookback": 24,
+      "computed_on": "spot+vix",
+      "purpose": "Detects institutional hedging divergence: NIFTY/BANKNIFTY rising AND VIX also rising (unusual). Bearish reversal signal."
+    },
+    {
+      "name": "persistence_3bar",
+      "formula": "divergence_signal[i] AND divergence_signal[i-1] AND divergence_signal[i-2]",
+      "lookback": 3,
+      "computed_on": "derived",
+      "purpose": "Requires divergence to persist for 15 consecutive seconds (3 bars) before entry. At 5-second resolution, single-bar divergence spikes are noise; 15 seconds of sustained divergence indicates genuine institutional positioning. Original required 5-bar persistence on 1-min bars (5 minutes) — compressed to 3 bars (15s) proportionally to hold time."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "spot_roc_24 < -roc_threshold (spot falling at least 10 bps over 2 min)",
+        "vix_roc_24 < -vix_roc_threshold (VIX also falling — complacency signal)",
+        "Divergence persisted for ≥3 consecutive bars (15 seconds)",
+        "VIX level between 12 and 28 (linear relationship range)",
+        "Time: 09:20-15:20 IST"
+      ],
+      "confirmation": "Third bar of consecutive bull divergence — entry fires on bar 3 of persistence"
+    },
+    "buy_pe": {
+      "conditions": [
+        "spot_roc_24 > roc_threshold (spot rising at least 10 bps over 2 min)",
+        "vix_roc_24 > vix_roc_threshold (VIX also rising — institutional hedging signal)",
+        "Divergence persisted for ≥3 consecutive bars (15 seconds)",
+        "VIX level between 12 and 28 (linear relationship range)",
+        "Time: 09:20-15:20 IST"
+      ],
+      "confirmation": "Third bar of consecutive bear divergence — entry fires on bar 3 of persistence"
+    },
+    "entry_price": "limit at candle close"
+  },
+
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "NIFTY/BANKNIFTY 30-60 second typical move is 2-5 option points. If the reversal hasn't begun within 30 seconds (6 bars), a 4-point loss indicates the divergence is continuing rather than resolving — thesis is wrong and we exit. Gives 1 full 2-minute move of room without letting a full divergence continuation compound losses.",
+    "target_points": 6,
+    "target_rationale": "When NIFTY-VIX divergence resolves, spot snaps back 15-25 index points within 60-90 seconds (= 7-12 option pts at delta 0.5). Targeting 6 points captures roughly 60% of the median resolution move at 1:1.5 R:R — conservative enough to fill on the fast first leg.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+
+  "filters": {
+    "vix_filter": "India VIX between 12 and 28 — outside this range the NIFTY-VIX relationship becomes non-linear (at <12 VIX is floored and co-movement loses meaning; at >28 VIX regime is crisis mode where all correlations break down)",
+    "time_filter": "No entries before 09:20 (pre-open noise) or after 15:20 (expiry-day flatten risk)",
+    "volume_filter": "None — VIX divergence is an index-level signal independent of volume",
+    "trend_filter": "None — strategy explicitly fades short-term divergences from the normal negative correlation",
+    "spread_filter": "None — limit order execution at candle close eliminates spread cost"
+  },
+
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.50,
+    "profit_factor_estimate": 1.49,
+    "edge_decay_risk": "Medium — VIX-equity divergence patterns are known but less studied in Indian markets at intraday timescales; institutional algo desks are the most likely counter-party and may eventually arbitrage these divergences faster. Edge persists as long as VIX update latency (15s) creates lag between spot moves and IV repricing."
+  },
+
+  "adaptation_notes": "Three major changes from the original: (1) REMOVED the stock-selection layer — original traded high-beta NIFTY 50/BANKNIFTY constituent stocks to express the macro signal; we trade the INDEX options directly, which the original's notes section explicitly recommended ('Consider trading NIFTY futures or options directly'). This eliminates idiosyncratic stock risk and makes the signal cleaner. (2) COMPRESSED ROC window from 15 minutes (ROC_15 on 1-min bars) to 2 minutes (ROC_24 on 5-second bars). Original held positions 15-45 minutes; we hold 30-90 seconds. The divergence we're detecting and fading must also resolve at a proportionally shorter horizon. (3) DROPPED Bank NIFTY relative performance component (BN_Relative indicator) — in the original, BN_Relative vs NIFTY was used to confirm sector rotation within the equity selection. Without dual-index data in a single compute() call, this component cannot be reproduced. VIX divergence alone is the more fundamental signal and sufficient for direction prediction.",
+
+  "weaknesses": [
+    "VIX is updated every 15 seconds — in 5-second bars, vix_roc_24 will show flat stretches where VIX hasn't updated, potentially missing or delaying the divergence signal",
+    "NIFTY-VIX divergence can persist for 60-120 minutes in strongly trending markets; the 3-bar persistence filter does not filter out sustained divergences that continue for many bars, leading to repeated entries in the wrong direction",
+    "Without BANKNIFTY relative performance component (dropped due to pipeline constraint), the signal loses the sector-rotation confirmation present in the original strategy",
+    "India VIX is computed from NIFTY options only — for BANKNIFTY, VIX is a less direct measure of implied volatility"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_301.json",
+    "original_timeframe": "1-minute bars",
+    "original_hold_time": "15-45 minutes",
+    "original_indicators": ["NIFTY_ROC_15", "VIX_ROC_15", "BN_Relative (ROC_15 BankNifty - ROC_15 Nifty)", "Divergence_Signal (sign product)", "Macro_Score (combined signal)"],
+    "original_stop": "25 bps from entry",
+    "original_target": "40 bps from entry"
+  }
+}

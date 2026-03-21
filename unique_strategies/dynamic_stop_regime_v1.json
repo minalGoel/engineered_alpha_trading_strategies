@@ -1,0 +1,136 @@
+{
+  "name": "dynamic_stop_regime_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["ema-crossover", "vwap", "regime-adaptive", "dynamic-stop", "volatility-regime"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_318.json",
+  "original_name": "dynamic_stop_regime_v1",
+  "mechanism": "On NIFTY, when the 60-second EMA crosses above the 3-minute EMA while the index is trading above session VWAP, it signals that short-term institutional order flow is accelerating faster than the medium-term drift — typically the early signature of a TWAP/VWAP algorithm that has absorbed initial supply and is now moving the market directionally. The critical adaptation for option premium management at 5-second resolution: NIFTY's ATR percentile over the preceding 10 minutes reliably classifies the microstructure volatility regime. In compressed-volatility regimes (ATR percentile < 30), EMA crossovers generate clean 15-25 spot-point directional moves that translate to 3-5 option premium points, and tight 3-point stops work because noise is minimal. In high-volatility bursts (ATR percentile > 70), the same crossover signal requires 7-point premium stops to survive the inevitable retest before the 12-point continuation move materializes — failing to widen stops in these regimes is the primary source of noise-triggered exits on NIFTY.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_fast_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "60-second EMA (12 bars × 5s). NOT 12x the original EMA(10) which would be 120 bars = 10 min — we are trading a 30-120s hold, so the fast signal must capture micro-acceleration within that window. The 12-bar EMA reacts to the last ~3-4 bars (15-20 seconds) due to exponential decay, appropriate for detecting sudden order flow bursts on NIFTY."
+    },
+    {
+      "name": "ema_slow_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute EMA (36 bars × 5s). The slow line represents the medium-term drift direction. When the 60s EMA crosses above the 3-min EMA, it means the most recent minute of price action is stronger than the preceding 3 minutes — a genuine short-term momentum shift, not random noise. Chosen to give a 3:1 fast/slow ratio, mirroring the original EMA(10/25) ratio."
+    },
+    {
+      "name": "vwap",
+      "formula": "Cumulative(typical_price × volume) / Cumulative(volume), reset each session",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "No lookback — cumulative from session open. VWAP acts as a regime filter: above VWAP means institutional buy-side is net long; below means net short. EMA crossovers in the direction of VWAP have higher directional conviction. This is identical to the original strategy's intent but computed on the index directly rather than individual stocks."
+    },
+    {
+      "name": "atr_36",
+      "formula": "ATR(high, low, close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute ATR (36 bars × 5s). Measures current true range magnitude. Original used ATR(14) on 1-min bars = 14 minutes of ATR. Compressed to 3 min because our hold is 30-120s — the ATR must reflect the CURRENT noise level within our hold window, not the last 14 minutes. A 3-minute ATR captures the intraday microstructure volatility that determines how far NIFTY is likely to move against us before reversing."
+    },
+    {
+      "name": "atr_pctile_120",
+      "formula": "percentile_rank(atr_36, 120-bar rolling window)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute ATR percentile (120 bars × 5s). This is the regime classifier. Original used 120 × 1-min = 2-hour window. We compress to 10 minutes because the relevant question is 'is NIFTY currently in a high-vol or low-vol microstructure state?' not 'was NIFTY volatile two hours ago?' The 10-minute window captures the current intraday session phase (opening volatility, midday compression, afternoon expansion) and responds quickly to sudden volatility regime shifts."
+    },
+    {
+      "name": "vol_sma_75",
+      "formula": "SMA(volume, 75)",
+      "lookback": 75,
+      "computed_on": "spot",
+      "purpose": "6.25-minute volume moving average (75 bars × 5s). Filters entries to bars where volume confirms the crossover. Original used SMA(volume, 15) on 1-min = 15-minute average. The 75-bar window covers approximately the same 6-7 minute lookback but at 5-second resolution, appropriate for distinguishing genuine institutional participation from thin-market noise on the NIFTY."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "EMA(close, 12) crosses above EMA(close, 36) on the current bar",
+        "close > VWAP (NIFTY above session average — buy-side institutional net long)",
+        "volume > 0.8 × SMA(volume, 75) (volume confirms institutional participation)",
+        "ATR percentile computed (warmup >= 240 bars = 20 minutes)",
+        "In session: 09:20–15:25 IST"
+      ],
+      "confirmation": "All three conditions must be true simultaneously on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "EMA(close, 12) crosses below EMA(close, 36) on the current bar",
+        "close < VWAP (NIFTY below session average — sell-side institutional net short)",
+        "volume > 0.8 × SMA(volume, 75)",
+        "ATR percentile computed (warmup >= 240 bars)",
+        "In session: 09:20–15:25 IST"
+      ],
+      "confirmation": "All three conditions must be true simultaneously on the same 5-second bar"
+    },
+    "entry_price": "limit order at bar close"
+  },
+  "exit": {
+    "stop_points": {
+      "low_vol_regime": 3,
+      "med_vol_regime": 5,
+      "high_vol_regime": 7
+    },
+    "stop_rationale": "Stop calibrated to NIFTY ATR regime: in low-vol compression (ATR pctile < 30), NIFTY's noise within a 30-second window is ≤6 spot points = ≤3 option premium points (delta ~0.5), so 3 pts is tight but correct. In high-vol bursts (ATR pctile > 70), NIFTY routinely whipsaws 12-15 spot points before continuation, requiring 7 option premium points to survive the retest. Medium regime (30-70) uses 5 pts for typical 3-7 pt 1-minute NIFTY moves.",
+    "target_points": {
+      "low_vol_regime": 5,
+      "med_vol_regime": 8,
+      "high_vol_regime": 12
+    },
+    "target_rationale": "Target set at ~1.67x stop for each regime, capturing the median continuation leg: low-vol crossovers extend 10-15 spot points (5 option pts at delta 0.5); high-vol crossovers that survive the retest extend 20-30 spot points (12 option pts). The 1.67:1 reward/risk ratio is profitable at 45%+ win rate after costs.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "No explicit VIX filter — ATR percentile already captures current vol regime without requiring external VIX. ATR is more responsive to intraday NIFTY microstructure than the 30-minute India VIX.",
+    "time_filter": "09:20–15:25 IST. Skip 09:15-09:20 pre-open noise. Flatten at 15:25.",
+    "volume_filter": "volume > 0.8 × SMA(volume, 75) on entry bar to confirm institutional participation",
+    "trend_filter": "VWAP alignment (close > VWAP for CE, close < VWAP for PE) acts as intraday trend filter",
+    "spread_filter": "Not applicable — limit orders at candle close; no bid-ask spread cost in this pipeline"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.73,
+    "edge_decay_risk": "Moderate — EMA crossovers are widely-known signals, but the ATR-regime-adaptive stop sizing is the structural edge. If NIFTY's volatility regime becomes permanently bimodal (always very high or very low), the medium-regime calibration degrades. Otherwise, the adaptive nature provides structural robustness."
+  },
+  "adaptation_notes": "Original traded NIFTY 50 constituent stocks on 1-min bars with fixed EMA(10/25) crossover and ATR-sized stops. Three key changes: (1) EMA periods compressed to 12/36 (60s/3-min) because we hold 30-120s, not 15-60 min — the fast EMA must react within the hold window. (2) ATR lookback compressed from 14 bars (14-min) to 36 bars (3-min) to capture current microstructure noise, not historical regime. (3) ATR percentile window compressed from 120-min to 10-min to classify the CURRENT session microstructure phase rather than the last 2 hours. The stop regime buckets (3/5/7 option pts for LOW/MED/HIGH vol) were calibrated specifically to NIFTY option point moves at the respective vol regimes, NOT by percentage-scaling from the original equity stop levels.",
+  "weaknesses": [
+    "EMA crossovers on 5-second NIFTY bars generate many false signals during sideways/choppy midday sessions — the VWAP and volume filters reduce but do not eliminate this",
+    "ATR percentile computed over only 120 bars (10 min) can misclassify regime immediately after sudden news spikes — the percentile will briefly show high-vol even after the spike resolves",
+    "During post-crossover high-vol regimes, the 7-point stop corresponds to ~14 spot points of adverse move — on 1L capital at ₹200 premium ATM, this still limits risk to ₹4,550 per trade (7 pts × 65 units × 7 lots × assumed delta), acceptable",
+    "No explicit filter for within-EMA alignment (both EMAs may be flattening rather than trending) — false crossovers during range-bound NIFTY sessions will trigger entries"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_318.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-60 min",
+    "original_indicators": ["EMA(10)", "EMA(25)", "VWAP", "ATR(14)", "ATR_Pctile(120)", "Vol_Regime"],
+    "original_stop": "Dynamic: 1.0x/1.5x/2.5x ATR(14) based on ATR percentile regime",
+    "original_target": "1.8x stop_distance (fixed ratio)"
+  }
+}

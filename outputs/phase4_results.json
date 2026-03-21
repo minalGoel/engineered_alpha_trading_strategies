@@ -1,0 +1,2093 @@
+{
+  "check18_option_chain": [
+    {
+      "name": "acceleration_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "adaptive_threshold_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "adversarial_ensemble_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "adverse_selection_filter_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "adx_strong_trend_pullback",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "adx_trend_strength_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "afternoon_profit_fade",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "atr_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "atr_breakout_volatility_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "atr_channel_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "atr_expansion_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "autocorrelation_regime_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bayesian_update_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bb_squeeze_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bid_ask_imbalance_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_band_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_mean_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_price_action_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_squeeze_breakout",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_squeeze_breakout_v82",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_squeeze_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bollinger_squeeze_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "bootstrap_confidence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "changepoint_detection_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "closing_auction_anticipation_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "connors_rsi_extreme_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "consolidation_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "demark_sequential_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "deviation_from_ema_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "divergence_plus_level_confluence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "donchian_channel_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "drawdown_adaptive_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "dynamic_stop_regime_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "elder_impulse_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "elliott_impulse_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ema200_dip_reversal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ema_crossover_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ema_crossover_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ema_crossover_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ensemble_signal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "entropy_regime_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "european_open_momentum_continuation",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "expiry_day_premium_decay_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "fibonacci_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "fibonacci_intraday_retracement",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "first_hour_range_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "first_pullback_after_trend_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "fractal_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "fractal_dimension_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_and_go_with_volume_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_continuation_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_continuation_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_exhaustion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fade_large_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fade_reversion_v103",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fade_reversion_v116",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fade_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fill_fade_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fill_full_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fill_partial_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_fill_stall_001",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_momentum_continuation",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_reversal_volume_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_to_vwap_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "gap_vwap_momentum_trifecta_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "harmonic_pattern_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "heikin_ashi_trend_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "hmm_regime_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "hull_ma_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "hurst_exponent_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ichimoku_cloud_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "index_correlated_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "index_momentum_stock_selection_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "index_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "inside_bar_breakout_v177",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "institutional_flow_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_momentum_ema_cross_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_range_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_rsi_divergence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_trend_channel_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_trend_following_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_vol_pattern_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "intraday_volatility_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "kalman_filter_trend_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "keltner_channel_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "keltner_channel_trend_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "kernel_density_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "lasso_feature_select_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "last_30_min_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "liquidity_provision_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "low_vol_compression_long_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "low_vol_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "lunch_hour_range_compression_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "ma_crossover_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "macd_histogram_divergence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "macd_signal_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "macd_trend_continuation_v71",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "market_profile_poc_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "market_state_classifier_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "maximum_entropy_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "mean_reversion_hull_ma",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "mean_reversion_speed_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "mean_variance_optimal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "microstructure_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "microstructure_volume_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "moc_drift_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "momentum_decay_adaptive_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "momentum_exhaustion_vix_reversal",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "momentum_ignition_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "momentum_reversion_switch_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "momentum_score_composite_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "monday_reversal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "multi_asset_signal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "multi_ema_ribbon_squeeze",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "multi_factor_composite_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "multi_indicator_consensus_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "multi_timeframe_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "multi_timeframe_confirmation_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "narrow_range_7_breakout",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "narrow_range_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "open_high_low_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "opening_drive_post_gap_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "opening_drive_reversal_001",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "opening_range_breakout_15",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "opening_range_breakout_30_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_15min_filtered_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_15min_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_30min_volume_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_5min_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_atr_scaled_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_closing_range_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_failure_trade_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_gap_combo_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_index_aligned_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_momentum_v22",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_momentum_v29",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_momentum_v32",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_narrow_range_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_plus_sector_filter_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_pullback_entry_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_retest_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_vwap_confirmation_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "orb_wide_range_fade_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "order_block_entry_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "overnight_gap_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "overnight_vol_carry_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "parabolic_sar_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "partial_gap_fill_scalp_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "pdh_pdl_fakeout_v141",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "pivot_camarilla_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "pivot_point_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "pre_market_auction_edge_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "prev_day_hl_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "prev_day_hl_reversal",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "previous_day_high_low_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "previous_day_hl_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "price_channel_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "price_impact_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "psychological_level_mean_reversion",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "pullback_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "pullback_to_vwap_trend_ride",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "quality_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "quantile_regression_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "range_day_band_fade_003",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "range_expansion_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "regime_detection_vol_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "relative_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "robust_regression_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "roc_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rolling_sharpe_adaptive_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "round_number_reversal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_connors_pullback_v41",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_connors_pullback_v42",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_connors_pullback_v46",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_connors_pullback_v49",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_connors_pullback_v50",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_connors_pullback_v54",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_divergence_vwap_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_extreme_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "rsi_reversal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "sma_crossover_banknifty_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "smart_beta_intraday_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "spectral_analysis_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "spread_dynamics_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "squeeze_release_breakout_001",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "stochastic_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "straddle_proxy_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "supertrend_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "support_resistance_reversal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "three_bar_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "tick_direction_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "trade_arrival_rate_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "trend_counter_trend_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "trend_strength_adaptive_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_adjusted_mean_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_bucket_strategy_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_filtered_index_trend_v126",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_filtered_index_trend_v133",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_mean_reversion_intraday_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_mean_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_regime_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_regime_switch_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vix_spike_mean_reversion",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vol_adjusted_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vol_breakout_squeeze_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vol_clustering_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vol_of_vol_signal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vol_regime_adaptive_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "volatility_contraction_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "volume_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "volume_clock_signal_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "volume_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "volume_profile_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "volume_spike_exhaustion_fade",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_anchored_support_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_band_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_band_squeeze_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_breakout_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_cross_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_crossover_flow_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_gap_fill_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_basic_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v10",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v11",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v12",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v13",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v14",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v18",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v19",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v3",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_mean_reversion_v5",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_overshoot_fade_001",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_overshoot_fade_002",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_overshoot_fade_003",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_pinch_breakout",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_pivot_rejection_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_reclaim_trend_001",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_rsi_confluence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_rsi_volume_confluence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_rsi_volume_hybrid_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_slope_momentum_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_slope_trend_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_volume_divergence_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_zscore_bounce_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "vwap_zscore_mean_reversion",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "wavelet_decomposition_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "weighted_indicator_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "williams_r_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    },
+    {
+      "name": "zscore_reversion_v1",
+      "detail": "option_chain=true but no indicator computed_on='option' and no option-chain signal keyword found in indicators/entry/filters. Strategy computes all signals on spot data \u2014 option_chain flag may only indicate the instrument traded, not data used."
+    }
+  ],
+  "check19_no_vix": [
+    {
+      "name": "acceleration_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "adverse_selection_filter_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "adx_strong_trend_pullback",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "adx_trend_strength_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "afternoon_profit_fade",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "atr_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "atr_breakout_volatility_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "atr_expansion_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "autocorrelation_regime_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "bollinger_band_reversion_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "bollinger_squeeze_breakout",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "bollinger_squeeze_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "changepoint_detection_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "closing_auction_anticipation_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "consolidation_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "divergence_plus_level_confluence_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "drawdown_adaptive_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "elder_impulse_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "ema_crossover_reversion_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "ema_crossover_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "ensemble_signal_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "entropy_regime_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "european_open_momentum_continuation",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "fibonacci_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "fibonacci_intraday_retracement",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "first_pullback_after_trend_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "fractal_dimension_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "gap_continuation_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "gap_fade_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "gap_fill_stall_001",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "gap_momentum_continuation",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "hmm_regime_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "hull_ma_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "hurst_exponent_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "index_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "inside_bar_breakout_v177",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "institutional_flow_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "intraday_rsi_divergence_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "intraday_trend_channel_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "intraday_trend_following_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "intraday_vol_pattern_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "kalman_filter_trend_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "last_30_min_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "low_vol_compression_long_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "low_vol_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "lunch_hour_range_compression_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "macd_signal_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "macd_trend_continuation_v71",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "mean_reversion_hull_ma",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "mean_variance_optimal_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "microstructure_reversion_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "momentum_decay_adaptive_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "momentum_reversion_switch_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "multi_ema_ribbon_squeeze",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "multi_indicator_consensus_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "multi_timeframe_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "multi_timeframe_confirmation_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "narrow_range_7_breakout",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "narrow_range_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "opening_drive_post_gap_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "opening_drive_reversal_001",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "opening_range_breakout_15",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "orb_5min_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "orb_momentum_v22",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "orb_momentum_v32",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "orb_retest_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "order_block_entry_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "overnight_vol_carry_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "parabolic_sar_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "pivot_point_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "pre_market_auction_edge_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "prev_day_hl_reversal",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "previous_day_hl_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "price_channel_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "psychological_level_mean_reversion",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "pullback_to_vwap_trend_ride",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "quantile_regression_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "range_day_band_fade_003",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "regime_detection_vol_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "relative_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "roc_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "rolling_sharpe_adaptive_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "round_number_reversal_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "rsi_connors_pullback_v42",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "rsi_connors_pullback_v46",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "rsi_connors_pullback_v49",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "rsi_connors_pullback_v50",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "rsi_connors_pullback_v54",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "sma_crossover_banknifty_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "smart_beta_intraday_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "squeeze_release_breakout_001",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "supertrend_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "three_bar_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "tick_direction_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "trade_arrival_rate_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "trend_counter_trend_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "trend_strength_adaptive_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vol_breakout_squeeze_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vol_of_vol_signal_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "volatility_contraction_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "volume_breakout_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "volume_clock_signal_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "volume_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "volume_spike_exhaustion_fade",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_cross_momentum_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_mean_reversion_v18",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_mean_reversion_v19",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_mean_reversion_v3",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_overshoot_fade_001",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_overshoot_fade_002",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_pinch_breakout",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_reclaim_trend_001",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "vwap_slope_trend_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "wavelet_decomposition_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    },
+    {
+      "name": "weighted_indicator_v1",
+      "detail": "No VIX indicator, no active VIX filter condition, no VIX entry condition \u2014 strategy does not filter by volatility regime"
+    }
+  ],
+  "check20_eod": {
+    "early_flags": [
+      {
+        "name": "consolidation_breakout_v1",
+        "eod_time": "14:45",
+        "eod_minutes": 885,
+        "eod_rule": "flatten at 14:45 IST",
+        "detail": "EOD time 14:45 < 15:00"
+      },
+      {
+        "name": "european_open_momentum_continuation",
+        "eod_time": "14:15",
+        "eod_minutes": 855,
+        "eod_rule": "flatten at 14:15 IST (855 minutes)",
+        "detail": "EOD time 14:15 < 15:00"
+      },
+      {
+        "name": "gap_momentum_v1",
+        "eod_time": "09:35",
+        "eod_minutes": 575,
+        "eod_rule": "flatten at 09:35",
+        "detail": "EOD time 09:35 < 15:00"
+      },
+      {
+        "name": "gap_to_vwap_v1",
+        "eod_time": "14:15",
+        "eod_minutes": 855,
+        "eod_rule": "flatten at 14:15 IST",
+        "detail": "EOD time 14:15 < 15:00"
+      },
+      {
+        "name": "gap_vwap_momentum_trifecta_v1",
+        "eod_time": "11:30",
+        "eod_minutes": 690,
+        "eod_rule": "flatten at 11:30 \u2014 gap trades lose relevance after first 2h when price has fully digested the overnight information",
+        "detail": "EOD time 11:30 < 15:00"
+      },
+      {
+        "name": "intraday_range_reversion_v1",
+        "eod_time": "14:45",
+        "eod_minutes": 885,
+        "eod_rule": "flatten at 14:45 IST",
+        "detail": "EOD time 14:45 < 15:00"
+      },
+      {
+        "name": "opening_drive_post_gap_v1",
+        "eod_time": "09:22",
+        "eod_minutes": 562,
+        "eod_rule": "flatten at 09:22 IST (1:1.75 R:R or time stop, whichever comes first)",
+        "detail": "EOD time 09:22 < 15:00"
+      },
+      {
+        "name": "orb_failure_trade_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST (time_minutes >= 870)",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "orb_momentum_v29",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST \u2014 ORB continuation exhausts by early afternoon; late-session entries in elevated-VIX sessions carry gap-risk at thin liquidity",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "overnight_gap_reversion_v1",
+        "eod_time": "09:50",
+        "eod_minutes": 590,
+        "eod_rule": "flatten at 09:50 IST (end of gap window)",
+        "detail": "EOD time 09:50 < 15:00"
+      },
+      {
+        "name": "vix_mean_reversion_intraday_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST \u2014 matching original's session cutoff; post-14:30 VIX dynamics are dominated by end-of-day hedging rolls, not mean reversion",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "vix_mean_reversion_v1",
+        "eod_time": "14:00",
+        "eod_minutes": 840,
+        "eod_rule": "flatten at 14:00 IST \u2014 VIX spikes after 14:00 have insufficient session time to revert",
+        "detail": "EOD time 14:00 < 15:00"
+      },
+      {
+        "name": "vix_regime_breakout_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "volume_profile_breakout_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "vwap_breakout_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "vwap_gap_fill_v1",
+        "eod_time": "10:30",
+        "eod_minutes": 630,
+        "eod_rule": "flatten at 10:30 IST (630 min) \u2014 gap fills are a morning phenomenon; after 10:30 unfilled gaps either proved structural or activity dwindles",
+        "detail": "EOD time 10:30 < 15:00"
+      },
+      {
+        "name": "vwap_mean_reversion_v10",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST \u2014 earlier than market close to avoid the afternoon liquidity thinning where VWAP reversion mechanics weaken as institutional TWAP programs wind down",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "vwap_overshoot_fade_002",
+        "eod_time": "11:15",
+        "eod_minutes": 675,
+        "eod_rule": "flatten at 11:15 IST",
+        "detail": "EOD time 11:15 < 15:00"
+      },
+      {
+        "name": "vwap_overshoot_fade_003",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST (45 min buffer before close, avoids afternoon gamma/liquidity risk)",
+        "detail": "EOD time 14:30 < 15:00"
+      }
+    ],
+    "late_flags": [],
+    "py_mismatch": [
+      {
+        "name": "european_open_momentum_continuation",
+        "json_eod_minutes": 855,
+        "py_session_end_minutes": 925,
+        "diff_minutes": 70,
+        "detail": "JSON eod_rule implies 855 min (14:15) but .py session_end_minutes=925 (15:25) (diff=70 min)"
+      },
+      {
+        "name": "gap_continuation_v1",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 660,
+        "diff_minutes": 265,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=660 (11:00) (diff=265 min)"
+      },
+      {
+        "name": "gap_fade_v1",
+        "json_eod_minutes": 565,
+        "py_session_end_minutes": 925,
+        "diff_minutes": 360,
+        "detail": "JSON eod_rule implies 565 min (09:25) but .py session_end_minutes=925 (15:25) (diff=360 min)"
+      },
+      {
+        "name": "gap_momentum_continuation",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 690,
+        "diff_minutes": 235,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=690 (11:30) (diff=235 min)"
+      },
+      {
+        "name": "index_correlated_breakout_v1",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 870,
+        "diff_minutes": 55,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=870 (14:30) (diff=55 min)"
+      },
+      {
+        "name": "opening_drive_post_gap_v1",
+        "json_eod_minutes": 562,
+        "py_session_end_minutes": 925,
+        "diff_minutes": 363,
+        "detail": "JSON eod_rule implies 562 min (09:22) but .py session_end_minutes=925 (15:25) (diff=363 min)"
+      },
+      {
+        "name": "orb_30min_volume_v1",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 660,
+        "diff_minutes": 265,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=660 (11:00) (diff=265 min)"
+      },
+      {
+        "name": "orb_gap_combo_v1",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 640,
+        "diff_minutes": 285,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=640 (10:40) (diff=285 min)"
+      },
+      {
+        "name": "partial_gap_fill_scalp_v1",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 585,
+        "diff_minutes": 340,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=585 (09:45) (diff=340 min)"
+      },
+      {
+        "name": "pre_market_auction_edge_v1",
+        "json_eod_minutes": 925,
+        "py_session_end_minutes": 570,
+        "diff_minutes": 355,
+        "detail": "JSON eod_rule implies 925 min (15:25) but .py session_end_minutes=570 (09:30) (diff=355 min)"
+      }
+    ],
+    "early_intentional": [
+      {
+        "name": "expiry_day_premium_decay_v1",
+        "eod_time": "14:00",
+        "eod_minutes": 840,
+        "eod_rule": "flatten at 14:00 IST \u2014 expiry day last hour (14:00-15:30) has chaotic pinning dynamics that invalidate the reversion thesis",
+        "detail": "EOD time 14:00 < 15:00"
+      },
+      {
+        "name": "gap_exhaustion_v1",
+        "eod_time": "11:00",
+        "eod_minutes": 660,
+        "eod_rule": "flatten at 11:00 IST (no new entries after 11:00; open positions closed at 15:25)",
+        "detail": "EOD time 11:00 < 15:00"
+      },
+      {
+        "name": "gap_fade_large_v1",
+        "eod_time": "10:30",
+        "eod_minutes": 630,
+        "eod_rule": "flatten by 10:30 IST (630 minutes) \u2014 gap fades beyond this window are no longer behavioral but structural",
+        "detail": "EOD time 10:30 < 15:00"
+      },
+      {
+        "name": "gap_fade_reversion_v103",
+        "eod_time": "09:35",
+        "eod_minutes": 575,
+        "eod_rule": "flatten at 09:35 (strategy window closed)",
+        "detail": "EOD time 09:35 < 15:00"
+      },
+      {
+        "name": "gap_fade_reversion_v116",
+        "eod_time": "09:45",
+        "eod_minutes": 585,
+        "eod_rule": "flatten at 09:45 (strategy window closed)",
+        "detail": "EOD time 09:45 < 15:00"
+      },
+      {
+        "name": "gap_fade_v1",
+        "eod_time": "09:25",
+        "eod_minutes": 565,
+        "eod_rule": "flatten at 09:25 IST \u2014 gap fade thesis expires after first 10 minutes; congestion zones forming after 09:25 no longer reflect the opening gap behavioral pattern",
+        "detail": "EOD time 09:25 < 15:00"
+      },
+      {
+        "name": "gap_fill_stall_001",
+        "eod_time": "10:45",
+        "eod_minutes": 645,
+        "eod_rule": "flatten at 10:45 IST (645 min)",
+        "detail": "EOD time 10:45 < 15:00"
+      },
+      {
+        "name": "gap_reversal_volume_v1",
+        "eod_time": "10:00",
+        "eod_minutes": 600,
+        "eod_rule": "flatten at 10:00 IST (session_end_minutes=600)",
+        "detail": "EOD time 10:00 < 15:00"
+      },
+      {
+        "name": "index_momentum_stock_selection_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "monday_reversal_v1",
+        "eod_time": "11:00",
+        "eod_minutes": 660,
+        "eod_rule": "flatten at 11:00 IST (strategy only trades Monday morning window)",
+        "detail": "EOD time 11:00 < 15:00"
+      },
+      {
+        "name": "opening_drive_reversal_001",
+        "eod_time": "10:00",
+        "eod_minutes": 600,
+        "eod_rule": "flatten at 10:00 IST (session_end_minutes = 600) \u2014 only trade the opening drive window",
+        "detail": "EOD time 10:00 < 15:00"
+      },
+      {
+        "name": "opening_range_breakout_15",
+        "eod_time": "11:00",
+        "eod_minutes": 660,
+        "eod_rule": "flatten at 11:00 IST (session_end)",
+        "detail": "EOD time 11:00 < 15:00"
+      },
+      {
+        "name": "orb_momentum_v22",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST \u2014 late-day ORB chasing degrades as liquidity thins and range expansion stalls",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "orb_momentum_v32",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST \u2014 rolling range breakouts after 14:30 face thinning liquidity and converging session VWAP that suppresses further continuation",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "orb_narrow_range_v1",
+        "eod_time": "12:00",
+        "eod_minutes": 720,
+        "eod_rule": "flatten at 12:00 IST (no new ORB signals after 12:00; NR4 momentum is front-loaded)",
+        "detail": "EOD time 12:00 < 15:00"
+      },
+      {
+        "name": "orb_plus_sector_filter_v1",
+        "eod_time": "14:00",
+        "eod_minutes": 840,
+        "eod_rule": "flatten at 14:00 IST \u2014 original used 14:00 cutoff",
+        "detail": "EOD time 14:00 < 15:00"
+      },
+      {
+        "name": "orb_pullback_entry_v1",
+        "eod_time": "11:00",
+        "eod_minutes": 660,
+        "eod_rule": "flatten at 11:00 IST (session_end_minutes = 660)",
+        "detail": "EOD time 11:00 < 15:00"
+      },
+      {
+        "name": "orb_retest_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST \u2014 retests after 14:30 reflect end-of-day positioning, not genuine institutional reference level tests",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "range_day_band_fade_003",
+        "eod_time": "14:15",
+        "eod_minutes": 855,
+        "eod_rule": "flatten at 14:15 IST",
+        "detail": "EOD time 14:15 < 15:00"
+      },
+      {
+        "name": "relative_momentum_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 (session_end_minutes=870)",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "vwap_mean_reversion_basic_v1",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST (no new entries after 14:30)",
+        "detail": "EOD time 14:30 < 15:00"
+      },
+      {
+        "name": "vwap_overshoot_fade_001",
+        "eod_time": "11:15",
+        "eod_minutes": 675,
+        "eod_rule": "flatten at 11:15 IST (session_end for this strategy)",
+        "detail": "EOD time 11:15 < 15:00"
+      },
+      {
+        "name": "vwap_reclaim_trend_001",
+        "eod_time": "13:30",
+        "eod_minutes": 810,
+        "eod_rule": "flatten at 13:30 IST (session_end_minutes = 810)",
+        "detail": "EOD time 13:30 < 15:00"
+      },
+      {
+        "name": "vwap_zscore_mean_reversion",
+        "eod_time": "14:30",
+        "eod_minutes": 870,
+        "eod_rule": "flatten at 14:30 IST (session end, avoid late-day trend transitions)",
+        "detail": "EOD time 14:30 < 15:00"
+      }
+    ]
+  },
+  "check21_trades": [
+    {
+      "name": "ema_crossover_v1",
+      "max_trades_per_day": 6,
+      "typical_high": 8,
+      "issues": [
+        "typical_range high=8 > max_trades_per_day=6"
+      ]
+    },
+    {
+      "name": "inside_bar_breakout_v177",
+      "max_trades_per_day": 8,
+      "typical_high": 10,
+      "issues": [
+        "typical_range high=10 > max_trades_per_day=8"
+      ]
+    },
+    {
+      "name": "spectral_analysis_v1",
+      "max_trades_per_day": 6,
+      "typical_high": 8,
+      "issues": [
+        "typical_range high=8 > max_trades_per_day=6"
+      ]
+    },
+    {
+      "name": "vol_surface_signal_v1",
+      "max_trades_per_day": 5,
+      "typical_high": 6,
+      "issues": [
+        "typical_range high=6 > max_trades_per_day=5"
+      ]
+    }
+  ],
+  "check22_winrate": [
+    {
+      "name": "adversarial_ensemble_v1",
+      "win_rate": 0.6,
+      "tags": [
+        "ensemble",
+        "adversarial",
+        "multi-signal",
+        "meta-strategy",
+        "momentum"
+      ],
+      "issue": "momentum win_rate=0.600 > expected upper bound 0.55"
+    },
+    {
+      "name": "bootstrap_confidence_v1",
+      "win_rate": 0.6,
+      "tags": [
+        "bootstrap",
+        "statistical",
+        "momentum",
+        "confidence-interval",
+        "quantitative"
+      ],
+      "issue": "momentum win_rate=0.600 > expected upper bound 0.55"
+    },
+    {
+      "name": "donchian_channel_breakout_v1",
+      "win_rate": 0.4,
+      "tags": [
+        "breakout",
+        "trend_following",
+        "donchian",
+        "momentum"
+      ],
+      "issue": "momentum win_rate=0.400 below expected range 0.42\u20130.55"
+    },
+    {
+      "name": "european_open_momentum_continuation",
+      "win_rate": 0.56,
+      "tags": [
+        "momentum",
+        "event_driven",
+        "time_of_day"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    },
+    {
+      "name": "gap_and_go_with_volume_v1",
+      "win_rate": 0.56,
+      "tags": [
+        "gap",
+        "momentum",
+        "volume",
+        "vwap",
+        "opening"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    },
+    {
+      "name": "gap_vwap_momentum_trifecta_v1",
+      "win_rate": 0.56,
+      "tags": [
+        "gap",
+        "vwap",
+        "momentum",
+        "opening-session",
+        "institutional-flow"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    },
+    {
+      "name": "intraday_vol_pattern_v1",
+      "win_rate": 0.57,
+      "tags": [
+        "volatility",
+        "u_shape",
+        "intraday_pattern",
+        "time_of_day",
+        "multi_regime",
+        "mean_reversion",
+        "momentum"
+      ],
+      "issue": "momentum win_rate=0.570 > expected upper bound 0.55"
+    },
+    {
+      "name": "low_vol_momentum_v1",
+      "win_rate": 0.56,
+      "tags": [
+        "volatility_regime",
+        "momentum",
+        "low_vol_anomaly",
+        "ema_crossover"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    },
+    {
+      "name": "opening_drive_post_gap_v1",
+      "win_rate": 0.56,
+      "tags": [
+        "gap",
+        "opening_drive",
+        "momentum",
+        "institutional_flow",
+        "session_open"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    },
+    {
+      "name": "orb_gap_combo_v1",
+      "win_rate": 0.6,
+      "tags": [
+        "orb",
+        "gap",
+        "opening_range",
+        "breakout",
+        "momentum",
+        "dual_alignment"
+      ],
+      "issue": "momentum win_rate=0.600 > expected upper bound 0.55"
+    },
+    {
+      "name": "orb_index_aligned_v1",
+      "win_rate": 0.57,
+      "tags": [
+        "orb",
+        "opening_range",
+        "breakout",
+        "momentum",
+        "intraday",
+        "institutional_flow"
+      ],
+      "issue": "momentum win_rate=0.570 > expected upper bound 0.55"
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "win_rate": 0.56,
+      "tags": [
+        "microstructure",
+        "order_flow",
+        "volume_delta",
+        "momentum"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    },
+    {
+      "name": "overnight_vol_carry_v1",
+      "win_rate": 0.57,
+      "tags": [
+        "volatility",
+        "overnight",
+        "carry",
+        "regime",
+        "gap",
+        "mean_reversion",
+        "momentum"
+      ],
+      "issue": "momentum win_rate=0.570 > expected upper bound 0.55"
+    },
+    {
+      "name": "quantile_regression_v1",
+      "win_rate": 0.57,
+      "tags": [
+        "quantile-regression",
+        "composite-signal",
+        "distribution-shift",
+        "momentum",
+        "vwap"
+      ],
+      "issue": "momentum win_rate=0.570 > expected upper bound 0.55"
+    },
+    {
+      "name": "tick_direction_momentum_v1",
+      "win_rate": 0.57,
+      "tags": [
+        "microstructure",
+        "order_flow",
+        "momentum",
+        "tick_direction",
+        "short_term"
+      ],
+      "issue": "momentum win_rate=0.570 > expected upper bound 0.55"
+    },
+    {
+      "name": "vix_bucket_strategy_v1",
+      "win_rate": 0.56,
+      "tags": [
+        "vix",
+        "regime",
+        "volatility",
+        "mean-reversion",
+        "momentum",
+        "trend-following",
+        "adaptive"
+      ],
+      "issue": "momentum win_rate=0.560 > expected upper bound 0.55"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "name": "drawdown_adaptive_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["trend-following", "supertrend", "vwap", "adaptive", "regime-filter", "drawdown"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_314.json",
+  "original_name": "drawdown_adaptive_v1",
+  "mechanism": "On NIFTY, large institutional TWAP/VWAP algorithms create directional micro-trends detectable by Supertrend(2-min ATR) — when NIFTY is in a bullish Supertrend AND trading above session VWAP, buy-side program flow is dominant at multiple timescales and 30-60 second continuation is high-probability. The drawdown-adaptive layer tracks NIFTY's intraday session high-water mark: beyond 0.4% session drawdown, CE entries are suppressed (market is in a distribution/sell-program regime where Supertrend bullish whipsaws are common), and beyond 0.7% session drawdown all entries halt (index is in stress/liquidation mode where the signal degrades entirely). This regime filter mirrors the original's anti-martingale logic — during index drawdown, the order book skews bearish and a Supertrend long is fighting institutional flow.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "supertrend_24",
+      "formula": "Supertrend(ATR(24), multiplier=2.5) on spot OHLC",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars = 2-minute ATR, chosen because: original used ATR(10) on 1-min bars (10 min of price action) for a 15-60 min hold. At 5s bars holding 30-120s, we compress to 2-min ATR to match the signal horizon to the hold time. A 10-min ATR would react too slowly to 30s micro-trends. The 2-min period captures institutional order-flow driven micro-swings while filtering 1-bar noise."
+    },
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(close * volume) / cumsum(volume) from session open",
+      "lookback": "session_cumulative",
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open — no scaling needed. VWAP benchmarks the dominant execution algo fill price for the session. Price above VWAP = buy programs are getting better-than-benchmark fills (bullish pressure); below = sell programs dominate."
+    },
+    {
+      "name": "session_drawdown_pct",
+      "formula": "(session_high_watermark - close) / session_high_watermark * 100",
+      "lookback": "session_cumulative",
+      "computed_on": "spot",
+      "purpose": "Session HWM is cumulative from 09:20. No scaling needed — it tracks the NIFTY intraday regime quality. Thresholds (0.4%, 0.7%) derived from original's % drawdown thresholds (0.3%, 0.6%, 1.0%) slightly compressed because index moves faster than individual equity."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "Supertrend trend direction == bullish (close > supertrend lower band)",
+        "Supertrend bullish for 2+ consecutive bars (persistence filter against 5s spikes)",
+        "close > session VWAP (buy programs dominant, getting above-benchmark fills)",
+        "session_drawdown_pct < 0.40% (index has not entered distribution regime)"
+      ],
+      "confirmation": "2-bar Supertrend persistence (trend[i] == trend[i-1] == bullish)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "Supertrend trend direction == bearish (close < supertrend upper band)",
+        "Supertrend bearish for 2+ consecutive bars",
+        "close < session VWAP (sell programs dominant)",
+        "session_drawdown_pct < 0.70% (not in full liquidation mode where signals degrade)"
+      ],
+      "confirmation": "2-bar Supertrend persistence"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5): a valid Supertrend micro-trend should not retrace 8 spot pts within 30 seconds of entry — if it does, the trend signal has failed (institutional order flow reversed). At 2-minute hold, NIFTY typically moves 3-7 option pts; a 4pt stop gives 1:1.75 R:R to the 7pt target.",
+    "target_points": 7.0,
+    "target_rationale": "7 option pts (~14 NIFTY spot pts): NIFTY institutional TWAP micro-trends carry 15-25 spot pts over 1-2 minutes when Supertrend and VWAP align. Targeting 7 pts captures ~50% of the expected continuation move, balancing hit rate vs magnitude.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "none (VIX not used; drawdown_pct acts as volatility/stress proxy)",
+    "time_filter": "09:20-15:25 IST only",
+    "volume_filter": "none (NIFTY index volume is noisy at 5s; signal quality from Supertrend + VWAP alignment instead)",
+    "trend_filter": "session_drawdown_pct thresholds act as regime filter (0.4% = CE off, 0.7% = all off)",
+    "spread_filter": "limit orders at close price — no spread cost (per execution model)"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.46,
+    "edge_decay_risk": "Moderate — Supertrend + VWAP is widely used; edge is in the drawdown-regime filter which is less commonly implemented at 5s. If NIFTY regime shifts to more ranging days (low trend autocorrelation), signal quality drops."
+  },
+  "adaptation_notes": "Original strategy's position sizing engine (reduce lots at 0.3%/0.6%/1.0% drawdown) cannot be directly represented in OptionSignals (which has fixed stop/target arrays, not per-trade lot scaling). Instead, the drawdown logic is converted to a SIGNAL GATE: at 0.4% session drawdown, CE entries suppressed (mirrors the original's 0.3% threshold for 25% size cut — effectively cutting CE signal to zero); at 0.7% session drawdown all signals halt (mirrors 1.0% daily loss limit but using index price level rather than P&L). The underlying Supertrend + VWAP signal is preserved but compressed from ATR(10, 1-min) = 10-min lookback to ATR(24, 5s) = 2-min lookback to match the 30-120s hold horizon. Trailing stop and signal exit (Supertrend flip) from original are replaced by time_stop_bars=24 (120s max hold), which is simpler and appropriate for 5s bars.",
+  "weaknesses": [
+    "Session drawdown tracks NIFTY price level, not actual P&L from trades — a whipsaw session where NIFTY drops 0.4% then recovers will suppress CE entries during the recovery (the very period when original strategy would be re-entering at full size)",
+    "Supertrend at 2-min ATR may whipsaw during the first 5-10 minutes of session before sufficient ATR warmup (24 bars = 2 min); first few signals of the day are lower quality",
+    "VWAP filter is redundant with Supertrend direction for most bars — adding it reduces trade count without proportionally improving accuracy in range-bound sessions"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_314.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-60 min",
+    "original_indicators": ["Supertrend(ATR=10, mult=3.0)", "VWAP", "Session_PnL", "Session_HWM", "DD_Pct", "Size_Scale"],
+    "original_stop": "25 bps from entry",
+    "original_target": "45 bps from entry"
+  }
+}

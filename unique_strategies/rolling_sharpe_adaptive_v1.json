@@ -1,0 +1,126 @@
+{
+  "name": "rolling_sharpe_adaptive_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "ema-crossover", "vwap", "regime-adaptive", "signal-quality-filter"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_313.json",
+  "original_name": "rolling_sharpe_adaptive_v1",
+  "mechanism": "On NIFTY, sustained institutional buy/sell programs create microtrend windows where the fast EMA (2-min) stays above the slow EMA (5-min) and price holds above VWAP — these reflect TWAP/VWAP algo order execution that persists for 30-120 seconds. The Rolling Signal Quality filter captures whether THIS session's microtrend structure is coherent: if over the last 3 minutes the EMA directional signal correctly predicted the next 5-second bar's direction more than ~52% of the time, the current regime is favorable (trending, not choppy). In contrast, when NIFTY is in a mean-reverting session, EMA/VWAP signals flip rapidly and the signal accuracy drops below 50% — the filter stands aside, avoiding the false breakouts that plague EMA strategies on range-bound NIFTY days. This regime-gating preserves the base EMA/VWAP edge while suppressing loss-making chop periods.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_fast_24",
+      "formula": "EMA(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute fast EMA (24 × 5s). NOT 12x scaling of original EMA(9) on 1-min bars (which would give 108 bars = 9 min — far too slow for a 30-90s hold). Compressed to 2-min because the trade trigger must respond within 1-2x the hold time. A 9-min EMA would generate signals that are already stale by the time we enter at 5s resolution."
+    },
+    {
+      "name": "ema_slow_60",
+      "formula": "EMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute slow EMA (60 × 5s). Context filter for the trade direction. Original EMA(21) on 1-min = 21 minutes of trend context for a 15-45 min hold. Our hold is 30-90s so trend context needs are proportionally shorter — 5 min (60 bars) provides sufficient directional bias without looking too far back relative to the hold time."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Session VWAP — cumulative measure, no period scaling needed. The VWAP position (close > vwap by threshold) confirms the EMA direction is consistent with the session's dominant order flow reference price used by institutional TWAP/VWAP algos."
+    },
+    {
+      "name": "signal_quality_36",
+      "formula": "rolling_mean(I(sign(ema_fast[t-1] - ema_slow[t-1]) == sign(close[t] - close[t-1])), 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute rolling EMA signal accuracy (36 × 5s bars). This is the key adaptation from the original's rolling Sharpe of 20 trade outcomes. We cannot track live trade PnL in compute(), so instead we measure how accurately the EMA direction has predicted the next 5-second bar's return direction over the last 3 minutes. A value > 0.52 indicates the signal has been working (trending regime). A value near or below 0.50 indicates a choppy market where the EMA/VWAP signal flip-flops (mean-reverting regime). 36 bars chosen to span 3 minutes — enough bars (~36 direction-correct tests) to get a stable accuracy estimate, yet short enough to reflect the current intraday session regime rather than yesterday's conditions."
+    },
+    {
+      "name": "vol_sma_30",
+      "formula": "rolling_mean(volume, 30)",
+      "lookback": 30,
+      "computed_on": "spot",
+      "purpose": "2.5-minute rolling mean volume (30 × 5s). Volume confirmation adapted from the original's SMA(volume,15) on 1-min bars. Entry only when current 5s bar volume exceeds this mean — filters out thin-tape signals where EMA alignment may reflect illiquid drifts rather than genuine institutional order flow."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ema_fast > ema_slow (fast EMA above slow — bullish alignment)",
+        "(close - vwap) / vwap * 10000 > vwap_distance_bps (price above VWAP by threshold, not barely above)",
+        "signal_quality_36 > signal_quality_threshold (EMA signal has been accurate recently — good trending regime)",
+        "volume > vol_sma_30 (above-average volume confirming flow)",
+        "time_minutes in [560, 925) (09:20–15:25 IST session)"
+      ],
+      "confirmation": "All conditions simultaneous on the same 5-second bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ema_fast < ema_slow (fast EMA below slow — bearish alignment)",
+        "(close - vwap) / vwap * 10000 < -vwap_distance_bps (price below VWAP by threshold)",
+        "signal_quality_36 > signal_quality_threshold (EMA signal accurate in recent bars)",
+        "volume > vol_sma_30",
+        "time_minutes in [560, 925)"
+      ],
+      "confirmation": "All conditions simultaneous on the same 5-second bar close"
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option premium points ≈ 8 NIFTY spot points at delta ~0.5. At a 30-90s hold, if NIFTY moves 8 spot points against an EMA-aligned position (which should not reverse more than 5-6 spot points within 30s if the regime filter passed), the thesis is invalidated. Based on the 15-second typical move of 1-3 option pts, a 4-pt stop gives 2-4 bars of room before being stopped out — enough to not stop out on noise while tight enough to limit damage on failed signals.",
+    "target_points": 7,
+    "target_rationale": "7 option premium points ≈ 14 NIFTY spot points at delta ~0.5. At 30-90s hold in a confirmed trending regime, NIFTY EMA-aligned moves typically extend 12-20 spot points before the first pullback (per the 1-minute typical range of 3-7 option pts, the upper end reflects regime-filtered entries). Targeting 7 pts captures roughly 50% of the expected first leg at 1:1.75 R:R, leaving room for imperfect delta estimation.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST (925 min)"
+  },
+  "filters": {
+    "vix_filter": "none — VIX not used; regime quality captured by signal_quality_36",
+    "time_filter": "09:20–15:25 IST; no entries in first 5 minutes (noisy open)",
+    "volume_filter": "volume > vol_sma_30 (2.5-min rolling mean)",
+    "trend_filter": "ema_fast vs ema_slow alignment IS the trend filter",
+    "spread_filter": "not applicable — limit order execution at candle close"
+  },
+  "tunable_params": [
+    {"name": "signal_quality_threshold", "default": 0.52, "low": 0.48, "high": 0.62, "note": "Minimum fraction of correct EMA direction predictions in last 36 bars to enter"},
+    {"name": "vwap_distance_bps", "default": 5.0, "low": 2.0, "high": 15.0, "note": "Minimum bps distance from VWAP to confirm directional bias (not marginally above/below)"},
+    {"name": "stop_pts", "default": 4.0, "low": 2.0, "high": 8.0},
+    {"name": "target_pts", "default": 7.0, "low": 4.0, "high": 12.0}
+  ],
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.52,
+    "edge_decay_risk": "Medium — the signal quality filter reduces trade frequency significantly on choppy days, but EMA/VWAP is a common signal that many algos watch; crowded exits can flip the regime filter unexpectedly. The regime filter itself is computed entirely from spot price, so it has no look-ahead bias but is entirely reactive — it can flip off at the worst moment (signal turning choppy mid-trade)."
+  },
+  "adaptation_notes": "Three major changes from original: (1) Universe collapsed from NIFTY 50 constituent stocks to the NIFTY index itself — the mechanism is direction prediction on the aggregate, not stock selection. (2) EMA periods compressed from 9/21 (1-min bars) to 24/60 (5-second bars), calibrated to hold time (30-90s) rather than blindly multiplied by 12. (3) Rolling Sharpe of 20 TRADES replaced by rolling signal accuracy over 36 BARS — because compute() has no access to live trade PnL, but the regime-clustering thesis maps cleanly to: 'has the EMA direction been predictive of 5-second returns in the last 3 minutes?' This preserves the anti-chop property of the original meta-layer. The volume confirmation is kept as a 2.5-min rolling mean (30 bars) vs original's SMA(15) on 1-min bars.",
+  "weaknesses": [
+    "Signal quality filter computed over 36 bars (3 min) has high variance — a single 1-minute choppy burst can turn the filter off, causing missed trades at the start of a trending regime",
+    "EMA/VWAP signals are widely known and traded; when many participants enter on the same signal, exits are crowded and regime can flip rapidly in the 5-second pipeline",
+    "Volume in 5-second NIFTY spot bars is the Futures volume proxy — can be noisy and may not cleanly track institutional order flow at fine granularity"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_313.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["EMA(9)", "EMA(21)", "VWAP", "Rolling_Trade_Sharpe(20 trades)", "Size_Multiplier"],
+    "original_stop": "20 bps from entry",
+    "original_target": "35 bps from entry"
+  }
+}

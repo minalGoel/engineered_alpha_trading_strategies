@@ -1,0 +1,135 @@
+{
+  "name": "entropy_regime_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["entropy", "information-theory", "regime", "Shannon", "quantitative", "trend-following"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_312.json",
+  "original_name": "entropy_regime_v1",
+  "mechanism": "When institutional TWAP/VWAP algorithms are actively working large directional NIFTY orders, the 5-second return distribution compresses into a tight cluster of small positive (buy program) or small negative (sell program) values — Shannon entropy over the preceding 60 bars (5 minutes) falls below 1.8 bits versus the random-walk baseline of 3.0 bits (log2(8) for 8 bins). This compressed entropy signals an order program with 40-60% unfilled lots remaining, which creates 30-90 second autocorrelation in NIFTY spot returns as the algorithm continues filling. We enter in the direction of the dominant 5-second mean return with VWAP and EMA confirmation, and exit within 90 seconds before the program completes and entropy reverts toward baseline.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "log_ret",
+      "formula": "log(close[i] / close[i-1])",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "5-second log returns — the raw input to the Shannon entropy computation. Log returns are used (not simple returns) to ensure symmetry around zero and comparability across price levels."
+    },
+    {
+      "name": "entropy_60",
+      "formula": "shannon_entropy(histogram(log_ret, bins=8, window=60))",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute (60-bar) rolling Shannon entropy in bits. Window of 60 bars gives ~7.5 returns per bin on average (60/8), sufficient for a reliable histogram without requiring thousands of bars. Compressed from the original 50-min window to 5 minutes because we hold 30-90s, not 15-45 min — we need to detect the CURRENT regime, not a stale one. Original 50-min was appropriate for individual equity stock patterns; for a 90s NIFTY trade we need regime detection that is near-real-time."
+    },
+    {
+      "name": "dom_ret",
+      "formula": "mean(log_ret, window=60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Mean 5-second log return over the same 60-bar window as entropy. Determines the DIRECTION of the structured regime: positive = algo buy program, negative = algo sell program. The sign of this mean is the primary directional signal."
+    },
+    {
+      "name": "ret_vol",
+      "formula": "std(log_ret, window=60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Rolling return volatility — used to filter false low-entropy signals from lunch-hour inactivity (09:00-10:00, 12:00-13:00 IST) where returns cluster near zero not from structure but from low volume. Low entropy + low vol = inactive market; low entropy + sufficient vol = genuine directed order flow."
+    },
+    {
+      "name": "ema_12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute EMA (trade trigger). Compressed from original EMA(10) on 1-min bars (10-min context window) to 12 bars (1 min) at 5s resolution because we need near-real-time price direction for a 30-90s trade. Aligning ema_12 > ema_36 confirms the current 1-min micro-trend matches the entropy signal direction."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute EMA (context filter). Compressed from original EMA(20) on 1-min bars (20-min context) to 36 bars (3 min) because at 5s frequency we are trading the fast leg of an algo program; a 20-min context would be blind to recent regime changes that matter for our 90-second hold."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(price * volume) / cumulative(volume) from session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP — cumulative from 09:15 IST, no scaling needed. VWAP-benchmarked institutional algorithms buy below VWAP and sell above VWAP, so being on the correct side of VWAP increases the probability that the detected algo program is adding to (rather than reversing) the current VWAP-relative position."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "entropy_60 < entropy_threshold (default 1.8 bits — structured, compressed return distribution)",
+        "ret_vol > min_return_vol (default 0.0001 — filter out inactivity false signals)",
+        "dom_ret > min_dominant_return (default 0.00005 — positive mean return, buy program running)",
+        "close > vwap (price above fair value — VWAP-algo buy pressure likely)",
+        "ema_12 > ema_36 (1-min trend aligned bullish)"
+      ],
+      "confirmation": "All five conditions simultaneously true on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "entropy_60 < entropy_threshold (structured distribution)",
+        "ret_vol > min_return_vol (filter inactivity)",
+        "dom_ret < -min_dominant_return (negative mean return, sell program running)",
+        "close < vwap (price below fair value — VWAP-algo sell pressure likely)",
+        "ema_12 < ema_36 (1-min trend aligned bearish)"
+      ],
+      "confirmation": "All five conditions simultaneously true on the same 5-second bar"
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts (≈8 NIFTY spot pts at delta 0.5) — in a genuine low-entropy directed program, a 8-spot-pt adverse move within 30 seconds means the algorithm has paused or is being absorbed by opposing order flow, invalidating the thesis. NIFTY 30-second moves are typically 2-5 option pts, so 4 pts is a 1.0-2.0x expected-move stop.",
+    "target_points": 7.0,
+    "target_rationale": "7 option pts (≈14 NIFTY spot pts at delta 0.5) — sustained low-entropy NIFTY programs run 60-90 seconds and typically move 12-20 spot pts during the window; 7 pts captures the lower bound of that range at 1:1.75 R:R. Based on NIFTY 1-min typical move of 3-7 option pts, 7 pts is at the upper end of the 90-second expected range.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "None — entropy regime detection acts as its own volatility filter; high-VIX (chaotic) days show high entropy and self-exclude",
+    "time_filter": "Entries only 09:25-15:20 IST; first 10 minutes excluded for 60-bar warmup",
+    "volume_filter": "Implicit via ret_vol > min_return_vol — requires minimum return dispersion to confirm active order flow",
+    "trend_filter": "ema_12 vs ema_36 alignment (1-min vs 3-min)",
+    "spread_filter": "None — limit order execution at candle close, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.49,
+    "edge_decay_risk": "Low-to-moderate — Shannon entropy of return distributions is not in mainstream retail technical toolkits. Risk: as SEBI mandates more transparency in algorithmic trading, institutional order programs may become less predictable and the return distribution may become more uniform."
+  },
+  "adaptation_notes": "Original operated on 50 NIFTY constituent stocks at 1-min bars with 50-bar (50-min) entropy window, 15-45 min holds. CONVERTED to NIFTY index itself at 5s bars with 60-bar (5-min) entropy window, 30-90s holds. Three key changes: (1) Entropy window compressed 10x from 50 min to 5 min — detecting the current regime for a 90s hold requires near-real-time entropy, not a 50-min backward window. (2) EMAs compressed from 10/20-min (equity) to 1-min/3-min (index) — same proportional relationship to hold time. (3) Added ret_vol > min_return_vol guard to prevent false low-entropy signals during inactivity (lunch hours), which the original flagged as a known weakness. The equity-stock dimension is dropped entirely (no stock universe) — the same information-theoretic signal is applied directly to the NIFTY index return stream, where it captures institutional program trading order flow rather than individual stock patterns.",
+  "weaknesses": [
+    "Entropy computed on only 60 returns with 8 bins gives ~7.5 observations per bin — histogram is sparse and entropy estimates fluctuate. Consider permutation entropy as a more robust alternative.",
+    "NIFTY lunch-hour inactivity (12:00-13:00 IST) can create false low-entropy readings; the ret_vol guard mitigates but does not fully eliminate this.",
+    "Flat trending days (slow VWAP drift) produce persistently low entropy — the signal fires too frequently and most trades hit time stop rather than target.",
+    "Large macro events (RBI policy, US CPI) can create short-lived panic moves that produce very low entropy for 1-2 minutes followed by violent reversal — the signal would enter just as the reversal begins."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_312.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["Returns_1min ROC(1)", "Entropy_50 shannon_entropy(histogram(50))", "Entropy_Pctile 20-day percentile rank", "Dominant_Direction mean(returns, 50)", "ATR_14", "EMA(10)/EMA(20) cross"],
+    "original_stop": "0.8 * ATR(14)",
+    "original_target": "1.2 * ATR(14)"
+  }
+}

@@ -1,122 +1,159 @@
-"""gap_continuation_momentum_v1 — Gap-continuation regime filter with 5s micro-momentum entries.
-
-Mechanism: When NIFTY opens with a gap >0.3% driven by overnight global cues, FII and
-institutional VWAP algorithms are directionally aligned. If the gap holds past 09:35 (close
-still above session open for gap-up), we enter on 1-minute positive micro-momentum signals
-in the gap direction, capturing 10-20 spot point continuation pulses as 5-10 option points.
-
-Converted from: trading_strategies/unique_strategies_all/Strategy_169.json
-Original: Gap continuation on NIFTY200 stocks, 1-min bars, 30-90 min hold.
 """
-from pipeline.strategies.base import BaseStrategy, OptionSignals, TunableParam
+gap_continuation_momentum_v1 — NIFTY Gap + ORB Continuation
+
+Mechanism: When NIFTY gaps up > 0.4% at open (FII/global-cue driven), the first 15
+minutes (09:15-09:30) form the opening range as the morning order queue absorbs. When
+NIFTY breaks above this ORB high (with VWAP and volume confirmation), VWAP-benchmarked
+algorithms with unfinished buy programs trigger simultaneously, creating a 30-90 second
+directional burst. We enter at the exact 5-second ORB breakout bar, not a 1-min
+confirmation, capturing the first institutional flow resumption.
+
+Stop: 4 option pts (~8 NIFTY spot pts) — reversal back inside ORB invalidates thesis.
+Target: 7 option pts (~14 NIFTY spot pts) — lower end of typical 15-20 pt post-ORB burst.
+Hold: up to 18 bars (90 seconds).
+"""
+from __future__ import annotations
+
 import numpy as np
 import polars as pl
+
+from pipeline.strategies.base import BaseStrategy, OptionSignals, TunableParam
 
 
 class Strategy(BaseStrategy):
     name = "gap_continuation_momentum_v1"
     underlying = "NIFTY"
-    session_start_minutes = 575   # 09:35 IST — after 20-min gap confirmation window
-    session_end_minutes = 780     # 13:00 IST — avoid afternoon reversal sessions
-    max_trades_per_day = 5
-    max_lookback = 180            # 15 minutes (confirmation window warmup)
+    session_start_minutes = 555   # 09:15 — need full ORB window from market open
+    session_end_minutes = 925     # 15:25 — EOD flatten
+    max_trades_per_day = 4
+    max_lookback = 180            # 15 min warmup (180 bars × 5s) for ORB formation
 
     def tunable_params(self) -> list[TunableParam]:
         return [
-            TunableParam("gap_threshold", 0.003, 0.002, 0.008),   # 0.3% NIFTY gap minimum
-            TunableParam("mom_threshold", 0.0001, 0.00005, 0.0003),  # 1-min micro-momentum trigger
-            TunableParam("vix_max", 22.0, 16.0, 28.0),
-            TunableParam("stop_pts", 3.0, 2.0, 6.0),
-            TunableParam("target_pts", 5.0, 3.0, 10.0),
+            TunableParam("gap_threshold", 0.4, 0.2, 0.8),   # % gap to qualify
+            TunableParam("vol_ratio", 1.2, 1.0, 2.0),        # volume multiplier for confirmation
+            TunableParam("stop_pts", 4.0, 2.0, 7.0),
+            TunableParam("target_pts", 7.0, 4.0, 12.0),
         ]
 
-    def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
+    def compute(
+        self,
+        spot_df: pl.DataFrame,
+        option_df: pl.DataFrame,
+        vix_df: pl.DataFrame,
+        params: dict[str, float],
+    ) -> OptionSignals:
         n = len(spot_df)
 
+        # ── Extract arrays ──────────────────────────────────────────────────
         close = spot_df["close"].fill_null(strategy="forward").to_numpy()
+        high = spot_df["high"].fill_null(strategy="forward").to_numpy()
+        low = spot_df["low"].fill_null(strategy="forward").to_numpy()
         open_ = spot_df["open"].fill_null(strategy="forward").to_numpy()
+        volume = spot_df["volume"].fill_null(0).to_numpy().astype(float)
         time_min = spot_df["time_minutes"].to_numpy()
         day_id = spot_df["day_id"].to_numpy()
 
-        gap_threshold = params.get("gap_threshold", 0.003)
-        mom_threshold = params.get("mom_threshold", 0.0001)
-        vix_max = params.get("vix_max", 22.0)
-        stop_pts = params.get("stop_pts", 3.0)
-        target_pts = params.get("target_pts", 5.0)
+        # ── Parameters ──────────────────────────────────────────────────────
+        gap_threshold = params.get("gap_threshold", 0.4)
+        vol_ratio = params.get("vol_ratio", 1.2)
+        stop_pts = params.get("stop_pts", 4.0)
+        target_pts = params.get("target_pts", 7.0)
 
-        # ── Build per-day session open and last close ──────────────────────────
-        day_open = {}       # day_id -> first bar's open (session open)
-        day_last_close = {} # day_id -> last seen close (updated each bar)
+        # ── Gap % per day ───────────────────────────────────────────────────
+        # gap_pct[i] = (day_open - prev_day_close) / prev_day_close * 100
+        gap_pct = np.zeros(n)
+        days = np.unique(day_id)
+        day_last_close: dict[int, float] = {}
 
-        for i in range(n):
-            d = int(day_id[i])
-            if d not in day_open:
-                day_open[d] = open_[i]
-            day_last_close[d] = close[i]  # last bar of each day wins
+        for idx_d, d in enumerate(days):
+            mask = day_id == d
+            idxs = np.where(mask)[0]
+            if len(idxs) == 0:
+                continue
+            day_open_price = open_[idxs[0]]
+            if idx_d > 0:
+                prev_d = days[idx_d - 1]
+                prev_close = day_last_close.get(int(prev_d), day_open_price)
+                if prev_close != 0:
+                    gap_pct[idxs] = (day_open_price - prev_close) / prev_close * 100.0
+            day_last_close[int(d)] = close[idxs[-1]]
 
-        sorted_days = sorted(day_open.keys())
+        # ── ORB (09:15-09:30 = time_minutes in [555, 570)) ─────────────────
+        orb_high = np.full(n, np.inf)
+        orb_low = np.full(n, -np.inf)
+        orb_formed = np.zeros(n, dtype=bool)
 
-        # Map each day to the prior day's last close
-        day_prev_close = {}
-        for k in range(1, len(sorted_days)):
-            d = sorted_days[k]
-            prev_d = sorted_days[k - 1]
-            day_prev_close[d] = day_last_close[prev_d]
+        for d in days:
+            mask_d = day_id == d
+            orb_mask = mask_d & (time_min < 570)          # 09:15-09:30 ORB window
+            post_mask = mask_d & (time_min >= 570)        # after ORB is complete
 
-        # ── Per-bar gap direction and holding confirmation ─────────────────────
-        # gap_dir: +1 = gap-up day, -1 = gap-down day, 0 = no meaningful gap
-        # gap_confirmed: True if past 09:35 AND gap still holding (not filled)
-        gap_dir = np.zeros(n)
-        gap_confirmed = np.zeros(n, dtype=bool)
+            orb_idxs = np.where(orb_mask)[0]
+            post_idxs = np.where(post_mask)[0]
 
-        for i in range(n):
-            d = int(day_id[i])
-            if d not in day_prev_close:
-                continue  # first day of the dataset: no prior close available
+            if len(orb_idxs) == 0:
+                continue
 
-            pc = day_prev_close[d]
-            so = day_open[d]
-            gp = (so - pc) / pc  # gap as fraction of prev close
+            orb_h = np.max(high[orb_idxs])
+            orb_l = np.min(low[orb_idxs])
 
-            if gp > gap_threshold:
-                gap_dir[i] = 1.0
-            elif gp < -gap_threshold:
-                gap_dir[i] = -1.0
+            if len(post_idxs) > 0:
+                orb_high[post_idxs] = orb_h
+                orb_low[post_idxs] = orb_l
+                orb_formed[post_idxs] = True
 
-            # Confirmation: past 09:35 IST (575 min) AND gap not filled
-            if time_min[i] >= 575:
-                if gap_dir[i] > 0 and close[i] > so:
-                    gap_confirmed[i] = True
-                elif gap_dir[i] < 0 and close[i] < so:
-                    gap_confirmed[i] = True
+        # ── Session VWAP (cumulative from 09:15 each day) ──────────────────
+        vwap = np.zeros(n)
 
-        # ── 1-minute micro-momentum trigger (12 bars × 5s = 60s) ─────────────
-        # Positive momentum = price is rising over the past minute → continuation onset
-        mom_12 = np.zeros(n)
-        for i in range(12, n):
-            base = close[i - 12]
-            if base != 0.0:
-                mom_12[i] = (close[i] - base) / base
+        for d in days:
+            mask_d = day_id == d
+            idxs = np.where(mask_d)[0]
+            if len(idxs) == 0:
+                continue
+            tp = (high[idxs] + low[idxs] + close[idxs]) / 3.0
+            vol = volume[idxs]
+            cum_tp_vol = np.cumsum(tp * vol)
+            cum_vol = np.cumsum(vol)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                vwap[idxs] = np.where(cum_vol > 0, cum_tp_vol / cum_vol, close[idxs])
 
-        # ── VIX regime filter ──────────────────────────────────────────────────
-        vix_close = np.full(n, 15.0)
-        if vix_df is not None and not vix_df.is_empty():
-            vix_joined = spot_df.select("datetime").join_asof(
-                vix_df.select(["datetime", pl.col("close").alias("vix_close")]).sort("datetime"),
-                on="datetime",
-                strategy="backward",
-            )
-            vix_close = vix_joined["vix_close"].fill_null(15.0).to_numpy()
+        # ── Rolling volume SMA (60 bars = 5 min) ───────────────────────────
+        vol_sma = np.zeros(n)
+        for i in range(60, n):
+            vol_sma[i] = np.mean(volume[i - 60 : i])
+        # For first 60 bars, use cumulative mean as best estimate
+        for i in range(1, min(60, n)):
+            vol_sma[i] = np.mean(volume[: i + 1])
+        if n > 0:
+            vol_sma[0] = volume[0] if volume[0] > 0 else 1.0
 
-        # ── Entry signals ──────────────────────────────────────────────────────
-        in_session = (time_min >= self.session_start_minutes) & (time_min < self.session_end_minutes)
-        low_vix = vix_close < vix_max
+        vol_sma = np.where(vol_sma <= 0, 1.0, vol_sma)   # avoid divide-by-zero
 
-        # Buy CE: gap-up regime confirmed + fresh positive micro-momentum
-        buy_ce = in_session & low_vix & (gap_dir > 0) & gap_confirmed & (mom_12 > mom_threshold)
+        # ── Entry time filter: only 09:30-10:30 ────────────────────────────
+        # time_min 570 = 09:30, 630 = 10:30
+        in_entry_window = (time_min >= 570) & (time_min < 630)
 
-        # Buy PE: gap-down regime confirmed + fresh negative micro-momentum
-        buy_pe = in_session & low_vix & (gap_dir < 0) & gap_confirmed & (mom_12 < -mom_threshold)
+        # ── Signals ────────────────────────────────────────────────────────
+        # Bull: gap-up day, close breaks above ORB high, above VWAP, volume surge
+        buy_ce = (
+            in_entry_window
+            & orb_formed
+            & (gap_pct > gap_threshold)
+            & (close > orb_high)
+            & (close > vwap)
+            & (volume > vol_sma * vol_ratio)
+        )
+
+        # Bear: gap-down day, close breaks below ORB low, below VWAP, volume surge
+        buy_pe = (
+            in_entry_window
+            & orb_formed
+            & (gap_pct < -gap_threshold)
+            & (close < orb_low)
+            & (close < vwap)
+            & (volume > vol_sma * vol_ratio)
+        )
 
         return OptionSignals(
             buy_ce=buy_ce,
@@ -126,6 +163,6 @@ class Strategy(BaseStrategy):
             stop_points=np.full(n, stop_pts),
             target_points=np.full(n, target_pts),
             strike_offset=np.zeros(n, dtype=np.int32),
-            time_stop_bars=18,             # 90 seconds max hold
+            time_stop_bars=18,          # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,
         )

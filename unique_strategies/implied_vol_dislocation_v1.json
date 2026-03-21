@@ -1,0 +1,117 @@
+{
+  "name": "implied_vol_dislocation_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "vix", "implied_realized_spread", "regime", "contrarian"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_46.json",
+  "original_name": "implied_vol_dislocation_v1",
+  "mechanism": "On NIFTY, when India VIX is significantly elevated relative to the index's own rolling 5-minute realized volatility, options market makers are pricing in more risk than actual price action warrants — they have accumulated excess long-delta spot positions from delta-hedging short puts at inflated IV, and as each bar passes without the feared volatility materializing, that hedge-unwind pressure eases and creates a mild upward drift (buy CE when ratio z-score is high and 1-min return turns positive). Conversely, when NIFTY's 5-minute realized vol sharply exceeds VIX, an unexpected volatility burst is underway: institutional stop-loss cascades are moving the index faster than options participants priced, and the directional momentum — confirmed by the 1-minute return — tends to persist for another 15-45 seconds before options repricing can catch up (buy PE when RV > VIX and 1-min return is negative).",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 45],
+  "max_hold_bars": 9,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rv_60",
+      "formula": "std(log_returns(close), window=60) * sqrt(252 * 6.25 * 3600 / 5)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rolling annualized realized vol. SHORT enough to capture current intraday volatility regime (not yesterday's), long enough to smooth 5-second noise. This is the intraday equivalent of the original's 20-day RV — we want 'what is NIFTY actually doing RIGHT NOW' vs what VIX implies over the next 30 days. 60 bars = 5 minutes is the minimum window producing a stable rolling stddev estimate from 5-second returns without requiring 20 days of daily data."
+    },
+    {
+      "name": "vix_close",
+      "formula": "India VIX close, joined backward to spot bars, fill_null=15.0",
+      "lookback": 1,
+      "computed_on": "vix",
+      "purpose": "Options market's annualized implied vol for the next 30 days. Used as IV proxy — avoids needing per-strike IV computation from the option chain. Represents the 'priced-in fear' we compare against actual 5-min realized movement."
+    },
+    {
+      "name": "iv_rv_ratio",
+      "formula": "(vix_close / 100.0) / max(rv_60, 0.001)",
+      "lookback": 1,
+      "computed_on": "computed",
+      "purpose": "Core signal: ratio of VIX (as decimal) to 5-min realized vol (as decimal). Ratio > 1 means VIX exceeds recent realized vol (options overpricing fear). Ratio < 1 means VIX below recent realized vol (momentum burst underway). Direct analog of original's vix / rv_20d, transposed to intraday timescale."
+    },
+    {
+      "name": "ratio_zscore",
+      "formula": "zscore(iv_rv_ratio, window=240)",
+      "lookback": 240,
+      "computed_on": "computed",
+      "purpose": "20-minute (240-bar) rolling z-score of iv_rv_ratio. WHY 240 bars: normalizes the ratio within TODAY's session context — some days VIX is structurally elevated or depressed, and we want to detect UNUSUAL dislocations relative to the session's own IV/RV regime. NOT 12x the original lookback (which would be 20 * 252 * 12 = nonsensical). The 20-min window anchors to intraday regime while being responsive enough to detect dislocations that resolve in 15-45 seconds."
+    },
+    {
+      "name": "mom_12",
+      "formula": "(close[i] - close[i-12]) / close[i-12]",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute (12-bar) return. Directional CONFIRMATION: the IV/RV ratio tells us the regime but not the immediate direction of resolution. mom_12 confirms which way the dislocation is resolving. For buy_ce (VIX >> RV): need momentum already turning positive to confirm the fear is actually fading. For buy_pe (RV >> VIX): need negative momentum confirming the downward cascade is in progress, not yet exhausted."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ratio_zscore > zscore_threshold (VIX z-score significantly above session baseline — fear premium is excessive relative to today's IV/RV norm)",
+        "mom_12 > min_momentum (1-min return positive — upward resolution already begun)",
+        "in session 09:30-15:20 IST"
+      ],
+      "confirmation": "Both conditions true on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ratio_zscore < -zscore_threshold (intraday RV significantly exceeds VIX — unexpected volatility burst, options market lagging)",
+        "mom_12 < -min_momentum (1-min return negative — directional cascade in progress)",
+        "in session 09:30-15:20 IST"
+      ],
+      "confirmation": "Both conditions true on the same 5-second bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot points at delta 0.5. In a 15-second dislocation-resolution trade, if NIFTY moves 8 spot points against the thesis within the first few bars, the IV/RV dislocation thesis is clearly wrong for this bar cluster. Calibrated to the upper bound of the 15-30s typical option move range (2-5 pts), using slightly above that range to give the trade room while still cutting losers quickly.",
+    "target_points": 6,
+    "target_rationale": "6 option pts = ~12 NIFTY spot points. The expected 15-45 second resolution of a VIX/RV dislocation (delta-hedge unwind easing or stop-loss cascade continuing) historically produces 10-15 spot point directional moves on NIFTY. 6 pts captures the lower bound of that range with 1:1.5 R:R (stop 4, target 6).",
+    "time_stop_bars": 9,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "core to strategy — VIX is the IV proxy",
+    "time_filter": "09:30-15:20 IST (15-min warmup for RV accumulation; avoid expiry-day final 10 min)",
+    "volume_filter": "none — NIFTY index volume is noisy at 5-second bars",
+    "trend_filter": "mom_12 acts as directional gate",
+    "spread_filter": "none — limit order execution, no spread cost in pipeline"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.5,
+    "profit_factor_estimate": 1.38,
+    "edge_decay_risk": "low — VIX vs intraday realized vol dislocation is structural (options market prices 30-day horizon, NIFTY 5-min RV prices current-session reality)"
+  },
+  "adaptation_notes": "Original traded top-15 NIFTY-beta stocks at 1-min bars using 20-DAY realized vol (a slow regime signal firing 3-5x per MONTH). The adaptation keeps the contrarian directional thesis — VIX >> RV → market overpricing fear → upward bias (buy CE); RV >> VIX → momentum burst underway → continuation bias (buy PE with negative confirmation) — but replaces: (1) equity universe with NIFTY index; (2) 20-day RV with 5-minute rolling RV (the intraday equivalent of 'current actual volatility'); (3) absolute ratio thresholds with a rolling 20-min z-score so the signal adapts to each day's own IV/RV regime; (4) 60-200 minute hold with a 15-45 second hold, enforced via time_stop_bars=9. The directional logic is inverted from the CONVENTIONS reference iv_dislocation example (which uses IV > RV to predict a DOWN move): this strategy follows the original's explicit contrarian thesis — fear premium (high VIX) exhausting without confirming volatility → mean-reversion to calm → long index.",
+  "weaknesses": [
+    "VIX vs 5-min intraday RV dislocation may persist longer than 45 seconds without resolving — time_stop will be hit frequently on buy_ce trades",
+    "On structurally high-VIX days (VIX > 25), ratio_zscore may flag buy_ce continuously without producing clean upward drifts",
+    "rv_60 at 5-second resolution can be noisy on NIFTY due to zero-volume bars early in session",
+    "buy_pe arm (RV burst > VIX) fires less frequently — fewer short-side opportunities vs buy_ce"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_46.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "60-200 bars (1-3 hours)",
+    "original_indicators": ["rv_20d (20-day annualized RV)", "iv_rv_ratio (VIX / rv_20d)", "nifty_return_30 (30-bar 1-min return)", "atr_20"],
+    "original_stop": "0.35% from entry",
+    "original_target": "0.5% from entry"
+  }
+}

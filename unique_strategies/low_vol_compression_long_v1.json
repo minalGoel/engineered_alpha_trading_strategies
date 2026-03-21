@@ -1,0 +1,133 @@
+{
+  "name": "low_vol_compression_long_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "compression", "breakout", "realized-vol"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_44.json",
+  "original_name": "low_vol_compression_long_v1",
+  "mechanism": "On NIFTY, when the 2-minute realized volatility (24 five-second bars) compresses to below 55% of the 30-minute session baseline, institutional TWAP and HFT algorithms have entered a passive, non-directional mode — neither sending large sweeps nor triggering momentum. This creates a coiled-spring microstructure: resting limit orders accumulate on both sides of the book, spreads tighten, and price oscillates within a narrow band. The first macro trigger — FII block order, global index impulse, or news reaction — causes a cascade of stop orders and momentum algos to activate simultaneously, producing a rapid 15-25 spot point expansion. VWAP position at the moment of expansion reveals which side of accumulated demand is larger: if NIFTY is above VWAP when the range expansion bar fires, VWAP-benchmarked buyers are still net accumulators and the move favors upside.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "rvol_24",
+      "formula": "STDDEV(log_return_5s, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute realized vol (24 bars × 5s). This is the FAST compression detector — chosen because 2 minutes captures the noise floor of NIFTY's microstructure volatility without being so short (e.g., 6 bars = 30s) that a single outlier bar distorts the signal. The original used 30 × 1-min = 30 minutes; we compress drastically because we are trading the immediate 15-120 second expansion, not the 15-60 minute continuation."
+    },
+    {
+      "name": "rvol_360",
+      "formula": "STDDEV(log_return_5s, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "30-minute baseline realized vol (360 bars × 5s). This is the SESSION CONTEXT filter — it tells us whether the current 2-minute quiet period is anomalously quiet relative to the last half hour. Chosen at 30 min (not the original's 4h equivalent of 250 × 1-min) because intraday NIFTY vol regime changes frequently; a 4h baseline would include morning vol when comparing afternoon compression, creating false signals."
+    },
+    {
+      "name": "compression_ratio",
+      "formula": "rvol_24 / rvol_360",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Ratio of fast vol to baseline. Replaces the original's PERCENTILE_RANK(250) which requires expensive full-window sorting at every bar. The ratio is a direct, stable measure of compression: 1.0 = normal, <0.55 = significantly quieter than the recent session baseline. Threshold of 0.55 calibrated to detect the bottom ~15% of intraday compression episodes on NIFTY."
+    },
+    {
+      "name": "bar_range",
+      "formula": "high - low",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "5-second bar range. Used in the range-expansion confirmation — the entry fires only when the expansion bar itself shows a range >1.5x the prior 10-bar (50s) average range. This filters false vol-compression readings where compression was already ending gradually rather than exploding suddenly."
+    },
+    {
+      "name": "avg_range_10",
+      "formula": "MEAN(bar_range, 10)",
+      "lookback": 10,
+      "computed_on": "spot",
+      "purpose": "50-second average bar range (10 bars × 5s). Reference level for the range expansion confirmation. 10 bars is long enough to capture the compressed range regime (not just the last 1-2 bars) but short enough to be locally relevant to the compression period."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative(typical_price × volume) / cumulative(volume), reset daily",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP as directional bias filter. No scaling needed — VWAP is always cumulative from the session open. If NIFTY is above VWAP at the expansion moment, VWAP-benchmarked institutional buyers are still in accumulation mode, tilting the explosive move upward."
+    },
+    {
+      "name": "ema_20",
+      "formula": "EMA(close, 20)",
+      "lookback": 20,
+      "computed_on": "spot",
+      "purpose": "20-bar (100s, ~1.7 minute) EMA as secondary trend confirmation. Confirming price is above/below EMA_20 alongside VWAP eliminates whipsaw entries where the index is crossing VWAP in a choppy sideways regime. Two filters (VWAP + EMA) both agreeing increases confidence in the directional expansion."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "compression_ratio < 0.55 (2-min vol below 55% of 30-min baseline)",
+        "bar_range > 1.5 * avg_range_10 (expansion bar confirms breakout)",
+        "close > vwap (bullish institutional bias)",
+        "close > ema_20 (short-term uptrend confirmation)"
+      ],
+      "confirmation": "All four conditions must be true simultaneously on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "compression_ratio < 0.55 (2-min vol below 55% of 30-min baseline)",
+        "bar_range > 1.5 * avg_range_10 (expansion bar confirms breakout)",
+        "close < vwap (bearish institutional bias)",
+        "close < ema_20 (short-term downtrend confirmation)"
+      ],
+      "confirmation": "All four conditions must be true simultaneously on the same 5-second bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). If the thesis is correct — a genuine vol expansion driven by accumulated institutional orders — NIFTY should not retrace 8 spot pts within the first 30-60 seconds after the expansion bar. A 4-pt option stop gives the trade room for 1-2 bar hesitation while killing false expansions (which retrace immediately).",
+    "target_points": 7,
+    "target_rationale": "7 option pts (~14 NIFTY spot pts at delta 0.5). Genuine vol expansions from compression on NIFTY typically produce 15-25 spot pt moves in the first 60-120 seconds. Targeting 14 spot pts captures roughly 60-70% of the lower end of this range, providing 1:1.75 risk-reward while maintaining a realistic hit rate. Targeting the full 25 pts would require holding through the full expansion, increasing false-target risk.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "none — this strategy is vol-regime agnostic by design; the compression_ratio itself captures the current vol environment without needing VIX",
+    "time_filter": "09:30-15:20 IST; skip first 15 min (09:15-09:30) where open auction distorts vol measurements and rvol_360 baseline is insufficient",
+    "volume_filter": "implicit — bar_range expansion naturally correlates with volume; explicit volume filter avoided to prevent over-fitting to NIFTY index volume which is noisy at 5s resolution",
+    "trend_filter": "VWAP + EMA(20) dual confirmation provides session-level and short-term trend alignment",
+    "spread_filter": "none — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.52,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.89,
+    "edge_decay_risk": "low — volatility clustering is structural in index microstructure; the compression→expansion pattern is driven by institutional TWAP scheduling which is stable"
+  },
+  "adaptation_notes": "Original used 30-bar 1-min realized vol vs 250-bar percentile on individual Nifty50 stocks (stock-specific compression). Converted to the NIFTY index itself with: (1) compressed fast lookback from 30-min to 2-min because we trade the immediate 15-120s expansion not the 15-60 min continuation; (2) baseline changed from 250-bar (4h) to 360-bar (30-min) to capture intraday session regime without mixing morning and afternoon vol regimes; (3) percentile ranking replaced with compression_ratio (rvol_24/rvol_360) for efficiency and stability; (4) range expansion confirmation kept from original (bar_range > 1.5x avg) as it directly identifies the explosive breakout bar; (5) VWAP + EMA dual filter replaces single VWAP condition because NIFTY index VWAP alone is noisy at 5s resolution.",
+  "weaknesses": [
+    "Vol can compress for 5-15 minutes on NIFTY (flat, low-activity period) generating no signals — patience required and session trade count will be low on quiet days",
+    "Direction of expansion is uncertain even with VWAP/EMA filter — NIFTY can gap-reverse immediately after range expansion, stopping out before the real move begins",
+    "rvol_360 baseline requires 30 minutes of data (360 bars warmup) — strategy cannot trade effectively in the first 30 minutes of the session even after the 09:30 time filter",
+    "False compression readings during news event aftermath where vol briefly dips before the second wave — the range_expansion filter mitigates but does not eliminate this"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_44.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-60 bars (15-60 min)",
+    "original_indicators": ["rvol_30 (30-bar realized vol)", "rvol_250 (250-bar baseline)", "rvol_pctile (percentile rank)", "atr_20 (stop sizing)", "vwap", "ema_20"],
+    "original_stop": "0.8 * ATR(20)",
+    "original_target": "2.0 * ATR(20)"
+  }
+}

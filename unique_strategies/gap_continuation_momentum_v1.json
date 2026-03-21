@@ -2,106 +2,120 @@
   "name": "gap_continuation_momentum_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["gap", "continuation", "momentum", "opening-gap", "regime-filter"],
-  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_169.json",
+  "tags": ["gap", "momentum", "continuation", "orb", "opening-range"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_47.json",
   "original_name": "gap_continuation_momentum_v1",
-  "mechanism": "When NIFTY opens with a gap >0.3% driven by overnight global cues (US futures, Asian markets, SGX Nifty), the gap reflects pre-positioned FII and domestic institutional orders that need intraday execution. If after 20 minutes of trading the gap is holding — NIFTY close remains above the session open for a gap-up — VWAP-benchmarked institutional algorithms are net directional buyers, continuously absorbing counter-trend flow. At 5-second resolution, these resting buy programs create periodic micro-continuation pulses: each brief 30-60 second pullback in price is quickly absorbed, generating 10-20 NIFTY spot point resumption moves. We enter at the onset of these micro-pulses using 1-minute positive momentum as the trigger, capturing the option premium expansion as NIFTY resumes its gap direction.",
+  "mechanism": "When NIFTY gaps up > 0.4% at open on global cues or FII-driven overnight information, institutions with unfinished buy programs allow price to consolidate during 09:15-09:30 as the opening order queue clears. When NIFTY then closes above the 15-minute post-open range high (ORB high), VWAP-benchmarked algorithms — still below their target allocation — trigger systematic buy orders simultaneously, creating a 30-90 second directional burst. At 5-second resolution we enter at the exact ORB breakout bar rather than waiting for a 1-minute confirmation, capturing the first 10-15 spot points of institutional flow resumption before the burst exhausts. The inverse holds for gap-down: break below ORB low on a gap-down day signals continued institutional selling.",
   "universe": "NIFTY",
   "timeframe": "5s",
-  "session": "09:35-13:00 IST",
+  "session": "09:15-10:30 IST (entries only 09:30-10:30; ORB computed 09:15-09:30)",
   "hold_time_seconds": [30, 90],
   "max_hold_bars": 18,
-  "trades_per_day": "0-5",
-  "max_trades_per_day": 5,
+  "trades_per_day": "0-3",
+  "max_trades_per_day": 4,
   "data": {
     "ohlcv_5s": true,
     "option_chain": true,
-    "vix": true,
+    "vix": false,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
-    "other": ["prev_session_close"]
+    "other": []
   },
   "indicators": [
     {
       "name": "gap_pct",
-      "formula": "(session_open - prev_day_close) / prev_day_close",
+      "formula": "(first_open_of_day - prev_day_last_close) / prev_day_last_close * 100",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Day-level gap detection using NIFTY session open vs prior session's last close. Threshold 0.3% — much smaller than the original's 1.5% equity threshold because indices are less volatile; a 0.3% NIFTY gap represents ~60-70 spot points, a meaningful overnight information signal from global markets. Not scaled from the original — this is a fixed economic threshold set to NIFTY's volatility profile, not a bars calculation."
+      "purpose": "Identifies gap days. NIFTY gaps > 0.4% are overnight information events (global close, FII positioning, macro data) where institutional participants have genuine directional intent. Threshold set at 0.4% not 1.5% because index diversification compresses individual stock gaps by ~3-4x; a 0.4% NIFTY gap carries equivalent institutional conviction to a 1.5% single-stock gap."
     },
     {
-      "name": "gap_holding",
-      "formula": "close > session_open (gap-up) OR close < session_open (gap-down), checked after 09:35",
+      "name": "orb_high_15",
+      "formula": "MAX(high, 09:15 to 09:30)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "15-minute opening range high. FIXED TIME WINDOW — same 15 minutes as original regardless of bar timeframe (180 bars at 5s = 15 minutes = 09:15-09:30). This range represents the supply ceiling during morning queue absorption. NOT scaled because the opening range is a clock-based concept, not a bar-count concept."
+    },
+    {
+      "name": "orb_low_15",
+      "formula": "MIN(low, 09:15 to 09:30)",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "15-minute opening range low. Symmetric to orb_high_15. Break below signals continuation of gap-down with institutional selling."
+    },
+    {
+      "name": "vwap_session",
+      "formula": "CUMSUM(typical_price * volume) / CUMSUM(volume) from 09:15",
       "lookback": 0,
       "computed_on": "spot",
-      "purpose": "Bar-by-bar confirmation that the gap is not being filled. Replaces the original's structural check (bar-15 close > high of bars 1-5). After 09:35 IST, if NIFTY close stays above the session open on a gap-up day, institutional VWAP algorithms are net buyers and the gap-continuation thesis remains active. Dynamically turns off if the gap fills mid-morning, preventing false entries."
+      "purpose": "Session VWAP as institutional benchmark. CUMULATIVE measure — no lookback scaling needed. On a gap-up day, bullish breakout only valid above VWAP (confirms VWAP-benchmarked algos still buying). Below VWAP on a gap-up day suggests the gap is being faded."
     },
     {
-      "name": "mom_12",
-      "formula": "(close[i] - close[i-12]) / close[i-12]",
-      "lookback": 12,
+      "name": "vol_sma_60",
+      "formula": "SMA(volume, 60)",
+      "lookback": 60,
       "computed_on": "spot",
-      "purpose": "1-minute (12 bars × 5s) micro-momentum to time entry within the gap-continuation regime. 12 bars chosen because our hold time is 30-90 seconds — entering on fresh 1-min positive momentum means we are catching the micro-continuation onset, not chasing a move already 2-3 minutes old. Longer lookbacks (36-60 bars) would lag too much; shorter (6 bars) would be too noisy at 5s."
+      "purpose": "5-minute rolling volume average (60 bars x 5s = 5 min). ORB breakout only valid with volume surge > 1.2x this average. Compressed from original 10-bar 1-min SMA (10 min) to 5 min because at 5s bars near-real-time volume confirmation is needed, not a 10-minute lagged reference."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "gap_pct > 0.003 (NIFTY gapped up >0.3% from prior session close)",
-        "time_minutes >= 575 (past 09:35 IST, 20-min confirmation window elapsed)",
-        "close > session_open (gap still holding, not being filled by sellers)",
-        "mom_12 > 0.0001 (fresh 1-minute positive micro-momentum: continuation onset)",
-        "VIX < 22 (low fear regime; high-VIX gap days often see sharp reversals)"
+        "gap_pct > gap_threshold (default 0.4%)",
+        "close > orb_high_15 (breakout above ORB high)",
+        "close > vwap_session (above institutional benchmark)",
+        "volume > vol_sma_60 * vol_ratio (confirming volume surge, default 1.2x)",
+        "time_minutes in [570, 630) (09:30-10:30 IST only)"
       ],
-      "confirmation": "All conditions simultaneously true on a single 5s bar"
+      "confirmation": "5-second bar closes above 15-min ORB high on a gap-up day with volume confirmation"
     },
     "buy_pe": {
       "conditions": [
-        "gap_pct < -0.003 (NIFTY gapped down >0.3% from prior session close)",
-        "time_minutes >= 575 (past 09:35 IST)",
-        "close < session_open (gap-down still holding, no recovery)",
-        "mom_12 < -0.0001 (fresh 1-minute negative micro-momentum: bearish continuation)",
-        "VIX < 22"
+        "gap_pct < -gap_threshold (default -0.4%)",
+        "close < orb_low_15 (breakdown below ORB low)",
+        "close < vwap_session (below institutional benchmark)",
+        "volume > vol_sma_60 * vol_ratio (confirming volume surge, default 1.2x)",
+        "time_minutes in [570, 630) (09:30-10:30 IST only)"
       ],
-      "confirmation": "All conditions simultaneously true on a single 5s bar"
+      "confirmation": "5-second bar closes below 15-min ORB low on a gap-down day with volume confirmation"
     },
-    "entry_price": "market"
+    "entry_price": "limit at candle close"
   },
   "exit": {
-    "stop_points": 3.0,
-    "stop_rationale": "3 option points = ~6 NIFTY spot points at delta 0.5. A gap-continuation micro-pulse driven by institutional VWAP flow should not retrace 6 spot points within 30-90 seconds; if it does, either the gap is filling or a counter-macro event has shifted institutional order direction. Exit immediately — the regime is no longer valid.",
-    "target_points": 5.0,
-    "target_rationale": "5 option points = ~10 NIFTY spot points. Gap-continuation micro-pulses on NIFTY average 10-20 spot points per pulse at 1-2 minute timescales; targeting 10 pts captures the conservative lower half of that range at 1:1.67 R:R, achievable within our 30-90 second hold window without requiring the full continuation leg.",
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY reverses back inside the ORB after the breakout, the institutional flow thesis is invalidated — false ORB breakouts typically retrace 6-10 spot pts within 30 seconds. 4 pts allows noise without absorbing a full reversal.",
+    "target_points": 7,
+    "target_rationale": "7 option points (~14 NIFTY spot points). Post-ORB gap continuation bursts typically extend 15-20 spot points in the first 60-90 seconds as stacked buy orders execute. 7 pts captures the lower end of this extension with 1:1.75 R:R, calibrated to typical NIFTY 1-minute move of 3-7 option pts.",
     "time_stop_bars": 18,
-    "eod_rule": "flatten at 13:00 IST (no new entries; afternoon sessions see more two-way flow as institutional execution winds down)"
+    "eod_rule": "flatten at 15:25"
   },
   "filters": {
-    "vix_filter": "VIX < 22; gap days with elevated VIX (>22) frequently see institutional selling into the gap, reversing the continuation thesis",
-    "time_filter": "09:35-13:00 IST; first 20 min is the confirmation window, afternoon sessions have less directional institutional flow",
-    "volume_filter": "not applied explicitly; index volume at 5s is noisy and gap_holding provides the same filtering function",
-    "trend_filter": "gap direction IS the trend filter — only trade in the direction of the opening gap",
-    "spread_filter": "not applicable; limit order execution at 5s close prices, no bid-ask spread cost"
+    "vix_filter": "none — gap continuation persists across vol regimes; high-VIX days have larger gaps that continue more strongly",
+    "time_filter": "entry only 09:30-10:30 IST; after 10:30 gap momentum dissipates as VWAP reverts and late participants fade the gap",
+    "volume_filter": "volume > 1.2x 5-min rolling SMA at breakout bar",
+    "trend_filter": "VWAP filter ensures direction aligns with institutional benchmark",
+    "spread_filter": "none (limit order execution at close price)"
   },
   "edge": {
-    "expected_bps": 35,
+    "expected_bps": 30,
     "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.67,
-    "profit_factor_estimate": 1.94,
-    "edge_decay_risk": "low — gap-continuation days driven by global macro flows are persistent; institutional VWAP execution creates predictable micro-pulses that are difficult to front-run at 5s latency"
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.0,
+    "edge_decay_risk": "low — institutional VWAP-benchmarked algos create structural ORB continuation; index-level flow, not stock-specific news"
   },
-  "adaptation_notes": "Original: NIFTY 200 stock universe, gap >1.5%, 15-min structural confirmation (bar-15 > high of bars 1-5), 30-90 min hold, VWAP + volume filters. Key changes: (1) Gap threshold 1.5%→0.3% because NIFTY index is ~5x less volatile than individual stocks intraday. (2) Structural confirmation replaced by bar-by-bar gap-holding check (close vs session_open after 09:35) — more responsive at 5s and avoids discrete bar lookups. (3) Added 1-min micro-momentum trigger (mom_12) to time entry within the gap regime, replacing the original's single entry at 09:30. (4) Hold time compressed from 30-90 min to 30-90 seconds — we trade the micro-continuation pulses, not the full intraday trend. (5) Stock-specific filters (delivery volume, catalyst type, ADV, bid-ask spread %) replaced with VIX regime filter only, appropriate for index trading.",
+  "adaptation_notes": "Original traded individual Nifty50 stocks gapping > 1.5%. Converted to NIFTY index: (1) gap threshold reduced from 1.5% to 0.4% — index diversification compresses moves ~3-4x, same conviction = smaller index gap; (2) hold time compressed from 15-60 min to 30-90s by entering at the 5-second ORB breakout bar rather than waiting for 1-min confirmation; (3) ORB time window stays at exactly 15 minutes (180 bars at 5s) — clock-based concept, not bar-count; (4) vol_sma window compressed from 10-min to 5-min for faster volume confirmation; (5) stock-level catalysts replaced by index-level overnight information (SGX Nifty, global close, FII positioning).",
   "weaknesses": [
-    "Gap conditions (>0.3% held past 09:35) occur on only ~30-40% of trading days; zero-trade days are common",
-    "On strong gap-up days, aggressive sellers quickly fill the gap before 09:35, disabling the strategy for the entire session",
-    "Using session_open as the fill-detection level is imprecise — a transient dip below open and recovery resets the gap_holding signal, potentially missing valid continuation bars",
-    "1-minute momentum trigger may fire too late on high-velocity gap mornings where the micro-pulse is already 2-3 minutes old at entry"
+    "NIFTY gaps > 0.4% occur on ~30-40% of trading days — strategy is idle on flat-open days",
+    "Post-ORB breakout on gap days can be false (trapped longs, algo stop hunts) — volume filter reduces but does not eliminate this",
+    "Gap continuation tends to work for first 45-60 min; late entries near 10:30 have lower hit rate",
+    "Correlated with global markets — consecutive false breakout days possible during range-bound global sessions"
   ],
   "_source": {
-    "original_file": "trading_strategies/unique_strategies_all/Strategy_169.json",
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_47.json",
     "original_timeframe": "1min",
-    "original_hold_time": "30-90 minutes",
-    "original_indicators": ["gap_pct (1.5-5% threshold)", "first_15_return (bar 15 vs bar 1 open)", "first_15_vol (>2x average volume)", "VWAP (session cumulative)", "ATR_14d (daily bars)"],
-    "original_stop": "VWAP level OR 0.5% from entry",
-    "original_target": "0.8% from entry"
+    "original_hold_time": "15-60 bars (15-60 minutes)",
+    "original_indicators": ["gap_pct", "orb_high_15", "orb_low_15", "vwap", "volume_sma_10", "atr_20_daily"],
+    "original_stop": "orb midpoint",
+    "original_target": "0.5 * abs(gap_pct) from entry"
   }
 }

@@ -126,6 +126,11 @@
       "name": "cross_listed_arb_v1",
       "source_file": "trading_strategies/unique_strategies_all/Strategy_198.json",
       "reason": "NSE-BSE cross-listing arbitrage for mid-cap equity stocks. The entire thesis is about transient price divergences between the same stock on NSE vs BSE due to differential HFT participation and order flow. This fundamentally requires: (1) a universe of mid-cap stocks dual-listed on both NSE and BSE, (2) order book data from both exchanges simultaneously, (3) simultaneous execution on two different exchanges. NIFTY/BANKNIFTY index is not cross-listed — it trades exclusively on NSE; there is no BSE equivalent of the NIFTY or BANKNIFTY index. Without NSE-BSE dual listing, the entire arbitrage mechanism does not exist. There is no directional NIFTY/BANKNIFTY signal derivable from this thesis. Explicit kill: requires cross-sectional universe of dual-listed equity stocks with per-stock order book data from both exchanges."
+    },
+    {
+      "name": "orb_multi_stock_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_235.json",
+      "reason": "Pure multi-stock portfolio ORB strategy — trades 5-8 NIFTY 50 constituent stocks simultaneously and derives its entire edge from cross-stock diversification (portfolio win rate ~70% vs individual stock ~52%). Requires per-stock ORB levels, per-stock volume/ATR, correlation matrix of 50 stocks, sector membership caps, per-stock earnings filter, and portfolio beta tracking. Our pipeline provides only the NIFTY/BANKNIFTY index (spot_df), option_df, and vix_df — no individual equity feeds exist. Collapsing to a single NIFTY ORB breakout destroys the diversification thesis entirely and is already converted as orb_momentum_v22 (killed 4+ additional times for the same reason). Explicit kill: requires cross-sectional universe of equity stocks with per-stock price/volume feeds."
     }
   ]
 }

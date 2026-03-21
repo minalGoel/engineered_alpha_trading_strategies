@@ -1,0 +1,122 @@
+{
+  "name": "orb_gap_combo_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["ORB", "gap", "opening_range", "breakout", "momentum", "dual_alignment"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_233.json",
+  "original_name": "orb_gap_combo_v1",
+  "mechanism": "On NIFTY, an overnight gap encodes FII/DII directional conviction formed after previous close; when the 15-minute opening range breakout aligns with the gap direction, it reveals that domestic institutional and algorithmic participants agree with the overnight macro bias. This dual confirmation — gap direction + ORB breakout direction — triggers simultaneous execution from gap-continuation algos and ORB-breakout systems, creating a cascade of aggressive limit-order consumption above/below the ORB boundary that sustains for 30-90 seconds. Volume confirmation filters out low-conviction ORB breaks where algorithmic demand is thin, selecting only bars where order flow imbalance is measurably above the session mean.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-10:40 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_close"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(day_open - prev_day_close) / prev_day_close * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Day-level gap percentage computed once at session open — no rolling lookback, just the overnight displacement. Threshold 0.15% chosen because NIFTY index moves are smoother than individual stocks (original used 0.3% for single stocks); below 0.15% is market noise, above 0.15% is a genuine overnight institutional position. Smaller threshold than original because index gap is already an aggregated signal across 50 stocks."
+    },
+    {
+      "name": "orb_high",
+      "formula": "max(high, bars where time_min in [555, 570))",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Fixed 15-minute time window 09:15–09:30 = 180 bars at 5s. NOT scaled — the ORB is a real-time window defined by market structure (overnight information absorption), not a rolling lookback. Same 15 minutes as the original strategy's ORB definition."
+    },
+    {
+      "name": "orb_low",
+      "formula": "min(low, bars where time_min in [555, 570))",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Symmetric to orb_high for bearish ORB breakdowns. Same fixed 15-minute window."
+    },
+    {
+      "name": "vol_sma_240",
+      "formula": "rolling_mean(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "240-bar (20-min) rolling volume mean as baseline. Matches original's SMA(volume, 20) on 1-min bars = 20 minutes real time. This is a CONTEXT FILTER (not a trade trigger), so the original time horizon is preserved rather than compressed. Used as denominator for vol_ratio."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume / vol_sma_240",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Volume at breakout bar relative to 20-min mean. Threshold 1.2x (slightly relaxed from original's 1.3x for stocks) because index volume is noisier at 5s resolution than stock volume at 1-min. Confirms that the ORB breakout bar carries genuine order flow, not random price drift."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_min in [570, 640) — 09:30 to 10:40 IST, ORB must be fully formed",
+        "gap_pct > gap_threshold (default 0.15%) — NIFTY gapped up overnight",
+        "close > orb_high — price breaks above ORB high (aligned with gap direction)",
+        "2-bar persistence: orb_breakout_up on current AND previous bar — 10s filter vs 5s noise",
+        "vol_ratio > vol_ratio_threshold (default 1.2) — volume confirms institutional participation",
+        "vix in [12, vix_max] (default vix_max=22) — avoid extreme fear/low-vol regimes"
+      ],
+      "confirmation": "2 consecutive 5s closes above ORB high with volume surge in gap-up direction"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_min in [570, 640) — 09:30 to 10:40 IST",
+        "gap_pct < -gap_threshold (default -0.15%) — NIFTY gapped down overnight",
+        "close < orb_low — price breaks below ORB low (aligned with gap direction)",
+        "2-bar persistence: orb_breakout_down on current AND previous bar",
+        "vol_ratio > vol_ratio_threshold — volume confirms selling pressure",
+        "vix in [12, vix_max]"
+      ],
+      "confirmation": "2 consecutive 5s closes below ORB low with volume surge in gap-down direction"
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 NIFTY spot pts at ATM delta ~0.5. A confirmed gap+ORB breakout that is genuine should not retrace 10 spot pts through the ORB level within 90 seconds — that magnitude of retrace means the dual-alignment thesis has failed. Calibrated at the wide end of the 1-minute typical NIFTY range (3-7 pts) to avoid premature stop-out on normal volatility while flagging true reversals.",
+    "target_points": 8,
+    "target_rationale": "8 option pts = ~16 NIFTY spot pts. On gap-aligned ORB breakout days, the first-impulse leg extends 20-35 spot pts beyond the ORB level before the first meaningful pullback. Targeting 16 spot pts (bottom 50% of expected range) at 1:1.6 R:R is conservative enough to be hit frequently while exceeding breakeven by 13x. Consistent with the 2-minute NIFTY typical option move of 5-10 pts at our 90s hold time.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST (entries already restricted to 10:40, so time_stop handles all exits)"
+  },
+  "filters": {
+    "vix_filter": "India VIX 12–22 (default). Below 12: extremely low volatility makes ORB breaks false-positive prone; above 22: gap-driven ORB ranges become so wide that 5-pt stop is insufficient and breakout follow-through is erratic",
+    "time_filter": "entries restricted to 09:30–10:40 IST — the gap+ORB combo only has predictive power in the first 70 minutes post-ORB when gap-filling vs continuation dynamics are still active",
+    "volume_filter": "vol_ratio > 1.2 at breakout bar — confirms institutional order flow, not algorithmic price probing",
+    "trend_filter": "gap direction acts as the trend filter: only trade ORB breakouts aligned with overnight gap (no counter-gap entries)",
+    "spread_filter": "limit orders — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.40,
+    "edge_decay_risk": "low-moderate — gap+ORB dual alignment is more selective than pure ORB (fires ~1-2x/day vs 3-4x/day for ORB alone), reducing the overcrowding risk that erodes pure ORB alpha; the combination criterion is underused by retail and semi-systematic traders"
+  },
+  "adaptation_notes": "Original strategy traded NIFTY50 constituent STOCKS: per-stock gap vs stock's prev_close, per-stock ORB range, with NIFTY index gap as a tertiary confirmation filter. In conversion, we apply the ENTIRE thesis to NIFTY index itself: NIFTY's own overnight gap replaces stock gap, NIFTY's own ORB replaces stock ORB, and the 'triple alignment' collapses to dual alignment (gap + ORB are now the same instrument). This is valid because the index IS the aggregated expression of the constituent gaps. Volume filter threshold lowered from 1.3x to 1.2x because index volume at 5s has higher baseline noise than single stock 1-min volume. Hold time compressed from 30-240 min to 30-90s (time_stop=18 bars): we capture only the first impulsive leg of the ORB continuation, exiting before the strategy enters the reversal-prone consolidation phase that dominates the original's long hold. Entry window restricted to 09:30-10:40 IST (vs original's 09:30-10:15) because gap+ORB thesis decays rapidly as session VWAP absorbs overnight bias.",
+  "weaknesses": [
+    "On days with NIFTY gap > 0.8% the opening range itself may encompass the entire gap reversal zone; the ORB level becomes less meaningful as a support/resistance, increasing false breakout rate",
+    "The 10-second persistence filter (2 × 5s bars) is necessary but minimal; choppy gap days produce multiple 10s breaks above/below ORB without follow-through, leading to repeated small losses",
+    "Entry window 09:30–10:40 is restrictive; strategy fires 0 signals on flat-open days (gap < 0.15%), making it capital-inefficient as a standalone strategy"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_233.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-240 mins",
+    "original_indicators": ["gap_pct", "ORB_high_15", "ORB_low_15", "ORB_breakout_direction", "NIFTY_gap_direction", "volume_ratio_20", "ATR_14"],
+    "original_stop": "ORB_mid OR 50% gap fill",
+    "original_target": "gap_pct + 1.5 × ORB_range from breakout level"
+  }
+}

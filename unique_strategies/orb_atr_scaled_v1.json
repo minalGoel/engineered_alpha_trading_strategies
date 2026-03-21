@@ -1,0 +1,130 @@
+{
+  "name": "orb_atr_scaled_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["ORB", "ATR_scaled", "adaptive_exits", "vol_adjusted", "intraday_breakout"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_234.json",
+  "original_name": "orb_atr_scaled_v1",
+  "mechanism": "NIFTY's 09:15-09:30 window is the overnight information absorption period; large institutional participants hold back directional orders until the range crystallises. When NIFTY breaks above the range high with expanding volume and ADX-confirmed directionality, the previously-withheld institutional TWAP flow begins executing and creates a sustained 15-25 spot point extension within the next 60-120 seconds. The KEY innovation over standard ORB: targets and stops scale with ATR(14 min at 5s) rather than the ORB range width. On high-volatility NIFTY mornings (wide ATR), the setup warrants wider stops and targets; on quiet days, tighter management avoids giving back small gains. This decouples the entry signal (ORB, about price structure) from trade management (ATR, about current volatility regime).",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-10:30 IST entry, hold to 15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "orb_high_180",
+      "formula": "max(high) where time_minutes in [555, 570) on each session day",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Fixed 09:15-09:30 window = same 15 minutes regardless of bar size. NOT scaled — it's always 15 calendar minutes (180 bars at 5s vs 15 bars at 1-min). The opening range is an event-time construct, not a lookback."
+    },
+    {
+      "name": "orb_low_180",
+      "formula": "min(low) where time_minutes in [555, 570) on each session day",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Same as orb_high_180 — fixed event-time window."
+    },
+    {
+      "name": "atr_168",
+      "formula": "Wilder ATR(168) on spot OHLC",
+      "lookback": 168,
+      "computed_on": "spot",
+      "purpose": "14 min of volatility (168 × 5s = 840s = 14 min). Matches original ATR(14, 1-min) exactly: 14 × 60/5 = 168 bars. This IS the correct 12x scaling because ATR is a TIME-WINDOW construct — we want the same 14 minutes of market data to estimate per-bar volatility at the moment of breakout. ATR_168 ≈ 2-5 NIFTY spot pts per 5s bar; ×0.5 delta gives option pt equivalent for scaling stops/targets."
+    },
+    {
+      "name": "adx_36",
+      "formula": "ADX(36) using Wilder smoothing on spot OHLC",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-min ADX (NOT 14-min scaled). We hold 30-120s, so the direction filter should confirm trend over a lookback comparable to the hold window. Original's 14-min ADX is a context filter; at 5s, a 3-min ADX detects whether the breakout bar itself has directional structure — fast enough to signal regime, slow enough to avoid 5s noise."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumulative sum(close × volume) / sum(volume) from session open, reset each day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative measure — no lookback or scaling needed. VWAP acts as institutional benchmark: breakout above VWAP confirms institutional buyers are absorbing supply at above-average prices, adding conviction to ORB long."
+    },
+    {
+      "name": "vol_ratio_36",
+      "formula": "volume / SMA(volume, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-min volume SMA (NOT 20-min as in original). At 5s, volume is extremely noisy bar-by-bar; SMA(36) = 3 min is the shortest window that smooths tick-level noise while still being reactive to the breakout surge. Original's SMA(20, 1-min) = 20-min context is too slow for a 30-120s hold — we need to know if THIS breakout bar is above-average, not above the last 20 minutes."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > orb_high_180 (ORB breakout above opening range high)",
+        "adx_36 > 18.0 (3-min directional movement present)",
+        "vol_ratio_36 > 1.2 (breakout bar volume above recent average)",
+        "close > vwap (trading above institutional benchmark)",
+        "close_in_bar_range > 0.70 (bar closed in upper 30% — bullish close, not a wick)",
+        "time_minutes in [570, 630] (09:30-10:30 IST entry window only)"
+      ],
+      "confirmation": "All 6 conditions must be true simultaneously on the signal bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < orb_low_180 (ORB breakdown below opening range low)",
+        "adx_36 > 18.0",
+        "vol_ratio_36 > 1.2",
+        "close < vwap",
+        "close_in_bar_range < 0.30 (bar closed in lower 30%)",
+        "time_minutes in [570, 630]"
+      ],
+      "confirmation": "All 6 conditions simultaneously on signal bar"
+    },
+    "entry_price": "limit order at bar close"
+  },
+  "exit": {
+    "stop_points": "ATR_adaptive: clip(ATR_168 × 0.5 × stop_atr_mult, 3.0, 8.0) — default stop_atr_mult=2.5",
+    "stop_rationale": "NIFTY ORB breakouts typically 'throwback' 8-12 spot pts to the ORB level before continuing; at delta ~0.5 that is 4-6 option pts. ATR_168 × 0.5 × 2.5 with a 3.0-pt floor achieves this on average: on a typical NIFTY session (ATR ≈ 2.5 spot pts/bar), stop = clip(3.1, 3, 8) ≈ 3-4 pts; on a high-vol day (ATR ≈ 4 pts/bar), stop = clip(5.0, 3, 8) ≈ 5 pts — correctly giving the trade more room when the market is choppier.",
+    "target_points": "ATR_adaptive: clip(ATR_168 × 0.5 × target_atr_mult, 6.0, 14.0) — default target_atr_mult=5.0",
+    "target_rationale": "NIFTY's first-leg ORB extension covers 15-25 spot pts within 2 minutes of breakout confirmation; at delta 0.5 that is 7-12 option pts. ATR_168 × 0.5 × 5.0 scales to current session volatility: typical day gives clip(6.25, 6, 14) ≈ 6-7 pts; high-vol gives clip(10.0, 6, 14) = 10 pts — maintaining a consistent ~2:1 reward-to-risk across volatility regimes, which is the strategy's core edge.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX 12-28 (wide range — ATR scaling adapts to vol, so VIX filter only blocks extreme dislocations)",
+    "time_filter": "Entry window 09:30-10:30 IST only; ORB signal degrades rapidly after first hour",
+    "volume_filter": "vol_ratio_36 > 1.2 (breakout bar must exceed 3-min average volume)",
+    "trend_filter": "ADX_36 > 18 (directional movement present at 3-min scale)",
+    "spread_filter": "limit orders at bar close — no spread concern"
+  },
+  "edge": {
+    "expected_bps": 45,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 2.26,
+    "edge_decay_risk": "low — ORB is a structural feature of NIFTY open; ATR-scaling is a systematic improvement over fixed-range exits. Requires the opening range to be meaningful (less effective on very news-heavy days where range is artificially wide)."
+  },
+  "adaptation_notes": "1. ORB window: unchanged at 15 min (09:15-09:30); 15 bars at 1-min becomes 180 bars at 5s — same time, more bars. 2. ATR: 12x scaling IS correct here because ATR is a per-bar-range average and we want the same 14-minute time coverage. ATR(168 × 5s) = ATR(14 × 1-min). 3. ADX: COMPRESSED from 14-min to 3-min (36 bars). Original's 14-min ADX is a slow context filter appropriate for 15-120 min holds; at 30-120s holds, we need ADX to detect directional structure within the last 3 minutes, not the last 14. 4. Volume SMA: COMPRESSED from 20-min to 3-min (36 bars) — same reasoning as ADX; we need to compare breakout volume to very recent norm, not 20-min history. 5. VWAP: unchanged concept (cumulative). 6. Entry window: preserved (09:30-10:30 IST). 7. VIX filter: widened slightly from '12-25' to '12-28' — ATR-scaling already adapts to vol, so VIX filter only blocks extreme tail events. 8. Hold time: compressed from 15-120 min to 30-120s (max 24 bars); ATR-scaled stops/targets remain appropriate.",
+  "weaknesses": [
+    "ATR(168) computed at breakout time may be dominated by the ORB window itself (first 180 bars), so ATR and ORB width could be correlated — the 'decoupling' is partial",
+    "NIFTY ORB only generates 2-4 valid breakout signals per day; 6 max_trades_per_day is aspirational, actual frequency likely 2-3",
+    "Entry window (09:30-10:30 IST) limits to first 60 minutes; late-session ORB retests (common on rangebound days) are excluded",
+    "ADX(36) at 5s is noisy and slow to ramp — may miss fast opening breakouts in the first 3 minutes after 09:30"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_234.json",
+    "original_timeframe": "1-min",
+    "original_hold_time": "15-120 mins",
+    "original_indicators": ["ORB_high_15 (15-bar 1-min)", "ATR_14 (1-min)", "ADX_14 (1-min)", "volume_ratio SMA(20)", "VWAP"],
+    "original_stop": "entry - 1.0 × ATR_14",
+    "original_target": "entry + 2.0 × ATR_14"
+  }
+}

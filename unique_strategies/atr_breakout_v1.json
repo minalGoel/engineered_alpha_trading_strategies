@@ -1,0 +1,103 @@
+{
+  "name": "atr_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "volatility", "momentum", "atr"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_6.json",
+  "original_name": "atr_breakout_v1",
+  "mechanism": "On NIFTY, when a 5-second candle's range exceeds 1.5× the recent 2-minute average true range, it signals that a large directional market order has swept multiple price levels within a single 5-second window — characteristic of institutional algo execution (TWAP/VWAP programs) that have initiated a directional leg. These programs typically fill only 30-60% of their intended size per burst, leaving continuation pressure that persists for the next 30-90 seconds. We enter at the close of the expansion candle in the direction of the bar (bullish close → CE, bearish close → PE), capturing the continuation leg before the program order is complete.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "atr_24",
+      "formula": "mean(TrueRange, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars = 2 minutes of rolling average true range. NOT 12x the original 14-bar period (which would give 168 bars = 14 minutes). We compress because our hold is 15-60 seconds — we want to measure the local micro-volatility regime at the same timescale as our trade, not the session-scale regime. A 14-minute ATR would be too slow to reflect intraday volatility shifts; a 2-minute ATR captures the current burst regime."
+    },
+    {
+      "name": "bar_range",
+      "formula": "high - low",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Current 5-second candle range compared against ATR to detect volatility expansion."
+    },
+    {
+      "name": "vol_mean_60",
+      "formula": "mean(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60-bar (5-minute) rolling volume average for the NIFTY index. Adapted from the original 20-bar average on 1-minute stocks. At 5s frequency, index volume is noisy tick-by-tick; 5 minutes gives stable baseline to detect genuine activity surges vs. noise."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "bar_range > range_mult * atr_24",
+        "close > open (bullish candle)",
+        "volume > 1.2 * vol_mean_60"
+      ],
+      "confirmation": "All three on same bar; enter at bar close"
+    },
+    "buy_pe": {
+      "conditions": [
+        "bar_range > range_mult * atr_24",
+        "close < open (bearish candle)",
+        "volume > 1.2 * vol_mean_60"
+      ],
+      "confirmation": "All three on same bar; enter at bar close"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option points corresponds to ~6 NIFTY spot points at ATM delta ~0.5. A genuine ATR breakout should not retrace more than 6 spot points within 30 seconds — if it does, the 'large program order continuation' thesis is wrong and the expansion was noise. At 5-second hold we need tight stops.",
+    "target_points": 5.0,
+    "target_rationale": "5 option points (~10 NIFTY spot points). A confirmed ATR expansion on NIFTY typically sees 10-20 spot point continuation in the burst direction (per observed 1-min burst behavior). 5 pts captures ~50% of the lower end of that range with 1:1.67 R:R, leaving room for the time stop to handle partial moves.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "none — VIX not used; ATR directly captures realized volatility regime",
+    "time_filter": "09:20-15:25 IST; skip first 5 minutes of session (09:15-09:20) to avoid pre-open noise",
+    "volume_filter": "volume > 1.2 * vol_mean_60 (index volume confirmation)",
+    "trend_filter": "candle direction (close vs open) provides implicit trend/direction filter",
+    "spread_filter": "none — limit order execution model"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.4,
+    "edge_decay_risk": "medium — structural. ATR breakout signals are widely known but the 5s granularity capturing institutional program continuation is less crowded than daily/weekly ATR strategies."
+  },
+  "adaptation_notes": "Original used ATR(14) on 1-minute bars with range > 1.5× ATR on NIFTY200 stocks. Three key adaptations: (1) Lookback compressed from 14×1min to 24×5s (2 minutes) — we trade at 5s so we need local micro-volatility, not session regime. (2) Direction added explicitly: original implied bullish/bearish by candle direction but didn't state it; we make it explicit with close vs open as the buy_ce/buy_pe switch. (3) Universe changed from equity stocks to NIFTY index — on the index, single-stock noise is averaged away and what remains is purer institutional order flow, making ATR expansions more signal-rich.",
+  "weaknesses": [
+    "False signals during news spikes (RBI, FOMC) where range expands but no continuation follows",
+    "At 5-second resolution, individual large trades can create transient range expansion without institutional follow-through",
+    "Volume filter on index may fire too loosely during high-vol sessions",
+    "Range expansion candles on NIFTY can sometimes be gaps between bids/offers at session boundaries rather than genuine program flow"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_6.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "1-10 bars (1-10 min)",
+    "original_indicators": ["ATR(14)", "bar range (high-low)"],
+    "original_stop": "0.5% from entry",
+    "original_target": "1.0% from entry"
+  }
+}

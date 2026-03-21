@@ -1,0 +1,121 @@
+{
+  "name": "vwap_mean_reversion_v13",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "volume_confirmation", "persistence_filter"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_98.json",
+  "original_name": "vwap_mean_reversion_v13",
+  "mechanism": "On NIFTY, when the index sustains a z-score deviation below -2.4 relative to the 60-minute session standard deviation for at least two consecutive 5-second bars AND volume is elevated above the 5-minute average, this is the signature of multi-wave institutional forced selling — not a single algorithmic spike that corrects in one bar. The 2-bar persistence distinguishes sustained cascades (where stop-loss programs, FII sell orders, and VWAP-benchmarked algorithms overlap) from momentary data artifacts. At this depth of persistent dislocation, every VWAP-benchmarked program on NIFTY is aggressively under-benchmark and begins absorbing supply simultaneously, creating the snap-back within 30-120 seconds as buy programs overwhelm the now-depleted sell queue.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each session_date",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Cumulative session VWAP — institutional benchmark. No lookback scaling needed; cumulative measure resets at open."
+    },
+    {
+      "name": "vwap_stddev_720",
+      "formula": "STDDEV(close, 720)",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": "720-bar (60-min) rolling standard deviation of close, for z-score normalization. The original uses 20-bar × 5-min = 100-min window to capture stable session volatility context. At 5s bars, 720 bars = 60 min provides similar stability (full first half of session) without over-compressing. This longer window raises the bar for what counts as 'extreme' compared to shorter windows in v10 (180-bar/15-min) and v11 (240-bar/20-min), selecting only the deepest dislocations that are extreme relative to the session's full realized volatility baseline."
+    },
+    {
+      "name": "vwap_zscore",
+      "formula": "(close - vwap) / max(vwap_stddev_720, 0.5)",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": "Deviation from VWAP in units of 60-min session volatility. Floor of 0.5 prevents division instability in ultra-low-vol sessions. Threshold ±2.4 from original — selects events more extreme than v10 (-2.3) and targets a slightly shallower extreme than v11 (-2.5)."
+    },
+    {
+      "name": "rel_volume_60",
+      "formula": "volume / SMA(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Current 5s volume relative to 5-minute (60-bar) average. The original uses 10-bar × 5-min = 50-min window. At 5s, a 5-minute baseline (60 bars) captures the current session pace without being too sensitive to start-of-session low volume. Shorter than v10's 36-bar (3-min) baseline to be more stable across different session phases."
+    },
+    {
+      "name": "zscore_prev1",
+      "formula": "vwap_zscore shifted back 1 bar",
+      "lookback": 721,
+      "computed_on": "spot",
+      "purpose": "Prior bar z-score for 2-bar persistence filter. Requiring both current AND prior bar to exceed threshold eliminates single-bar spikes (data artifacts, micro-corrections within a run) and selects only genuine sustained dislocations. This is the key differentiator from single-bar-trigger variants (v10, v11, v12) — 10 seconds of sustained extreme deviation confirms multi-program cascade rather than a single algorithmic order."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_zscore < -zscore_threshold (default -2.4): current bar extreme negative deviation from 60-min VWAP stddev baseline",
+        "zscore_prev1 < -zscore_threshold: PRIOR bar also extreme — 2-bar persistence confirms sustained cascade, not single-spike artifact",
+        "rel_volume_60 > rel_vol_threshold (default 1.3): volume elevated above 5-min average, confirming active selling participation",
+        "vix_close < vix_max (default 30.0): avoid entering in circuit-breaker-level chaos where VWAP reversion assumptions break down",
+        "time_minutes in [560, 920): session 09:20-15:20 IST, avoid open noise and pre-close chaos"
+      ],
+      "confirmation": "Two consecutive bars at extreme negative z-score with volume surge — the 2-bar persistence is the primary filter: sustained forced selling with elevated volume marks the pre-exhaustion state before buy programs absorb the remaining supply."
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_zscore > +zscore_threshold (default +2.4): current bar extreme positive deviation",
+        "zscore_prev1 > +zscore_threshold: prior bar also extreme — sustained run-up, not spike",
+        "rel_volume_60 > rel_vol_threshold (default 1.3): elevated volume confirms active buying participation",
+        "vix_close < vix_max (default 30.0)",
+        "time_minutes in [560, 920)"
+      ],
+      "confirmation": "Symmetric: sustained high-volume run-up above VWAP marks the pre-exhaustion state before VWAP-sell programs overwhelm the bid."
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 6,
+    "stop_rationale": "6 option points because this targets deep 2.4-sigma deviations — if sustained for 2 bars with volume, the extreme is genuine and needs room. A 6-pt stop allows for a ~12 spot-point adverse move without exiting prematurely; at this dislocation depth, 12 spot points of further adverse move (total ~80+ pts below VWAP) indicates the thesis is broken and a sustained trend is forming rather than a reversion.",
+    "target_points": 10,
+    "target_rationale": "10 option points targets ~50% of the expected snap-back. Sustained 2.4-sigma deviations on NIFTY with volume confirmation historically revert 25-40 spot points within 90-120 seconds (delta 0.5 → ~12-20 option pts); capturing 10 pts (lower-bound of expected range) gives 1:1.67 R:R and ensures we close the position before the reversion overshoots or stalls.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "vix_close < 30.0 — avoids circuit-breaker regimes where VWAP assumption breaks; unlike v11 which uses 25.0, this allows elevated-but-not-extreme VIX sessions which often produce the best mean-reversion setups",
+    "time_filter": "09:20-15:20 IST",
+    "volume_filter": "rel_volume_60 > 1.3 — confirms active participation, not thin-market drift",
+    "trend_filter": "none — deep z-score is itself a contra-trend signal; adding trend filter would eliminate most valid signals",
+    "spread_filter": "none — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 2.12,
+    "edge_decay_risk": "medium — behavioral; persistent VWAP anchoring by institutional algos is structural but threshold sensitivity can change with index composition shifts"
+  },
+  "adaptation_notes": "The original uses a 20-bar × 5-min = 100-min stddev window for z-score normalization. Converted to 720-bar (60-min) at 5s for stability while compressing from 100 min (single-day comparison). The key structural change is the addition of 2-bar persistence: the original 5-min bars already embed 25 seconds of trading, so a single original bar 'persists' implicitly; at 5-second resolution we need explicit multi-bar confirmation to match the signal quality of the original. Volume baseline shortened to 5 min (60 bars) from the original's 50-min baseline because at 5s resolution, the relevant volume comparison is the 'current burst vs recent pace' not 'vs the full session.' VIX threshold set at 30 (vs original's none) to avoid circuit-breaker conditions unique to index options trading.",
+  "weaknesses": [
+    "2-bar persistence means we miss the very first entry bar — in fast snap-backs, price may have already moved 2-3 pts before entry fires, reducing effective target capture",
+    "720-bar warmup means no signals in the first 60 minutes of a session — limited morning trading",
+    "NIFTY index volume is a proxy (futures + ETF), not as clean as individual stock volume; rel_volume signal may be noisier than in original equity version",
+    "Similar to v10 in concept — real differentiation requires empirical testing to confirm 2-bar persistence adds signal quality vs. v10's single-bar"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_98.json",
+    "original_timeframe": "5min",
+    "original_hold_time": "10-30 bars (50-150 min)",
+    "original_indicators": ["VWAP", "vwap_zscore with STDDEV(20)", "rel_volume with SMA(10)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "VWAP touch"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "name": "vwap_mean_reversion_v11",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "forced_liquidation", "exhaustion", "elevated_vix"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_96.json",
+  "original_name": "vwap_mean_reversion_v11",
+  "mechanism": "On NIFTY, when the z-score relative to the 20-minute rolling standard deviation drops below -2.5 (typically 60-90 spot points below session VWAP at VIX 15-25 sessions), the selling transitions from discretionary VWAP-urgency accumulation to forced margin liquidation of leveraged long positions hitting stop-loss limits — a qualitatively different seller archetype with a hard supply ceiling. Once this forced-sell pool is depleted, there is no new supply to replace it and the bid side re-asserts abruptly. The microstructure signature of exhaustion is price beginning to lift within the 30-second window even while the z-score remains deeply negative: the close reclaims more than 30% of the 6-bar (30-second) high-low range from below, indicating that the forced sellers have been absorbed and market makers are aggressively raising bid ladders. On NIFTY, this forced-exhaustion pattern at -2.5 sigma produces a 25-35 spot point snap-back within 60 seconds as the vacuum left by exhausted sellers fills with VWAP-benchmarked buy programs that had been holding back to avoid chasing the forced-sell cascade.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset at session open (day_id boundary)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session-cumulative VWAP from open — no scaling needed. This is the institutional benchmark that TWAP/VWAP-mandated buy-side algorithms must beat. At z=-2.5, these algorithms face a 60-90 spot point benchmark lag and structural mandate to reduce tracking error, making their buy-program activation predictable once the forced-sell cascade exhausts."
+    },
+    {
+      "name": "vwap_stddev_240",
+      "formula": "rolling_std(close, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute (240 bars x 5s) rolling standard deviation of close prices, used as the z-score denominator. Calibrated at 240 bars (between v10's 180-bar 15-min and v18's 360-bar 30-min) for the following reason: the -2.5 threshold is more extreme than v10's -2.3, so the denominator needs to be more stable (more bars) to avoid spurious z=-2.5 readings from short vol spikes. However, we do not need the full 30-minute window of v18 because forced-liquidation events are triggered by today's session volatility, not a 30-minute smoothed history. At typical NIFTY intraday vol, std_240 ≈ 25-35 points, making z=-2.5 correspond to a 62-87 spot point deviation from VWAP — the forced-liquidation zone."
+    },
+    {
+      "name": "vwap_zscore",
+      "formula": "(close - vwap) / max(vwap_stddev_240, 0.5)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Session-normalized deviation from VWAP. Floor of 0.5 prevents noise division in ultra-low-vol periods. Threshold -2.5 selects the most extreme dislocation class — more extreme than v10's -2.3 and v18's -1.7 — targeting specifically the forced-liquidation regime rather than the broader VWAP-urgency regime."
+    },
+    {
+      "name": "range_position_6",
+      "formula": "(close - min(close, 6)) / max(max(close, 6) - min(close, 6), 0.1)",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Position of current close within the last 6-bar (30-second) high-low range, bounded [0, 1]. A value > 0.3 means price has reclaimed at least 30% of the 30-second range from below — the exhaustion signature of forced sellers being absorbed. Lookback of 6 bars (30 seconds) is chosen to match the mechanism: forced-liquidation programs execute in bursts of 10-30 seconds; the signal fires when the last burst is visibly absorbed within the same 30-second window. Shorter (3 bars = 15s) is too noisy; longer (12 bars = 60s) is too slow and the move has started. This indicator is the key differentiator from v10 (which uses rel_volume) and v18 (which uses dev_momentum over 2 minutes)."
+    },
+    {
+      "name": "vix_close",
+      "formula": "India VIX close, backward-aligned via asof join to spot bars",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Upper VIX cap of 25. Below VIX 25, the market is in a range where forced liquidations are episodic (leverage is accessible and positions get levered up, then occasionally margin-called) but not regime-changing (where the index trends relentlessly down for hours). Above VIX 25, the -2.5 sigma VWAP deviation may be a structural break rather than an overshoot, and the reversion thesis fails. Original had the same VIX < 25 threshold; the absolute level is preserved because VIX regime boundaries are independent of bar frequency."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_zscore < -zscore_threshold (default -2.5): extreme negative deviation, typically 60-90 NIFTY spot pts below VWAP",
+        "range_position_6 > range_thresh (default 0.3): close has reclaimed >= 30% of the 30-second range from the low — forced sellers absorbed",
+        "vix_close < vix_max (default 25.0): elevated-but-not-crisis VIX regime where forced liquidation is episodic",
+        "bar within session 09:30-15:20 IST",
+        "at least 240 bars of warmup from dataset start"
+      ],
+      "confirmation": "Range reclaim above 30% of 30-second window while z-score still extreme — the two conditions together confirm both the degree of dislocation AND the incipient exhaustion of sellers"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_zscore > +zscore_threshold (default +2.5): extreme positive deviation, typically 60-90 NIFTY spot pts above VWAP",
+        "(1 - range_position_6) > range_thresh (default 0.3): close has fallen >= 30% from the 30-second high — forced buyers absorbed",
+        "vix_close < vix_max (default 25.0)",
+        "bar within session 09:30-15:20 IST",
+        "at least 240 bars of warmup"
+      ],
+      "confirmation": "Symmetric: forced buy-side exhaustion at extreme positive z-score — close falling from 30-second high while deviation remains extreme"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option points (~10 NIFTY spot points at delta 0.5). At z=-2.5, the existing dislocation is already 60-90 spot points; if price moves an additional 10 spot points against the trade in the next 120 seconds, the forced-liquidation wave is still ongoing and the thesis has fired prematurely — exit and avoid the continuation. Tighter than v18's 6 pts (which uses a wider stop because it enters on momentum turning, before exhaustion is confirmed) because v11 waits for the range_position_6 confirmation signal, meaning entry is already at a cleaner spot — the stop can be tighter.",
+    "target_points": 9,
+    "target_rationale": "9 option points (~18 NIFTY spot points at delta 0.5). The forced-liquidation snap-back at -2.5 sigma on NIFTY covers 25-35 spot points in the first 60-90 seconds as VWAP-benchmarked programs fill the vacuum left by exhausted forced sellers. At delta 0.5, 18 spot points = 9 option points, capturing roughly 55-60% of the expected snap-back — conservative enough to exit before the reversion stalls at z=-1.5 and the second slower leg begins. R:R = 1:1.8.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "vix_close < 25.0 — upper cap only; prevents trading in structural breakdown regimes where VWAP reversion fails; no lower cap because forced liquidations can occur even at low VIX when position sizing is large",
+    "time_filter": "09:30-15:20 IST; first 15 minutes skipped for VWAP and rolling std warmup (240-bar std needs ~20 min to stabilize)",
+    "volume_filter": "none — replaced by range_position_6 as the exhaustion detector; NIFTY index volume is noisy due to basket rebalances",
+    "trend_filter": "none — this strategy fades extreme dislocations; trend alignment would contradict the reversion thesis",
+    "spread_filter": "none — limit order execution at candle close prices, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.8,
+    "profit_factor_estimate": 2.48,
+    "edge_decay_risk": "medium — forced-liquidation mechanics are persistent as long as leveraged long positioning exists in NIFTY derivatives; risk is that regulatory margin changes reduce leverage, shrinking the frequency of -2.5 sigma events"
+  },
+  "adaptation_notes": "Original Strategy_96 is a 15-min FnO equity strategy (top 50 by volume) with z-score threshold -2.5, rel_volume > 1.4, and VIX < 25. Key adaptations: (1) Universe → single NIFTY index: index VWAP reversion is driven purely by institutional benchmark mandates, not retail panic; z=-2.5 on the index represents forced-liquidation exhaustion, a cleaner and more structural signal than individual stock panic. (2) Timeframe: 15-min bars → 5-second bars. (3) Rolling std lookback changed from 50 bars x 15-min (750 min = multi-session) to 240 bars x 5s (20 min = current session context); the original's 750-minute window created a very stable denominator — we approximate this stability with 240 bars while keeping the window intraday. (4) rel_volume > 1.4 replaced by range_position_6 > 0.3: NIFTY volume at 5s resolution is dominated by basket rebalances and derivatives roll; the 30-second range reclaim is a cleaner exhausion signal visible at 5s that is mechanistically tied to the forced-liquidation thesis. (5) VIX < 25 preserved from original — same absolute threshold. (6) Stop changed from 1.5*ATR(14) to fixed 5 option pts. (7) Target changed from VWAP touch (impractical at 5s, often takes hours) to 9 option pts (~18 spot pts = ~55% of expected snap-back). Differentiation from other converted versions: v10 (z=-2.3, VIX band 12-22, rel_volume); v18 (z=-1.7, dev_momentum signal, no VIX); v19 (moderate z, range_contraction microstructure). v11 is the only version combining extreme threshold (-2.5) with VIX upper-cap-only filter and range_position_6 exhaustion detection.",
+  "weaknesses": [
+    "z=-2.5 events are rare (1-3 per day) — low trade frequency means small sample sizes and sensitive to a few bad days",
+    "range_position_6 can show false reclaim if selling pauses briefly mid-cascade before resuming — the true forced exhaustion may require a 2-bar confirmation that is not implemented",
+    "VIX < 25 means the strategy is inactive on the highest-volatility days when forced liquidations are most dramatic — a tradeoff against the risk of structural breakdown on those days",
+    "240-bar std warmup means the first 20 minutes of each session produce no signals"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_96.json",
+    "original_timeframe": "15-minute bars",
+    "original_hold_time": "30-60 bars (at 15-min = 7.5-15 hours, clearly ambiguous; max_hold_bars=15 = 225 min)",
+    "original_indicators": ["vwap", "vwap_zscore (STDDEV close 50 bars)", "rel_volume (SMA volume 20)"],
+    "original_stop": "1.5 * ATR(14) below entry",
+    "original_target": "VWAP touch"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "name": "ema_crossover_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "trend", "ema", "crossover"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_7.json",
+  "original_name": "ema_crossover_v1",
+  "mechanism": "On NIFTY, systematic momentum algorithms and TWAP/VWAP institutional executors track short-vs-medium EMA alignment at the 1-3 minute scale. When EMA(12) crosses above EMA(36) — a 1-minute trend flipping above a 3-minute reference — it marks the inflection where net buy-side order flow has conclusively overwhelmed the prior sell pressure: the institutional TWAP that initiated the push still has unexecuted volume, while fresh momentum algos pile in within seconds of the cross detecting the regime shift. On NIFTY specifically, this fast-EMA cross fires 4-8 times per session and each cross tends to sustain 30-90 seconds of continuation before the slower EMA catches up and the edge dissipates. Death crosses (EMA12 below EMA36) signal the symmetric sell-side flow acceleration.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema12",
+      "formula": "EMA(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 1-minute fast trend. NOT 12x the original 9-bar (which would give 108 bars = 9-min EMA — far too slow for 30-90s holds). At 5-second bars, a 1-minute EMA detects momentum that turns over within the same window as our trade duration, making it the correct trigger-level indicator."
+    },
+    {
+      "name": "ema36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "36 bars = 3-minute medium trend context. Maintains the original 9:21 ≈ 1:2.3 fast-to-slow ratio (12:36 = 1:3, close enough). A 3-minute reference EMA is stable enough that a 1-minute EMA crossing it reflects genuine regime change rather than noise, while being short enough to generate 4-8 crossovers per session. The original's 21-minute EMA context would rarely cross in a 30-90s hold window."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "EMA12[t-1] <= EMA36[t-1] AND EMA12[t] > EMA36[t]  (golden cross)",
+        "close[t] > EMA12[t]  (price confirming above fast EMA)"
+      ],
+      "confirmation": "close must be above EMA12 at cross bar to avoid entering fading crosses"
+    },
+    "buy_pe": {
+      "conditions": [
+        "EMA12[t-1] >= EMA36[t-1] AND EMA12[t] < EMA36[t]  (death cross)",
+        "close[t] < EMA12[t]  (price confirming below fast EMA)"
+      ],
+      "confirmation": "close must be below EMA12 at cross bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option pts = ~6 NIFTY spot pts. An EMA crossover that then reverses 6 spot points within 30 seconds means the order flow imbalance was momentary, not a regime shift — the institutional TWAP filled and stopped. At delta ~0.5, 6 spot pts = 3 option pts. Setting the stop tighter than 3 pts risks getting stopped by normal post-cross oscillation.",
+    "target_points": 6,
+    "target_rationale": "6 option pts = ~12 NIFTY spot points. Confirmed EMA crossovers on NIFTY typically continue 12-20 spot points within 90 seconds as residual institutional flow and momentum algos follow through. 6 pts captures ~50-60% of median expected continuation at 1:2 risk-reward.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "none — EMA crossover signal is independent of volatility regime",
+    "time_filter": "09:20-15:25 IST; first 5 minutes skipped to avoid pre-open auction gaps",
+    "volume_filter": "none — index volume is structural, not informative at 5s bars",
+    "trend_filter": "none — strategy is bidirectional, works in both trending and ranging days",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.26,
+    "edge_decay_risk": "medium — EMA crossover is widely known; NIFTY-specific execution advantage comes from 5s resolution entry before 1-min bar confirmers pile in"
+  },
+  "adaptation_notes": "Original used EMA(9) and EMA(21) on 1-min bars of nifty500 stocks, held 5-15 minutes. Converted to EMA(12) and EMA(36) on 5-second NIFTY index bars. Key changes: (1) Lookback NOT scaled 12x — instead matched to hold time: 1-min fast EMA vs 3-min slow EMA for 30-90s holds. Original's 9-min/21-min EMAs would not cross fast enough for 5s trading. (2) Entry is strict crossover (not sustained alignment) to fire once per momentum shift rather than holding for 5-15 bars. (3) Stop/target in option pts rather than % move — 3pt stop / 6pt target replaces 0.3%/0.5% equity targets. (4) Stock-specific 10-bar volume filter dropped — index volume at 5s is not informative.",
+  "weaknesses": [
+    "EMA crossovers lag — the 12-bar EMA requires ~1 min to reflect a trend change, so entry is 5-10 seconds after the actual momentum inflection",
+    "Multiple false crossovers during NIFTY consolidation phases (typically 11:00-12:30)",
+    "Death cross signals may underperform on upward-biased days when institutional buying absorbs all sell pressure quickly",
+    "Only 4-8 signals per day — low trade frequency means daily P&L variance is high"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_7.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-15 bars (5-15 min)",
+    "original_indicators": ["EMA(close, 9)", "EMA(close, 21)"],
+    "original_stop": "0.3% from entry",
+    "original_target": "0.5% from entry"
+  }
+}

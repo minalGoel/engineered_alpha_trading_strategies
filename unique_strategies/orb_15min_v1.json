@@ -1,0 +1,121 @@
+{
+  "name": "orb_15min_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "opening_range", "momentum", "orb", "width_filter"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_69.json",
+  "original_name": "orb_15min_v1",
+  "mechanism": "On NIFTY, when the 09:15-09:29 opening range compresses into a tight band (0.3-1.5% of index price, roughly 60-300 points), it signals that FII/DII desks and domestic algo participants are in genuine price discovery equilibrium — neither side has printed a decisive gap or directional bias. This condensed coiled state means that the first close above the ORB high with a volume surge (>1.5x the 20-minute rolling average) represents a decisive supply-ceiling break: an institutional buy program has cleared the ask-side resting orders that defined the upper bound, and the same algorithms that created the range now accelerate the breakout as their sell-stop orders above are triggered and VWAP-benchmark algos scramble to avoid tracking error. The tight range also means the breakout signal has lower noise than wide-ORB days where price action is already directional from the open. At 5-second resolution, a 2-bar persistence filter (10 seconds) prevents false triggers from index microstructure spikes that never appear in 1-minute bar framing.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-12:00 IST (entries), 09:30-15:25 IST (full session)",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-4",
+  "max_trades_per_day": 4,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "orb_high",
+      "formula": "MAX(high[09:15:00 to 09:29:59])",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Fixed 15-minute time window (09:15-09:29 = 180 bars at 5s). NOT scaled from any rolling lookback — the opening range is the same real-time window regardless of bar granularity. Chosen as 15 min (not 20 min as in orb_momentum_v22) to match the original strategy and because empirically the first 15 min captures the tightest equilibrium coil before the first directional impulse."
+    },
+    {
+      "name": "orb_low",
+      "formula": "MIN(low[09:15:00 to 09:29:59])",
+      "lookback": 180,
+      "computed_on": "spot",
+      "purpose": "Mirror of orb_high for bearish breakdowns. Same 15-minute window. Both levels are carried forward as constants for the rest of the day."
+    },
+    {
+      "name": "orb_width_pct",
+      "formula": "(orb_high - orb_low) / orb_low * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "The KEY filter absent in orb_momentum_v22. Computes daily ORB width as a percentage. Skip the day if < 0.3% (range too narrow = no information, tick noise) or > 1.5% (range too wide = gap day, high false breakout rate, stop becomes too large). This filter selects 'coiled spring' sessions where the breakout has genuine supply/demand compression behind it."
+    },
+    {
+      "name": "vol_sma_240",
+      "formula": "rolling_mean(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Rolling 20-minute volume average (240 × 5s = 20 min). Matches the original strategy's SMA(volume, 20) on 1-min bars — same 20 real-time minutes. Used as denominator for the breakout volume surge filter. 20 minutes chosen (not the 10-min 120-bar average in orb_momentum_v22) because we want a baseline that includes the opening range formation volume, not just the post-open quiet period."
+    },
+    {
+      "name": "persist_2bar",
+      "formula": "close[t] > orb_high AND close[t-1] > orb_high (for buy_ce)",
+      "lookback": 2,
+      "computed_on": "spot",
+      "purpose": "2-bar (10-second) persistence — slightly shorter than orb_momentum_v22's 3-bar because the width filter already screens out wide-range high-noise days, so the remaining tight-ORB days have cleaner breakouts that do not need the extra 5 seconds of confirmation."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes >= 570 AND time_minutes < 720 (09:30-12:00 IST — ORB formed and early session only)",
+        "close > orb_high for 2 consecutive 5s bars (persist_2bar)",
+        "volume > 1.5 * vol_sma_240 on current bar (volume surge confirms institutional commitment)",
+        "orb_width_pct >= 0.3 AND orb_width_pct <= 1.5 (width filter: coiled spring days only)",
+        "vix_close < 25 (avoid trending/panic sessions where ORB logic breaks down)"
+      ],
+      "confirmation": "2-bar close persistence above ORB high + volume surge"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes >= 570 AND time_minutes < 720 (09:30-12:00 IST)",
+        "close < orb_low for 2 consecutive 5s bars (persist_2bar)",
+        "volume > 1.5 * vol_sma_240 on current bar",
+        "orb_width_pct >= 0.3 AND orb_width_pct <= 1.5",
+        "vix_close < 25"
+      ],
+      "confirmation": "2-bar close persistence below ORB low + volume surge"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option points = ~6 NIFTY spot points at delta 0.5. The width filter ensures we only trade days where ORB is 60-300 points wide; the first 6 spot points of retracement back into the range signals the breakout has failed before establishing follow-through. Tighter than orb_momentum_v22's 5 pts because the width filter screens out wide, noisy ORB days that need more breathing room — tight-ORB breakouts either work immediately or reverse quickly.",
+    "target_points": 6,
+    "target_rationale": "6 option points = ~12 NIFTY spot points. Tight ORB sessions produce concentrated initial momentum bursts — when the coiled spring releases, NIFTY typically moves 15-25 spot points in the first 30-60 seconds (3-5 option pts) before the first pause. Targeting 12 spot points captures the majority of this burst conservatively within the 90-second time stop. Risk:reward = 1:2.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST; entry window closes at 12:00 IST"
+  },
+  "filters": {
+    "vix_filter": "vix < 25 — identical to original. ORB continuation breaks down in high-volatility regimes (VIX > 25) where NIFTY trends directionally all session and the range concept loses meaning",
+    "time_filter": "entry only 09:30-12:00 IST; ORB continuation is strongest in first 2-3 hours; afternoon entries have declining follow-through as institutional TWAP programs wrap up",
+    "volume_filter": "1.5x rolling 20-min average — higher threshold than orb_momentum_v22's 1.2x because tight ORB days have lower baseline volume; the 1.5x ensures genuine institutional breakout volume, not just slightly above average",
+    "trend_filter": "none — the width filter replaces VWAP as the day-quality filter; adding VWAP would over-filter on the already-screened tight-ORB days",
+    "spread_filter": "none — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.50,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 1.67,
+    "edge_decay_risk": "medium — width filter reduces trade frequency but improves precision; algo crowding of ORBs matters less on tight-range days where fewer participants have pre-programmed breakout triggers"
+  },
+  "adaptation_notes": "Original trades NIFTY 50 FNO constituent stocks on 1-min bars, holding 30-180 minutes with ATR-based position sizing. Key adaptations: (1) Applied to NIFTY index directly — the ORB thesis is more reliable on the index than individual stocks because institutional flow aggregates cleanly. (2) Opening range remains 15 real-time minutes (180 bars vs original's 15 bars — same wall-clock time). (3) Width filter 0.3-1.5% is preserved exactly — this is the CORE differentiator of this strategy vs orb_momentum_v22, which has no width gate. (4) VIX < 25 filter preserved. (5) Volume threshold kept at 1.5x (same as original, vs 1.2x in orb_momentum_v22). (6) ATR-based stops replaced with fixed 3/6 option premium points — tighter than orb_momentum_v22 because width filter screens out wide noisy days. (7) Hold time compressed from 30-180 min to 30-90s (18 bars); the original's mechanism — institutional flow commitment — manifests within seconds on the index, not minutes as it does on individual stocks. (8) Entry window capped at 12:00 IST matching original's 09:30-12:00 morning window. (9) 2-bar persistence (vs 3-bar in orb_momentum_v22) because width filter already screens high-noise days. (10) Daily ATR removed — not computable from intraday 5s bars and replaced by option premium stops.",
+  "weaknesses": [
+    "Width filter significantly reduces trade count — on many days NIFTY opens wide (>1.5%) after global events, eliminating the day's ORB opportunity",
+    "Volume comparison to 20-min SMA includes opening range volume which is structurally high — threshold of 1.5x may be too stringent on slower days",
+    "Tight ORB days (0.3-0.5%) can produce very small range endpoints where the 2-bar persistence generates entry 10-15 spots above the breakout level, reducing R:R",
+    "Entry window closes at 12:00 — afternoon momentum continuation from ORB breakout is missed"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_69.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-180 bars (30-180 min)",
+    "original_indicators": ["orb_high (15-bar)", "orb_low (15-bar)", "orb_width_pct", "orb_volume", "atr_20"],
+    "original_stop": "opposite side of ORB (orb_low for longs, orb_high for shorts)",
+    "original_target": "1.5 * orb_width from breakout level"
+  }
+}

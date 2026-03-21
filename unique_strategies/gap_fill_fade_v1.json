@@ -1,0 +1,106 @@
+{
+  "name": "gap_fill_fade_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "gap", "opening", "index"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_70.json",
+  "original_name": "gap_fill_fade_v1",
+  "mechanism": "When NIFTY or BANKNIFTY gaps 0.3-1.5% at open due to overnight global cues (SGX Nifty, Dow futures, Nasdaq), institutional desks with VWAP and arrival-price benchmarks immediately see sub-benchmark fills and begin accumulating (for gap-down) or distributing (for gap-up) against the gap direction. Within the first 25 minutes, this institutional flow is systematic and large enough to create measurable reversal momentum at the 5-second level. We detect the first 5-second reversal bar as confirmation that gap-fill flow has begun, then ride the initial 20-40 spot point impulse of this institutional rebalancing. Index gaps are smoother than single-stock gaps because no earnings or company events drive them — pure overnight noise from correlated global cues.",
+  "universe": "BOTH",
+  "timeframe": "5s",
+  "session": "09:20-09:45 IST (entry window), 15:25 IST flatten",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NIFTY and BANKNIFTY",
+    "order_book": false,
+    "other": ["previous_day_close"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(day_first_open - prev_day_last_close) / prev_day_last_close * 100",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Gap size classification. No lookback needed — computed once per day from day_id boundaries. Same time frame as original (daily). Thresholds kept at 0.3-1.5%: NIFTY 0.3% = ~60 pts, 1.5% = ~300 pts — within this band the gap is likely noise-driven and fillable in minutes."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute RSI to detect immediate momentum exhaustion in the gap direction. Original used RSI(7) on 1-min bars (7-minute exhaustion window). We compress to 36 bars (3 min) because at 5-second resolution we're entering the gap fill at its very start — we need exhaustion of the INITIAL gap-continuation impulse in the first 3 minutes, not over 7 minutes. A 7-min RSI would be too slow and would only trigger well after the best fill entry."
+    },
+    {
+      "name": "bar_green",
+      "formula": "close > open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "5-second reversal confirmation. Original required first green/red 1-minute bar. At 5-second bars we apply the same logic — a single 5s bar closing above its open is the first unit of reversal. Combined with RSI confirmation, this filters noise from sustained gap-continuation moves."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct between -1.5 and -0.3 (index gapped down moderately — noise, not information)",
+        "rsi_36 < 42 (initial gap-down momentum showing exhaustion)",
+        "close > open on current 5s bar (first reversal bar detected)",
+        "time_minutes <= 585 (09:45 IST — entry only in first 25 min of session)",
+        "vix < 22 (low-chaos regime where gap fills are more reliable)"
+      ],
+      "confirmation": "5-second bar closes above its open while RSI is sub-42, within entry window"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct between 0.3 and 1.5 (index gapped up moderately — noise, not information)",
+        "rsi_36 > 58 (initial gap-up momentum showing exhaustion)",
+        "close < open on current 5s bar (first reversal bar detected)",
+        "time_minutes <= 585 (09:45 IST — entry only in first 25 min of session)",
+        "vix < 22"
+      ],
+      "confirmation": "5-second bar closes below its open while RSI is above 58, within entry window"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option points = ~10 NIFTY spot points at delta 0.5. If the gap extends another 10 spot points after entry (instead of reversing), the gap-fill thesis is broken — institutional flow is not absorbing the gap. NIFTY 30-second typical move is 2-5 option pts, so 5 pts gives one full typical-move of room before cutting.",
+    "target_points": 8,
+    "target_rationale": "8 option points = ~16 NIFTY spot points at delta 0.5. For a 0.3-1.5% gap on NIFTY (~60-300 spot pts gap), the first institutional reversal impulse in 30-90 seconds typically covers 20-40 spot pts. We target 16 pts (conservative lower end), giving 1:1.6 risk-reward while ensuring the target is achievable within 18 bars (90 seconds).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "vix < 22 — same as original; high VIX days have information-driven gaps that may persist",
+    "time_filter": "entry only within first 25 minutes of session (09:20-09:45); after that, gap either fills or persists as information",
+    "volume_filter": "none applied — NIFTY/BANKNIFTY volume is always sufficient; index volume is noisy at 5s resolution",
+    "trend_filter": "implicit — gap_pct caps at 1.5% to exclude information-driven gaps; no explicit 5-day trend filter needed as NIFTY gaps are rarely trend-continuation",
+    "spread_filter": "none — limit orders at candle close, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.21,
+    "edge_decay_risk": "low-medium — index gap fill tendency is structurally robust (institutional benchmarking is persistent), but edge may compress as more algos target the same first-reversal-bar signal"
+  },
+  "adaptation_notes": "Three key changes from the original equity strategy: (1) Universe changed from top-50 FnO stocks to NIFTY/BANKNIFTY index — eliminates stock-specific event risk entirely, gap is always pure overnight noise at index level. (2) Hold time compressed from 15-120 min (full gap fill) to 30-90 seconds (first fill impulse only) — we exit well before the gap fills completely, capturing the first institutional push rather than the full convergence. This means targets are much smaller in absolute terms but achievable in seconds. (3) RSI lookback compressed from 7 to 36 bars (3 min instead of 7 min) — at 5s resolution we need a faster exhaustion signal; the original 7-min RSI would only confirm exhaustion long after the best entry has passed.",
+  "weaknesses": [
+    "Index gaps on event days (RBI, Union Budget, global shock) can persist all day regardless of gap size — the 1.5% cap helps but BANKNIFTY can have extreme persistent gaps even within this band",
+    "First 25 minutes of NIFTY have highest intraday volatility — 5-second reversal bar confirmation can fire on noise before the true reversal begins, leading to early entries that get stopped out",
+    "BANKNIFTY gap fills may be noisier than NIFTY because banking stocks have event-specific gaps (RBI policy, bank results) that contaminate the index gap"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_70.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-120 bars (15-120 min)",
+    "original_indicators": ["gap_pct", "gap_direction", "rel_volume_5", "rsi_7"],
+    "original_stop": "0.5% beyond gap extreme",
+    "original_target": "previous day close (full gap fill)"
+  }
+}

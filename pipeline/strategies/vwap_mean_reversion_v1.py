@@ -1,6 +1,6 @@
 """VWAP Mean Reversion v1 — RSI + VWAP Dual Confirmation
 
-Converts: trading_strategies/unique_strategies_all/Strategy_20.json
+Converts: trading_strategies/unique_strategies_all/Strategy_68.json
 Original: VWAP z-score reversion on Nifty50 stocks, 1-min bars, RSI + volume confirmation.
 
 Mechanism: On NIFTY, when a 10-min rolling z-score deviation from session VWAP drops below -1.5

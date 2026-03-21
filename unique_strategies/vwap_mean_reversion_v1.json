@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "author": "claude_strategist",
   "tags": ["mean_reversion", "vwap", "rsi", "dual_confirmation", "intraday"],
-  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_20.json",
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_68.json",
   "original_name": "vwap_mean_reversion_v1",
   "mechanism": "On NIFTY, when the index deviates more than 1.5 rolling standard deviations below session VWAP AND RSI(36) simultaneously confirms oversold conditions (RSI < 38), two independent signals of short-term exhaustion align. The VWAP z-score catches the statistical magnitude of dislocation — at z=-1.5 with 10-min rolling std, this is approximately 15-25 spot points below the institutional benchmark price, triggering VWAP-benchmarked algorithms to begin accumulating. The RSI exhaustion filter removes false positives where VWAP is stretched but price momentum is still negative (indicating continued selling pressure), keeping only entries where both the deviation depth AND the velocity of selling have abated. This dual-confirmation is the specific differentiator from v18 (which uses pure deviation momentum without RSI) and v19 (which uses range contraction microstructure): here the RSI acts as a sell-flow exhaustion gate, distinct from either magnitude-based or range-based filtering.",
   "universe": "NIFTY",
@@ -107,7 +107,7 @@
     "VWAP z-score may fire near day lows/highs that are structural breakouts rather than overshoots — no explicit day-range filter"
   ],
   "_source": {
-    "original_file": "trading_strategies/unique_strategies_all/Strategy_20.json",
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_68.json",
     "original_timeframe": "1-minute bars",
     "original_hold_time": "10-60 bars (10-60 minutes)",
     "original_indicators": ["vwap_zscore (60-bar rolling std)", "rel_volume (SMA 20)", "rsi_14", "atr_20"],

@@ -1,0 +1,98 @@
+{
+  "name": "afternoon_profit_fade",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "time_of_day", "vwap", "afternoon"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_348.json",
+  "original_name": "afternoon_profit_fade",
+  "mechanism": "On NIFTY/BANKNIFTY, when the index has moved more than 0.5% from session open by 14:45 IST, a predictable mean-reversion impulse emerges as leveraged retail and intraday prop-desk participants simultaneously unwind directional positions to avoid NSE EOD MTM margin calls and overnight risk. This creates concentrated one-sided order flow — heavy selling on strong up-days, aggressive covering on down-days — that pushes the index 15-25 spot points back toward session VWAP in the 14:45-15:15 window. BANKNIFTY exhibits a stronger version of this pattern given its higher retail F&O participation and leverage ratios. At 5-second bars we enter precisely as the unwinding flow begins at 14:45 rather than waiting for a full 1-minute bar confirmation, capturing the first leg of the VWAP reversion.",
+  "universe": "BOTH",
+  "timeframe": "5s",
+  "session": "14:45-15:20 IST",
+  "hold_time_seconds": [60, 600],
+  "max_hold_bars": 120,
+  "trades_per_day": "1-3",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX or NSE:NIFTYBANK-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each day_id",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative session VWAP — no lookback needed as it accumulates from bar 1. Target for the mean-reversion fade: on a strong up-day NIFTY is above VWAP and sellers push it back; on a down-day buyers absorb and lift it. VWAP is the natural magnet for EOD position liquidation."
+    },
+    {
+      "name": "day_return",
+      "formula": "(close - session_open_close) / session_open_close",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Intraday return from the day's first bar close. Original used 375 bars (full day at 1-min) — but this is simply a measure of 'how much has NIFTY moved today'. No scaling needed: it is the cumulative price change from session open to now, available at every bar. Threshold 0.5% for index vs original's 3% for stocks — index moves are compressed by diversification."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes >= 885 (14:45 IST)",
+        "time_minutes < 920 (15:20 IST)",
+        "day_return < -0.005 (index down >0.5% from open)",
+        "close < vwap_session (still below VWAP, reversion not yet started)"
+      ],
+      "confirmation": "none — enter at 5-second bar close to capture start of covering rally"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes >= 885 (14:45 IST)",
+        "time_minutes < 920 (15:20 IST)",
+        "day_return > 0.005 (index up >0.5% from open)",
+        "close > vwap_session (still above VWAP, fade not yet started)"
+      ],
+      "confirmation": "none — enter at 5-second bar close to capture start of profit-booking selloff"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts (~10 NIFTY spot pts at delta 0.5). If NIFTY moves 10 pts further against the fade direction within the first 2 minutes, end-of-day liquidation flow has not materialized — either the day's trend is extending on fresh news or the position squaring hasn't started, meaning the thesis is wrong for this session.",
+    "target_points": 8,
+    "target_rationale": "8 option pts (~16 NIFTY spot pts). Afternoon VWAP reversion on NIFTY covers 15-25 spot pts in the 14:45-15:10 window during trend-days. Targeting 8 pts captures the lower end of expected reversion (1:1.6 R:R) — conservative given that not all fades reach full VWAP, some stall at the midpoint.",
+    "time_stop_bars": 120,
+    "eod_rule": "flatten at 15:20 IST (session_end_minutes = 920)"
+  },
+  "filters": {
+    "vix_filter": "none — afternoon fade works in both high and low VIX regimes as EOD margin pressure is calendar-driven",
+    "time_filter": "strictly 14:45-15:20 IST (885-920 min). No trades outside this window — the profit-booking behavior is only concentrated in this period.",
+    "volume_filter": "none",
+    "trend_filter": "day_return threshold acts as implicit trend filter — only trade when intraday move is large enough to trigger meaningful position liquidation",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.87,
+    "edge_decay_risk": "low — structural. EOD margin pressure is a persistent feature of NSE F&O market microstructure, driven by broker risk management systems that auto-square positions. This is a regulatory mechanism, not a behavioral bias."
+  },
+  "adaptation_notes": "The original traded individual NIFTY100 stocks with >3% daily moves. Converted to NIFTY/BANKNIFTY index with 0.5% threshold — stocks need larger moves because idiosyncratic volatility dominates, while the index move of 0.5% is sufficient to attract concentrated position-squaring flow (0.5% of NIFTY ≈ 110 pts, which triggers broker auto-square thresholds for highly leveraged retail F&O positions). The VWAP target from the original is preserved exactly — EOD liquidators push toward VWAP regardless of whether it's individual stocks or the index. Hold time compressed from 15-30 minutes to 10 minutes (120 bars) because at 5-second resolution the entry captures the beginning of the fade, not a lagged 1-minute confirmation; the first 5-10 minutes captures the bulk of the reversion before close-proximity effects create noise.",
+  "weaknesses": [
+    "Strong intraday trends can accelerate rather than fade near close — momentum ignition events (FII program trades, short squeezes) override the EOD liquidation pressure",
+    "On event days (budget, Fed, election results), the afternoon window may see continued directional flow rather than mean reversion",
+    "BANKNIFTY's expiry day (every Wednesday) sees anomalous options-driven hedging flows that distort the pattern — gamma hedging by market makers overwhelms the mean-reversion",
+    "Low-conviction days (day_return near threshold, 0.4-0.6%) produce noisy signals since not enough participants are underwater to trigger forced liquidation"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_348.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-30 bars (15-30 min)",
+    "original_indicators": ["day_return (375-bar lookback)", "vwap (session cumulative)"],
+    "original_stop": "0.5% from entry",
+    "original_target": "vwap touch"
+  }
+}

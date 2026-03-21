@@ -1,0 +1,104 @@
+{
+  "name": "vwap_zscore_mean_reversion",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "stat_arb", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_339.json",
+  "original_name": "vwap_zscore_mean_reversion",
+  "mechanism": "On NIFTY, hundreds of concurrent institutional VWAP-benchmarked algorithms (mutual funds, FIIs, prop desks) compete to fill directional orders throughout the mid-session. When a large block or cascade of market orders temporarily drives NIFTY 2.5+ standard deviations away from session VWAP in a non-directional (low directional-efficiency) regime, these VWAP algos collectively accelerate in the opposite direction — each algo is getting fills significantly better than its VWAP benchmark and increases participation rate. The resulting institutional counter-flow produces a mean-reversion snap-back of 10-20 NIFTY spot points within 30-90 seconds. The ADX/directional-efficiency filter is critical: on trending days NIFTY can sustain 3-sigma VWAP deviations for hours, so we only trade when the session character is choppy (directional efficiency < 0.30).",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-14:30 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume), reset daily",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative measure from session open — no scaling needed. Session VWAP is the institutional benchmark that NIFTY-algo desks are evaluated against throughout the day."
+    },
+    {
+      "name": "vwap_z",
+      "formula": "(close - vwap_session) / rolling_std(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "120 bars = 10 minutes rolling std. At 5s resolution, 10 minutes captures the current intraday volatility regime without including stale AM volatility. The original used 20 one-minute bars (20 min) as the normalization window. We compress to 10 min because we're trading the fast snap-back (30-90s), not the slow drift back over 15-45 minutes, so we want a more responsive local vol estimate that reflects the current session moment."
+    },
+    {
+      "name": "directional_efficiency_60",
+      "formula": "|close[i] - close[i-60]| / sum(|close[k] - close[k-1]|, k=i-59..i)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60 bars = 5 minutes directional efficiency. Replaces ADX(14) from original. For a context filter on a 5-second strategy, we need something that reacts within 5 minutes to a trending shift — ADX(14 min) is too slow for a 30-90s hold. Directional efficiency (net move / total path length) over 60 bars directly measures whether the last 5 minutes has been directional (>0.4) or choppy (<0.25). Value < 0.30 is the analog of ADX < 20, matching the original's non-trending filter."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_z < -zscore_threshold (default -2.5)",
+        "directional_efficiency_60 < de_threshold (default 0.30)",
+        "vix < vix_max (default 20.0)",
+        "close > open (bullish reversal bar — price starting to recover)"
+      ],
+      "confirmation": "Bullish 5s candle (close > open) at the z-score extreme confirms first buyers are stepping in"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_z > +zscore_threshold (default 2.5)",
+        "directional_efficiency_60 < de_threshold (default 0.30)",
+        "vix < vix_max (default 20.0)",
+        "close < open (bearish reversal bar — first sellers appearing)"
+      ],
+      "confirmation": "Bearish 5s candle at the z-score extreme confirms selling pressure emerging at overextension"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). A 2.5-sigma VWAP deviation on NIFTY typically represents 12-20 spot points below VWAP. If price moves another 8 spot points further from VWAP (deepening deviation), the mean-reversion thesis is broken — the market may have transitioned to trending mode mid-trade. 4 option pts gives room for one further 5s bar of extension without being overly tight.",
+    "target_points": 7.0,
+    "target_rationale": "7 option points (~14 NIFTY spot points at delta 0.5). A 2.5-sigma VWAP deviation reverts to VWAP over 30-90 seconds, covering ~80% of the deviation distance. The deviation itself is typically 15-25 spot points on NIFTY; 14 spot pts (7 option pts) captures 60-70% of the expected snap-back — conservative enough to be hit within the 90s time window, giving 1:1.75 risk-reward.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 14:30 IST (session end, avoid late-day trend transitions)"
+  },
+  "filters": {
+    "vix_filter": "vix < 20.0 — VIX > 20 means elevated vol where 3-sigma deviations can persist; reversion is unreliable in fear regimes",
+    "time_filter": "10:00-14:30 IST (600-870 min) — avoids opening auction noise (09:15-10:00) and late-session trend-following dominance (14:30+)",
+    "volume_filter": "none — NIFTY index volume is always liquid; individual bar volume not meaningful at 5s on index",
+    "trend_filter": "directional_efficiency_60 < 0.30 — non-trending regime required, analogous to ADX < 20 in original",
+    "spread_filter": "none — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "medium — behavioral; as more algos discover VWAP reversion the snap-back speed increases but the edge persists because institutional VWAP benchmarking is structural"
+  },
+  "adaptation_notes": "Three key changes from original: (1) Universe shifted from nifty200 stocks to NIFTY index — the index has structural VWAP-algo flow that individual stocks lack, making the mechanism MORE reliable, not less; (2) z-score threshold relaxed from 3.0 to 2.5 because 5-second NIFTY bars are less noisy than individual stock 1-minute bars — a 2.5-sigma event on 5s bars is still genuinely extreme; (3) ADX(14 min) replaced by directional_efficiency over 60 bars (5 min) — more responsive to regime changes within the compressed hold window, directly measures choppiness without the smoothing lag of Wilder ADX.",
+  "weaknesses": [
+    "NIFTY trending days: directional_efficiency filter should block entries, but rapid trend accelerations can temporarily register as non-trending before reversing",
+    "Flash-crash scenarios: VIX can lag a sudden NIFTY crash by 1-2 minutes; VIX filter may not protect in time",
+    "Expiry days: large gamma unwinds can cause sustained VWAP deviations that don't revert — consider skipping NIFTY weekly expiry Thursday"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_339.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 bars (15-45 minutes)",
+    "original_indicators": ["vwap_z (rolling_std 20 bars)", "adx_14"],
+    "original_stop": "1.5 * ATR(20) from entry",
+    "original_target": "vwap touch (z-score crosses 0)"
+  }
+}

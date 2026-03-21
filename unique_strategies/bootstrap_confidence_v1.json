@@ -1,0 +1,103 @@
+{
+  "name": "bootstrap_confidence_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["bootstrap", "statistical", "momentum", "confidence-interval", "quantitative"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_332.json",
+  "original_name": "bootstrap_confidence_v1",
+  "mechanism": "On NIFTY, large institutional and FII directional orders create persistent 5-second return autocorrelation that lasts 5-15 minutes as TWAP/VWAP algorithms steadily absorb liquidity. A block bootstrap CI (90%) built from the last 120 five-second log returns (10-min window) being entirely above zero means: accounting for the serial correlation structure, the positive directional bias is statistically robust — not a single-bar spike diluted in the average, but a sustained regime. When this condition fires on NIFTY, the same institutional order flow that created the statistical significance still has inventory to deploy, making the next 30-90 seconds of continuation probabilistically favorable. The CI width adapts naturally to current volatility regimes — wide in choppy markets (few signals) and narrow in trending markets (more signals), creating a self-filtering mechanism without explicit regime detection.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "log_ret_5s",
+      "formula": "log(close[i] / close[i-1])",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "5-second log return — the raw material for bootstrap resampling. Log returns are additive and better-behaved for statistical inference than simple returns."
+    },
+    {
+      "name": "block_bootstrap_ci_lower",
+      "formula": "5th percentile of 200 block bootstrap resamples (block_size=6, i.e. 30s blocks) of the mean of the last 120 log returns",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "120 bars = 10 minutes: same COUNT as original (120 1-min bars) giving equal statistical power, but compressed to 5s so the CI reflects the CURRENT regime rather than 2 hours of stale history. Block size=6 (30s) captures short-run autocorrelation in NIFTY 5-second returns driven by algorithmic order pacing."
+    },
+    {
+      "name": "block_bootstrap_ci_upper",
+      "formula": "95th percentile of same bootstrap distribution",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Upper bound of the 90% CI; if this is below zero, statistical evidence for downward directional bias."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ci_lower > ci_min_signal (entire 90% bootstrap CI above zero, minimum signal 0.8 bps per 5s bar = ~0.1% per 10-min window)",
+        "vix_close < vix_cap (default 22; high VIX widens CIs and makes genuine directional signals rarer but noisier)",
+        "time_minutes in [570, 920) — after 09:30 warmup, before 15:20 EOD flatten"
+      ],
+      "confirmation": "CI entirely positive across 200 bootstrap resamples — no additional confirmation required; the bootstrap test itself is the confirmation"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ci_upper < -ci_min_signal (entire 90% bootstrap CI below zero)",
+        "vix_close < vix_cap",
+        "time_minutes in [570, 920)"
+      ],
+      "confirmation": "CI entirely negative — statistical evidence for bearish directional bias"
+    },
+    "entry_price": "limit order at bar close"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "Bootstrap signal fires only in statistically high-confidence trending conditions; if NIFTY reverses enough to cost 3 option points (~6 spot pts at ATM delta 0.5), the institutional flow that triggered the signal has reversed and the thesis is broken. At a 30-90s hold, NIFTY typical move is 2-5 option pts — a 3-pt stop catches false breakdowns without being too tight on normal noise.",
+    "target_points": 6.0,
+    "target_rationale": "Sustained institutional momentum on NIFTY typically runs 12-20 spot points before mean reversion; 6 option points (~12 spot pts) captures the first leg of the move, giving a 1:2 risk-reward ratio consistent with the 60%+ win rate expected from bootstrap-filtered entries.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "VIX < 22 (high VIX inflates CI width and makes the CI-entirely-positive test harder to pass, paradoxically reducing signal quality)",
+    "time_filter": "09:30-15:20 IST — 09:30 ensures 10 min of warm-up bars for bootstrap window",
+    "volume_filter": "None — applied to NIFTY index; volume is available but not used as CI test subsumes regime detection",
+    "trend_filter": "None — CI test inherently captures the trend direction; no separate trend filter needed",
+    "spread_filter": "None — limit order execution at close prices, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 2.0,
+    "profit_factor_estimate": 3.0,
+    "edge_decay_risk": "Low-to-medium — bootstrap inference for short-horizon direction prediction is novel at 5s frequency; however, if market becomes more autocorrelated (or less), CI thresholds need re-calibration"
+  },
+  "adaptation_notes": "Original strategy applied bootstrap CI to 120 1-minute returns on NIFTY50 stocks (2-hour lookback). Converted to 120 five-second returns on NIFTY index (10-minute lookback) for three reasons: (1) same count = same statistical power; (2) 5s bars make the CI reflect the current intraday regime rather than stale 2-hour history; (3) index is smoother than individual stocks, reducing noise in the bootstrap samples. Session start moved from 11:15 (original needed 120 1-min bars from open) to 09:30 (10-min warmup). Hold time compressed from 15-45 min to 30-90s; stop/target calibrated to NIFTY ATM option premium moves at that timescale. Bootstrap reps reduced to 200 (from original's 500) as 200 gives stable 5th/95th percentiles for 120-sample windows.",
+  "weaknesses": [
+    "Block bootstrap with block_size=6 (30s blocks) assumes autocorrelation decays within 30s — if NIFTY has longer-run micro-trends (e.g., 2-3 minute momentum cycles), CI width may be underestimated",
+    "Running 200 bootstrap resamples per bar in Python is the compute bottleneck; full session backtest takes ~15-20s per day — acceptable for research, but limits parameter sweep granularity",
+    "CI-entirely-above-zero is strict: in choppy markets, this rarely fires, leading to zero-trade days — position sizing needs to account for low trade frequency",
+    "Signal fires after the move has already started (CI reflects the past 10 min); in fast-reversing intraday NIFTY regimes, entry may occur near the end of the move rather than the beginning"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_332.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["Block_Bootstrap_CI (120 bars, 500 reps, block_size=5)", "CI_Lower", "CI_Upper", "CI_Width", "Signal_Strength", "VWAP", "ROC(5)"],
+    "original_stop": "abs(CI_Lower) bps from entry",
+    "original_target": "Forward_Return_Proxy bps from entry"
+  }
+}

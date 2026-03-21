@@ -1,0 +1,164 @@
+{
+  "name": "lasso_feature_select_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["machine-learning", "feature-selection", "adaptive", "regression", "regime-adaptive"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_333.json",
+  "original_name": "lasso_feature_select_v1",
+
+  "mechanism": "On NIFTY at 5-second resolution, the relative predictive power of individual technical indicators shifts continuously throughout the session: momentum signals (MACD histogram, 1-min ROC) dominate during institutional TWAP/VWAP execution windows that create sustained 30-90 second directional bursts, while mean-reversion signals (VWAP distance, RSI) dominate during gamma-hedging chop between those order blocks. A LASSO regression model refitted every 5 minutes on the trailing 60 minutes of 5-second NIFTY data automatically selects which subset of 9 technical features currently has non-zero predictive power for the next 60-second index return — zeroing out irrelevant features and adapting to intraday regime shifts without requiring manual regime detection. When the sparse model (at least 2 active features) predicts a positive 60-second return exceeding the threshold, we buy NIFTY ATM CE; when it predicts a negative return below the negative threshold, we buy NIFTY ATM PE.",
+
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+
+  "indicators": [
+    {
+      "name": "vwap_dist",
+      "formula": "(close - session_VWAP) / close",
+      "lookback": "session_cumulative",
+      "computed_on": "spot",
+      "purpose": "Session VWAP is cumulative from 09:15 — no scaling. Captures current deviation from the institutional benchmark price, which VWAP-benchmarked algos are actively managing. Directly signals mean-reversion vs momentum regime."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute RSI. Original was RSI(14) on 1-min bars = 14-minute lookback. Compressed to 3 min because we predict 60-second returns: the RSI signal we need detects fast overbought/oversold turns within 3 minutes, not slow 14-minute recovery cycles. The LASSO coefficient will zero it out if RSI is not predictive in the current regime."
+    },
+    {
+      "name": "macd_hist",
+      "formula": "EMA(close, 12) - EMA(close, 26) - EMA(MACD_line, 9)",
+      "lookback": 35,
+      "computed_on": "spot",
+      "purpose": "MACD histogram with 12/26/9 bar periods (60s/130s/45s). Bar counts kept proportionally identical to original (12:26:9 ratio) — at 5s bars this captures micro momentum differentials that take 1-2 minutes to develop, matching our 60-second hold horizon. Histogram sign flips are the clearest momentum-change signal at this timescale."
+    },
+    {
+      "name": "bb_pos",
+      "formula": "(close - BB_lower(60, 2)) / (BB_upper(60, 2) - BB_lower(60, 2))",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute Bollinger position (0=lower band, 1=upper band). Original used BB(20) on 1-min bars = 20-minute window. We use 60 bars (5 min) as a CONTEXT filter, not a trigger — it tells LASSO whether NIFTY is in the upper or lower half of its recent range. Context filters use longer lookbacks than triggers."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume / rolling_mean(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute volume baseline ratio. Captures whether current bar has elevated volume (institutional activity) vs normal. Scaled to 5-min baseline rather than 20-min original because intraday volume patterns on NIFTY index shift rapidly; a 5-min rolling mean better captures the current volume regime."
+    },
+    {
+      "name": "atr_norm",
+      "formula": "ATR(close, high, low, 24) / close",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute normalized ATR (24 bars × 5s). Provides current volatility scale for LASSO to weight signals accordingly. Short lookback matches the trade trigger speed — we want recent volatility, not the full-session average."
+    },
+    {
+      "name": "obv_slope",
+      "formula": "linreg_slope(OBV, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute OBV linear regression slope. Captures the rate of accumulation/distribution in NIFTY volume. Original used 20-bar OBV slope on 1-min bars = 20-minute window. Compressed to 12 bars (1 min) because the volume-price divergence signal must match our 60-second prediction horizon — slow OBV trends are irrelevant for 60s trades."
+    },
+    {
+      "name": "roc_12",
+      "formula": "ROC(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute price return (12 bars × 5s). The primary momentum trigger feature. Original used ROC(10) on 1-min bars = 10-minute momentum. Compressed to 1-min (12 bars) because for 60-second option trades, the momentum that matters is the last 60 seconds of price movement, not the last 10 minutes."
+    },
+    {
+      "name": "vix_level",
+      "formula": "India_VIX_close (from vix_df)",
+      "lookback": "real_time",
+      "computed_on": "vix",
+      "purpose": "Real-time VIX provides the macro volatility regime. In high-VIX environments, NIFTY momentum signals are more noisy but reversion signals are stronger; LASSO discovers this automatically by upweighting vix_level interaction with other features. Unchanged from original — VIX is already real-time."
+    },
+    {
+      "name": "lasso_model",
+      "formula": "Lasso(alpha=1e-4).fit(X_train[i-720:i-12], fwd_ret_12[i-720:i-12]); refit every 60 bars",
+      "lookback": 720,
+      "computed_on": "spot",
+      "purpose": "Rolling 60-minute training window (720 bars). Original used 5 trading days of 1-min data (~1950 samples). Compressed to 1-hour rolling window because NIFTY intraday regimes shift on 30-90 minute cycles (morning auction → midday consolidation → afternoon trend); a 1-hour window captures the current regime without being polluted by morning patterns in afternoon sessions. Refit every 5 minutes (60 bars) to adapt to regime shifts while avoiding excessive retraining overhead."
+    }
+  ],
+
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "lasso_pred > signal_threshold (model predicts positive 60s return for NIFTY)",
+        "active_features >= active_features_min (at least 2 non-zero LASSO coefficients — sparse model with genuine signal)",
+        "in_session (09:30-15:20 IST)"
+      ],
+      "confirmation": "LASSO model fitted on at least 180 bars of training data (30-minute minimum)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "lasso_pred < -signal_threshold (model predicts negative 60s return for NIFTY)",
+        "active_features >= active_features_min",
+        "in_session (09:30-15:20 IST)"
+      ],
+      "confirmation": "Same LASSO model quality check"
+    },
+    "entry_price": "limit order at candle close"
+  },
+
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY moves more than 8 spot points against the predicted direction within 30 seconds, the model's regime assessment is clearly wrong — this is the upper end of a 30-second adverse NIFTY move (typical 30s adverse: 2-5 pts). We use the wider end because LASSO signals are not high-frequency scalp signals but regime-adaptive predictions that need some room.",
+    "target_points": 7.0,
+    "target_rationale": "7 option points (~14 NIFTY spot points). Strong LASSO signals (multiple active features pointing same direction) typically correspond to institutional momentum moves of 15-25 spot points over 60 seconds. Target at 14 spot points = ~56% of expected move, giving a 1:1.75 stop:target ratio. NIFTY typical 60s move is 3-7 option pts (ref: CONVENTIONS.md table); 7 pts is the upper end of this range, only hit on strong directional bars which LASSO specifically selects for.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+
+  "filters": {
+    "vix_filter": "No explicit VIX filter — VIX is a LASSO feature; the model handles regime implicitly",
+    "time_filter": "09:30-15:20 IST; minimum 360-bar warmup before first signal (~30 min of 5s data)",
+    "volume_filter": "Embedded in vol_ratio feature (LASSO coefficient adapts to volume regime)",
+    "trend_filter": "Embedded in roc_12 and obv_slope features (LASSO discovers momentum vs reversion regime)",
+    "spread_filter": "Limit order execution; no spread cost"
+  },
+
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Medium — LASSO is well-known but the specific feature set on 5-second NIFTY with rolling refit is less exploited. Edge could decay as more ML-based intraday strategies enter NIFTY options. Rolling refit means the model continuously adapts."
+  },
+
+  "adaptation_notes": "KEY CHANGES FROM ORIGINAL: (1) Universe shifted from NIFTY 50 constituent stocks to NIFTY index itself — eliminates cross-sectional ranking, single spot_df pipeline. (2) Training horizon compressed from 5-day daily model (~1950 1-min samples) to rolling 60-min window (720 5-second samples) refitted every 5 min — NIFTY regimes shift intraday, not just day-to-day. (3) Prediction target changed from 20-bar (20-min) forward return to 12-bar (60-second) forward return — matches the 30-60s option hold horizon. (4) Feature lookbacks compressed: RSI 14min → 3min, Volume 20min → 5min, OBV slope 20min → 1min, ROC 10min → 1min; BB and ATR also shortened. (5) Removed F8_NIFTY_Return_20 (redundant with roc_12 since we ARE trading NIFTY), merged into ROC(12). (6) LASSO alpha lowered to 1e-4 from 0.001 — at 5-second resolution with more data points and smaller absolute return values, a smaller regularization parameter allows finer feature weighting.",
+
+  "weaknesses": [
+    "LASSO assumes linear feature-to-return relationships — on NIFTY, VIX × momentum interaction (momentum only predictive when VIX < 16) is non-linear and will be missed",
+    "Rolling 1-hour refit at 5-minute intervals means the model always lags the actual regime by up to 5 minutes",
+    "Periods of very low NIFTY volatility produce near-zero fwd_ret targets causing LASSO to fit on noise",
+    "sklearn must be installed in the execution environment; strategy falls back to zero signals if unavailable",
+    "The 9 features include highly correlated pairs (rsi_feat and bb_feat, roc_12 and macd_hist) — LASSO handles correlated features less stably than Elastic Net"
+  ],
+
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_333.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-30 min (up to 45 bars)",
+    "original_indicators": ["RSI(14)", "MACD(12,26,9)", "BB(20,2)", "VWAP_dist", "Volume_ratio(20)", "ATR(14)", "OBV_slope(20)", "NIFTY_ROC(20)", "India_VIX", "Momentum_ROC(10)"],
+    "original_stop": "15 bps from entry",
+    "original_target": "abs(LASSO_Prediction) bps from entry"
+  }
+}

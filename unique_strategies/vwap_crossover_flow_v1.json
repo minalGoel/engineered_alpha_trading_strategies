@@ -1,0 +1,123 @@
+{
+  "name": "vwap_crossover_flow_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["vwap", "crossover", "volume", "institutional-flow", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_51.json",
+  "original_name": "vwap_crossover_flow_v1",
+  "mechanism": "On NIFTY, when the index spends 2.5+ minutes (30+ bars at 5s) consistently below session VWAP, VWAP-benchmarked institutional algorithms accumulate a growing execution deficit versus their benchmark — every fill they get is worse than VWAP. A subsequent crossover back above VWAP accompanied by a 3x+ volume surge fingerprints multiple TWAP/VWAP algos crossing their internal trigger simultaneously, shifting from gradual accumulation to active catch-up. The cross bar closing in the top 25% of its range confirms the absorption is clean with no counter-selling, and these algos' residual order queues drive sustained directional momentum for 30-60 seconds. The inverse holds for downward crosses after price has been persistently above VWAP.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume), reset at session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative session VWAP — no lookback needed, runs from 09:15 open. Not scaled from original because VWAP is inherently session-cumulative regardless of bar size."
+    },
+    {
+      "name": "consec_below_vwap",
+      "formula": "count of consecutive 5s bars where close < vwap, reset on crossover or day boundary",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Minimum 30 consecutive bars (2.5 min) below VWAP required before a cross is meaningful. Original used 30 min-bars = 30 minutes; here 30 5s-bars = 2.5 min is chosen because on NIFTY, 2.5 min of sustained below-VWAP positioning is enough for institutional VWAP algos to build a meaningful execution deficit without being in fully-regime-trending territory. Lookback window of 360 bars (30 min) ensures the counter has room to reach 60+ bars if needed."
+    },
+    {
+      "name": "consec_above_vwap",
+      "formula": "count of consecutive 5s bars where close > vwap, reset on crossover or day boundary",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Mirror of consec_below_vwap for bearish crossover detection. Same rationale."
+    },
+    {
+      "name": "vol_surge",
+      "formula": "volume / SMA(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Volume relative to 20-minute baseline (240 bars at 5s). Original used SMA(20) on 1-min bars = 20-minute baseline — same absolute time window chosen deliberately, not 12x scaled. A 20-minute rolling average gives a stable intraday volume baseline that accounts for the typical U-shaped intraday volume pattern without being too slow to react to regime changes."
+    },
+    {
+      "name": "bar_range_position",
+      "formula": "(close - low) / (high - low)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Where the cross bar's close sits within its range. >= 0.75 for bullish confirmation (close in top quarter), <= 0.25 for bearish. Validates that the institutional absorption left no significant tail — a close in the middle of the range suggests balanced supply/demand, not directional conviction."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "VWAP cross up detected (close[i] > vwap[i] AND close[i-1] < vwap[i-1])",
+        "consec_below_vwap at prior bar >= 30 (2.5 min of sustained below-VWAP)",
+        "vol_surge >= 3.0 (at least 3x 20-min average volume on cross bar)",
+        "bar_range_position >= 0.75 (cross bar closes in top 25% of its range)",
+        "VIX < 22 (avoid volatile regimes where VWAP algos abandon benchmarks)",
+        "In session 09:30–15:20 IST"
+      ],
+      "confirmation": "All four primary conditions must hold simultaneously on the same 5s bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "VWAP cross down detected (close[i] < vwap[i] AND close[i-1] > vwap[i-1])",
+        "consec_above_vwap at prior bar >= 30 (2.5 min of sustained above-VWAP)",
+        "vol_surge >= 3.0 (at least 3x 20-min average volume on cross bar)",
+        "bar_range_position <= 0.25 (cross bar closes in bottom 25% of its range)",
+        "VIX < 22",
+        "In session 09:30–15:20 IST"
+      ],
+      "confirmation": "All four primary conditions must hold simultaneously on the same 5s bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot points at delta 0.5. A valid VWAP cross on institutional flow should not retrace 8 spot points within 30-60 seconds — that magnitude of reversal (back through VWAP plus 8 pts) would mean the crossover was a fake-out where supply overwhelmed the buying surge. NIFTY typical 30s move is 2-5 option pts; a 4pt adverse move is 1-2x the typical bar noise, giving the trade room to breathe while cutting quickly on failure.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot points at delta 0.5. After a conviction VWAP cross — 2.5+ min of one-sided positioning plus 3x volume surge plus strong range close — NIFTY typically extends 14-25 spot points before the next equilibrium. 7 pts captures the lower end of this range (14 spot pts), giving a 1:1.75 R:R. The target is intentionally conservative because 5s execution means we catch the start of the move, and locking in gains early avoids the pull-back as secondary algos begin fading.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20"
+  },
+  "filters": {
+    "vix_filter": "VIX < 22 — high volatility regimes cause VWAP algos to abandon VWAP execution in favor of aggressive market orders, breaking the benchmark-chasing mechanism",
+    "time_filter": "09:30-15:20 IST — skip first 15 min (pre-open volatility corrupts VWAP) and last 10 min (EOD flows unrelated to VWAP benchmarking)",
+    "volume_filter": "vol_surge > 3.0 on cross bar — filters marginal crosses on thin volume that don't represent institutional flow shifts",
+    "trend_filter": "min 30 consecutive bars on one side of VWAP — distinguishes genuine regime shifts from choppy oscillation around VWAP",
+    "spread_filter": "N/A — limit order execution at close prices"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.43,
+    "edge_decay_risk": "low — VWAP benchmarking is institutional execution infrastructure mandated by performance attribution systems, not an alpha-seeking strategy that gets crowded out"
+  },
+  "adaptation_notes": "Three key changes from the original: (1) UNIVERSE: moved from top-25 Nifty50 stocks to NIFTY index itself — same institutional flow but more liquid, tighter bid-ask, no single-stock event risk. (2) TIMEFRAME: 30 bars at 5s = 2.5 min of sustained below-VWAP (vs 30 bars at 1-min = 30 min in original) — compressed because at 5s we're catching the initial flow shift, not waiting for long regime formation; 2.5 min is enough for NIFTY VWAP algos to accumulate meaningful deficit. (3) HOLD TIME: compressed from 15-60 min to 30-90s — original captured full continuation wave; here we capture just the first impulse as algo queues clear, consistent with 5s execution model. Volume lookback kept at 20-min absolute window (same as original's 20 1-min bars = 20 min). Trailing stop removed — too complex for 30-90s hold; fixed 4pt stop substituted.",
+  "weaknesses": [
+    "Index volume at 5s resolution is synthetically derived and may not accurately reflect true institutional participation",
+    "Cross condition at 5s is vulnerable to momentary spikes — NIFTY can touch VWAP and immediately retrace within one 5s bar",
+    "Requiring 3x volume AND top-25% range position simultaneously creates very low signal frequency — may fire only 2-3 times per day",
+    "VIX filter at 22 excludes high-IV days where VWAP-benchmarked algos continue operating but with wider risk tolerance"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_51.json",
+    "original_timeframe": "1-minute bars",
+    "original_hold_time": "15-60 minutes (15-60 bars at 1-min)",
+    "original_indicators": ["bars_below_vwap(60)", "bars_above_vwap(60)", "vwap_cross_up", "vwap_cross_down", "vol_surge(SMA_20)", "atr_20"],
+    "original_stop": "close crosses back through VWAP",
+    "original_target": "0.4% from entry"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "name": "partial_gap_fill_scalp_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "scalp", "mean_reversion", "opening_range", "vwap_anchor"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_48.json",
+  "original_name": "partial_gap_fill_scalp_v1",
+  "mechanism": "When NIFTY gaps up 0.5–1.5% at open, institutional VWAP algorithms benchmarked to the previous close face immediate adverse fills and systematically begin selling against the gap within the first few minutes to close their benchmark gap; market makers who delta-hedged overnight at the prior close also reduce exposure at the elevated open. This dual flow creates a magnetic pull toward the 50% gap level — the midpoint between the gap open and the prior close — that typically initiates within 1–5 minutes of the open. At 5-second resolution, a 2-minute RSI overbought/oversold reading pinpoints when the initial gap-direction momentum has stalled and the VWAP anchor flow is about to dominate, allowing entry at the precise turn rather than after a full 1-minute bar confirms the reversal.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-09:45 IST (entry window only)",
+  "hold_time_seconds": [30, 300],
+  "max_hold_bars": 60,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_close", "day_open"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(day_open - prev_day_close) / prev_day_close * 100",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Measures NIFTY index gap size relative to previous session close. No scaling needed — this is a daily level computed once per session from the first bar's open. The 0.5–1.5% band filters out noise gaps (<0.5% have no meaningful VWAP dislocation) and news-driven gaps (>1.5% where institutional behavior is directional, not anchoring)."
+    },
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute RSI (24 bars × 5s = 120s). Original used RSI(7) at 1-min (7 minutes of history). Compressed to 2 minutes because we are catching the FAST stall of the initial gap-direction burst, not waiting for a confirmed reversal. The 2-minute window is sensitive enough to register exhaustion as institutional gap-direction momentum slows before the VWAP anchor flow takes over. Scaling 7 min → 2 min is justified because we target the first reversion leg (30–300s), not the full partial fill."
+    },
+    {
+      "name": "gap_moved_fraction",
+      "formula": "abs(close - day_open) / abs(day_open - prev_day_close)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Fraction of the gap already moved toward the partial fill target. Entry is blocked when > 30% of the gap has already been covered — at that point the easy first-leg opportunity has passed and chasing the remaining move has poor risk/reward. This is a threshold filter, not a time-series indicator; no period scaling required."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct between -1.5 and -0.5 (NIFTY gapped DOWN 0.5–1.5% — expecting partial fill UP)",
+        "rsi_24 on prior bar < 30 (oversold — gap-down selling has exhausted)",
+        "current bar is green (close > open) — first sign the selling has stalled",
+        "gap_moved_fraction < 0.30 (price still near the gap open, not already filling)",
+        "VIX < 22 (moderate volatility — gap fills are more predictable)",
+        "time between 09:20 and 09:45 IST"
+      ],
+      "confirmation": "First green 5-second bar after RSI(24) drops below 30, within the 09:20–09:45 entry window"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct between +0.5 and +1.5 (NIFTY gapped UP 0.5–1.5% — expecting partial fill DOWN)",
+        "rsi_24 on prior bar > 70 (overbought — gap-up buying has exhausted)",
+        "current bar is red (close < open) — first sign the buying has stalled",
+        "gap_moved_fraction < 0.30 (price still near the gap open, not already filling)",
+        "VIX < 22",
+        "time between 09:20 and 09:45 IST"
+      ],
+      "confirmation": "First red 5-second bar after RSI(24) rises above 70, within the 09:20–09:45 entry window"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 spot pts adverse move. If NIFTY extends the gap by another 10 pts after entry, the VWAP anchoring thesis has failed — institutions are following the gap direction rather than anchoring to prev close. A 0.5–1.5% NIFTY gap is 110–330 pts; a 10-pt extension is a minor continuation signal that clearly breaks the partial-fill hypothesis. At ATM delta ~0.5, 10 spot pts = ~5 option pts.",
+    "target_points": 8,
+    "target_rationale": "8 option pts ≈ 16 spot pts of gap reversion. A 0.5–1.5% NIFTY gap = 110–330 spot pts; the 50% partial fill target = 55–165 pts. We capture the FIRST leg (~16 pts) of that reversion within 30–300 seconds as VWAP algorithm flow initiates — this is 10–30% of the full partial fill, taken before momentum fades. Consistent with 5-minute NIFTY ATM option typical range of 7–15 pts (at delta 0.5). Risk:reward = 1:1.6.",
+    "time_stop_bars": 60,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX < 22 — in high-volatility environments NIFTY gaps are event-driven and less likely to partially fill on institutional VWAP anchoring alone",
+    "time_filter": "Entry only 09:20–09:45 IST (25-minute window) — gap fill dynamics weaken sharply after 09:45 as other intraday patterns dominate NIFTY flow",
+    "volume_filter": "none — NIFTY index volume is aggregate across all constituents and reliably reflects institutional activity",
+    "trend_filter": "gap size 0.5–1.5% only — below 0.5% there is insufficient VWAP dislocation to trigger anchor flow; above 1.5% gaps are news-driven with directional continuation risk",
+    "spread_filter": "limit order execution — no bid-ask spread cost in this pipeline"
+  },
+  "edge": {
+    "expected_bps": 25,
+    "win_rate_estimate": 0.58,
+    "avg_winner_to_loser": 1.2,
+    "profit_factor_estimate": 1.65,
+    "edge_decay_risk": "low — VWAP anchoring by institutions is a structural behavior driven by benchmark reporting requirements that are unlikely to change"
+  },
+  "adaptation_notes": "Original was for top-25 Nifty50 individual stocks. Adapted to the NIFTY index itself, where VWAP anchoring is even stronger since every major FII/DII benchmarks to NIFTY, not individual stocks. RSI lookback compressed from 7 min (original RSI(7) at 1-min) to 2 min (24 bars at 5s) because at 5-second bars we target the fast stall of the gap-direction burst, not a full reversal confirmation. Hold time compressed from 10–45 min (original) to 30–300s because we target only the initial reversion impulse as VWAP algorithms begin executing — we do not need to hold for the complete partial fill. Entry window kept tight at 09:20–09:45 matching original logic. Gap size filter (0.5–1.5%) carried over unchanged — the same logic applies at the index level. ATR-based stop from original replaced with fixed option-premium stop since we trade options.",
+  "weaknesses": [
+    "NIFTY gap fill can be delayed by macro news flow in the first 10 minutes — thesis may fail on RBI policy days, Fed days, and global risk-off events",
+    "2-minute RSI may give false exhaustion signals on strong trending gap days where NIFTY continues the gap direction",
+    "Low frequency — only 0-2 trades per session in the narrow 09:20–09:45 window; strategy contributes limited daily PnL",
+    "Gap size filter (0.5–1.5%) will miss many trading days where NIFTY gaps outside this range"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_48.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-45 bars (10-45 minutes)",
+    "original_indicators": ["gap_pct", "partial_fill_target", "rsi_7", "atr_20"],
+    "original_stop": "0.4% beyond gap direction",
+    "original_target": "50% gap fill level (partial_fill_target)"
+  }
+}

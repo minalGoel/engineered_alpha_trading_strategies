@@ -1,0 +1,130 @@
+{
+  "name": "market_profile_poc_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "market_profile", "volume_profile", "poc", "value_area", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_281.json",
+  "original_name": "market_profile_poc_v1",
+  "mechanism": "On NIFTY, the developing session Market Profile concentrates the majority of traded volume within a Value Area (VA) that shifts incrementally as institutional TWAP/VWAP algorithms and market makers repeatedly transact near the session's fairest price — the Point of Control (POC). When NIFTY briefly probes outside the VA boundary (a 10-25 spot point excursion) but fails to sustain a close outside the VA for more than 30 seconds, it signals that the initiative selling/buying was absorbed rather than welcomed. VWAP-benchmarked algorithms that filled orders at the VA boundary now delta-hedge or rebalance toward POC, creating a directional pull of 10-20 NIFTY spot points within 30-90 seconds. Market Profile was originally developed by Steidlmayer for CBOT index futures — NIFTY, as a highly liquid index driven by institutional flow, is precisely the environment where POC gravity operates fastest.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["volume-at-price profile constructed from 5s OHLCV by distributing bar volume uniformly across bar's high-low range"]
+  },
+  "indicators": [
+    {
+      "name": "poc",
+      "formula": "bin_centers[argmax(vol_at_price)] where vol_at_price is cumulative from session open",
+      "lookback": "cumulative from 09:15",
+      "computed_on": "spot",
+      "purpose": "Cumulative measure — no scaling. POC is valid from 09:15 but we require 15 min of development (180 bars) before trading at 09:30. The more data accumulated, the more stable and meaningful the POC becomes as the session's volume center of gravity."
+    },
+    {
+      "name": "va_high",
+      "formula": "upper boundary of price range containing 70% of cumulative session volume, expanded from POC outward",
+      "lookback": "cumulative from 09:15",
+      "computed_on": "spot",
+      "purpose": "Cumulative measure — no scaling. VA_high marks the upper acceptance boundary; breakouts above VA_high that fail to sustain (price re-enters VA) are the bearish entry trigger."
+    },
+    {
+      "name": "va_low",
+      "formula": "lower boundary of price range containing 70% of cumulative session volume",
+      "lookback": "cumulative from 09:15",
+      "computed_on": "spot",
+      "purpose": "Cumulative measure — no scaling. VA_low marks the lower acceptance boundary; breakouts below VA_low that fail to sustain (price re-enters VA) are the bullish entry trigger."
+    },
+    {
+      "name": "probe_below_va6",
+      "formula": "min(close[i-6:i]) < va_low[i-6:i]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6 bars = 30 seconds. Original strategy used a 5-bar probe lookback on 1-min bars (5 min total). We compress to 30 seconds because we are detecting the FAST microstructure rejection, not the slow multi-minute failed breakout. If price probed below VA_low within the past 30 seconds and has already returned, that is the quickest-possible absorption signal. Extending to 60+ seconds risks entering after the initial burst has already been captured."
+    },
+    {
+      "name": "probe_above_va6",
+      "formula": "max(close[i-6:i]) > va_high[i-6:i]",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "Same rationale as probe_below_va6 — 30 seconds to detect fast rejection of the VA upper breakout attempt."
+    },
+    {
+      "name": "poc_distance_bps",
+      "formula": "abs(close - poc) / poc * 10000",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Ensures sufficient room to POC before entry. If close is already within 3-8 bps of POC, the reversion profit is too small to clear costs. Minimum 8 bps (tunable) = ~8 NIFTY spot points from POC at 10,000 level."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "probe_below_va6 == True (close probed below VA_low within last 30 seconds)",
+        "close > va_low (price has returned inside the Value Area — failed breakdown)",
+        "close < poc (below POC — directional gravity toward POC is upward)",
+        "poc_distance_bps > poc_distance_threshold (≥ 8 bps minimum room to revert)",
+        "va_width_bps > 10 (VA is non-degenerate — enough price range for the profile to be meaningful)",
+        "vix_close < vix_threshold (≤ 20 — strong trend days destroy POC gravity)"
+      ],
+      "confirmation": "current bar close > previous bar close (buying pressure present at VA re-entry)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "probe_above_va6 == True (close probed above VA_high within last 30 seconds)",
+        "close < va_high (price has returned inside the Value Area — failed breakout)",
+        "close > poc (above POC — directional gravity toward POC is downward)",
+        "poc_distance_bps > poc_distance_threshold (≥ 8 bps minimum room to revert)",
+        "va_width_bps > 10 (VA is non-degenerate)",
+        "vix_close < vix_threshold (≤ 20)"
+      ],
+      "confirmation": "current bar close < previous bar close (selling pressure present at VA re-entry)"
+    },
+    "entry_price": "limit order at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points. If price extends 8 additional spot points FURTHER away from POC after re-entering VA, the POC gravity thesis has failed — initiate selling has resumed rather than being absorbed. NIFTY 30-second moves rarely extend beyond 5 option points without a genuine directional bias, so 4 points provides ample room while cutting losers quickly.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. A typical VA boundary is 15-30 spot points from POC in a mature profile (15-30 min into session). Targeting 14 spot points captures the first ~50-60% of the full POC reversion without demanding the price reach POC exactly (POC moves as volume accumulates). This gives a 1:1.75 R:R which is profitable at 52%+ win rate.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST (no new trades after 15:20; existing positions closed by time stop)"
+  },
+  "filters": {
+    "vix_filter": "vix_close < 20.0 (strong trend days with VIX > 20 break POC gravity — profile becomes single-sided distribution)",
+    "time_filter": "09:30-15:20 IST only (first 15 min excluded for profile development; last 10 min excluded for EOD risk)",
+    "volume_filter": "va_width_bps > 10 bps (VA must have minimum width — degenerate profile has no valid boundaries)",
+    "trend_filter": "Implicit in VIX threshold — trend days have rising VIX. No additional trend filter needed.",
+    "spread_filter": "Not applicable — limit orders at candle close"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "Low — Market Profile is a well-established framework from futures markets, and NIFTY is structurally similar to CME index futures in its institutional composition. The POC gravity mechanism is driven by VWAP benchmarking of large funds, which is structural behavior unlikely to disappear."
+  },
+  "adaptation_notes": "Three key changes from original: (1) TIMESCALE COMPRESSED — original operates on 1-min bars with 5-bar (5-min) probe detection and 10-30 min holds; converted to 6-bar (30s) probe detection and 30-90s holds. The probe window is NOT 12x scaled (which would give 72 bars = 6 min) because we are detecting the FAST microstructure rejection, not the slow multi-minute failed breakout. (2) UNIVERSE SIMPLIFIED — original covers NIFTY50 constituent stocks; this converts to NIFTY index alone where Market Profile is most theoretically grounded (originated as futures/index theory). (3) COMPUTATION ADAPTED — original uses 1-min OHLCV to distribute volume across price bins; this uses 5-second bars with 5-point bins (NIFTY tick granularity), producing more accurate volume-at-price distribution with ~4500 bars per session vs ~375 for 1-min. Profile accumulates from 09:15 but trading only begins at 09:30 (15 min warmup = 180 bars minimum profile depth).",
+  "weaknesses": [
+    "On strong trend days (estimated 20-30% of sessions), NIFTY single-distribution market profile has no POC reversion — the VA expands directionally and every probe outside VA continues rather than reverting. VIX filter helps but does not eliminate trend day losses.",
+    "Volume-at-price from OHLCV is approximate — bar volume is distributed uniformly across the bar's high-low range, which misrepresents bars with large wicks. Real tick data would produce a more accurate profile.",
+    "POC is computed by 5-point bins — for NIFTY in normal conditions, the VA spans 30-80 spot points, giving only 6-16 bins in the VA. This coarse granularity can cause POC to 'jump' as new volume accumulates, making the target price somewhat noisy.",
+    "On low-volume days (early session, 09:30-10:00), the profile has few data points and VA boundaries are unstable. The min_bars_for_profile=60 check mitigates this but does not fully eliminate noisy early-session signals."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_281.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 min",
+    "original_indicators": ["POC (cumulative)", "VA_high (cumulative)", "VA_low (cumulative)", "POC_distance_bps", "VA_breakout_failed (5-bar lookback)"],
+    "original_stop": "price breaks back beyond VA boundary by > 10 bps",
+    "original_target": "price reaches POC (full mean reversion)"
+  }
+}

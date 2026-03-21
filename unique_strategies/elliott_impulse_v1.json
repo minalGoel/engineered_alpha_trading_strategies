@@ -1,0 +1,123 @@
+{
+  "name": "elliott_impulse_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["elliott_wave", "impulse", "wave_structure", "continuation", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_280.json",
+  "original_name": "elliott_impulse_v1",
+  "mechanism": "On NIFTY, large institutional TWAP/algorithmic orders execute in directional bursts — a 15-40 second sharp move (micro Wave 1, typically 8-15 spot points) as the algo aggressively fills. The burst exhausts available liquidity and triggers a 20-40 second counter-trend absorption pause (micro Wave 2, 38-62% retracement) as resting limit orders on the other side absorb flow. When price breaks back above the Wave 1 peak, it confirms those counter-trend limits are now exhausted and the original algorithm is resuming — this is the Wave 3 signal. The entry rides the first 30-60 seconds of the Wave 3 resumption before the next absorption pause, exploiting the predictable autocorrelation in institutional order flow execution at the sub-minute timescale.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "wave1_high",
+      "formula": "max(high[i-24:i]) at the swing high within the wave window",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "24 bars = 2 minutes. Micro Wave 1 on NIFTY needs 15-40 seconds to develop (3-8 bars) plus room for Wave 2 retracement (3-8 bars) plus time for Wave 3 setup. 24 bars gives exactly this space. NOT 12x scaled from original's 5-10 bar Wave 1 detection on 1-min — that would give 60-120 bars (5-10 minutes), which is the hold time, not the setup detection window. We are detecting faster micro-waves, so 2 min is the right lookback."
+    },
+    {
+      "name": "wave1_low",
+      "formula": "min(low[i-24:i]) prior to wave1_high",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Same 24-bar window as wave1_high; we find the swing low that precedes the swing high to define Wave 1 magnitude. For bearish setup, roles are reversed."
+    },
+    {
+      "name": "wave2_retrace_ratio",
+      "formula": "(wave1_high - min(low after wave1_high)) / (wave1_high - wave1_low)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "Retracement ratio must be 0.35-0.65 (slightly wider than Fibonacci 0.382-0.618 to account for 5-second bar noise on NIFTY). Measured within the same 24-bar window, post Wave 1 peak."
+    },
+    {
+      "name": "rsi_60",
+      "formula": "RSI(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60 bars = 5-minute RSI. Original used RSI(14) on 1-min bars = 14-minute lookback. Compressed to 5 minutes because our Wave 3 hold is 30-90 seconds — we need RSI to reflect the momentum of the current micro-cycle, not the broader session trend. RSI(60) responds to 2-3 minute swings, matching the wave pattern timescale. RSI(168) from blind 12x scaling would be too slow and would often be mid-range when micro-wave is at extremes."
+    },
+    {
+      "name": "ema_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute EMA as trend context filter. Bullish Wave 3 trades only when close > EMA(36); bearish only when close < EMA(36). This aligns wave direction with the prevailing micro-trend, filtering against counter-trend Wave 3 fakeouts. 36 bars = 3 minutes is a natural context window for 30-90 second trades."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "wave1 bullish detected: wave1_low -> wave1_high surge of >= min_w1_pts (8 spots) within last 24 bars",
+        "wave2 retracement: 0.35 <= retrace_ratio <= 0.65 (Fibonacci zone, widened for 5s noise)",
+        "wave3 breakout: close[i] > wave1_high (confirms counter-trend limits exhausted)",
+        "rsi_60 > 50 AND rsi_60[i] > rsi_60[i-1] (momentum confirming, not diverging)",
+        "close > ema_36 (wave aligned with micro-trend)",
+        "in_session and VIX 11-22 (pattern needs some vol but not chaos)"
+      ],
+      "confirmation": "All conditions met simultaneously on the breakout bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "wave1 bearish detected: wave1_high -> wave1_low drop of >= min_w1_pts within last 24 bars",
+        "wave2 retracement: 0.35 <= retrace_ratio <= 0.65 (upward correction after wave1 low)",
+        "wave3 breakdown: close[i] < wave1_low (confirms counter-trend longs exhausted)",
+        "rsi_60 < 50 AND rsi_60[i] < rsi_60[i-1] (momentum confirming bearish)",
+        "close < ema_36 (wave aligned with micro-trend)",
+        "in_session and VIX 11-22"
+      ],
+      "confirmation": "All conditions met simultaneously on the breakdown bar"
+    },
+    "entry_price": "limit order at bar close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. After a micro-impulse of 8-15 spot points and a 38-62% retracement (3-9 spots), Wave 2 depth is typically 3-8 spots — a move 8 spots back through Wave 2 territory invalidates the wave count. Typical NIFTY 30-second move is 2-5 pts (option); 4 pts stop keeps risk proportional to the signal's hold horizon and clears the absorption noise zone.",
+    "target_points": 7.0,
+    "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. Wave 3 on NIFTY micro-structures typically extends 1.0-1.618x of Wave 1. With a minimum Wave 1 of 8 spots, Wave 3 target at 1.0x = 8 spots (4 option pts) to 1.618x = 13 spots (6.5 option pts). Targeting 7 option pts captures the median Wave 3 first-leg (14 spots), before the next absorption pause. Risk-reward 1:1.75 (stop 4, target 7).",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST (920 minutes)"
+  },
+  "filters": {
+    "vix_filter": "India VIX 11-22: wave patterns need some volatility to create detectable impulses but not chaotic spikes that mask wave structure",
+    "time_filter": "09:25-15:20 IST (565-920 min); skip first 10 minutes of session when opening volatility dominates and wave patterns are unreliable",
+    "volume_filter": "none (index volume is noisy at 5-second bars and unreliable for pattern confirmation)",
+    "trend_filter": "wave direction must align with EMA(36) — bullish Wave 3 only above EMA(36), bearish only below",
+    "spread_filter": "not applicable (limit order execution at candle close)"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.32,
+    "edge_decay_risk": "Medium — the impulse-retracement-continuation structure is robust and occurs at all timescales. Risk: at 5-second resolution on NIFTY, many false Wave 2/3 patterns fire from micro-noise rather than genuine institutional order flow. The min_w1_pts threshold and RSI confirmation reduce false signals but do not eliminate them. Pattern frequency may be sensitive to VIX regime."
+  },
+  "adaptation_notes": "Original operated on 1-minute bars of NIFTY50 constituents + index, detecting 5-10 minute Wave 1 formations and holding 10-30 minutes for Wave 3. Key changes: (1) Timescale compression by ~20x — detect 15-40 second micro-impulses instead of 5-10 minute waves. (2) Universe narrowed to NIFTY index only — constituent stocks are unavailable; NIFTY index exhibits the same structural waves from institutional flow. (3) Volume surge indicator dropped — 5-second NIFTY volume is too noisy to reliably confirm waves; RSI and EMA trend context replace it. (4) Lookback 24 bars (2 min) NOT 12x scaled from original (which would give 60-120 bars = 5-10 minutes, too long). Rationale: detecting micro-waves requires a window that spans the entire wave setup, which at 5s is ~2 minutes. (5) Stop placed at 4 option pts (Wave 2 invalidation level) vs original's 'Wave 2 low violated' concept — same logic, calibrated to 5s NIFTY move magnitudes.",
+  "weaknesses": [
+    "Wave 2 retracement boundary (35-65%) is wide enough to generate false positives from random oscillations in NIFTY at 5-second resolution, especially during low-volatility consolidations.",
+    "Micro-impulses of >= 8 NIFTY spot points occur frequently (10-20+ per day) but many are driven by high-frequency noise rather than genuine institutional TWAP flow — the wave structure will sometimes fire on echo patterns.",
+    "NIFTY micro-wave structure is most reliable during trending sessions; in range-bound sessions Wave 3 frequently fails to extend, hitting the time stop.",
+    "RSI(60) on 5-second bars has inherent lag — it may confirm Wave 3 entry one or two bars late, reducing the available profit window."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_280.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-30 min",
+    "original_indicators": ["wave1_detection (zigzag 0.1%, 5-10 bar impulse)", "wave2_retracement (38.2-61.8%)", "wave3_breakout (close > wave1_high)", "volume_surge_w3 (vol/SMA20 > 1.5)", "RSI_14"],
+    "original_stop": "wave2 low violated",
+    "original_target": "1.618 * wave1_length extension from wave2 end"
+  }
+}

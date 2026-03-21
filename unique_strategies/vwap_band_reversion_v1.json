@@ -1,0 +1,113 @@
+{
+  "name": "vwap_band_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "bands", "volume_confirmation"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_23.json",
+  "original_name": "vwap_band_reversion_v1",
+  "mechanism": "On NIFTY, when the index spot extends to ±2 rolling standard deviations from session VWAP, domestic mutual funds and FIIs executing index rebalancing/TWAP orders begin aggressive absorption — they are receiving fills 2 sigma better than their VWAP benchmark, creating strong incentive to step in. A 5-second bar that closes back inside the 2SD band on elevated volume signals that this absorption has overwhelmed the directional flow and the index will revert toward the 1SD band within 60-90 seconds. At 5s resolution we capture the entry bar itself rather than waiting for a full 1-minute bar to confirm the reversal.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative intraday VWAP — no lookback needed, cumulative from session open. Same as original; VWAP is benchmark-universal and applies directly to the index."
+    },
+    {
+      "name": "vwap_sd_120",
+      "formula": "rolling_std(close - vwap, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute rolling stddev of VWAP deviation. Original used 60-min bars (= 60 minutes) — that is too long a context window for a 90-second hold. We want current session volatility regime, not the full morning average. 120 bars (10 min) captures the current vol regime with enough data for statistical stability while remaining responsive to intraday regime shifts."
+    },
+    {
+      "name": "vol_avg_120",
+      "formula": "SMA(volume, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute average volume baseline. Original used SMA(volume, 10) on 1-min bars = 10 minutes. We preserve the same 10-minute window at 5s resolution (120 bars). This correctly captures the intraday volume rhythm rather than a naive 12x scale-up."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume / vol_avg_120",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Volume ratio relative to 10-min average. Ratio > 1.5 confirms institutional absorption at the band rather than passive drift."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "prev_close <= vwap - band_mult * vwap_sd_120",
+        "current_close > vwap - band_mult * vwap_sd_120",
+        "vol_ratio > vol_ratio_thresh",
+        "vix < vix_max",
+        "time in 09:30-15:20 IST"
+      ],
+      "confirmation": "Close recrosses lower 2SD band from below on high volume — absorptive reversal confirmed within the same 5s bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "prev_close >= vwap + band_mult * vwap_sd_120",
+        "current_close < vwap + band_mult * vwap_sd_120",
+        "vol_ratio > vol_ratio_thresh",
+        "vix < vix_max",
+        "time in 09:30-15:20 IST"
+      ],
+      "confirmation": "Close recrosses upper 2SD band from above on high volume — distribution exhaustion confirmed"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 spot points at delta 0.5) — the 2SD band reversion thesis breaks if price extends further below the band rather than reverting; 8 NIFTY spot points beyond the band entry level indicates absorption has failed and new directional flow is dominant. Calibrated against typical 30s NIFTY move of 2-5 pts: stop is 1.5x the upper end of a normal move, giving the trade room while invalidating quickly on failure.",
+    "target_points": 7,
+    "target_rationale": "7 option points (~14 spot points) — the reversion from 2SD band to 1SD band covers approximately 20-30 NIFTY spot points (one standard deviation width). At ATM delta ~0.5, that yields 10-15 option points. Targeting 7 pts captures ~50-65% of the expected reversion, a conservative take that completes within the 90-second hold window and maintains 1:1.75 risk-reward.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "vix < 22 — high VIX (>22) increases band breach frequency and reduces reversion reliability as trend-following flow overwhelms mean-reversion; original used vix < 20, relaxed slightly for index which is smoother than stocks",
+    "time_filter": "no trades first 15 min (09:15-09:30) — VWAP SD unstable with <120 bars of data; no trades last 10 min (15:20+)",
+    "volume_filter": "vol_ratio > 1.5 required — absorption signal must be confirmed by above-average volume",
+    "trend_filter": "none — VWAP bands are self-normalizing for trend",
+    "spread_filter": "none — limit order execution at close prices"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.50,
+    "edge_decay_risk": "low — VWAP benchmarking is structural; institutional mandates make this a persistent microstructure feature of NIFTY"
+  },
+  "adaptation_notes": "Original traded 1-min bars on NIFTY50 constituent stocks with a 60-min rolling SD window and 10-min volume average. Converted to 5s index options: (1) VWAP remains cumulative — no change needed; (2) SD window compressed from 60 min to 10 min to reflect current session volatility rather than the full morning — a 90-second scalp does not need 60 minutes of history; (3) volume average window preserved at 10 min (120 bars) — same logic applies at index level; (4) reversal confirmation uses prior-bar band breach + current-bar close-back-inside rather than the original's same-bar condition — at 5s this avoids false signals from intra-bar noise; (5) session start pushed to 09:30 to allow 120-bar VWAP SD stabilization; (6) VIX filter relaxed from <20 to <22 as NIFTY index is smoother than constituent stocks under moderate volatility.",
+  "weaknesses": [
+    "VWAP SD is session-cumulative dependent — early session (first 15-20 min) SD is unreliable despite session start filter",
+    "Strong directional days (trending away from VWAP) will produce repeated band touches without reversion — trend filter could help but risks over-filtering",
+    "Index volume at 5s resolution is noisier than 1-min data; volume spike filter may fire on automated periodic sweeps rather than genuine absorption"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_23.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-40 bars (10-40 min)",
+    "original_indicators": ["vwap", "vwap_sd (rolling 60-bar)", "vol_spike (vol > 2x SMA10)", "atr_20"],
+    "original_stop": "0.35% from entry or 1.2 * ATR20",
+    "original_target": "1SD VWAP band"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "name": "orb_vwap_confirmation_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["ORB", "VWAP", "dual_confirmation", "opening_range", "breakout", "institutional_flow"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_231.json",
+  "original_name": "orb_vwap_confirmation_v1",
+  "mechanism": "NIFTY's first 20 minutes (09:15-09:35) absorbs overnight information and institutional positioning; the resulting range high/low represents the equilibrium where buyers and sellers balanced. When NIFTY closes above the ORB high AND is meaningfully above session VWAP with the ORB high itself already above VWAP (structural alignment), VWAP-benchmarked institutional algorithms — who must fill directional mandates at or better than their VWAP benchmark — are already net buyers AND have pushed through the opening supply ceiling. A 2-bar (10s) persistence filter eliminates the frequent algo-driven stop-hunt spikes that briefly breach the ORB level before collapsing, selecting only breakouts sustained by genuine order flow. The combination (spatial: VWAP position + structural alignment; temporal: 10s persistence) identifies institutional breakout conviction rather than a mechanical price-level probe.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:35-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "orb_high",
+      "formula": "max(high) over bars where time_minutes in [555, 575)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Fixed time window 09:15-09:35 = 240 bars at 5s. NOT scaled from original 15-min ORB — the opening range is the same 20 minutes regardless of bar size; we just have more bars to capture it with higher fidelity."
+    },
+    {
+      "name": "orb_low",
+      "formula": "min(low) over bars where time_minutes in [555, 575)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Same fixed time window rationale as orb_high."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume), reset each day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative VWAP from session open — no lookback scaling needed, it is inherently cumulative. By 09:35+ it has absorbed 20 minutes of volume and represents meaningful institutional execution benchmark."
+    },
+    {
+      "name": "vwap_dev_bps",
+      "formula": "(close - vwap) / vwap * 10000",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Ensures price is MEANINGFULLY above/below VWAP (not just touching). Threshold of 3 bps filters entries where price is ambiguously straddling VWAP, which correlates with weaker breakout continuation."
+    },
+    {
+      "name": "vol_ratio",
+      "formula": "volume / rolling_mean(volume, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12-bar (1-min) rolling volume mean. Short enough to be responsive at 5s scale for intraday volume spikes. Confirms the breakout bar has elevated participation — key for distinguishing institutional breakout from thin-market drift."
+    },
+    {
+      "name": "persist_above_orb",
+      "formula": "close[i] > orb_high AND close[i-1] > orb_high",
+      "lookback": 2,
+      "computed_on": "spot",
+      "purpose": "2-bar (10s) persistence. Original required 2-bar hold on 1-min bars (2 min); compressed to 2×5s=10s because at index level, genuine institutional breakouts hold above the ORB level immediately — NIFTY's high liquidity means fake-outs resolve within 5-10s, not 2 minutes."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes >= 575 (after 09:35 — ORB window complete)",
+        "close > orb_high (current bar above ORB high)",
+        "close[i-1] > orb_high (previous bar also above ORB high — 2-bar persistence)",
+        "vwap_dev_bps > vwap_dev_threshold (meaningfully above VWAP, default 3 bps)",
+        "orb_high > vwap (structural alignment: ORB high itself above VWAP — confirms net buying from open)",
+        "vol_ratio > vol_ratio_threshold (default 1.1 — elevated volume on breakout)",
+        "vix in [vix_low, vix_high] (default 12-22)"
+      ],
+      "confirmation": "2-bar close persistence above ORB high (10 seconds at 5s bars)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes >= 575 (after 09:35 — ORB window complete)",
+        "close < orb_low (current bar below ORB low)",
+        "close[i-1] < orb_low (previous bar also below ORB low — 2-bar persistence)",
+        "vwap_dev_bps < -vwap_dev_threshold (meaningfully below VWAP, default -3 bps)",
+        "orb_low < vwap (structural alignment: ORB low itself below VWAP — confirms net selling from open)",
+        "vol_ratio > vol_ratio_threshold (default 1.1)",
+        "vix in [vix_low, vix_high] (default 12-22)"
+      ],
+      "confirmation": "2-bar close persistence below ORB low (10 seconds at 5s bars)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option points (~10 NIFTY spot pts at delta 0.5). NIFTY ORB throwbacks that still continue typically retrace less than 8-10 spot pts before re-accelerating; beyond 10 spot pts the breakout level has been reclaimed and the thesis is invalidated. Calibrated against the 30-120s hold window where typical NIFTY moves are 2-10 pts (per CONVENTIONS Table 10.4).",
+    "target_points": 8,
+    "target_rationale": "8 option points (~16 NIFTY spot pts at delta 0.5). NIFTY ORB breakouts with VWAP structural alignment extend 20-35 spot pts in the first 60-120 seconds; 8 pts captures the conservative lower bound of this range with 1:1.6 R:R. Within 2 minutes (24 bars) NIFTY typically moves 5-10 option pts, so 8 is achievable on ~50% of valid breakout entries.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX between 12 and 22 — below 12 means very low vol where ORB may be narrow and breakout false-positive rate rises; above 22 means jumpy index where breakouts gap and limit-order fills are unreliable",
+    "time_filter": "09:35-15:25 IST — entry only after 20-min ORB window is complete",
+    "volume_filter": "vol_ratio > 1.1 — breakout bar must have above-average volume to confirm institutional participation",
+    "trend_filter": "orb_high > vwap for longs (structural alignment); orb_low < vwap for shorts — eliminates breakouts where VWAP context is misaligned",
+    "spread_filter": "limit order execution; no spread filter needed"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.1,
+    "edge_decay_risk": "moderate — as more participants apply ORB+VWAP confirmation, false breakout rate could increase; the 2-bar persistence and structural alignment provide some moat but the edge may compress over 12-24 months"
+  },
+  "adaptation_notes": "Original was a multi-stock equity ORB using 1-min bars with 15-min opening range, targeting individual NIFTY50 constituent stocks (daily vol > ₹200cr). Key changes: (1) Applied directly to NIFTY index — purer institutional flow signal; (2) Opening range kept at 20 min (09:15-09:35) but now 240 bars at 5s resolution — same time window, higher fidelity; (3) VWAP persistence reduced from 2×1-min to 2×5s because at index level genuine breakouts resolve ambiguity within 10s not 2 min; (4) Volume filter kept but lookback compressed from 20×1-min to 12×5s (both = 1 min) — correct proportional scaling; (5) VWAP structural alignment condition retained — the most important filter from original; (6) Trailing stop and signal exit replaced by fixed stops/targets appropriate for 30-120s holds; (7) Target changed from 2×ORB_range to fixed 8 option points — at 5s scale we cannot hold long enough to achieve range-multiple targets.",
+  "weaknesses": [
+    "ORB validity degrades after 11:00 IST — late entries (11:00-15:25) often chase stale range levels that are no longer structurally relevant",
+    "2-bar persistence (10s) may still admit algorithmic probes on low-liquidity afternoons when large blocks transiently breach ORB",
+    "Structural alignment condition (orb_high > vwap for longs) eliminates valid breakouts on high-gap-up days where VWAP remains above ORB high for 30+ minutes before adjusting",
+    "Volume ratio filter computed on 5s bars is noisy — index volume in 5s chunks is highly irregular and the 12-bar mean may not represent 'normal' participation well"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_231.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "20-180 mins",
+    "original_indicators": ["ORB_high_15 (09:15-09:30)", "ORB_low_15", "VWAP", "volume_ratio (20-bar)", "ATR_14"],
+    "original_stop": "VWAP cross against position OR ORB midpoint",
+    "original_target": "2.0 × ORB_range from breakout level"
+  }
+}

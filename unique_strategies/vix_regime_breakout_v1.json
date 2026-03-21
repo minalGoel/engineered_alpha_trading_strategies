@@ -1,0 +1,125 @@
+{
+  "name": "vix_regime_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["volatility", "regime", "mean_reversion", "vix"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_73.json",
+  "original_name": "vix_regime_breakout_v1",
+  "mechanism": "When India VIX spikes >10% above its intraday session baseline, FII desks and domestic risk engines execute simultaneous NIFTY futures sell programs as portfolio delta hedges, pushing NIFTY down 40-100 spot points within 3-10 minutes and compressing ATM CE premiums. The instant VIX begins retracing from its intraday peak (>3% pullback from session high), these same hedging programs are partially unwound — market makers short gamma from sold puts must delta-hedge by buying NIFTY futures, producing a sharp CE premium expansion in the first 30-90 seconds. Conversely, while VIX is still accelerating upward (VIX rising vs 30 seconds prior), directional selling has not yet exhausted and NIFTY continues lower, making PE purchases appropriate until the peak is confirmed. On NIFTY specifically, the reversion is mechanically tight because the index's top-5 heavyweights (HDFC Bank, RELIANCE, INFY, TCS, ICICIBANK) are continuously arb-traded by HFT; once futures selling pressure lifts, cash-futures arbitrageurs rapidly close the basis gap.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-14:30 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "0-3",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vix_session_min",
+      "formula": "cumulative_min(vix_close, from=session_open, reset_daily=true)",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Tracks the intraday VIX baseline before the spike. Cumulative from session open; no scaling needed — it's a running state, not a fixed window. Serves as the pre-spike reference level equivalent to the original's vix_prev_close."
+    },
+    {
+      "name": "vix_spike_pct",
+      "formula": "(vix_close - vix_session_min) / vix_session_min * 100",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Measures how far VIX has risen from the day's low. Threshold >10% matches original. Unlike the original's prior-close basis, this measure resets to near-zero if VIX settles during the day and then spikes again — correctly identifying each discrete fear event."
+    },
+    {
+      "name": "vix_intraday_high",
+      "formula": "cumulative_max(vix_close, from=session_open, reset_daily=true)",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Tracks the intraday VIX peak. Cumulative from session open; no scaling. Used to compute how far VIX has pulled back from its worst level of the day."
+    },
+    {
+      "name": "vix_pullback_pct",
+      "formula": "(vix_intraday_high - vix_close) / vix_intraday_high * 100",
+      "lookback": 0,
+      "computed_on": "vix",
+      "purpose": "Measures the VIX retracement from its session peak. >3% pullback (matching original's threshold) confirms the fear peak is behind us and institutional hedgers have begun reversing their sell programs."
+    },
+    {
+      "name": "vix_rising_30s",
+      "formula": "vix_close > vix_close[6]",
+      "lookback": 6,
+      "computed_on": "vix",
+      "purpose": "30-second VIX direction check (6 bars x 5s = 30s). Used for PE signal: if VIX is still rising vs 30 seconds ago, selling has not peaked and more NIFTY downside is likely. Lookback of 6 bars chosen to match minimum trade hold time (30s) — longer window would lag behind the rapid VIX reversion."
+    },
+    {
+      "name": "nifty_ret_60",
+      "formula": "(close - close[60]) / close[60] * 100",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute NIFTY return (60 bars x 5s = 5 min). Original used 60 1-min bars = 60-min return to confirm NIFTY is 'oversold.' Compressed to 5 minutes because at our 30-90s hold time we care about the ACUTE selldown that accompanies the VIX spike — not a 60-minute context window. 5 minutes captures the fear-driven leg down that precedes the mean-reversion entry."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vix_spike_pct > 10.0 (VIX has risen >10% from session baseline)",
+        "vix_pullback_pct > 3.0 (VIX has retraced >3% from intraday high — peak confirmed)",
+        "nifty_ret_60 < -0.3 (NIFTY down >0.3% in last 5 minutes — acute selldown present)"
+      ],
+      "confirmation": "All three must hold simultaneously. VIX peak confirmation (pullback >3%) is the primary trigger — it signals hedge unwinds have begun."
+    },
+    "buy_pe": {
+      "conditions": [
+        "vix_spike_pct > 10.0 (VIX has risen >10% from session baseline)",
+        "vix_rising_30s = True (VIX still higher than 30 seconds ago — selling still accelerating)",
+        "nifty_ret_60 < -0.3 (NIFTY down >0.3% in last 5 minutes — directional move active)",
+        "buy_ce = False (not simultaneously triggering CE — CE signal takes priority)"
+      ],
+      "confirmation": "Fires when VIX spike is active but peak not yet confirmed — directional continuation trade before the mean-reversion window opens."
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. When VIX is reverting, NIFTY should bounce within 30 seconds; an additional 8-spot-point adverse move means the mean-reversion thesis has failed (the VIX 'pullback' was a dead-cat bounce) and remaining hedge unwinds are still active. Tight stop appropriate for high-conviction regime event.",
+    "target_points": 7,
+    "target_rationale": "7 option points = ~14 NIFTY spot points at delta 0.5. VIX spike reversions on NIFTY historically produce a 20-30 spot point first-leg recovery as futures buy programs reverse; 14 spot points captures roughly 50-60% of that move within the 30-90 second window, giving 1:1.75 R:R with the 4-point stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 14:30 IST"
+  },
+  "filters": {
+    "vix_filter": "vix_spike_pct > 10% (entry condition); skip if VIX > 30 (tail-event, structural regime shift — original's own guideline)",
+    "time_filter": "10:00-14:30 IST only — avoids opening noise (09:15-09:59) and pre-close illiquidity (14:31+)",
+    "volume_filter": "none — NIFTY index has uniform liquidity; volume confirmation used in original was for individual stocks",
+    "trend_filter": "none — counter-trend by design (mean reversion trade)",
+    "spread_filter": "none — limit order execution, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.57,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.35,
+    "edge_decay_risk": "low — structural, VIX mean-reversion is driven by mechanical hedge unwind flows, not price discovery"
+  },
+  "adaptation_notes": "Original traded high-beta NIFTY50 stocks (beta > 1.0) as VIX proxies. Converted to trade NIFTY index options directly — cleaner, more liquid, and no cross-sectional data required. Hold time compressed from 30-120 minutes to 30-90 seconds: we enter the moment VIX peaks and catch the FIRST move of the mean reversion rather than the full recovery. Two new elements added: (1) PE signal for the pre-peak phase (when VIX is still rising), which has no analog in the original (long-only equity strategy); (2) vix_rising_30s indicator to differentiate ascending vs descending VIX phase at 5-second granularity. Session start shifted from 10:00 to 10:00 matching original — avoids opening panic which is not a spike from a baseline. nifty_ret_60 lookback compressed from 60 1-min bars (60 min) to 60 5s bars (5 min) to capture only the acute selldown accompanying the spike, not the entire preceding trend.",
+  "weaknesses": [
+    "VIX spikes >10% intraday are rare — strategy may fire 0-1 times per day on normal days, 2-3 times on panic days. Low frequency limits statistical power in short backtests.",
+    "VIX session_min as prior reference fails on days where VIX opens already elevated (e.g., gap-up VIX after global overnight shock) — the spike_pct will understate the regime shift.",
+    "PE leg (VIX still rising) is inherently riskier than CE leg — entering before the peak means the spike could extend much further than 30 seconds, running through the 4-point stop.",
+    "VIX >30 filter (original) not yet implemented in tunable_params — should be added if tail events create persistent losses."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_73.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-120 bars (30-120 minutes)",
+    "original_indicators": ["vix_change_pct (from prior close)", "vix_intraday_high", "vix_pullback", "nifty_return_60 (60 1-min bars = 60 min)"],
+    "original_stop": "0.7% from entry (equity)",
+    "original_target": "VWAP touch OR 0.5% from entry (equity)"
+  }
+}

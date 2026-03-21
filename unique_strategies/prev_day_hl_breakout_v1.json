@@ -1,0 +1,119 @@
+{
+  "name": "prev_day_hl_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "support_resistance", "daily_levels", "momentum", "stop_sweep"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_78.json",
+  "original_name": "prev_day_hl_breakout_v1",
+  "mechanism": "When NIFTY closes above its previous day high (PDH) for three consecutive 5-second bars, overnight short-sellers' stop orders clustered just above PDH have been swept, removing the supply ceiling and creating a micro-liquidity vacuum. Simultaneously, breakout-scanning algorithms (dozens of which monitor PDH/PDL on NIFTY in real time) detect the confirmed level breach and inject fresh buy orders, accelerating the index 15-30 spot points beyond PDH within 30-90 seconds before the first wave of mean-reversion algos absorbs momentum. The symmetric logic applies at PDL for bearish breaks: trapped longs exit, shorts pile in, and the first 15-25 spot point decline is the most momentum-rich phase. PDH/PDL on NIFTY carries more weight than on individual stocks because every market participant — retail, institutional, FII — uses the same reference level for the same index.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_day_high", "prev_day_low"]
+  },
+  "indicators": [
+    {
+      "name": "pdh",
+      "formula": "max(high) over previous session day_id",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Previous day's absolute high. No lookback — this is a fixed session-level constant that resets each trading day. Used as the supply ceiling whose breach signals stop-cluster sweep."
+    },
+    {
+      "name": "pdl",
+      "formula": "min(low) over previous session day_id",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Previous day's absolute low. Symmetric to PDH. No lookback scaling required — it is a daily anchor, not a rolling indicator."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(typical_price * volume) / cumsum(volume) from session open per day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP from 09:15 each day. Cumulative measure — no scaling needed. Used as directional filter: a PDH breakout with price ABOVE VWAP confirms institutional demand is net positive for the day; a PDL break with price BELOW VWAP confirms net selling pressure. Prevents trading counter-trend to the dominant intraday flow."
+    },
+    {
+      "name": "rel_vol_240",
+      "formula": "volume / SMA(volume, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Current 5-second bar volume relative to its 20-minute (240-bar) rolling average. The original used SMA(20) on 1-minute bars — the same 20-minute baseline, preserved exactly because the relative volume threshold is about identifying above-average participation at the breakout moment, and a 20-minute reference window provides a stable intraday baseline. A reading > 1.5x confirms genuine order flow at the level, not a passive drift through PDH/PDL on thin volume."
+    },
+    {
+      "name": "consec_3",
+      "formula": "close > pdh for bars [i-2, i-1, i]",
+      "lookback": 3,
+      "computed_on": "spot",
+      "purpose": "3-bar (15-second) persistence filter to reject single-wick spikes through PDH/PDL. Original used 3 x 1-minute bars (3-minute confirmation) to filter fakes — compressed to 15 seconds because at 5s resolution a genuine breakout holds above the level immediately while spike-and-reverse behavior typically resolves within 1-2 bars. We cannot wait 3 minutes (36 bars) as that misses the entire first move."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > pdh for 3 consecutive 5-second bars (consec_above_pdh)",
+        "rel_vol_240 > rel_vol_threshold (default 1.5)",
+        "close > vwap (trending above session benchmark)",
+        "vix_close < vix_max (default 24, avoid extreme fear regimes)"
+      ],
+      "confirmation": "All 4 conditions simultaneously true on the same bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < pdl for 3 consecutive 5-second bars (consec_below_pdl)",
+        "rel_vol_240 > rel_vol_threshold (default 1.5)",
+        "close < vwap (trending below session benchmark)",
+        "vix_close < vix_max (default 24)"
+      ],
+      "confirmation": "All 4 conditions simultaneously true on the same bar"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points ≈ 8 spot points at delta 0.5. A confirmed PDH break on NIFTY that reverses 8+ spot points back inside PDH within 90 seconds is a proven false breakout (stop-hunt). At that retracement depth the supply ceiling has reasserted and the continuation thesis is invalidated. Calibrated to the 15-second NIFTY typical move of 1-3 pts — stop is wider than noise but tighter than a full reversal.",
+    "target_points": 7,
+    "target_rationale": "7 option points ≈ 14 spot points at delta 0.5. First continuation leg after genuine PDH break on NIFTY covers 15-30 spot points within 30-90 seconds (1-min move range: 3-7 pts option; 2-min: 5-10 pts). Target of 7 pts captures the median of the 30-90 second expected move and delivers 1.75:1 reward-to-risk ratio.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "vix < 24 — above 24 NIFTY becomes too volatile for stop-level precision; PDH/PDL becomes less predictive as range expansion dominates",
+    "time_filter": "09:20-15:20 IST — skip first 5 minutes of chaotic price discovery; stop at 15:20 to avoid EOD illiquidity",
+    "volume_filter": "rel_vol_240 > 1.5 — breakout must have above-average volume participation to distinguish from passive drift",
+    "trend_filter": "close vs VWAP — long side only when price above VWAP, short side only when below",
+    "spread_filter": "not applicable — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.45,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.44,
+    "edge_decay_risk": "medium — PDH/PDL is widely watched and the setup is crowded; edge comes from speed (enter within 15 seconds) and volume confirmation filtering out false breaks"
+  },
+  "adaptation_notes": "Key changes from original equity strategy: (1) Universe changed from NIFTY100 stocks to NIFTY index — single liquid instrument vs portfolio; (2) 3-bar confirmation compressed from 3 x 1-min (3 min) to 3 x 5-sec (15 sec) — at 5s resolution we need early entry to capture the initial move impulse; (3) Relative volume lookback kept at 20-minute baseline (240 bars at 5s = same calendar time as original 20 x 1-min); (4) ATR-based targets replaced with fixed option premium points calibrated to 30-90s NIFTY move magnitudes; (5) VWAP filter retained as directional context; (6) Trailing stop removed — too complex for 15-90s holds; (7) Session narrowed to 09:20-15:20 to avoid pre-open noise and EOD illiquidity.",
+  "weaknesses": [
+    "PDH/PDL is widely known — stop-hunting algos deliberately push NIFTY through these levels and reverse, creating false breakout patterns. The 3-bar filter and volume requirement reduce but do not eliminate this risk.",
+    "On days when NIFTY opens above PDH (gap-up), the breakout level is never tested intraday and no signals fire.",
+    "PDH/PDL levels on NIFTY are exactly as wide as the prior day's range — on high-volatility days the level is far from current price and rarely reached; on low-volatility days it is reached frequently with weak follow-through.",
+    "The volume filter (rel_vol > 1.5) at 5-second bars is noisy — a single large block trade can trigger the filter on a single bar without representing genuine broad participation."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_78.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-180 bars (30-180 min)",
+    "original_indicators": ["pdh", "pdl", "rel_volume (SMA20)", "atr_20_daily", "vwap"],
+    "original_stop": "0.3% from entry or back inside PDH/PDL",
+    "original_target": "0.5 * atr_20_daily from breakout level"
+  }
+}

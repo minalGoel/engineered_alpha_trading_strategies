@@ -1,0 +1,116 @@
+{
+  "name": "volume_profile_breakout_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["breakout", "volume_profile", "microstructure", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_74.json",
+  "original_name": "volume_profile_breakout_v1",
+  "mechanism": "On NIFTY, the intraday volume profile concentrates ~70% of session volume in a price band (value area) that acts as the institutional fair-value reference — VWAP-anchored and TWAP-following algorithms continuously recycle orders within this zone. The Value Area High (VAH) represents the upper supply wall built by two-way institutional flow. When NIFTY breaks and holds above VAH for two consecutive 5-second bars on a volume surge (>1.5× the 20-minute rolling baseline), it signals that resting sell orders at the VAH ceiling have been absorbed and fresh momentum-buy orders from trend-following algos and HFT systems cascade in, creating a directional burst of 15-25 spot points in the first 30-60 seconds. The 2-bar 5-second confirmation filters single-bar spikes while still entering near the leading edge of the institutional momentum push.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:45-14:30 IST",
+  "hold_time_seconds": [15, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "2-5",
+  "max_trades_per_day": 5,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vol_profile_poc",
+      "formula": "Running intraday POC: price bucket (10-pt width) with highest accumulated volume since session open",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open — no scaling needed. Identifies the institutional fair-value anchor that resting limit orders cluster around."
+    },
+    {
+      "name": "vol_profile_vah",
+      "formula": "Upper price boundary of the 70% value area (largest-volume buckets summing to 70% of session volume)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open. VAH is the ceiling of institutional fair value — a clean breakout above it with volume indicates supply absorption has completed."
+    },
+    {
+      "name": "vol_profile_val",
+      "formula": "Lower price boundary of the 70% value area",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open. VAL mirrors VAH for breakdown signals."
+    },
+    {
+      "name": "vol_ratio_240",
+      "formula": "volume[i] / mean(volume[i-240:i])",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "240 bars = 20 minutes matches the volume baseline needed to distinguish genuine institutional breakout volume from random noise. Original used SMA(volume, 20) on 1-min bars = 20 minutes. The time window is kept the same because breakout volume confirmation is about detecting anomalous volume relative to the recent session rhythm, and 20 minutes is the right window regardless of bar size."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > vol_profile_vah (current bar above VAH)",
+        "prev_close > prev_vah (prior bar also above VAH — 2-bar confirmation)",
+        "vol_ratio_240 >= 1.5 (volume surge confirms institutional breakout)",
+        "ret_1bar > 0 (current bar closed up — directional momentum)",
+        "vix < 24 (low enough volatility for orderly breakout; high VIX creates mean-reversion regime not breakout)",
+        "time_minutes in [585, 870) (09:45-14:30 — profile needs 30 min to develop)"
+      ],
+      "confirmation": "Two consecutive 5-second bars closing above VAH ensures the breakout is not a 5-second wick/spike"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < vol_profile_val (current bar below VAL)",
+        "prev_close < prev_val (prior bar also below VAL — 2-bar confirmation)",
+        "vol_ratio_240 >= 1.5 (volume surge confirms institutional breakdown)",
+        "ret_1bar < 0 (current bar closed down — directional momentum)",
+        "vix < 24",
+        "time_minutes in [585, 870)"
+      ],
+      "confirmation": "Two consecutive 5-second bars closing below VAL"
+    },
+    "entry_price": "limit at candle close (5-second bar)"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at delta 0.5). If NIFTY retraces 8 spot points back toward VAH within 60 seconds of the breakout, the supply at VAH has reasserted and the breakout has failed — the thesis is wrong. NIFTY 30-second typical move is 2-5 option points, so 4 points gives room for normal noise while cutting if the move reverses entirely.",
+    "target_points": 7,
+    "target_rationale": "7 option points (~14 NIFTY spot points). The initial momentum burst from a VAH breakout with institutional volume typically extends 15-25 spot points as algo chains trigger. 14 spot points captures ~60% of the expected move. At the 30-60 second hold time, 7 option points is at the upper end of the 1-minute move table (3-7 pts typical), targeting the high-end outcome that VAH breakouts with volume produce.",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 14:30 IST"
+  },
+  "filters": {
+    "vix_filter": "vix < 24 — above 24 NIFTY enters mean-reversion regime; VAH breakouts are more likely to fail in high-volatility panic sessions",
+    "time_filter": "09:45-14:30 IST — first 30 min excluded so volume profile has enough data (at least 360 bars) to identify stable VAH/VAL levels; last hour excluded to avoid options expiry and EOD noise",
+    "volume_filter": "breakout bar volume > 1.5× 20-minute rolling average",
+    "trend_filter": "bar-over-bar return must confirm direction (ret_1bar > 0 for CE, < 0 for PE)",
+    "spread_filter": "limit order execution at candle close — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.45,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.43,
+    "edge_decay_risk": "medium — volume profile analysis is increasingly common among institutional algos; as more participants watch VAH/VAL, false breakouts increase. But the VOLUME CONFIRMATION filter (1.5× surge) partially defends against this."
+  },
+  "adaptation_notes": "Original trades top-30 FnO stocks (cross-sectional universe) on 1-min bars with 15-90 minute holds. Converted to NIFTY index for three reasons: (1) NIFTY volume profile is more meaningful than individual stocks because institutional TWAP/VWAP algos target the index, making VAH/VAL structurally significant. (2) Index options are more liquid, enabling limit-order execution at 5s closes. (3) NIFTY's VAH/VAL boundaries are tracked by a wider institutional audience than any individual stock, creating stronger breakout momentum when they're breached. Hold time compressed from 15-90 min to 15-60 seconds — we capture only the INITIAL MOMENTUM BURST (first 30-60 seconds) rather than the full trapped-trader unwind thesis. This changes the exit model: instead of holding for POC-based exits, we use a tight time stop (12 bars = 60 seconds) because the momentum burst decays after that. Volume profile computed from running 5s OHLCV using 10-point price buckets (suitable for NIFTY's 100-200 pt daily range). 2-bar confirmation adapted from original's 2-bar 1-min confirmation — kept as 2 bars but at 5-second resolution this is 10 seconds, which is fast enough to catch the breakout early while filtering single-bar wicks.",
+  "weaknesses": [
+    "Volume profile at 5-second resolution takes 30+ minutes to develop meaningful VAH/VAL levels — early session trades are unavailable, limiting the trading window.",
+    "NIFTY index 'volume' aggregates futures + options flow and may be noisier than individual stock volume, making the vol_ratio threshold less precise.",
+    "In trending sessions where NIFTY trends above VAH all day, continuous buy_ce signals with no reversion could generate whipsaws — the strategy needs regime context (not implemented).",
+    "The 10-point bucket size may not resolve fine enough on low-volatility days when NIFTY trades in a tight 20-30 pt range."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_74.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-90 bars (15-90 minutes)",
+    "original_indicators": ["poc (point of control)", "value_area_high", "value_area_low", "breakout_volume_ratio (vol/SMA20)", "atr_20"],
+    "original_stop": "back to POC (re-entry into value area)",
+    "original_target": "1.5 × value area width from breakout level"
+  }
+}

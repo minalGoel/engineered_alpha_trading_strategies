@@ -131,6 +131,11 @@
       "name": "orb_multi_stock_v1",
       "source_file": "trading_strategies/unique_strategies_all/Strategy_235.json",
       "reason": "Pure multi-stock portfolio ORB strategy — trades 5-8 NIFTY 50 constituent stocks simultaneously and derives its entire edge from cross-stock diversification (portfolio win rate ~70% vs individual stock ~52%). Requires per-stock ORB levels, per-stock volume/ATR, correlation matrix of 50 stocks, sector membership caps, per-stock earnings filter, and portfolio beta tracking. Our pipeline provides only the NIFTY/BANKNIFTY index (spot_df), option_df, and vix_df — no individual equity feeds exist. Collapsing to a single NIFTY ORB breakout destroys the diversification thesis entirely and is already converted as orb_momentum_v22 (killed 4+ additional times for the same reason). Explicit kill: requires cross-sectional universe of equity stocks with per-stock price/volume feeds."
+    },
+    {
+      "name": "trade_size_clustering_v1",
+      "source_file": "trading_strategies/unique_strategies_all/Strategy_240.json",
+      "reason": "The entire signal mechanism requires tick-level trade tape — individual transaction records with qty, price, and bid/ask classification — to compute round_lot_ratio (count of round-lot trades / total trades), large_trade_pct (large trades by qty / total qty), and cluster_direction (Lee-Ready signed order flow from round-lot trades). Our pipeline provides only 5-second OHLCV bars (spot_df, option_df, vix_df); no per-trade qty or bid/ask classification is available. Volume in 5-second bars is a pre-aggregated composite — it cannot be decomposed back into individual trade sizes. Even the original strategy explicitly flagged this data dependency as a weakness: 'Tick-level trade data in India is expensive and not available via standard Zerodha API. NSE TBT data feed required.' There is no NIFTY/BANKNIFTY proxy derivable from OHLCV alone that preserves the round-lot institutional clustering thesis — bar-level volume spikes are a far weaker and different signal already covered by existing strategies. Explicit kill: requires tick-level trade tape with per-trade quantity and bid/ask classification, unavailable in the pipeline."
     }
   ]
 }

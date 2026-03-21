@@ -1,0 +1,123 @@
+{
+  "name": "orb_closing_range_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["closing_range", "breakout", "end_of_day", "institutional_positioning", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_238.json",
+  "original_name": "orb_closing_range_v1",
+  "mechanism": "NIFTY's 14:30-15:00 IST window is where mutual funds execute SIP-driven end-of-day equity deployment and FIIs flatten residual intraday delta before overnight risk. This sustained institutional two-way flow compresses NIFTY into a tight 20-40 spot point closing range. When NIFTY breaks above this range at 15:00+, buy-side MF flow has overwhelmed the supply ceiling — residual short-covering from derivatives participants (who need to square positions before close) accelerates the move and creates a 20-35 spot point continuation (10-17 option pts ATM) in the final trading window. The signal is only valid when NIFTY is already above its session VWAP, confirming that the breakout aligns with the day's net institutional direction rather than fighting accumulated sell-side pressure.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "15:00-15:20 IST",
+  "hold_time_seconds": [30, 600],
+  "max_hold_bars": 120,
+  "trades_per_day": "1-2",
+  "max_trades_per_day": 2,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["session_vwap", "closing_range_high", "closing_range_low"]
+  },
+  "indicators": [
+    {
+      "name": "crb_high",
+      "formula": "max(high) for all bars where time_minutes in [870, 900) (14:30-15:00 IST), forward-filled after 15:00",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Fixed time window — the 14:30-15:00 IST closing positioning window maps to exactly 360 bars at 5s resolution. Same 30-minute window as original; only the bar count differs. This is not a scaled lookback — it is the identical institutional window expressed in 5-second bars."
+    },
+    {
+      "name": "crb_low",
+      "formula": "min(low) for all bars where time_minutes in [870, 900) (14:30-15:00 IST), forward-filled after 15:00",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Same fixed time window as crb_high. The range bounds are anchored to the institutional positioning window, not an arbitrary rolling period."
+    },
+    {
+      "name": "session_vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume) from 09:15 IST, reset each day",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Cumulative from session open — no scaling needed. NIFTY above VWAP at 15:00 means the day's net institutional flow is bullish; a closing range breakout upward that aligns with this confirms buy-side dominance rather than a late-day noise spike."
+    },
+    {
+      "name": "momentum_24",
+      "formula": "close[i] - close[i-24] (price change over last 24 bars = 2 minutes)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute momentum is the TRADE TRIGGER at 5s granularity. Original used 5-bar 1-minute (5 minutes of momentum); compressed to 24 bars (2 min) because at 5s we detect the initial directional burst immediately after the range break. The first 2 minutes of a closing breakout is when the largest institutional orders execute — confirming this burst with 2-min momentum filters noise spikes without waiting too long in the restricted 15:00-15:20 entry window."
+    },
+    {
+      "name": "close_vs_day_range",
+      "formula": "(close - rolling_min(low, full_day)) / (rolling_max(high, full_day) - rolling_min(low, full_day))",
+      "lookback": 4500,
+      "computed_on": "spot",
+      "purpose": "Day's range position (0 at low, 1 at high). A NIFTY closing breakout above the 14:30-15:00 high must also be in the upper half of the day's range (>0.5) to confirm it is not a local anomaly in an otherwise weak session. 4500 bars covers the full 6.25-hour session — this is a cumulative day-context filter, not a rolling signal."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "close > crb_high (breakout above 14:30-15:00 range)",
+        "momentum_24 > 0 (2-min momentum positive — directional burst confirmed)",
+        "close > session_vwap (NIFTY above session VWAP — buy-side institutional tailwind)",
+        "close_vs_day_range > 0.5 (NIFTY in upper half of day's range)",
+        "vix < 22 (exclude chaotic high-VIX closing sessions with erratic institutional flows)",
+        "time_minutes in [900, 920) (15:00-15:20 IST only — no entries after 15:20)"
+      ],
+      "confirmation": "Current close above crb_high with positive 2-min momentum on NIFTY"
+    },
+    "buy_pe": {
+      "conditions": [
+        "close < crb_low (breakdown below 14:30-15:00 range)",
+        "momentum_24 < 0 (2-min momentum negative)",
+        "close < session_vwap (NIFTY below session VWAP — sell-side institutional tailwind)",
+        "close_vs_day_range < 0.5 (NIFTY in lower half of day's range)",
+        "vix < 22",
+        "time_minutes in [900, 920) (15:00-15:20 IST only)"
+      ],
+      "confirmation": "Current close below crb_low with negative 2-min momentum on NIFTY"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 5.0,
+    "stop_rationale": "5 option pts = ~10 NIFTY spot pts retrace. A valid closing range breakout should not retrace more than 10 pts back from the range boundary within the first 2 minutes — if it does, the breakout has failed and institutional flow has reversed. At delta ~0.5, 10 spot pts = 5 ATM option pts. This is tighter than a standard NIFTY 10-min stop (7-15 pts) because the thesis requires immediate follow-through; a stalling breakout in this narrow window is a confirmed failure.",
+    "target_points": 8.0,
+    "target_rationale": "8 option pts = ~16 NIFTY spot pts continuation. NIFTY closing range breakouts with institutional tailwind typically extend 20-35 spot pts in the first 5-10 minutes before the mandatory flatten; capturing 16 pts (~50% of expected move) at delta 0.5 gives a 1:1.6 R:R while being achievable in the restricted 15:00-15:20 entry window with a 10-min time stop.",
+    "time_stop_bars": 120,
+    "eod_rule": "flatten at 15:25 IST (925 minutes)"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 22; above 22, NIFTY closing range becomes erratic as algorithmic deleveraging overrides normal institutional end-of-day positioning signals",
+    "time_filter": "STRICT 15:00-15:20 IST only; entries after 15:20 have at most 5 minutes before mandatory flatten and insufficient time to reach the 8-pt target",
+    "volume_filter": "none — closing range quality is inferred from range width and VWAP position, not raw volume (NIFTY index volume can be noisy at 5s)",
+    "trend_filter": "NIFTY above (long) or below (short) session VWAP — ensures breakout aligns with the day's net institutional direction",
+    "spread_filter": "none — limit order execution at candle close prices, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.96,
+    "edge_decay_risk": "low — closing range trading at 5s resolution is systematically underexplored; most index option algos focus on the morning ORB and intraday VWAP mean reversion, leaving the closing window under-arbitraged"
+  },
+  "adaptation_notes": "Original traded NIFTY 50 equity stocks (top 15 by liquidity). Converted to NIFTY index directly — the institutional positioning mechanism (MF SIP deployment, FII delta adjustment, options short-covering) is actually STRONGER at the index level since NIFTY is the direct target of most institutional flows. Fixed-time window (14:30-15:00) kept identical in IST time; bar count changes from 30 1-min bars to 360 5s-bars (same 30 minutes, more precision). Momentum compressed from 5-min to 2-min to detect the initial directional burst at the 5s entry granularity. Session VWAP and day range position filters preserved conceptually. ATR-based stop replaced with fixed option pts stop (ATR not applicable to option premiums). Stock-specific filters (circuit halt, delivery %, earnings, volume_ratio_closing) removed as inapplicable to the NIFTY index.",
+  "weaknesses": [
+    "Very tight entry window (15:00-15:20) means at most 1-2 signals per day — strategy is capital-efficient but low-frequency; single bad day with erratic close can distort statistics",
+    "On weekly and monthly F&O expiry Thursdays, NIFTY closing range is mechanically distorted by expiry-driven pin risk and delta unwinding — generates false breakout signals against the expiry close",
+    "If macro news hits at 14:45-15:00, the closing range forms during confusion rather than genuine positioning, making breakout direction unreliable",
+    "Trades entered at 15:15-15:20 have only 5 minutes to the mandatory EOD flatten — time stop of 120 bars (10 min) may not execute before the pipeline's EOD flatten at 15:25"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_238.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "5-25 mins",
+    "original_indicators": ["CRB_high", "CRB_low", "CRB_range", "session_vwap_dev", "close_vs_session_range", "volume_ratio_closing", "ATR_10", "momentum_5"],
+    "original_stop": "CRB_mid or 0.5 * CRB_range or 0.2% from entry",
+    "original_target": "1.5 * CRB_range from CRB_high/low or time exit at 15:28 IST"
+  }
+}

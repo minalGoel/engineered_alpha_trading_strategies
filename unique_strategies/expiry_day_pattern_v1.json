@@ -1,0 +1,120 @@
+{
+  "name": "expiry_day_pattern_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["event_driven", "expiry", "gamma", "mean_reversion", "momentum", "options"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_261.json",
+  "original_name": "expiry_day_pattern_v1",
+  "mechanism": "On NIFTY and BANKNIFTY expiry days, option market makers who are short gamma at near-ATM strikes must delta-hedge: they buy the index on dips and sell on rallies relative to the strike cluster with maximum open interest (a proxy for max pain). In the morning session (09:20-13:30 IST), this creates a consistent magnetic pull — when NIFTY deviates 25+ spot points below the max-OI strike, market makers absorb selling and create a floor, reverting spot toward the pin level within 30-90 seconds; the mirror image holds when price is 25+ points above. In the final 90 minutes (13:30-15:25 IST), gamma decays toward zero and market makers unwind their delta hedges en masse: the pinning force collapses, and any directional push creates a rapid 30-60 second momentum burst as de-hedging amplifies the initial move rather than dampening it.",
+  "universe": "BOTH",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST (expiry days only — detected from option_df expiry == session_date)",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX or NSE:NIFTYBANK-INDEX",
+    "order_book": false,
+    "other": ["open_interest per strike from option_df (to derive max-OI strike = max pain proxy)"]
+  },
+  "indicators": [
+    {
+      "name": "is_expiry",
+      "formula": "1 if any option in option_df has expiry == session_date, else 0",
+      "lookback": 0,
+      "computed_on": "option",
+      "purpose": "Fires ONLY on expiry days — weekly Thursday NIFTY/BANKNIFTY or monthly last Thursday. The gamma dynamics and pinning mechanism require live expiry-day OI pressure; they do not exist on non-expiry days. Derived from option_df without any external calendar."
+    },
+    {
+      "name": "max_oi_strike",
+      "formula": "argmax over strikes of (sum(CE OI, PE OI) using last OI reading per strike for session-date expiry options)",
+      "lookback": 0,
+      "computed_on": "option",
+      "purpose": "The strike with highest combined CE+PE open interest is where option sellers have the greatest notional exposure and thus the greatest incentive to pin. This is a computationally tractable proxy for max pain (the true max pain minimizes total option buyer P&L, which correlates strongly with max-OI strike). Computed once per day from option_df — no lookback needed since it is a cumulative OI snapshot."
+    },
+    {
+      "name": "dist_to_max_oi",
+      "formula": "spot_close - max_oi_strike (in spot index points)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Measures how far NIFTY/BANKNIFTY has strayed from the pinning target. The signal fires when |dist| > threshold (default 30 pts). At NIFTY ~22500, 30 pts = ~13 bps — approximately the 30 bps used in the original 1-min strategy but compressed to spot points for direct thresholding. Direction of dist determines CE vs PE entry."
+    },
+    {
+      "name": "mom_12",
+      "formula": "close[i] - close[i-12]  (12-bar = 1-minute momentum)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "Used in the afternoon phase to confirm the gamma-unwind direction is self-consistent (not a 5-second noise spike). 12 bars = 1 minute — matches the 30-90 second hold time. The original strategy used volume_surge > 1.5x as confirmation; on the NIFTY index, 1-minute price momentum is a cleaner and more available confirmation signal."
+    },
+    {
+      "name": "roll_high_12 / roll_low_12",
+      "formula": "max(high[i-12:i]) / min(low[i-12:i])",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute rolling range used as the afternoon breakout level. When close > roll_high_12, price has broken the prior-minute candle structure to the upside — a sign that de-hedging momentum has begun. Same rationale for PE on the downside. 12-bar window chosen to match our hold time (18 bars max) so the signal captures fresh, recent structure."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "is_expiry == True",
+        "VIX in [12, 25] (meaningful gamma effects)",
+        "MORNING (09:20-13:30): dist_to_max_oi < -dist_threshold AND mom_12 >= 0 (price below max-OI and starting to turn)",
+        "OR AFTERNOON (13:30-15:25): close > roll_high_12 AND mom_12 > 0 (upside breakout with momentum)"
+      ],
+      "confirmation": "Morning: price is below pin level with 1-min momentum non-negative (reversion beginning). Afternoon: price has closed above the prior-1-minute candle range top."
+    },
+    "buy_pe": {
+      "conditions": [
+        "is_expiry == True",
+        "VIX in [12, 25]",
+        "MORNING (09:20-13:30): dist_to_max_oi > dist_threshold AND mom_12 <= 0 (price above max-OI and starting to turn)",
+        "OR AFTERNOON (13:30-15:25): close < roll_low_12 AND mom_12 < 0 (downside breakout with momentum)"
+      ],
+      "confirmation": "Morning: price above pin level with 1-min momentum non-positive. Afternoon: close below prior-1-minute candle range bottom."
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "Morning mean-reversion: if NIFTY continues away from the max-OI strike for another 8+ spot pts (4 option pts at delta 0.5), the gamma-hedging supply/demand is being overwhelmed by directional flow and the pin thesis is invalid. Afternoon breakout: if the de-hedging momentum stalls immediately and reverses 8 spot pts, it was a false break. 4 pts = 8 spot pts at delta 0.5 is the correct threshold for both phases at the 30-90s hold horizon.",
+    "target_points": 7,
+    "target_rationale": "Morning: NIFTY mean-reversion bounces from 25-40 pt deviations typically cover 15-25 spot pts in the first 60 seconds — capturing 14 spot pts (7 option pts) represents ~50-60% of the first leg. Afternoon: gamma-unwind bursts cover 15-30 spot pts in 30-60 seconds; 7 pts = 14 spot pts captures approximately half the expected move. R:R = 1:1.75.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25 IST (absolute; expiry-day positions must not be held into final 5 minutes)"
+  },
+  "filters": {
+    "vix_filter": "12.0 <= VIX <= 25.0 — below 12 gamma effects are too small (very low vol, thin OI), above 25 expiry pinning breaks down as directional flow overwhelms hedgers",
+    "time_filter": "morning phase 09:20-13:30 (mean-reversion toward pin); afternoon phase 13:30-15:25 (gamma unwind breakout)",
+    "volume_filter": "none — NIFTY/BANKNIFTY index volume on expiry is structurally higher; no per-bar filter needed",
+    "trend_filter": "morning: contrarian (fade deviation from max-OI). afternoon: trend-following (ride de-hedging burst)",
+    "spread_filter": "none — limit orders at candle close prices",
+    "event_filter": "expiry_day_only = True (detected via option_df where expiry == session_date)"
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.4,
+    "edge_decay_risk": "Medium — weekly expiry gamma effects are smaller than monthly (less OI), and algo participation on expiry is increasing. The two-phase structure (morning pin + afternoon unwind) is more sophisticated than simple 'sell gamma on expiry' and should be more durable."
+  },
+  "adaptation_notes": "Original strategy used 1-min bars with 15-45 minute hold times and required explicit max pain calculation (iterating all strikes to minimize option buyer P&L). Adapted as: (1) Replaced full max-pain computation with max-OI strike — computationally tractable from option_df and highly correlated with true max pain. (2) Hold time compressed from 15-45 min to 30-90 seconds — we catch only the FIRST short burst of each phase rather than the full move. (3) Added mom_12 (1-min momentum) as a microstructure confirmation replacing the original's volume_surge > 1.5x criterion — index volume at 5-second resolution is too noisy for ratio comparisons. (4) Afternoon breakout uses roll_high_12/roll_low_12 rather than the original's 'high/low of last 30 bars' — compressed from 30-min to 1-min range because at 5s resolution we detect the burst beginning, not the full breakout from a multi-hour range. (5) Expiry detection from option_df (expiry == session_date) requires no external calendar.",
+  "weaknesses": [
+    "Max-OI strike is only a proxy for true max pain. If heavy hedging is distributed across 2-3 strikes (not concentrated), the signal may be misleading.",
+    "On weekly expiry with low OI, gamma effects are much weaker than monthly expiry — signal quality is heterogeneous across Thursday types.",
+    "Only fires on expiry days (~52-60 trading days per year for combined NIFTY/BANKNIFTY weeklies + monthlies), limiting backtest data density.",
+    "option_df must be populated with OI data for expiry detection and max-OI computation to work; empty option_df returns zero signals."
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_261.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["max_pain_strike (full OI computation)", "distance_to_max_pain (bps)", "net_gamma", "expiry_phase"],
+    "original_stop": "15 bps from max pain distance (morning); 15 bps from entry (afternoon)",
+    "original_target": "max_pain_strike (morning); 30 bps from entry (afternoon)"
+  }
+}

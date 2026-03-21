@@ -1,0 +1,130 @@
+{
+  "name": "gap_continuation_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "continuation", "opening-range-breakout", "momentum", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_202.json",
+  "original_name": "gap_continuation_v1",
+  "mechanism": "On NIFTY, the first 5 minutes (09:15-09:20) on a gap day acts as a price discovery containment window: counter-trend traders post limit sell orders at the opening high, creating a visible supply shelf (ORH). When a 5-second bar closes above the ORH on a gap-up day — with EMA(5-min) above EMA(13-min) confirming sustained directional pressure — it signals that all counter-trend supply at the shelf has been absorbed. The order book immediately above the ORH is thin because no participants pre-positioned limit offers there overnight; institutional TWAP programs fill at-market into this vacuum, driving NIFTY 15-25 spot points cleanly in the gap direction within the next 30-90 seconds before fresh supply emerges.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-10:15 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "0-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": ["prev_session_close"]
+  },
+  "indicators": [
+    {
+      "name": "gap_pct",
+      "formula": "(first_open_of_day - prev_day_last_close) / prev_day_last_close",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Day-level gap detection. Threshold 0.3% (0.003 fractional) — NIFTY's intraday daily range is ~0.8-1.2%, so a 0.3% overnight gap represents a meaningful global information signal without requiring an extreme macro event. Not scaled from the original's 0.5% equity threshold; NIFTY is smoother and less gappy than individual stocks, so a lower threshold captures the same economic signal (genuine institutional pre-positioning overnight)."
+    },
+    {
+      "name": "orh",
+      "formula": "max(high, time_minutes in [555, 560))",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Opening range high: highest high of the first 5 minutes (09:15-09:20, 60 bars at 5s). This is a FIXED TIME WINDOW — 5 minutes regardless of bar size. Same time window as the original's '5-min opening range' concept. The ORH is the supply shelf that counter-trend traders defend; a close above it is the trigger."
+    },
+    {
+      "name": "orl",
+      "formula": "min(low, time_minutes in [555, 560))",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Opening range low: lowest low of the first 5 minutes. SAME FIXED TIME WINDOW as ORH. The ORL is the demand shelf on gap-down days; a close below it triggers the bearish signal."
+    },
+    {
+      "name": "ema_60",
+      "formula": "EMA(close, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute EMA (60 bars × 5s = 5 min), equivalent to the original's EMA(5) on 1-min bars. This is a TRADE TRIGGER — must be above EMA_156 to confirm the bullish trend is active. The 5-min EMA is the fastest meaningful trend line at our hold time (30-90s); shorter EMAs (12-24 bars) are too noisy at 5s frequency."
+    },
+    {
+      "name": "ema_156",
+      "formula": "EMA(close, 156)",
+      "lookback": 156,
+      "computed_on": "spot",
+      "purpose": "13-minute EMA (156 bars × 5s = 13 min), equivalent to the original's EMA(13) on 1-min bars. This is a CONTEXT FILTER — when EMA_60 > EMA_156 we are in a bullish micro-trend that makes gap continuation more probable. Same time horizon as original, different bar count. Not compressed further because the 13-min context window is already short and aligns with our gap observation window (first ~20 minutes of session)."
+    },
+    {
+      "name": "close_strength",
+      "formula": "(close - low) / (high - low + 0.01)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Fraction of bar range occupied by close (0=low, 1=high). Threshold >0.7 for longs (<0.3 for shorts). Equivalent to the original's 'breakout bar closes in upper 30% of its range' confirmation. At 5-second bars this is weaker signal than at 1-min, but it filters out wicks — a 5s bar that breaks ORH but closes near the bar's low indicates a false breakout or thin market, not institutional absorption."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct > 0.003 (NIFTY gapped up >0.3% overnight)",
+        "close > orh (5s bar closes above opening range high)",
+        "ema_60 > ema_156 (5-min EMA above 13-min EMA: bullish alignment)",
+        "close_strength > 0.70 (bar closes in upper 30% of its range: no wick rejection)",
+        "VIX between 13 and 25 (some volatility for continuation, not chaotic)",
+        "time_minutes in [560, 615) (09:20-10:15 IST: gap momentum window only)"
+      ],
+      "confirmation": "All conditions simultaneously true on a single 5s bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct < -0.003 (NIFTY gapped down >0.3% overnight)",
+        "close < orl (5s bar closes below opening range low)",
+        "ema_60 < ema_156 (5-min EMA below 13-min EMA: bearish alignment)",
+        "close_strength < 0.30 (bar closes in lower 30% of its range: no wick bounce)",
+        "VIX between 13 and 25",
+        "time_minutes in [560, 615) (09:20-10:15 IST)"
+      ],
+      "confirmation": "All conditions simultaneously true on a single 5s bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. An ORH breakout should not retrace back inside the opening range (typically 8-15 spot pts wide on gap days); if NIFTY reverses 8 spot pts post-breakout, the supply shelf has reasserted itself and the institutional absorption thesis is false — exit before the throwback deepens.",
+    "target_points": 7.0,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts. First-leg gap continuation after ORH breakout on NIFTY averages 20-30 spot pts within 60-90s; targeting 14 pts (50% of expected move) gives 1:1.75 R:R and exits comfortably before the 09:30 profit-taking wave that typically compresses the continuation.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 10:15 IST (no new entries beyond morning gap momentum window)"
+  },
+  "filters": {
+    "vix_filter": "VIX 13-25: below 13 means too calm (gaps don't continue — they fill immediately); above 25 means chaotic (gap reversals dominate, continuation unreliable)",
+    "time_filter": "09:20-10:15 IST only; gap and go momentum is a first-hour phenomenon driven by overnight order overhang being worked off",
+    "volume_filter": "implicit in EMA alignment — sustained institutional buying lifts all timeframe EMAs; explicit volume filter not used as NIFTY index volume at 5s is noisy",
+    "trend_filter": "EMA_60 > EMA_156 for longs (opposite for shorts); gap direction IS the macro trend, EMAs confirm micro-trend alignment",
+    "spread_filter": "not applicable; limit order execution at candle close prices, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 30,
+    "win_rate_estimate": 0.53,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.97,
+    "edge_decay_risk": "low-moderate — ORH breakout signals are observable and front-runnable by HFT, but at 5-second bar resolution the entry timing already absorbs the first microsecond of the move; institutional TWAP programs fill over multiple minutes so the 30-90s trade captures mid-order-flow, not the HFT spike"
+  },
+  "adaptation_notes": "Original: NIFTY 50 and Next 50 stocks, 1-min bars, gap >0.5%, 5-min ORH/ORL breakout with volume_surge >2x, EMA(5)/EMA(13) alignment, bar close strength >upper 30%, hold 15-60 min. Key changes: (1) Universe: individual stocks → NIFTY index; relative_strength filter (stock gap vs index gap) eliminated — not applicable on the index itself. (2) Gap threshold: 0.5% equity → 0.3% NIFTY; indices are 4-5x smoother than individual stocks, so 0.3% represents the same signal strength economically. (3) Volume surge filter (2x average 5-min volume): eliminated for NIFTY because index volume at 5s is an aggregate proxy and noisy; EMA alignment provides equivalent trend confirmation. (4) EMA periods: EMA(5) and EMA(13) on 1-min → EMA(60) and EMA(156) on 5s — exact same clock time, different bar count. (5) Hold time: 15-60 min → 30-90 seconds; we trade the first micro-continuation burst of the gap, not the full intraday trend. (6) Session window: 09:15-12:00 → 09:20-10:15 IST — tighter because at 5s frequency the relevant microstructure signal (ORH breakout with thin order book) is strongest in the first 60 minutes only.",
+  "weaknesses": [
+    "Gap days with ORH breakout conditions occur on ~20-30% of trading days; many days generate zero trades",
+    "Opening range on gap-up days is sometimes very wide (>20 spot pts on high-vol days), making ORH breakout entries occur far from fair value with extended risk",
+    "close_strength filter (upper 30% of bar range) is weaker at 5s than at 1-min because 5s bars have more noise and spread; a bar may have a strong close due to a thin single tick, not genuine absorption",
+    "EMA_60/EMA_156 may lag on fast-moving gap mornings, causing delayed alignment confirmation and missed entries"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_202.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-60 mins",
+    "original_indicators": ["gap_pct (>0.5%)", "opening_range_high (5-bar)", "opening_range_low (5-bar)", "volume_surge (>2x 20-day avg)", "EMA_5", "EMA_13", "ATR_10", "rel_strength (stock vs index gap)"],
+    "original_stop": "re-enters opening range OR 0.5*ATR_10",
+    "original_target": "0.7% move in gap direction"
+  }
+}

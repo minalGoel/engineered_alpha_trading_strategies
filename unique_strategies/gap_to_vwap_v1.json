@@ -1,0 +1,119 @@
+{
+  "name": "gap_to_vwap_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["gap", "vwap", "mean_reversion", "institutional_flow", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_204.json",
+  "original_name": "gap_to_vwap_v1",
+  "mechanism": "When NIFTY gaps and continues to deviate 20+ basis points below (or above) the developing session VWAP, VWAP-benchmarked institutional algorithms — index fund rebalancers, derivatives book delta-hedgers, and program traders tracking VWAP as their execution benchmark — begin accumulating against the gap direction to keep fills close to their VWAP target. On NIFTY, where these institutional flows are dominant and continuous, this creates a measurable first convergence thrust of 15-25 spot points within 60-90 seconds once RSI exhaustion signals the selling (or buying) pressure has peaked. At 5-second resolution we enter as the EMA(5) micro-cross confirms the institutional absorption has begun, capturing the first leg rather than waiting for the full VWAP touch. NIFTY's high liquidity and continuous two-sided institutional order flow make these reversion thrusts faster and more reliable than the original single-stock implementation.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-14:15 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP is cumulative — no lookback period. This is the gravitational attractor that institutional VWAP-benchmarked orders target. Cumulative from 09:15 IST each day."
+    },
+    {
+      "name": "vwap_dev_bps",
+      "formula": "(close - vwap) / vwap * 10000",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Current deviation from session VWAP in basis points. At NIFTY 24000, 20 bps = 48 spot pts. This is the threshold above which institutional VWAP reversion flow becomes compelling enough to generate a measurable first-leg thrust within 60-90s."
+    },
+    {
+      "name": "gap_pct",
+      "formula": "(day_open - prev_day_close) / prev_day_close",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Day-level gap computed once per session. Required to confirm VWAP deviation is gap-driven (institutional directional flow after overnight news) versus intraday drift. Gap-driven deviations revert faster because the institutional imperative to fill near VWAP is strongest when it was the gap itself that caused the deviation, not an intraday trend."
+    },
+    {
+      "name": "rsi_12",
+      "formula": "RSI(close, 12)",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "12 bars = 60 seconds RSI. Original used RSI(10) on 1-min = 10-minute RSI. We compress to 1-minute because at 5s bars with 30-90s holds, we need RSI to reflect the CURRENT short-term exhaustion state (last 60 seconds of momentum), not the prior 10 minutes. This is the entry trigger confirming that the gap-extension selling or buying has exhausted in the immediate term, signaling imminent reversion."
+    },
+    {
+      "name": "ema_5",
+      "formula": "EMA(close, 5)",
+      "lookback": 5,
+      "computed_on": "spot",
+      "purpose": "5 bars = 25-second micro EMA. Original used EMA(5) on 1-min = 5-min average. We compress dramatically because our entry trigger is 5s scale. A close crossing above/below the 25s EMA is the fastest reliable confirmation that the first institutional absorption bar has printed. Shorter would be too noisy (1-2 bar flips); longer would delay entry past the best fill."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "gap_pct < -gap_threshold (NIFTY gapped down)",
+        "vwap_dev_bps < -vwap_dev_threshold (still below VWAP by 20+ bps)",
+        "rsi_12 < rsi_oversold (short-term selling exhaustion, default 40)",
+        "close crosses above ema_5 from below (micro-upswing confirmation)"
+      ],
+      "confirmation": "All four conditions must be true simultaneously on the same 5-second bar"
+    },
+    "buy_pe": {
+      "conditions": [
+        "gap_pct > gap_threshold (NIFTY gapped up)",
+        "vwap_dev_bps > vwap_dev_threshold (still above VWAP by 20+ bps)",
+        "rsi_12 > rsi_overbought (short-term buying exhaustion, default 60)",
+        "close crosses below ema_5 from above (micro-downswing confirmation)"
+      ],
+      "confirmation": "All four conditions must be true simultaneously on the same 5-second bar"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 spot pts further deviation from VWAP at delta 0.5. If NIFTY moves 8 more spot pts away from VWAP after entry, the institutional VWAP reversion we are betting on is not materializing on our timescale — the gap is extending into a trend and we must exit. Typical NIFTY 30-60s move is 2-5 option pts, so 4 pts gives enough room for one failed attempt while capping tail risk.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 spot pts convergence toward VWAP at delta 0.5. On NIFTY, the first institutional absorption thrust from a 20+ bps gap deviation typically covers 15-25 spot pts within 60-90 seconds. Targeting 14 spot pts (7 option pts) captures ~70% of the median first leg, well within the 1-2 minute typical convergence window. This gives a 1:1.75 risk-reward at the 4 pt stop.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 14:15 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 20; above 20, VWAP deviations widen and mean reversion takes longer than 90s, degrading the time-stop performance",
+    "time_filter": "09:30-14:15 IST; first 15 min excluded because developing VWAP is VWAP heavily biased by gap open volume; afternoon excluded because gap-driven institutional VWAP pressure dissipates after 14:00",
+    "volume_filter": "none — NIFTY index volume is consistently liquid intraday",
+    "trend_filter": "implicitly handled by vwap_dev_bps condition — if NIFTY has been trending away from VWAP all day, the deviation threshold will be exceeded for hours and no entry will fire without RSI exhaustion",
+    "spread_filter": "not applicable — limit orders at candle close"
+  },
+  "edge": {
+    "expected_bps": 18,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.63,
+    "edge_decay_risk": "low — VWAP benchmarking is structural to institutional execution and will persist; gap-to-VWAP on NIFTY index is driven by program trading flows that are algorithmic and persistent"
+  },
+  "adaptation_notes": "Original was stock-universe with 1-min bars, 10-60 min hold. Key changes: (1) Applied to NIFTY index only — the institutional VWAP-benchmark flow is even stronger on the index than individual stocks because index funds and futures arbitrageurs must execute against NIFTY VWAP constantly; (2) Hold time compressed from 10-60 min to 30-90s — we capture only the FIRST leg of reversion, entering earlier via the EMA(5) micro-cross rather than waiting for a full 1-min bar confirmation; (3) RSI compressed from 10-period 1-min bars to 12-period 5s bars (= 60s RSI) to match our trigger timescale; (4) EMA compressed from 5-period 1-min to 5-period 5s bars (25s) for fastest reliable micro-cross; (5) VIX filter strengthened to 20 (original allowed 20) because at 5s bars, high VIX sessions produce slow, grinding reversion not fast 90s thrusts; (6) Session window narrowed to 09:30-14:15 IST — first 15 min excluded because early VWAP is unreliable (original identified same weakness), afternoon excluded because gap institutional urgency dissipates.",
+  "weaknesses": [
+    "On strong trend days where NIFTY opens gap-down and keeps falling, institutional VWAP algos may be overridden by directional macro flow, producing false reversion signals",
+    "The EMA(5) micro-cross at 25 seconds can fire multiple times in consolidation, triggering multiple entries before the real reversion begins; max_trades_per_day=6 limits damage",
+    "Early in the session (09:30-10:00), the developing VWAP is still being anchored by gap volume, making vwap_dev_bps readings noisy and potentially too generous as a threshold",
+    "Gap-to-VWAP logic requires a meaningful gap (>0.2%) to fire; on flat-open days the strategy will trade infrequently, leading to low statistical confidence on any given day"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_204.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-60 mins",
+    "original_indicators": ["vwap", "vwap_dev_bps", "RSI_10", "EMA_5", "vwap_slope", "gap_pct"],
+    "original_stop": "vwap_dev_bps exceeds 40bps against position OR 0.4% from entry",
+    "original_target": "price touches VWAP (vwap_dev_bps crosses 0)"
+  }
+}

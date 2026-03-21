@@ -1,0 +1,120 @@
+{
+  "name": "quality_momentum_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "ema-crossover", "acceleration", "vwap", "trend-continuation"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_294.json",
+  "original_name": "quality_momentum_v1",
+  "mechanism": "On NIFTY, when the 3-minute EMA (EMA-36) diverges above the 10-minute EMA (EMA-120) AND the gap is actively widening over the prior 30 seconds, this signals large institutional TWAP/VWAP programs are accumulating at multiple timescales simultaneously — not just a brief noise spike but a sustained directional program. The EMA gap acceleration distinguishes a live institutional order from a decaying imbalance: if each successive 5-second bar is adding to the gap, the program has not finished. A 5-minute ROC above 15 bps confirms the move has macro follow-through across the prior 60 bars. The VWAP position filter ensures the trade aligns with the session's dominant order flow direction, filtering entries where spot has already overshot.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "ema_fast_36",
+      "formula": "EMA(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute EMA — trade trigger for fast directional momentum. Original used EMA(9) on 1-min bars = 9-min horizon. We compress to 3-min (36 × 5s) because at 5-second resolution we trade the fast momentum burst (30-90s hold), not the full 20-60 minute institutional program. The 3-min EMA captures the acceleration leg already in progress."
+    },
+    {
+      "name": "ema_slow_120",
+      "formula": "EMA(close, 120)",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "10-minute EMA — context filter for the dominant intraday trend. Original used EMA(21) on 1-min bars = 21-min horizon. We use 10-min (120 × 5s) as the 'slow' baseline: institutional TWAP programs running for 10+ minutes create the floor/ceiling we're trading the continuation of. Shorter than original because our session entry start is 09:30 (15 min after open) and we need the slow EMA to have enough history."
+    },
+    {
+      "name": "ema_gap_accel_6bar",
+      "formula": "ema_gap[i] > ema_gap[i-6] (bullish) | ema_gap[i] < ema_gap[i-6] (bearish), where ema_gap = ema_fast - ema_slow",
+      "lookback": 6,
+      "computed_on": "spot",
+      "purpose": "6-bar (30 seconds) EMA gap acceleration — the key differentiator from plain crossover strategies. Original required 'EMA(9)-EMA(21) widening vs 5 bars ago on 1-min bars = 5 minutes ago'. At 5s, 6 bars = 30 seconds. If the gap is still widening 30 seconds in, the institutional order is still active. This is the quality-analog: momentum that is sustained over 30 seconds is more likely to continue than a one-bar spike."
+    },
+    {
+      "name": "roc_60",
+      "formula": "ROC(close, 60) = (close - close[60]) / close[60]",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "5-minute rate of change — confirms the move has macro follow-through. Original used ROC(30) on 1-min bars = 30-min horizon. We compress to 5-min (60 × 5s) rather than 12x scaling (360 bars = 30-min) because the trade trigger lookback scales with hold time, not the original's hold time. For a 30-90s trade, a 5-min ROC is the relevant 'medium-term' context — too much further back and you're measuring stale momentum."
+    },
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset at session open per day_id",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session VWAP — filters direction relative to dominant order flow. No scaling needed: cumulative from session open regardless of bar size. Close > VWAP = bullish session bias; close < VWAP = bearish. Aligns with institutional VWAP benchmark behavior."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ema_fast_36 > ema_slow_120 (3-min EMA above 10-min EMA)",
+        "ema_gap widening over prior 30 seconds (6 bars): ema_gap[i] > ema_gap[i-6]",
+        "roc_60 > roc_threshold (default 15bps, 5-min positive return)",
+        "close > vwap_session (price above session VWAP — bullish bias)",
+        "VIX < 25 (high-volatility filter: above 25, gap accelerations fail more frequently)"
+      ],
+      "confirmation": "EMA gap must be positive (ema_gap > ema_gap_min, default 0.5 pts) to exclude near-zero crossovers"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ema_fast_36 < ema_slow_120 (3-min EMA below 10-min EMA)",
+        "ema_gap widening bearishly over prior 30 seconds: ema_gap[i] < ema_gap[i-6]",
+        "roc_60 < -roc_threshold (default -15bps, 5-min negative return)",
+        "close < vwap_session (price below session VWAP — bearish bias)",
+        "VIX < 25"
+      ],
+      "confirmation": "EMA gap must be sufficiently negative (ema_gap < -ema_gap_min) to exclude noise crossovers"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 3.0,
+    "stop_rationale": "3 option pts = ~6 NIFTY spot points at delta 0.5. If EMA acceleration thesis is correct, NIFTY should not retrace 6 spot points within 30-90 seconds of entry. The 6 spot-point threshold is approximately the typical NIFTY noise range in a 30-second window (2-5 option pts at 30s per calibration table); a 3-pt option stop sits just outside this noise, exiting when the thesis clearly breaks.",
+    "target_points": 5.0,
+    "target_rationale": "5 option pts = ~10 NIFTY spot points at delta 0.5. At 30-90 second holds, NIFTY acceleration moves extend 8-15 spot points (3-7 option pts for 1-min, per calibration table). 5 option pts captures the lower half of the typical 1-min extension range, giving 1:1.67 R:R with the 3-pt stop — viable at 55%+ directional accuracy.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "VIX < 25; above 25, EMA gap signals produce more false starts due to choppy institutional behavior",
+    "time_filter": "09:30-15:20 IST; first 15 minutes excluded to allow EMA-120 warmup (120 bars = 10 min) and opening range noise to settle",
+    "volume_filter": "None explicit — NIFTY index volume is reliable at 5s resolution",
+    "trend_filter": "EMA gap direction is itself the trend filter; no additional trend filter needed",
+    "spread_filter": "None — limit order execution model, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.54,
+    "edge_decay_risk": "Moderate — EMA-based signals are well-known but the gap acceleration confirmation reduces crowding; however, competing algos watching the same EMA crossover means signal edge can erode if too many participants enter on the same bar"
+  },
+  "adaptation_notes": "The original strategy's 'quality filter' (ROE > 15%, D/E < 1.0, 4 consecutive positive quarters) is equity-specific and cannot be applied to a single index. The adaptation preserves the strategy's core signal structure — EMA crossover WITH widening gap confirmation + medium-term momentum + VWAP position — while discarding the stock-selection layer. The NIFTY index is inherently a quality-weighted instrument (cap-weighted, dominated by large-cap institutional favorites), so the quality thesis is embedded in the instrument itself. The key adaptation is: (1) EMA periods compressed from 9-min/21-min to 3-min/10-min to match 30-90s hold time instead of 20-60 min; (2) ROC compressed from 30-min to 5-min for same reason; (3) Gap acceleration window compressed from 5-min to 30-seconds (6 bars). The original's ATR-based stop converted to 3 option points (calibrated to typical NIFTY 30-90s move range).",
+  "weaknesses": [
+    "EMA crossover signals at 5-second resolution can produce rapid whipsaws during NIFTY's 09:15-09:30 opening volatility — mitigated by 09:30 session start filter",
+    "Gap acceleration confirmation (30-second window) may be too fast during high-VIX days when institutional programs pause/restart frequently",
+    "No volume confirmation — NIFTY index volume is pre-aggregated at 5s and less informative than equity tick volume; quality of volume signal is weaker than the original equity strategy's SMA(volume, 15) filter"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_294.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "20-60 min",
+    "original_indicators": ["EMA(9)", "EMA(21)", "ROC(30)", "VWAP", "Quality_Pass(ROE/DE/Earnings)"],
+    "original_stop": "1.0 × ATR(14)",
+    "original_target": "1.5 × ATR(14)"
+  }
+}

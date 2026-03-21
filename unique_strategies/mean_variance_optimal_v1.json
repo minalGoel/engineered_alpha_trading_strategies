@@ -1,0 +1,126 @@
+{
+  "name": "mean_variance_optimal_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean-variance", "sharpe-timing", "momentum", "volatility-compression", "quantitative"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_297.json",
+  "original_name": "mean_variance_optimal_v1",
+  "mechanism": "On NIFTY, when the instantaneous Sharpe ratio — computed as the 1-minute EMA of 5-second log returns divided by 3-minute realized volatility — ranks in the top 15% of its 20-minute history, it signals that institutional directional order flow has become coherent and low-noise. This state arises when VWAP-benchmarked buy algorithms are continuously absorbing sell flow without triggering retaliatory supply — price advances without the noise spikes that accompany contested moves. At 5-second resolution this 'coiled spring' condition typically precedes 30-60 second continuation as the one-sided imbalance is not yet fully priced in. The VWAP confirmation filters out high-Sharpe moments driven by volatile gaps above fair value where reversion is more likely than continuation.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:30-15:20 IST",
+  "hold_time_seconds": [30, 60],
+  "max_hold_bars": 12,
+  "trades_per_day": "4-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "log_ret",
+      "formula": "log(close[i] / close[i-1])",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "5-second log return — the fundamental unit for variance and momentum computation. Log-returns preferred over simple returns for numerical stability when annualizing."
+    },
+    {
+      "name": "ema_ret_12",
+      "formula": "EMA(log_ret, 12) — alpha=2/13",
+      "lookback": 12,
+      "computed_on": "spot",
+      "purpose": "1-minute EMA of 5-second returns (12 bars × 5s = 60s). This is the 'rolling expected return' component of the Sharpe numerator. Original used EMA(ROC,10) on 1-min bars (= 10-minute EMA). Compressed to 12 bars because at 5s resolution we are detecting the FAST directional burst (30-60s hold), not the slow drift. A 1-minute smoothing window separates genuine momentum from tick-by-tick noise while remaining fast enough to react to emerging order flow."
+    },
+    {
+      "name": "roll_var_36",
+      "formula": "VAR(log_ret, 36) — rolling variance over 36 bars",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "3-minute realized variance of 5-second returns (36 bars × 5s = 180s). Original used 30 1-min bars = 30 minutes of variance. Compressed to 3 minutes for two reasons: (1) we hold only 30-60 seconds, so the relevant compression window must precede our trade horizon not long-term history; (2) 36 bars at 5s gives ~36 data points which is statistically adequate for detecting compressed vs expanded local volatility — meaningful without requiring data that predates current regime."
+    },
+    {
+      "name": "instant_sharpe",
+      "formula": "ema_ret_12 / sqrt(max(roll_var_36, 1e-12))",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "Instantaneous Sharpe ratio. Positive high values = directional positive momentum with low noise. Negative low values = directional negative momentum with low noise. Values near zero = either no momentum or noisy momentum — do not trade."
+    },
+    {
+      "name": "sharpe_pct_240",
+      "formula": "percentile_rank(instant_sharpe, window=240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "20-minute (240 bars × 5s) session-relative Sharpe percentile. Original used 120 1-min bars = 2-hour lookback. Compressed to 20 minutes because: we want the Sharpe to be at a session-relative high within the CURRENT volatility regime, not versus 2 hours ago (regime can shift intraday). 20 minutes captures enough Sharpe variation to reliably identify top-15% moments without anchoring to stale regimes."
+    },
+    {
+      "name": "session_vwap",
+      "formula": "cumulative(typical_price × volume) / cumulative(volume) from day_open",
+      "lookback": "session",
+      "computed_on": "spot",
+      "purpose": "Cumulative VWAP from session open — no scaling needed (cumulative measure resets each day). Used to confirm that high-Sharpe momentum is in VWAP-aligned direction, filtering out post-spike situations where price is extended above fair value. Original used VWAP_Distance as a filter; same idea preserved."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "instant_sharpe > sharpe_threshold (default 2.0) — risk-adjusted return strongly positive",
+        "sharpe_pct_240 > 0.85 — current Sharpe in top 15% of last 20 minutes",
+        "close > session_vwap — price above fair value anchor (VWAP-aligned flow)",
+        "roll_var_36 > 0 — stock must be moving (non-zero variance)"
+      ],
+      "confirmation": "All conditions evaluated at bar close; entry fires on next bar open (limit at close price)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "instant_sharpe < -sharpe_threshold (default -2.0) — risk-adjusted return strongly negative",
+        "sharpe_pct_240 < 0.15 — current Sharpe in bottom 15% of last 20 minutes",
+        "close < session_vwap — price below fair value anchor",
+        "roll_var_36 > 0 — non-zero variance"
+      ],
+      "confirmation": "Symmetric with buy_ce"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 3,
+    "stop_rationale": "3 option pts = ~6 NIFTY spot pts at delta 0.5. A coiled-spring continuation that stalls and reverses 6 spot points within 30-60 seconds means the thesis is definitively wrong — 6 pts is the typical 15-second noise range on NIFTY, so a loss of that magnitude signals that opposing flow has overwhelmed the one-sided imbalance.",
+    "target_points": 5,
+    "target_rationale": "5 option pts = ~10 NIFTY spot pts. A high-Sharpe continuation at 5-second resolution typically runs 8-15 spot pts before mean-reverting; 5 option pts captures ~50-60% of the expected move and corresponds to the median 30-60s continuation size on NIFTY when Sharpe conditions are met (1:1.67 R:R).",
+    "time_stop_bars": 12,
+    "eod_rule": "flatten at 15:20 IST"
+  },
+  "filters": {
+    "vix_filter": "None — VIX not used (high VIX can still produce high-Sharpe momentum bursts; would create false exclusions)",
+    "time_filter": "09:30-15:20 IST; skip pre-open (first 15 minutes) for variance warmup",
+    "volume_filter": "roll_var_36 > 0 (implicit — requires NIFTY to be moving)",
+    "trend_filter": "VWAP direction confirmation (close > vwap for CE, close < vwap for PE)",
+    "spread_filter": "Limit order execution — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.55,
+    "avg_winner_to_loser": 1.67,
+    "profit_factor_estimate": 1.53,
+    "edge_decay_risk": "Medium — instantaneous Sharpe timing is novel at 5-second index resolution; edge depends on institutional VWAP algorithms creating coherent low-noise directional flow, which may cluster in certain market regimes and disappear in others"
+  },
+  "adaptation_notes": "Original applied mean-variance Sharpe timing to NIFTY 50 constituent stocks on 1-minute bars. Key changes: (1) Universe collapsed from 50 stocks to NIFTY index — the mechanism of coherent low-noise order flow applies directly to the index since institutional TWAP/VWAP algorithms operate on NIFTY futures; (2) Lookbacks compressed dramatically: EMA from 10 1-min bars (10 min) → 12 5-second bars (1 min); Variance from 30 1-min bars (30 min) → 36 5-second bars (3 min); Sharpe percentile from 120 1-min bars (2 hr) → 240 5-second bars (20 min) — all scaled to match 30-60s hold horizon rather than 15-45 min original; (3) Sharpe_Percentile threshold slightly relaxed from 0.90 → 0.85 because at 5s resolution there is more noise in the percentile calculation; (4) Signal confirmation bar (original required next-bar Sharpe > 1.5) removed — at 5s, requiring a second consecutive bar would miss the opportunity entirely; the VWAP filter provides the required confirmation.",
+  "weaknesses": [
+    "36 bars (3 min) is a small variance window — high variance from a single spike bar can suppress Sharpe for ~3 minutes even as NIFTY resumes trending",
+    "EMA(12) on 5-second returns is sensitive to a single large bar; the Sharpe can spike to >2.0 on a single aggressive institutional print before reverting",
+    "During news-driven moves (Fed speakers, geopolitical events), high-Sharpe conditions may appear mid-move rather than at the start, leading to late entries with poor R:R",
+    "VWAP filter may exclude valid afternoon trending sessions where NIFTY price has extended well above/below VWAP for extended periods"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_297.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["EMA(ROC(close,1), 10)", "VAR(ROC(close,1), 30)", "Instant_Sharpe", "Sharpe_Percentile(120)", "VWAP_Distance"],
+    "original_stop": "25 bps from entry",
+    "original_target": "45 bps from entry"
+  }
+}

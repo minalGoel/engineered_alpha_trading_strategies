@@ -2,110 +2,106 @@
   "name": "order_flow_imbalance_v1",
   "version": "0.2.0",
   "author": "claude_strategist",
-  "tags": ["microstructure", "order_flow", "cumulative_delta", "trend_following"],
-  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_244.json",
+  "tags": ["microstructure", "order_flow", "volume_delta", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_53.json",
   "original_name": "order_flow_imbalance_v1",
-  "mechanism": "On NIFTY, when FII/DII algorithmic TWAP orders are systematically absorbing sell-side inventory, consecutive 5-second bars show elevated positive signed volume (close > open) even as market makers reprice only incrementally — the index range-bounds while buying accumulates. This signed-volume/price divergence — measurable as a strongly positive 1-minute cumulative OFI ratio against a flat or negative 1-minute price return — persists for 30-90 seconds until the available sell inventory depletes and NIFTY prints a sharp 10-20 spot point directional break. At 5-second resolution we can enter during the accumulation phase before price responds, capturing the first 15-20 spot points of the breakout. The reverse pattern (consecutive bearish bars despite flat price) signals systematic distribution by institutional sellers before a decline.",
+  "mechanism": "On NIFTY, when institutional algorithms are working large directional orders via TWAP/VWAP execution, each 5-second bar exhibits a measurable volume tilt: heavier volume on uptick bars (close > open) than downtick bars during accumulation, and the reverse during distribution. Cumulating this volume-weighted bar_delta (volume × sign(close − open)) over a 1-minute window and z-scoring it against a 5-minute rolling baseline captures abnormal buy/sell pressure before it fully manifests in price. When this z-score exceeds ±1.5 and price confirms direction relative to session VWAP, the unexecuted tail of the institutional order typically pushes NIFTY a further 10-20 spot points within 30-90 seconds — unlike the unweighted direction proxy, high-volume bars carry proportionally more signal weight, making the z-score more sensitive to genuine institutional size rather than routine tick noise.",
   "universe": "NIFTY",
   "timeframe": "5s",
-  "session": "09:20-15:20 IST",
-  "hold_time_seconds": [15, 120],
-  "max_hold_bars": 24,
-  "trades_per_day": "5-10",
-  "max_trades_per_day": 10,
+  "session": "09:25-15:20 IST",
+  "hold_time_seconds": [15, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
   "data": {
     "ohlcv_5s": true,
     "option_chain": true,
-    "vix": true,
+    "vix": false,
     "index": "NSE:NIFTY50-INDEX",
     "order_book": false,
     "other": []
   },
   "indicators": [
     {
-      "name": "signed_vol_ratio",
-      "formula": "sign(close - open) * 1.0 — normalized per-bar flow direction",
+      "name": "bar_delta",
+      "formula": "volume * sign(close - open)",
       "lookback": 1,
       "computed_on": "spot",
-      "purpose": "Per-bar order flow proxy: +1 for bullish bar (close>open), -1 for bearish bar, 0 for doji. Approximates Lee-Ready trade classification using OHLCV. At 5-second resolution each bar direction cleanly reflects short-term net buying pressure — doji bars are excluded to avoid false neutrals from two-sided activity."
+      "purpose": "Volume-weighted per-bar delta: positive on uptick bars (close > open), negative on downtick bars, scaled by actual volume. Unlike unweighted direction, a 10,000-lot uptick bar contributes 100x more than a 100-lot doji, better reflecting genuine institutional size. This is the key differentiator from the unweighted signed-direction approach."
     },
     {
-      "name": "ofi_fast",
-      "formula": "rolling_sum(signed_vol_ratio, 12)",
+      "name": "cum_delta_12",
+      "formula": "SUM(bar_delta, 12)",
       "lookback": 12,
       "computed_on": "spot",
-      "purpose": "1-minute cumulative OFI (12 bars × 5s). Original used EMA(5) over 1-min bars (5-min context). Compressed to 12-bar rolling sum because we trade the fast divergence signal in the 15-120s window — OFI from >1 minute ago has already repriced or been absorbed. 12 bars matches our time-stop (24 bars) with a 2:1 lookback-to-hold ratio."
+      "purpose": "1-minute (12 × 5s) cumulative volume delta — the trigger-level imbalance accumulation window. NOT 10×12=120 bars. Original used 10-min cumulative for a 5-15 min hold; we hold 15-90s so 1-minute is the right window: long enough to filter individual-bar noise, short enough to remain predictive for a sub-2-minute hold."
     },
     {
-      "name": "ofi_slow",
-      "formula": "rolling_sum(signed_vol_ratio, 60)",
+      "name": "delta_zscore",
+      "formula": "(cum_delta_12 - SMA(cum_delta_12, 60)) / STDDEV(cum_delta_12, 60)",
       "lookback": 60,
       "computed_on": "spot",
-      "purpose": "5-minute context OFI (60 bars × 5s). Maps to original's EMA(15) at 1-min bars (15-min context), but halved to 5 minutes because institutional directional flow on NIFTY index resolves faster than on individual stocks. Used only as a context filter to avoid fighting sustained institutional flow — not the primary entry signal."
+      "purpose": "Normalize 1-min cumulative delta against a 5-minute (60 × 5s) rolling window. Original normalized over 60-min bars (60 minutes). Compressed to 5 min because NIFTY intraday vol regimes shift session-to-session — morning gap dynamics differ from afternoon drift; 5-min context captures the current regime without diluting with stale pre-noon data during afternoon entries."
     },
     {
-      "name": "price_change_12",
-      "formula": "(close - close[12]) / close[12]",
-      "lookback": 12,
+      "name": "vwap",
+      "formula": "cumulative(close * volume) / cumulative(volume) from session open",
+      "lookback": 0,
       "computed_on": "spot",
-      "purpose": "1-minute price return, same window as ofi_fast. Detects divergence: when ofi_fast is strongly positive but price_change_12 is flat/negative, latent buying pressure has accumulated but price has not yet responded — the key alpha signal from the original strategy."
+      "purpose": "Session VWAP from 09:15, reset each day. Directional filter: buy CE only above VWAP, buy PE only below VWAP. Eliminates counter-trend imbalance signals that are likely noise rather than the start of a sustained institutional flow. Identical to the original strategy's VWAP alignment filter."
     }
   ],
   "entry": {
     "buy_ce": {
       "conditions": [
-        "ofi_fast > ofi_threshold (1-min signed-volume ratio exceeds bullish threshold)",
-        "bull_divergence: ofi_fast > threshold AND price_change_12 <= 0 (flow bullish, price flat/down — latent buying)",
-        "OR bull_trend: ofi_fast > threshold AND ofi_slow > 0 AND price_change_12 > 0 (flow and price aligned, sustained flow confirms)",
-        "vix < 22 (avoid microstructure noise in high-volatility regimes)"
+        "delta_zscore > 1.5 — 1-min volume-weighted buy imbalance is 1.5 std above recent norm",
+        "close > vwap — price confirming bullish regime relative to session benchmark"
       ],
-      "confirmation": "Either divergence or trend signal fires; cannot fire simultaneously with buy_pe"
+      "confirmation": "fire on same bar close"
     },
     "buy_pe": {
       "conditions": [
-        "ofi_fast < -ofi_threshold (1-min signed-volume ratio exceeds bearish threshold)",
-        "bear_divergence: ofi_fast < -threshold AND price_change_12 >= 0 (flow bearish, price flat/up — latent selling)",
-        "OR bear_trend: ofi_fast < -threshold AND ofi_slow < 0 AND price_change_12 < 0 (flow and price aligned, sustained flow confirms)",
-        "vix < 22"
+        "delta_zscore < -1.5 — 1-min volume-weighted sell imbalance is 1.5 std below recent norm",
+        "close < vwap — price confirming bearish regime relative to session benchmark"
       ],
-      "confirmation": "Either divergence or trend signal fires; cannot fire simultaneously with buy_ce"
+      "confirmation": "fire on same bar close"
     },
     "entry_price": "market"
   },
   "exit": {
-    "stop_points": 5,
-    "stop_rationale": "5 option points (~10 NIFTY spot pts at delta 0.5). If a genuine OFI accumulation is building, NIFTY should not retrace 10+ spot points against the signal within 120 seconds — a retrace of that magnitude means inventory absorption completed at a different price level and the thesis is broken.",
-    "target_points": 8,
-    "target_rationale": "8 option points (~16 NIFTY spot pts). OFI-driven inventory exhaustion on NIFTY typically resolves in a 15-25 spot point directional break within 2 minutes; 16 pts captures ~65% of the expected move (1:1.6 R:R) while leaving room for partial fills at the tighter stop.",
-    "time_stop_bars": 24,
+    "stop_points": 4,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5). If confirmed volume-delta imbalance reverses by 8 spot pts within 30s, the institutional order that drove the abnormal z-score has completed or been absorbed by opposing flow — the thesis is broken. Consistent with 15-second typical NIFTY option move of 1-3 pts; stop triggers after approximately 2 adverse bars.",
+    "target_points": 7,
+    "target_rationale": "7 option pts (~14 NIFTY spot pts). Institutional TWAP slices on NIFTY typically push 15-25 spot pts per burst before pause; 14 pts captures ~60-70% of the lower-bound expectation at a 1:1.75 R:R. Even at a 56% win rate (the original equity backtest estimate), this R:R is strongly profitable after costs.",
+    "time_stop_bars": 18,
     "eod_rule": "flatten at 15:20"
   },
   "filters": {
-    "vix_filter": "India VIX < 22 — above 22, tail-risk hedging dominates NIFTY microstructure and signed-volume OFI becomes unreliable as market makers widen and stop absorbing flow directionally",
-    "time_filter": "09:20-15:20 IST — skip first 5 min (pre-open noise) and last 10 min (EOD position squaring)",
-    "volume_filter": "none — signed direction ratio is self-normalizing, does not depend on absolute volume levels",
-    "trend_filter": "ofi_slow direction aligns or is neutral for entry; conflict between ofi_fast and ofi_slow suppressed via divergence-only mode",
-    "spread_filter": "none — limit order execution at candle close prices, no spread cost"
+    "vix_filter": "none — volume-weighted delta works across vol regimes; the z-score normalization self-adjusts to current session volatility",
+    "time_filter": "no trades first 10 min (09:15-09:25 IST) to skip pre-open auction volume noise; no new entries after 15:20",
+    "volume_filter": "implicit — bar_delta is zero on zero-volume bars, so halts/gaps auto-excluded",
+    "trend_filter": "VWAP alignment: buy CE only above VWAP, buy PE only below VWAP",
+    "spread_filter": "none — limit order execution at candle close prices"
   },
   "edge": {
     "expected_bps": 18,
-    "win_rate_estimate": 0.54,
-    "avg_winner_to_loser": 1.6,
-    "profit_factor_estimate": 1.28,
-    "edge_decay_risk": "Medium — OHLCV signed-volume OFI proxy is less precise than tick-level Lee-Ready. Signal strength depends on 5-second bars cleanly reflecting net order flow, most reliable during active institutional TWAP windows (10:00-11:30, 13:30-15:00 IST)."
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.3,
+    "profit_factor_estimate": 1.4,
+    "edge_decay_risk": "medium — volume delta on 5s OHLCV bars is a noisy proxy for true tick-level order flow; signal is most reliable during high-volume institutional TWAP windows (10:00-11:30, 13:30-15:00 IST)"
   },
-  "adaptation_notes": "Original requires tick-level trade data with Lee-Ready buy/sell classification (not available in the 5s OHLCV pipeline). Adapted to OHLCV signed-volume proxy: sign(close-open) per bar, summed over a rolling window — preserves the core OFI accumulation signal without per-trade classification. Applied to NIFTY index directly rather than constituent stocks; the index naturally aggregates all component order flows. Original's session-cumulative OFI replaced by 1-min rolling OFI because session-level accumulation is too slow for 15-120s holds. Original's EMA(5)/EMA(15) on 1-min bars (5/15 min context) compressed to 12/60-bar rolling sums (1/5 min at 5s) to match the faster hold time. The key alpha signal — OFI positive while price flat — is preserved exactly as the divergence entry condition.",
+  "adaptation_notes": "Original traded Nifty50 constituent stocks (top 20 by turnover) at 1-min bars with 10-min cumulative volume delta and 60-min z-score normalization. Changes: (1) universe collapsed to NIFTY index directly — aggregate constituent volume on the index captures the same institutional flow that drives individual stock deltas; (2) cumulative window compressed 10 min → 1 min (12 bars) matching the shorter hold time; (3) normalization window compressed 60 min → 5 min (60 bars) to track current session vol regime; (4) z-score threshold lowered from 2.0 to 1.5 because 5s bars are noisier and need a lower threshold to fire with sufficient frequency; (5) VWAP filter retained unchanged; (6) volume-weighting preserved — this is the key differentiator vs unweighted direction strategies.",
   "weaknesses": [
-    "Signed-volume proxy misclassifies doji bars (close ≈ open with high activity) — these show as 0 OFI but may have significant two-sided institutional activity",
-    "NIFTY 5-second volume is pre-aggregated across all constituent trades; the signed direction from a single bar may not reflect the dominant institutional flow when large opposing orders partially cancel",
-    "Divergence signal frequency may be low on trend days where price and flow move together from the start, reducing trade count"
+    "bar_delta using close vs open misclassifies doji bars (close ≈ open with high activity) — these score near-zero delta even if two-sided institutional activity was high",
+    "NIFTY index volume aggregates all constituent trades; high-volume downtick on one component can cancel a high-volume uptick on another, producing misleading delta",
+    "Z-score normalization breaks during very-low-volume periods (lunch lull 12:30-13:00) where rolling STDDEV collapses toward zero"
   ],
   "_source": {
-    "original_file": "trading_strategies/unique_strategies_all/Strategy_244.json",
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_53.json",
     "original_timeframe": "1min",
-    "original_hold_time": "3-8 min",
-    "original_indicators": ["OFI_1min (signed volume per bar)", "cumulative_OFI (session sum)", "OFI_momentum (EMA5 - EMA15)", "OFI_price_divergence (sign mismatch)"],
-    "original_stop": "10 bps from entry",
-    "original_target": "20 bps from entry"
+    "original_hold_time": "5-15 bars (5-15 min)",
+    "original_indicators": ["bar_delta (volume*sign(close-open))", "cum_delta_10", "delta_zscore (SMA/STDDEV over 60 bars)", "atr_20"],
+    "original_stop": "0.15% from entry",
+    "original_target": "0.2% from entry"
   }
 }

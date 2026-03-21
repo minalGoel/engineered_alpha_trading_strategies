@@ -1,12 +1,13 @@
 """Order Flow Imbalance strategy for NIFTY 5-second index options.
 
-Thesis: When NIFTY's 5-second bars show sustained positive signed volume
-(close > open) against flat/negative price change, it signals FII/DII
-algorithmic TWAP accumulation. As sell inventory depletes, NIFTY breaks
-out directionally in 15-120 seconds. The OFI/price divergence is the key
-alpha signal.
+Thesis: When NIFTY's 5-second bars show abnormally high volume-weighted
+buying pressure (volume * sign(close - open) z-score > 1.5) while price
+is above session VWAP, it signals institutional TWAP accumulation whose
+unexecuted tail will push NIFTY 10-20 spot points in the next 30-90 seconds.
+Volume-weighting is the key differentiator — large-volume uptick bars carry
+proportionally more signal than small doji bars.
 
-Converted from: trading_strategies/unique_strategies_all/Strategy_244.json
+Converted from: trading_strategies/unique_strategies_all/Strategy_53.json
 """
 from __future__ import annotations
 
@@ -16,15 +17,31 @@ import polars as pl
 from pipeline.strategies.base import BaseStrategy, OptionSignals, TunableParam
 
 
+def _compute_vwap(close: np.ndarray, volume: np.ndarray, day_id: np.ndarray) -> np.ndarray:
+    """Session VWAP, reset at each new day_id."""
+    n = len(close)
+    vwap = np.zeros(n)
+    cum_pv = 0.0
+    cum_v = 0.0
+    current_day = -1
+    for i in range(n):
+        if day_id[i] != current_day:
+            cum_pv = 0.0
+            cum_v = 0.0
+            current_day = day_id[i]
+        cum_pv += close[i] * volume[i]
+        cum_v += volume[i]
+        vwap[i] = cum_pv / cum_v if cum_v > 0 else close[i]
+    return vwap
+
+
 def _rolling_sum(arr: np.ndarray, window: int) -> np.ndarray:
-    """Rolling sum over last `window` bars. Partial sums for early bars."""
+    """Rolling sum over last `window` bars (partial sums for warm-up bars)."""
     n = len(arr)
     padded = np.zeros(n + 1)
     padded[1:] = np.cumsum(arr)
     result = np.zeros(n)
-    # Early bars: sum from 0 to i (partial)
     result[:window - 1] = padded[1:window]
-    # Full window bars
     result[window - 1:] = padded[window:] - padded[:n - window + 1]
     return result
 
@@ -32,16 +49,16 @@ def _rolling_sum(arr: np.ndarray, window: int) -> np.ndarray:
 class Strategy(BaseStrategy):
     name = "order_flow_imbalance_v1"
     underlying = "NIFTY"
-    session_start_minutes = 560   # 09:20 IST
+    session_start_minutes = 565   # 09:25 IST — skip first 10 min pre-open noise
     session_end_minutes = 920     # 15:20 IST
-    max_lookback = 120            # 10 min warmup (covers ofi_fast=12 + ofi_slow=60)
-    max_trades_per_day = 10
+    max_lookback = 72             # 6 min warmup (need 60 bars for zscore window)
+    max_trades_per_day = 8
 
     def tunable_params(self) -> list[TunableParam]:
         return [
-            TunableParam("ofi_threshold", 0.30, 0.10, 0.70),
-            TunableParam("stop_pts",      5.0,  3.0,  9.0),
-            TunableParam("target_pts",    8.0,  5.0,  15.0),
+            TunableParam("delta_zscore_threshold", 1.5, 1.0, 2.5),
+            TunableParam("stop_pts",               4.0, 2.0, 8.0),
+            TunableParam("target_pts",             7.0, 4.0, 12.0),
         ]
 
     def compute(self, spot_df, option_df, vix_df, params) -> OptionSignals:
@@ -60,69 +77,44 @@ class Strategy(BaseStrategy):
             .fill_null(strategy="forward")
             .to_numpy()
         )
+        volume = (
+            spot_df["volume"]
+            .fill_null(0)
+            .to_numpy()
+            .astype(np.float64)
+        )
         time_min = spot_df["time_minutes"].to_numpy()
+        day_id   = spot_df["day_id"].to_numpy()
 
         # ── Parameters ────────────────────────────────────────────────────
-        ofi_threshold = params.get("ofi_threshold", 0.30)
-        stop_pts      = params.get("stop_pts",      5.0)
-        target_pts    = params.get("target_pts",    8.0)
+        threshold  = params.get("delta_zscore_threshold", 1.5)
+        stop_pts   = params.get("stop_pts",               4.0)
+        target_pts = params.get("target_pts",             7.0)
 
-        # ── Signed volume direction proxy ─────────────────────────────────
-        # +1 = bullish bar, -1 = bearish bar, 0 = doji
-        # Proxy for Lee-Ready per-bar order flow direction.
-        signed_dir = np.where(close > open_, 1.0,
-                     np.where(close < open_, -1.0, 0.0))
+        # ── Session VWAP (reset each day) ─────────────────────────────────
+        vwap = _compute_vwap(close, volume, day_id)
 
-        # ── Fast OFI: 12-bar rolling sum (1 min) ─────────────────────────
-        # Detects short-term accumulation/distribution building up.
-        # Range: [-12, +12]; normalise to [-1, +1] for threshold comparison.
-        OFI_FAST_WINDOW = 12
-        ofi_fast_raw = _rolling_sum(signed_dir, OFI_FAST_WINDOW)
-        ofi_fast = ofi_fast_raw / OFI_FAST_WINDOW  # [-1, +1]
+        # ── Volume-weighted bar delta ─────────────────────────────────────
+        # Positive on uptick bars (close>open), negative on downtick bars.
+        # High-volume bars contribute proportionally more than doji bars.
+        bar_delta = volume * np.sign(close - open_)
 
-        # ── Slow OFI: 60-bar rolling sum (5 min) ─────────────────────────
-        # Context filter — are we in an overall buying or selling regime?
-        OFI_SLOW_WINDOW = 60
-        ofi_slow = _rolling_sum(signed_dir, OFI_SLOW_WINDOW)  # raw direction sum
+        # ── 1-minute cumulative volume delta (12 bars × 5s) ───────────────
+        # Accumulation window: long enough to filter individual-bar noise,
+        # short enough to remain predictive for a 15-90s hold.
+        cum_delta_12 = _rolling_sum(bar_delta, 12)
 
-        # ── 1-minute price return (same window as fast OFI) ───────────────
-        price_change_12 = np.zeros(n)
-        price_change_12[OFI_FAST_WINDOW:] = (
-            (close[OFI_FAST_WINDOW:] - close[:-OFI_FAST_WINDOW])
-            / close[:-OFI_FAST_WINDOW]
-        )
-
-        # ── OFI / price divergence (primary alpha signal) ─────────────────
-        # Bull divergence: flow is bullish but price flat/down → latent buying
-        bull_divergence = (ofi_fast > ofi_threshold) & (price_change_12 <= 0.0)
-        bear_divergence = (ofi_fast < -ofi_threshold) & (price_change_12 >= 0.0)
-
-        # ── Trend continuation (secondary signal) ─────────────────────────
-        # Both fast OFI and slow context agree with price direction
-        bull_trend = (
-            (ofi_fast > ofi_threshold)
-            & (ofi_slow > 0.0)
-            & (price_change_12 > 0.0)
-        )
-        bear_trend = (
-            (ofi_fast < -ofi_threshold)
-            & (ofi_slow < 0.0)
-            & (price_change_12 < 0.0)
-        )
-
-        # ── VIX filter ────────────────────────────────────────────────────
-        vix_close = np.full(n, 15.0)
-        if vix_df is not None and not vix_df.is_empty():
-            vix_joined = spot_df.select("datetime").join_asof(
-                vix_df.select(
-                    ["datetime", pl.col("close").alias("vix_close")]
-                ).sort("datetime"),
-                on="datetime",
-                strategy="backward",
-            )
-            vix_close = vix_joined["vix_close"].fill_null(15.0).to_numpy()
-
-        vix_ok = vix_close < 22.0
+        # ── Z-score vs 5-minute (60-bar) rolling baseline ─────────────────
+        # Captures how abnormal the current 1-min buying/selling pressure is
+        # relative to the recent session regime.
+        NORM_WINDOW = 60
+        delta_zscore = np.zeros(n)
+        for i in range(NORM_WINDOW, n):
+            window_vals = cum_delta_12[i - NORM_WINDOW:i]
+            mean = np.mean(window_vals)
+            std  = np.std(window_vals)
+            if std > 0:
+                delta_zscore[i] = (cum_delta_12[i] - mean) / std
 
         # ── Session filter ────────────────────────────────────────────────
         in_session = (
@@ -130,12 +122,14 @@ class Strategy(BaseStrategy):
             & (time_min < self.session_end_minutes)
         )
 
-        # ── Final signals ─────────────────────────────────────────────────
-        buy_ce = in_session & vix_ok & (bull_divergence | bull_trend)
-        buy_pe = in_session & vix_ok & (bear_divergence | bear_trend)
+        # ── Entry signals ─────────────────────────────────────────────────
+        # Bullish: volume-weighted buying abnormally strong + price above VWAP
+        buy_ce = in_session & (delta_zscore > threshold) & (close > vwap)
 
-        # Resolve simultaneous signals (divergence + trend can both fire on
-        # the same bar in edge cases) — favour neither; skip that bar.
+        # Bearish: volume-weighted selling abnormally strong + price below VWAP
+        buy_pe = in_session & (delta_zscore < -threshold) & (close < vwap)
+
+        # Prevent simultaneous CE + PE signals
         both   = buy_ce & buy_pe
         buy_ce = buy_ce & ~both
         buy_pe = buy_pe & ~both
@@ -148,6 +142,6 @@ class Strategy(BaseStrategy):
             stop_points=np.full(n, stop_pts),
             target_points=np.full(n, target_pts),
             strike_offset=np.zeros(n, dtype=np.int32),
-            time_stop_bars=24,           # 120 seconds
+            time_stop_bars=18,           # 90 seconds max hold
             max_trades_per_day=self.max_trades_per_day,
         )

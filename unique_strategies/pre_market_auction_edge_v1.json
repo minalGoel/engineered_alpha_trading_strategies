@@ -1,0 +1,103 @@
+{
+  "name": "pre_market_auction_edge_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["time_of_day", "opening_gap", "momentum", "early_session", "auction"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_56.json",
+  "original_name": "pre_market_auction_edge_v1",
+  "mechanism": "NIFTY's NSE pre-opening session (09:00–09:08) produces an indicative equilibrium price that reflects net overnight FII and institutional futures positioning. When NIFTY opens with a gap exceeding 0.2% from the previous close, the auction price has embedded a strong directional bias. If the first 2 minutes of continuous trading (09:15–09:17) confirm the gap direction — meaning institutional order flow is absorbing supply at the gap level rather than fading it — algo momentum strategies and options market makers delta-hedging their books amplify the move over the next 30–90 seconds. At 5-second resolution we can detect this 2-minute confirmation the moment it completes and enter before the burst has fully played out, capturing the continuation leg as remaining institutional TWAP/VWAP orders execute.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:17-09:25 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "opening_gap_pct",
+      "formula": "(day_first_open - prev_day_last_close) / prev_day_last_close",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Proxy for the NSE pre-opening auction equilibrium gap. Lookback is 1 day because the signal resets each session — we compare the current day's opening price (which reflects the pre-opening auction outcome) to the prior day's final close. No intraday rolling window required; this is a daily snapshot signal carried forward across the early session bars."
+    },
+    {
+      "name": "intraday_ret",
+      "formula": "(close - day_first_open) / day_first_open",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute cumulative return since the day's first bar open — the directional confirmation signal. Lookback of 24 bars = 2 minutes at 5s, chosen to match our confirmation window: 2 minutes is sufficient to distinguish institutional absorption (gap holds) from gap-fade (gap reverses). The original used 5 one-minute bars (5 minutes); we compress to 2 minutes because we are trading the fast burst leg, not the sustained intraday trend. A 2-minute confirmation at 5-second resolution is granular enough to detect the direction of institutional order flow without waiting for gap information to fully dissipate."
+    },
+    {
+      "name": "bar_in_day",
+      "formula": "per-bar index within trading day, reset at each day's first bar",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Gates entries to bars 24–72 within the day (09:17–09:21 IST). After bar 72 (~6 min from open), the opening gap information has been absorbed and the directional edge from the pre-auction signal decays. This prevents stale signals from firing mid-session."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "opening_gap_pct > gap_threshold (default 0.002 = 0.2%)",
+        "intraday_ret > confirm_threshold (default 0.0005 = 0.05%)",
+        "bar_in_day in [24, 72] — 09:17 to 09:21 IST entry window"
+      ],
+      "confirmation": "gap-up confirmed by bullish 2-min early session return"
+    },
+    "buy_pe": {
+      "conditions": [
+        "opening_gap_pct < -gap_threshold",
+        "intraday_ret < -confirm_threshold",
+        "bar_in_day in [24, 72]"
+      ],
+      "confirmation": "gap-down confirmed by bearish 2-min early session return"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5): a confirmed gap that reverses by 8 spot points within 60 seconds means institutional absorption has failed and a gap fade is underway — the original thesis is invalidated. NIFTY's early session 30-second range is typically 5–12 pts, so 8 pts is tight enough to cut quickly but not so tight it triggers on normal volatility.",
+    "target_points": 7,
+    "target_rationale": "7 option pts (~14 NIFTY spot pts at delta 0.5): confirmed opening gap continuations on NIFTY typically deliver a 15–25 spot point burst in the first 60–90 seconds as momentum algos pile on. Targeting 7 pts captures ~50% of the median expected burst leg, giving a 1:1.75 R:R. Setting a higher target risks holding through the post-burst stall where the gap move decelerates.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST; entry window practically closes at 09:21 IST (bar_in_day > 72 filter)"
+  },
+  "filters": {
+    "vix_filter": "none — opening gap is a pre-market signal; intraday VIX level not relevant at session open",
+    "time_filter": "entries restricted to 09:17–09:21 IST (bar_in_day 24–72); stale gap signal beyond 09:21",
+    "volume_filter": "none — NIFTY index volume is reliable at open; individual stock auction volume not required",
+    "trend_filter": "opening_gap_pct direction must align with intraday_ret direction (both conditions required)",
+    "spread_filter": "none — limit order execution, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.30,
+    "edge_decay_risk": "moderate — as pre-market gap-and-go strategies become more crowded on NIFTY futures, the early-session burst window may compress further; the gap threshold may need tightening over time"
+  },
+  "adaptation_notes": "Original strategy used NSE pre-opening auction equilibrium price (AEP, 09:00–09:08) for individual Nifty50 stocks — top 20 by turnover with >500 pre-market orders — holding 15–75 minutes on 1-min bars. Converted to NIFTY index using: (1) first bar open vs prev-day close as AEP proxy — equivalent because the pre-opening session's outcome is embedded in the NIFTY opening price; (2) 2-minute (24-bar at 5s) confirmation window replacing 5 one-minute bars — compressed because we trade the fast burst not the sustained trend; (3) hold time compressed from 15–75 min to 15–120 seconds — we capture only the momentum burst leg, not the full intraday continuation; (4) individual stocks replaced by NIFTY index — cleaner signal with no stock-specific event risk. The stock-specific pre-market AEP data requirement is eliminated by using index-level opening gap, which is fully derivable from the OHLCV pipeline.",
+  "weaknesses": [
+    "First-bar open gap is a noisier AEP proxy than true pre-opening auction price — NSE pre-opening session can set indicative prices that diverge from the actual first-trade price",
+    "Only 0–2 signals per day with gap threshold 0.2% — flat-open days generate no trades; low throughput requires high per-trade win rate",
+    "Early NIFTY session (09:15–09:20) has higher volatility and occasionally erratic moves; gap confirmation filter reduces but does not eliminate false bursts",
+    "Gap threshold of 0.2% is large enough that signals are rare; index option premium must move at least 4 pts to hit stop, which is achievable within 30 seconds"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_56.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-75 bars (15-75 min)",
+    "original_indicators": ["aep_gap_pct", "continuous_open_gap", "aep_vs_open", "first_5_direction", "atr_20"],
+    "original_stop": "0.3% from entry",
+    "original_target": "0.4% from entry"
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "name": "lunch_hour_range_compression_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["time_of_day", "range_breakout", "microstructure", "compression", "intraday"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_54.json",
+  "original_name": "lunch_hour_range_compression_v1",
+  "mechanism": "During 12:00-13:30, NIFTY's order flow shrinks as large domestic institutional desks pause rebalancing and algo momentum strategies reduce size in the low-information lunch window — the index typically compresses to a 30-50 spot point range (vs 70-120 points in the morning). At 13:30, NAV-linked mutual fund orders and FII afternoon directional flows re-enter simultaneously, overwhelming the thin resting orders at the range boundary. On NIFTY specifically (versus individual stocks), this breakout is cleaner because the index aggregates hundreds of names, dampening false breakouts from single-stock noise. The first 30-90 seconds of the breakout carries persistent directionality as the initial institutional order blocks — sized in hundreds of crores — cannot be fully absorbed by resting liquidity instantly, creating autocorrelation in the NIFTY spot order book.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "13:30-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "0-2",
+  "max_trades_per_day": 3,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": false,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "lunch_high",
+      "formula": "MAX(high, bars where time_minutes in [720, 810))",
+      "lookback": 1080,
+      "computed_on": "spot",
+      "purpose": "Fixed time window (12:00-13:30 = 90 min = 1080 bars at 5s), NOT a rolling lookback. Computed fresh each day as a cumulative session max. This window is the structural Indian lunch period — same calendar time regardless of bar size."
+    },
+    {
+      "name": "lunch_low",
+      "formula": "MIN(low, bars where time_minutes in [720, 810))",
+      "lookback": 1080,
+      "computed_on": "spot",
+      "purpose": "Same fixed window as lunch_high. Together they define the compression band whose breakout we trade."
+    },
+    {
+      "name": "lunch_range",
+      "formula": "lunch_high - lunch_low",
+      "lookback": 1080,
+      "computed_on": "spot",
+      "purpose": "Compression degree. Must be < 0.3% of spot price (configurable via compression_threshold) to qualify as a genuine compression day rather than a wide-ranging lunch."
+    },
+    {
+      "name": "morning_direction",
+      "formula": "sign(close_at_12:00 - open_at_09:15)",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Pre-lunch trend context. Required to align breakout with morning trend — avoids fading the entire day's direction. Same role as original; no scaling needed as it is a scalar per day."
+    },
+    {
+      "name": "vol_sma_60",
+      "formula": "rolling_mean(volume, 60)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60-bar (5-min) rolling volume SMA. Breakout bar must exceed this by volume_multiplier. Lookback is 60 bars (5 min) rather than the original's 20 bars (20 min at 1-min) because 5s index volume is noisy — a 5-min SMA smooths this adequately while remaining local enough to capture intraday volume context."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes >= 810 (after 13:30)",
+        "close > lunch_high",
+        "lunch_range < compression_threshold * close",
+        "morning_direction == +1 (morning was bullish)",
+        "volume > vol_sma_60 * volume_multiplier"
+      ],
+      "confirmation": "5-second close above lunch high with volume surge and morning alignment"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes >= 810 (after 13:30)",
+        "close < lunch_low",
+        "lunch_range < compression_threshold * close",
+        "morning_direction == -1 (morning was bearish)",
+        "volume > vol_sma_60 * volume_multiplier"
+      ],
+      "confirmation": "5-second close below lunch low with volume surge and morning alignment"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option points = ~8 NIFTY spot points at delta 0.5. A post-lunch NIFTY breakout should not retrace 8 spot points back inside the lunch range within 90 seconds — if it does, the institutional order flow thesis has failed and the breakout is a false one. 4 pts is calibrated to contain one normal retest without closing the position on noise.",
+    "target_points": 7.0,
+    "target_rationale": "7 option points = ~14 NIFTY spot points. The first 30-90 second burst after a genuine post-lunch breakout typically covers 15-25 NIFTY spot points (7-12 option pts at delta 0.5). We target 7 pts (the lower bound) for a 1:1.75 R:R, ensuring we capture the fast initial surge without requiring the full continuation.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "none — the lunch compression pattern is structural and not sensitive to broad market vol regime",
+    "time_filter": "active only 13:30-15:25; lunch range computed from 12:00-13:30 bars",
+    "volume_filter": "breakout bar volume > vol_sma_60 * volume_multiplier (default 1.2x) to distinguish institutional re-entry from random drift",
+    "trend_filter": "morning_direction must align with breakout direction (close@12:00 vs open@09:15)",
+    "spread_filter": "none — index options have tight spreads; limit orders at close price",
+    "compression_filter": "lunch_range < 0.3% of spot price (compression_threshold=0.003) — genuine compression days only, not wide-ranging lunches"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.62,
+    "edge_decay_risk": "low — the lunch hour compression is structural to Indian market participation patterns and MF NAV-driven flows. Unlikely to decay unless SEBI changes trading hours or NAV calculation rules."
+  },
+  "adaptation_notes": "Converted from 1-min equity (Nifty50 top-20 stocks) to 5-second NIFTY index options. Key changes: (1) Universe: from top-20 individual stocks to NIFTY index directly — the lunch compression is cleaner on the index because single-stock noise cancels out in aggregation; (2) Hold time: compressed from 30-90 minutes to 30-90 seconds — we target only the initial breakout burst, not the full post-lunch trend. The thesis is that the FIRST institutional re-entry cannot be absorbed instantly; (3) Stop/target: converted from equity-based 'range midpoint stop' (0.5 × lunch_range) to fixed option premium points calibrated to 5s NIFTY move sizes; (4) Volume filter: converted from 20-bar 1-min SMA to 60-bar 5s SMA (both = 5 minutes in wall clock time, equivalent scaling); (5) No ATR stop — replaced with fixed points appropriate for 30-90s option holds at 5s resolution.",
+  "weaknesses": [
+    "Not all days have a genuine lunch compression — some days are directionally active through lunch (major global macro events, RBI policy days)",
+    "Session_start is 13:30 which means at most 1-2 trades per day — low-frequency relative to other 5s strategies",
+    "Morning direction filter is strict — eliminates signals on days with a flat morning, reducing trade count further",
+    "The breakout may fire on multiple 5s bars in a row (all above lunch_high), requiring the max_trades_per_day cap to prevent over-trading on a single breakout event"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_54.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-90 bars (30-90 minutes)",
+    "original_indicators": ["lunch_high (MAX over 90 bars)", "lunch_low (MIN over 90 bars)", "lunch_range", "morning_direction", "atr_20", "volume_sma_20"],
+    "original_stop": "lunch_midpoint (0.5 * lunch_range from entry)",
+    "original_target": "1.0 * lunch_range from breakout level"
+  }
+}

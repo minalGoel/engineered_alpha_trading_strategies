@@ -1,0 +1,115 @@
+{
+  "name": "robust_regression_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["robust-regression", "Huber", "trend-following", "pullback", "microstructure"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_328.json",
+  "original_name": "robust_regression_v1",
+  "mechanism": "On NIFTY, institutional TWAP and VWAP algorithms executing large directional orders create persistent micro-trends over 3-7 minute windows. Individual block trades and sudden micro-news events generate outlier bars that bias OLS regression and obscure the genuine institutional flow direction; Huber IRLS down-weights these spike bars (residual > 1.35 * MAD) to reveal the true gradient of underlying demand. When the Huber slope t-statistic exceeds 2.0 on a 5-minute window (60 bars) and price dips back below the regression line, we are entering a confirmed TWAP buy-flow at a momentary intraday imbalance point — the ongoing order execution will absorb that imbalance and push spot back through the trend line within 30-90 seconds.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:25-15:25 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "huber_t_stat",
+      "formula": "slope / se(slope) from IRLS-Huber WLS regression of close on bar_index (window=60 bars)",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "60-bar window (5 minutes) chosen because: (a) <30 bars yields t-stat with too few degrees of freedom; (b) 5 min captures one round of institutional TWAP activity on NIFTY and gives a stable slope estimate; (c) longer windows (120+ bars) would lag too far behind for 15-120 second options trades. This is NOT 12x the original 30-min window — original 30 bars at 1-min = 30 min, but we need 5-min because we hold 15-120 seconds, not 15-45 minutes. Threshold 2.0 ensures >95% confidence the slope is non-zero."
+    },
+    {
+      "name": "huber_residual",
+      "formula": "close[i] - (huber_intercept + huber_slope * (window-1)) — distance from regression line at current bar",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Negative residual means price is below the robust trend line — the dip-entry opportunity in an uptrend. Entry requires residual in [-2*MAD, 0) to catch genuine dips while excluding extreme outlier bars that the Huber weighting itself classifies as statistical anomalies."
+    },
+    {
+      "name": "huber_residual_mad",
+      "formula": "MAD(residuals_in_window) * 1.4826 (robust standard deviation) from final IRLS iteration",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Noise-level denominator for normalising the residual — ensures dip entry is meaningful relative to the scatter of the current trend window, not an arbitrary threshold."
+    },
+    {
+      "name": "vwap",
+      "formula": "cumsum(close * volume) / cumsum(volume), reset each session",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "Session trend filter. close > VWAP for CE entries confirms that TWAP institutional buyers are net above their benchmark — they will continue buying. Unchanged from original strategy which used VWAP as a broad direction filter."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "huber_t_stat > t_stat_threshold (robust uptrend statistically significant, default 2.0)",
+        "huber_residual < 0 (price is below robust regression line — dip in confirmed uptrend)",
+        "huber_residual > -mad_limit * huber_residual_mad (not an extreme outlier, default mad_limit=2.0)",
+        "close > vwap (session trend: TWAP buyers are above benchmark, demand intact)",
+        "India VIX < 25 (original filter preserved; high VIX creates spike-dominated bars)",
+        "time_minutes in [565, 925) — 09:25 to 15:25 IST"
+      ],
+      "confirmation": "none — signals fire immediately on bar close; time_stop handles false positives"
+    },
+    "buy_pe": {
+      "conditions": [
+        "huber_t_stat < -t_stat_threshold (robust downtrend statistically significant)",
+        "huber_residual > 0 (price is above regression line — rip in confirmed downtrend)",
+        "huber_residual < mad_limit * huber_residual_mad",
+        "close < vwap",
+        "India VIX < 25",
+        "time_minutes in [565, 925)"
+      ],
+      "confirmation": "none"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4.0,
+    "stop_rationale": "4 option pts (~8 NIFTY spot pts at delta 0.5): if NIFTY moves 8 spot pts against a confirmed robust uptrend within 30 seconds, the institutional flow has stalled or reversed and the TWAP thesis is invalid; 4 pts is just above the upper end of typical 30s adverse NIFTY moves (2-5 pts) to avoid noise-stops while still cutting losers promptly.",
+    "target_points": 7.0,
+    "target_rationale": "7 option pts (~14 NIFTY spot pts): a confirmed institutional TWAP trend with t-stat > 2.0 should carry NIFTY at least 14 spot pts in the next 60-120 seconds — the lower bound of 1-min typical NIFTY moves (3-7 option pts); 1:1.75 R:R calibrated so 55% win rate exceeds break-even at ~0.6 pts cost.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "India VIX < 25 — inherited from original; extreme vol regimes create spike-heavy bars that saturate Huber weights and degrade regression quality",
+    "time_filter": "No entries before 09:25 IST — need 60 bars (5 min) warmup for stable regression from 09:15 open",
+    "volume_filter": "none — NIFTY index volume is noisy at 5-second resolution; VWAP provides implicit volume-weighting",
+    "trend_filter": "VWAP direction: close > vwap for CE, close < vwap for PE",
+    "spread_filter": "none — limit order execution"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.47,
+    "edge_decay_risk": "Low-Medium — Huber regression filtering is a principled statistical technique; the edge stems from cleaner trend detection not from a specific market pattern that participants would immediately arbitrage away"
+  },
+  "adaptation_notes": "Original traded NIFTY 50 constituent stocks on 1-min bars with 15-45 min hold using sklearn HuberRegressor. Key changes: (1) Applied to NIFTY index directly — no stock universe needed; (2) Window compressed from 30 bars (30 min) to 60 bars (5 min) — we're trading the fast institutional flow, not the slow multi-stock trend; (3) Replaced sklearn HuberRegressor with numpy IRLS for pipeline compatibility and performance; (4) Target changed from 'residual crosses zero' to a fixed option-point target since option premium dynamics don't mirror the regression line crossing; (5) Stop changed from residual-based to fixed option-point stop; (6) VIX < 25 filter preserved; earnings/stock-specific filters dropped. The core insight — outlier-resistant trend slope is more reliable than OLS — translates directly to NIFTY where individual TWAP spikes regularly distort simple moving average slopes.",
+  "weaknesses": [
+    "IRLS loop is O(n * window * iterations) per compute() call — slow for large datasets but acceptable for per-day evaluation",
+    "At 5-second resolution, 60-bar t-stat may generate more false positives than at 1-minute because intraday NIFTY is noisier; t_stat_threshold may need to be raised to 2.5+",
+    "Dip-in-trend + t-stat + VWAP three-way conjunction may produce too few signals on slow range-bound days"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_328.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-45 min",
+    "original_indicators": ["Huber_Slope (30-bar, sklearn)", "Slope_TScore", "Residual", "Residual_Std (MAD-based)", "VWAP"],
+    "original_stop": "Residual reaches -2.5 * Residual_Std",
+    "original_target": "Residual crosses zero (price returns to regression line)"
+  }
+}

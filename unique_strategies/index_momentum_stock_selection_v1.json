@@ -1,0 +1,99 @@
+{
+  "name": "index_momentum_stock_selection_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["momentum", "regime", "trend_following", "morning_momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_66.json",
+  "original_name": "index_momentum_stock_selection_v1",
+  "mechanism": "When NIFTY has established >0.5% return from the day's open by 10:00 IST, large institutional TWAP/VWAP algorithms executing buy-side mandates (FII inflows, mutual fund SIPs deployed intraday) remain active through the morning session, absorbing short-term supply and creating a persistent directional bias. At 5-second resolution, this regime manifests as a drift where 2-minute counter-moves are quickly followed by resumptions — the institutional buy queue has not cleared. A bearish morning regime (NIFTY down >0.5% from open) creates the mirror dynamic with seller-driven TWAP flow overwhelming intraday bounces. We confirm the regime is still live with a 2-minute spot return aligned to the morning direction before entering, filtering dips/pops that temporarily break the regime.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "10:00-14:30 IST",
+  "hold_time_seconds": [15, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "3-8",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "morning_return",
+      "formula": "(close - day_open) / day_open",
+      "lookback": 1,
+      "computed_on": "spot",
+      "purpose": "Cumulative return from the day's opening price — the regime filter. This is a fixed-time cumulative measure (same concept as the original's 10:00 snapshot), not scaled from the original lookback. Establishes whether institutional flow is net bullish or bearish for the morning session. No lookback scaling needed because it's a running sum since day open, not a rolling window."
+    },
+    {
+      "name": "fast_ret_24",
+      "formula": "(close[i] - close[i-24]) / close[i-24]",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute return (24 x 5s bars) as the intraday entry trigger confirming the regime is still active. The original made a single daily entry at 10:00 and held 1.5-4 hours. We hold 15-120 seconds, so the entry trigger must be compressed to match our hold time. A 2-minute lookback (24 bars) is the natural fast-momentum confirmation — long enough to filter 5-second noise, short enough to reflect current micro-momentum. 12x scaling from original would give 12 bars (1 min), but 24 bars (2 min) is chosen because the regime needs a slightly longer confirmation to avoid whipsaws in moderate-trend days."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "morning_return > 0.5% (NIFTY is in bullish morning regime — institutional buying active)",
+        "fast_ret_24 > 0.05% (2-minute return positive — regime is live, not reversing)",
+        "vix < 22 (avoid high-vol regime where morning momentum reverses quickly)",
+        "time in 10:00-14:30 IST session"
+      ],
+      "confirmation": "Both the daily regime signal and the 2-minute fast return must agree on the bullish direction"
+    },
+    "buy_pe": {
+      "conditions": [
+        "morning_return < -0.5% (NIFTY is in bearish morning regime — institutional selling active)",
+        "fast_ret_24 < -0.05% (2-minute return negative — regime is live, not reversing)",
+        "vix < 22",
+        "time in 10:00-14:30 IST session"
+      ],
+      "confirmation": "Both the daily regime signal and the 2-minute fast return must agree on the bearish direction"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (~8 NIFTY spot points at ATM delta ~0.5): if NIFTY retraces 8+ spot points against the morning regime direction within 120 seconds, the institutional TWAP flow has temporarily paused or the regime has shifted, invalidating the micro-thesis. A 4-point stop limits loss to ~6.7x breakeven and avoids holding through regime breaks.",
+    "target_points": 7,
+    "target_rationale": "7 option points (~14 NIFTY spot points): within a bullish/bearish morning regime, 2-minute momentum continuations on NIFTY typically cover 10-20 spot points; 14 pts captures 50-70% of the median continuation move, producing a 1:1.75 R:R. This is consistent with the 1-2 minute typical move of 3-7 option pts (we target the upper-mid range where regime strength adds conviction).",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 14:30"
+  },
+  "filters": {
+    "vix_filter": "vix < 22 — same as original strategy; high-vol sessions see morning momentum reverse sharply, destroying regime persistence",
+    "time_filter": "10:00-14:30 IST; regime established after 45 minutes of trading, and afternoon sessions after 14:30 see regime exhaustion and mean-reversion",
+    "volume_filter": "none — NIFTY index volume is always sufficient for limit order execution",
+    "trend_filter": "morning_return > |0.5%| from day open is the primary regime filter",
+    "spread_filter": "limit order execution at candle close — no spread cost"
+  },
+  "edge": {
+    "expected_bps": 22,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 1.6,
+    "edge_decay_risk": "medium — morning momentum persistence is a known effect, but the regime filter (>0.5%) provides selectivity. Primary risk is afternoon mean-reversion after strong morning moves degrading later-session trades."
+  },
+  "adaptation_notes": "The original strategy used beta-sorted stock selection (top 5 highest-beta Nifty50 stocks) to amplify index momentum. The stock selection mechanism is entirely dropped — trading NIFTY ATM options directly provides inherent index beta exposure. The core alpha signal (NIFTY morning momentum regime established by 10:00) is preserved as the primary regime filter. Hold time is compressed from 90-240 minutes to 15-120 seconds, requiring a fast 2-minute entry trigger rather than a single daily entry at 10:00. VIX filter preserved at threshold 22. Session window matches original (10:00-14:30). The beta amplification concept is replaced by ATM option delta (~0.5), which naturally amplifies index moves.",
+  "weaknesses": [
+    "Regime can reverse intraday — afternoon mean-reversion after strong morning moves will generate losing trades in later session",
+    "On days where morning return is near threshold (0.4-0.6%), signal quality degrades — regime is ambiguous",
+    "Multiple trades in same direction within regime creates correlated losses if regime reverses sharply",
+    "VIX < 22 filter may miss profitable trending days during moderate elevated-vol environments (VIX 22-25)",
+    "No stock-level beta amplification — pure NIFTY direction, not the 1.5x leverage the original achieved via stock selection"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_66.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "90-240 bars (1.5-4 hours)",
+    "original_indicators": ["nifty_return_from_open", "beta_rank_20day", "stock_return_from_open", "atr_20"],
+    "original_stop": "0.3% portfolio loss across 5-stock basket",
+    "original_target": "0.5% portfolio return across 5-stock basket"
+  }
+}

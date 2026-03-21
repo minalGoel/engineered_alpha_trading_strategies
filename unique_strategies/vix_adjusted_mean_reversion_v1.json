@@ -1,0 +1,112 @@
+{
+  "name": "vix_adjusted_mean_reversion_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["mean_reversion", "vwap", "vix", "adaptive", "regime_filter"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_64.json",
+  "original_name": "vix_adjusted_mean_reversion_v1",
+  "mechanism": "On NIFTY, VWAP-benchmarked institutional algorithms (pension funds, FIIs executing large program orders) aggressively fade intraday deviations from session VWAP, but their activation threshold scales with current VIX. In low-VIX regimes (< 14), NIFTY's compressed realized vol makes even a 20-30 spot point deviation from VWAP statistically anomalous (z-score ~1.0), triggering immediate algo-driven fading within 30-60 seconds. In high-VIX regimes (> 20), those same institutions require 60-80 spot point deviations (z-score ~2.5+) before fading because intraday noise is genuinely wider and smaller deviations are not statistically significant. By scaling the entry z-score threshold dynamically with VIX — entering only when the deviation is anomalous relative to the current volatility regime — we isolate the conditions where the reverting institutional force is strong enough to produce a measurable 30-90 second bounce on the index.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 8,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap_session",
+      "formula": "cumsum(close * volume) / cumsum(volume) since session open (reset per day)",
+      "lookback": null,
+      "computed_on": "spot",
+      "purpose": "Session VWAP from 09:15 — cumulative measure, no lookback scaling needed. This is the reversion anchor: VWAP-benchmarked institutional algos treat this as their execution benchmark throughout the day."
+    },
+    {
+      "name": "vwap_zscore",
+      "formula": "(close - vwap_session) / rolling_std(close - vwap_session, 240)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Z-score of VWAP deviation using 240-bar (20 min) rolling stddev. 20 minutes captures enough intraday price action to estimate current session vol without being anchored to the open. Shorter stddev window (e.g. 60 bars/5 min) over-reacts to brief spikes; longer (720 bars/60 min) misses intra-session regime changes. The entry signal fires when this z-score crosses the VIX-scaled adaptive threshold."
+    },
+    {
+      "name": "adaptive_threshold",
+      "formula": "clip(1.0 + (vix_close - 12) * 0.1, 0.8, 2.5)",
+      "lookback": 1,
+      "computed_on": "vix",
+      "purpose": "VIX-scaled entry threshold — current VIX reading only, no historical lookback needed. Maps VIX 12 → threshold 1.0, VIX 22 → threshold 2.0, clipped at [0.8, 2.5]. Directly implements the original strategy's core innovation: aggressive entries in calm markets (small deviations are truly anomalous) and selective entries in volatile markets (need genuine dislocation)."
+    },
+    {
+      "name": "rsi_24",
+      "formula": "RSI(close, 24)",
+      "lookback": 24,
+      "computed_on": "spot",
+      "purpose": "2-minute RSI (24 bars × 5s) for entry confirmation. Original used RSI(14) on 1-min bars = 14 min of context. Compressed to 24 bars (2 min) because we're trading a 30-90s reversion — we need to confirm that FAST momentum (last 2 min) is exhausted, not just slow momentum. A 14-min equivalent (168 bars) would be too lagged to confirm intraday turning points at 5s resolution."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "vwap_zscore < -1 * adaptive_threshold (below VIX-scaled lower band)",
+        "rsi_24 < 40 (momentum oversold — confirms dislocation not a slow trend down)",
+        "zscore_delta > 0 (zscore turning up — reversion has started, not still deepening)",
+        "vix_close < 25 (absolute panic cap — above 25 dislocations become disorderly)"
+      ],
+      "confirmation": "zscore_delta > 0 (current z-score higher than previous bar — bounce initiation)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "vwap_zscore > adaptive_threshold (above VIX-scaled upper band)",
+        "rsi_24 > 60 (momentum overbought — confirms dislocation not a slow trend up)",
+        "zscore_delta < 0 (zscore turning down — fade has started)",
+        "vix_close < 25"
+      ],
+      "confirmation": "zscore_delta < 0 (current z-score lower than previous bar — fade initiation)"
+    },
+    "entry_price": "market"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option points (≈8 NIFTY spot points at delta ~0.5). If mean reversion is correct, the bounce begins within 30s. A 4-pt option loss means NIFTY has moved 8+ spot points FURTHER from VWAP after our entry — deviation is accelerating, not reverting, and the thesis is wrong. Calibrated just above the 2-5 pt noise range for a 30s NIFTY move so we avoid stopping out on brief fluctuations while cutting quickly if wrong.",
+    "target_points": 7,
+    "target_rationale": "7 option points (≈14 NIFTY spot points). A z-score > adaptive_threshold deviation on NIFTY typically represents a 30-60 spot point dislocation from VWAP. The first-leg reversion within 30-90s covers approximately 20-30 spot points (half the deviation), which is 7-10 option points at delta ~0.5. We target 7 pts (lower end) to maximize hit rate — the full journey back to VWAP takes minutes but we only need the initial institutional fading impulse.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 15:25"
+  },
+  "filters": {
+    "vix_filter": "vix_close < 25 — above 25 NIFTY dislocations become chaotic; market makers withdraw and the reverting institutional force is absent",
+    "time_filter": "09:20-15:25 IST — skip first 5 min pre-open noise; VWAP stddev needs 20 min to stabilize",
+    "volume_filter": "none — index volume on 5s bars is erratic; signal driven purely by price structure",
+    "trend_filter": "none — mean reversion strategy; zscore_delta confirmation already prevents entering mid-trend",
+    "spread_filter": "none — limit order execution at candle close prices, no spread cost"
+  },
+  "edge": {
+    "expected_bps": 20,
+    "win_rate_estimate": 0.56,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 2.0,
+    "edge_decay_risk": "low — VWAP-benchmarked institutional execution is structural to how large orders are worked in Indian markets; VIX-adaptive thresholds are more robust to regime change than fixed thresholds"
+  },
+  "adaptation_notes": "Original ran on top-25 Nifty50 stocks at 1-min bars, targeting 10-60 min mean reversions. Converted to NIFTY index for three reasons: (1) VWAP-to-VIX interaction is even stronger at index level where institutional program orders dominate; (2) Index is more symmetric for CE/PE entry; (3) Index VWAP is cleaner than single-stock VWAP (no earnings gaps, corporate events). Key changes: (a) stddev lookback: 60 1-min bars → 240 5s bars (20 min) — same calendar time; (b) RSI: 14 1-min → 24 5s (2 min) — compressed because hold time reduced 10x; (c) added zscore_delta confirmation to avoid catching falling knives; (d) VIX cap retained at 25; (e) hold time: 10-60 min → 30-90s — only the initial institutional fading impulse, not the full VWAP journey.",
+  "weaknesses": [
+    "VWAP z-score near session open (first 20 min of trading) has unreliable stddev — denominator is small and noisy; warmup period needs to be respected",
+    "On strong trending days driven by sustained FII flow, VWAP constantly drifts directionally and z-score thresholds will trigger repeatedly against trend (catching falling knives)",
+    "Linear VIX-to-threshold mapping (0.1 per VIX point) is an approximation; the true relationship is likely nonlinear and may differ in different market regimes",
+    "zscore_delta confirmation is a 1-bar filter (5 seconds) which may still enter mid-move if the initial reversal bar is followed by continuation"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_64.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "10-60 bars (10-60 min)",
+    "original_indicators": ["vwap_zscore(60)", "adaptive_threshold(VIX-scaled)", "rsi_14", "atr_20"],
+    "original_stop": "1.5 * adaptive_threshold in z-score terms OR 1.5 * ATR(20) in price terms",
+    "original_target": "vwap_zscore crosses 0 (full reversion to VWAP)"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "name": "adversarial_ensemble_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["ensemble", "adversarial", "multi-signal", "meta-strategy", "momentum"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_67.json",
+  "original_name": "adversarial_ensemble_v1",
+  "mechanism": "On NIFTY, simultaneous agreement across five independent microstructure signals — VWAP dislocation (short-term supply/demand imbalance), ORB directional break (institutional positioning established in the opening 20-minute window), RSI extreme (3-minute momentum exhaustion or initiation), volume spike on a directional bar (block trade or basket execution activity), and EMA trend alignment (10-minute institutional trend context) — indicates a program trade, FII basket order, or multi-strategy algo convergence is in progress. At 5-second resolution, this multi-signal confluence is rare (~2-4 times per session) but highly directional: when all signals agree and none contradicts, NIFTY typically sustains the move for 15-25 spot points over the next 30-120 seconds as the underlying institutional order continues to execute. The adversarial veto eliminates entries where any sub-strategy is actively signaling the opposite direction, filtering out fake breakouts driven by temporary liquidity gaps in the NIFTY order book.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:20-15:25 IST",
+  "hold_time_seconds": [30, 120],
+  "max_hold_bars": 24,
+  "trades_per_day": "2-6",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "vwap_zscore",
+      "formula": "dev = close - session_VWAP; vwap_z = dev / rolling_std(dev, 360)",
+      "lookback": 360,
+      "computed_on": "spot",
+      "purpose": "Session VWAP is cumulative — no period scaling needed. The 360-bar (30-min) rolling stddev of deviation captures the current session's volatility regime for normalization, not all-day history. Threshold 1.5σ signals a meaningful dislocation where VWAP-benchmarked algos start aggressively reversing."
+    },
+    {
+      "name": "orb_high_low",
+      "formula": "orb_high = max(high, first 240 bars of day); orb_low = min(low, first 240 bars of day)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "Fixed time window (09:15-09:35 IST = 20 minutes = 240 bars). Not scaled — the opening range is defined by calendar time, not bar count. Same 20-min window as the original but now resolved at 5-second granularity, allowing entry immediately on breakout rather than waiting for the next 1-min bar close."
+    },
+    {
+      "name": "rsi_36",
+      "formula": "RSI(close, 36)",
+      "lookback": 36,
+      "computed_on": "spot",
+      "purpose": "Original uses 40-bar RSI on 1-min bars (40-minute RSI). We target 30-120 second holds — the relevant exhaustion signal is the 3-minute momentum shift, not the 40-minute one. RSI(36) = 3-minute RSI detects when a fast directional push has created a short-term extreme. Threshold 35/65 (vs standard 30/70) is more sensitive to fast 5-second data."
+    },
+    {
+      "name": "volume_spike",
+      "formula": "vol_spike = volume > vol_ratio * rolling_mean(volume, 60); dir = +1 if close>open, -1 if close<open",
+      "lookback": 60,
+      "computed_on": "spot",
+      "purpose": "Original uses 20-bar (20-minute) volume baseline on 1-min bars. Compressed to 60-bar (5-minute) baseline to match the faster hold time — 5 minutes of volume history is sufficient context for detecting intrabar block activity. A volume spike on a directional bar at 5s frequency typically indicates a basket trade or large institutional order hitting."
+    },
+    {
+      "name": "ema_60_120",
+      "formula": "ema_120 = EMA(close, 120); ema_60 = EMA(close, 60); ema_cross_up = close crosses above ema_60 while close > ema_120",
+      "lookback": 120,
+      "computed_on": "spot",
+      "purpose": "Original uses EMA(20) on 1-min = 20-minute trend context. We use EMA(120) = 10-minute context (same order of magnitude) as trend filter, and EMA(60) = 5-minute as the pullback trigger. A close-above-EMA(60) while above EMA(120) detects micro-pullback entries in established intraday trends — the same thesis as the original but adapted to 5-second resolution."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "ensemble_score >= threshold (at least 3 of 5 sub-strategies = +1)",
+        "no sub-strategy is -1 (adversarial veto: no active contradiction)",
+        "vix_close < vix_max (22.0 default)",
+        "in session 09:20-15:25 IST",
+        "condition holds for 2 consecutive bars (10-second persistence, filters single-bar spikes)"
+      ],
+      "confirmation": "2-bar persistence required on all conditions simultaneously"
+    },
+    "buy_pe": {
+      "conditions": [
+        "ensemble_score <= -threshold (at least 3 of 5 sub-strategies = -1)",
+        "no sub-strategy is +1 (adversarial veto)",
+        "vix_close < vix_max",
+        "in session",
+        "2-bar persistence"
+      ],
+      "confirmation": "2-bar persistence required"
+    },
+    "entry_price": "limit at candle close"
+  },
+  "exit": {
+    "stop_points": 4,
+    "stop_rationale": "4 option pts = ~8 NIFTY spot pts at delta 0.5. When 3+ sub-strategies agree and the signal is wrong, NIFTY typically stalls and reverses within 30 seconds — a move of 8 spot pts against within the first 30s means the institutional order has already completed or the signal was spurious. Tighter than deep-reversion strategies because this is a high-conviction entry, not a mean-reversion with a final-flush risk.",
+    "target_points": 7,
+    "target_rationale": "7 option pts = ~14 NIFTY spot pts at delta 0.5. FII basket executions and program trades on NIFTY typically run 15-25 spot points over 30-90 seconds; 14 pts captures the lower bound (conservative) of the expected directional move. At 1:1.75 R:R with 55%+ win rate, this is profitable after all costs.",
+    "time_stop_bars": 24,
+    "eod_rule": "flatten at 15:25 IST"
+  },
+  "filters": {
+    "vix_filter": "vix_close < 22.0 (ensemble signals are less reliable in extreme vol regimes where sub-strategy correlations spike)",
+    "time_filter": "09:20-15:25 IST; first 5 minutes skipped to allow ORB to begin forming",
+    "volume_filter": "embedded in volume_signal sub-strategy",
+    "trend_filter": "embedded in ema_signal sub-strategy",
+    "spread_filter": "not required — limit order execution at candle close"
+  },
+  "edge": {
+    "expected_bps": 40,
+    "win_rate_estimate": 0.60,
+    "avg_winner_to_loser": 1.75,
+    "profit_factor_estimate": 2.63,
+    "edge_decay_risk": "low — multi-signal adversarial ensemble is structurally robust; sub-strategies must all degrade simultaneously for edge to disappear. However, in low-volatility regimes signals will be rare."
+  },
+  "adaptation_notes": "Original trades top-20 NIFTY50 stocks on 1-min bars, hold 15-60 minutes. Converted to NIFTY index 5-sec bars, hold 30-120 seconds. Key changes: (1) ORB window unchanged in calendar time (20 min) but resolves faster. (2) RSI compressed from 40-bar/40-min to 36-bar/3-min — we catch fast momentum, not slow divergence. (3) Volume baseline compressed from 20-bar/20-min to 60-bar/5-min. (4) EMA from 20-bar/20-min to 120-bar/10-min (same order of magnitude). (5) 2-bar persistence check = 10 seconds (original was 2 bars at 1-min = 2 minutes — same ratio relative to hold time). (6) Stops/targets in option premium points not percentage-based. The adversarial veto logic is preserved intact — it's the unique structural element that differentiates this from single-signal strategies.",
+  "weaknesses": [
+    "Very low signal frequency — 3/5 agreement with no contradiction fires 2-4 times per session; statistically meaningful only over many weeks",
+    "Sub-strategies can be correlated on NIFTY (VWAP reversion and RSI extreme often fire together on the same directional push), reducing true ensemble diversity",
+    "ORB signal is directionally binary after the first 20 min — if NIFTY breaks out early, ORB stays +1 for rest of day and may over-contribute to ensemble in the original breakout direction",
+    "Loop-based VWAP and ORB computation is O(n) — acceptable but slower than vectorized alternatives"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_67.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "15-60 bars (15-60 min)",
+    "original_indicators": ["vwap_zscore", "orb_signal", "rsi_divergence", "volume_spike", "ema_pullback", "ensemble_score", "atr_20"],
+    "original_stop": "0.25% from entry",
+    "original_target": "0.4% from entry"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "name": "orb_plus_sector_filter_v1",
+  "version": "0.2.0",
+  "author": "claude_strategist",
+  "tags": ["orb", "opening-range", "vix", "dual-confirmation", "sector-filter"],
+  "original_strategy": "trading_strategies/unique_strategies_all/Strategy_63.json",
+  "original_name": "orb_plus_sector_filter_v1",
+  "mechanism": "On NIFTY, the 20-minute opening range (09:15-09:35) concentrates overnight information; false ORB breakouts occur when a single sector (IT, Energy) pushes NIFTY above the range while risk sentiment remains mixed. The differentiating signal is VIX ORB confirmation: as institutional buy programs overwhelm the opening range supply ceiling, option market makers simultaneously reduce hedging demand, causing India VIX to break below its own 20-minute opening range low. When NIFTY closes above its ORB high AND VIX simultaneously closes below its ORB low (dual-index ORB confirmation), the signal identifies broad-based institutional conviction — not a sector-specific spike — that carries NIFTY 20-30 spot points in 60-90 seconds. For the bearish case, NIFTY breaking its ORB low accompanied by VIX breaking its ORB high confirms synchronized fear escalation and institutional selling pressure.",
+  "universe": "NIFTY",
+  "timeframe": "5s",
+  "session": "09:35-14:00 IST",
+  "hold_time_seconds": [30, 90],
+  "max_hold_bars": 18,
+  "trades_per_day": "0-4",
+  "max_trades_per_day": 6,
+  "data": {
+    "ohlcv_5s": true,
+    "option_chain": true,
+    "vix": true,
+    "index": "NSE:NIFTY50-INDEX",
+    "order_book": false,
+    "other": []
+  },
+  "indicators": [
+    {
+      "name": "nifty_orb_high",
+      "formula": "MAX(high, 09:15-09:34)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "FIXED TIME WINDOW: 20-minute ORB is identical to the original strategy regardless of bar size. At 5s resolution, 240 bars = 20 minutes. Entry window starts at 09:35 once the ORB is fully formed. Same time window as the original — no scaling needed because this is a clock-based range, not a bar-count period."
+    },
+    {
+      "name": "nifty_orb_low",
+      "formula": "MIN(low, 09:15-09:34)",
+      "lookback": 240,
+      "computed_on": "spot",
+      "purpose": "FIXED TIME WINDOW: same as orb_high. Symmetric counterpart for bearish breakdowns."
+    },
+    {
+      "name": "vix_orb_high",
+      "formula": "MAX(vix_high, 09:15-09:34)",
+      "lookback": 240,
+      "computed_on": "vix",
+      "purpose": "FIXED TIME WINDOW: VIX opening range high over the same 20-minute window. This is the 'sector index ORB' analog from the original — VIX is the broadest measure of cross-sector risk sentiment in NIFTY. VIX breaking its ORB high during a NIFTY down-breakout confirms multi-sector fear escalation (vs. a single-sector selloff that barely moves VIX)."
+    },
+    {
+      "name": "vix_orb_low",
+      "formula": "MIN(vix_low, 09:15-09:34)",
+      "lookback": 240,
+      "computed_on": "vix",
+      "purpose": "FIXED TIME WINDOW: VIX opening range low over the same 20-minute window. VIX closing below this level during a NIFTY up-breakout means option market makers are reducing hedges broadly — confirming that the NIFTY rally has multi-sector institutional backing, not just an IT or FMCG spike."
+    },
+    {
+      "name": "vwap",
+      "formula": "VWAP from 09:15 session open (cumulative)",
+      "lookback": 0,
+      "computed_on": "spot",
+      "purpose": "CUMULATIVE MEASURE — no scaling needed. VWAP-benchmarked algos dominate NIFTY intraday flow; close > VWAP at breakout time confirms that NIFTY has been net-bought all session, adding directional context. Acts as a secondary filter (the VIX ORB is the primary novel filter)."
+    }
+  ],
+  "entry": {
+    "buy_ce": {
+      "conditions": [
+        "time_minutes >= 575 (09:35 IST, after ORB forms)",
+        "close > nifty_orb_high (NIFTY breaks above opening range)",
+        "vix_close < vix_orb_low (VIX breaks below its opening range low — broad fear dropping)",
+        "close > vwap (session is net-bullish)",
+        "vix_close < vix_level_cap (not in extreme panic regime)"
+      ],
+      "confirmation": "Dual ORB: NIFTY breakout confirmed by VIX ORB breakdown (fear-falling confirmation mirrors original sector-index confirmation)"
+    },
+    "buy_pe": {
+      "conditions": [
+        "time_minutes >= 575 (09:35 IST, after ORB forms)",
+        "close < nifty_orb_low (NIFTY breaks below opening range)",
+        "vix_close > vix_orb_high (VIX breaks above its opening range high — broad fear rising)",
+        "close < vwap (session is net-bearish)",
+        "vix_close < vix_level_cap (not in extreme panic where options are too expensive)"
+      ],
+      "confirmation": "Dual ORB: NIFTY breakdown confirmed by VIX ORB breakout (fear-rising confirmation mirrors original sector-index confirmation)"
+    },
+    "entry_price": "limit at bar close"
+  },
+  "exit": {
+    "stop_points": 5,
+    "stop_rationale": "5 option pts = ~10 NIFTY spot points (delta ~0.5). ORB breakouts with dual VIX confirmation should not retrace through the ORB level; a 10-spot-point drawback within 90 seconds indicates the breakout has failed and institutional flow has reversed. Tighter than deep-reversion stops (6 pts in vwap_mean_reversion_v18) because breakouts are directional continuation, not mean reversion needing room.",
+    "target_points": 8,
+    "target_rationale": "8 option pts = ~16 NIFTY spot points. ORB breakouts confirmed by VIX ORB typically extend 20-30 spot points in the first push (institutional order flow continuing partially unfilled); 8 pts captures ~60% of the median move at 1:1.6 R:R. Consistent with Example E (orb_momentum_v22) using 8 pts target for the same ORB continuation thesis.",
+    "time_stop_bars": 18,
+    "eod_rule": "flatten at 14:00 IST — original used 14:00 cutoff"
+  },
+  "filters": {
+    "vix_filter": "vix_close < vix_level_cap (default 25.0) — prevents trading when extreme panic has inflated premiums beyond the cost model assumptions; above 25, ATM premiums spike and breakeven moves to 1.5+ pts",
+    "time_filter": "entry only 09:35-14:00 IST; requires both NIFTY and VIX ORBs fully formed (20 minutes = 240 bars)",
+    "volume_filter": "none — dual ORB confirmation (VIX alignment) replaces the volume filter from the original; VIX breaking its range is a stronger signal than volume threshold alone",
+    "trend_filter": "vwap direction (close vs vwap) as session trend confirmation",
+    "spread_filter": "not required — limit order execution at candle close, no bid-ask spread cost"
+  },
+  "edge": {
+    "expected_bps": 28,
+    "win_rate_estimate": 0.54,
+    "avg_winner_to_loser": 1.6,
+    "profit_factor_estimate": 1.88,
+    "edge_decay_risk": "low-medium — VIX-confirmed ORB is a multi-instrument signal; harder to arbitrage away than single-index ORB; decays if VIX behavior decouples from NIFTY index flow (structural regime change)"
+  },
+  "adaptation_notes": "Original strategy: stock ORB + sector-index ORB confirmation. Key adaptation: the 'sector index' analog for NIFTY is India VIX (VIX = cross-sectional weighted implied vol of NIFTY options = a true multi-sector fear index). When NIFTY breaks its ORB high and VIX simultaneously breaks ITS ORB low, fear has dropped broadly — the rally has multi-sector institutional backing. This mirrors the original's sector-filter logic exactly: original checked if the BANKING sector index was also breaking out when a bank stock broke its ORB; this checks if broad market RISK SENTIMENT (VIX) is confirming the NIFTY breakout direction. The 20-minute ORB window is kept identical (not scaled) because it is a clock-based range — the same 09:15-09:35 window regardless of bar frequency. The trailing stop and sector-exit signal from the original are removed (incompatible with 5s trading). VWAP added as a secondary structural filter.",
+  "weaknesses": [
+    "Dual ORB confirmation significantly reduces trade frequency; on high-VIX days, VIX rarely breaks below its own ORB low even during NIFTY up-breakouts",
+    "VIX ORB break may lag the NIFTY ORB break by 10-30 seconds — optimal entry can be missed",
+    "In strong trending markets where VIX declines all morning (like post-RBI dovish surprise), VIX ORB low is set very low and the signal may never fire despite valid NIFTY breakouts",
+    "Entry window ends at 14:00 — strategies with late-day breakouts are excluded"
+  ],
+  "_source": {
+    "original_file": "trading_strategies/unique_strategies_all/Strategy_63.json",
+    "original_timeframe": "1min",
+    "original_hold_time": "30-120 bars (30-120 minutes)",
+    "original_indicators": ["stock_orb_high", "stock_orb_low", "sector_orb_high", "sector_orb_low", "atr_20"],
+    "original_stop": "stock ORB midpoint",
+    "original_target": "1.0x ORB range from breakout level"
+  }
+}

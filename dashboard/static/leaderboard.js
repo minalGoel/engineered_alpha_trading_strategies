@@ -18,11 +18,18 @@ async function loadLeaderboard() {
 }
 
 function _cvCard(name, v) {
+  // BUG 2: show sensitivity status explicitly — all 6 happen to be FRAGILE
   const sensColor = v.sensitivity_verdict === 'ROBUST' ? 'var(--green)' : 'var(--amber)';
+  const sensBadge = v.sensitivity_verdict === 'FRAGILE'
+    ? '<span style="background:rgba(245,158,11,.15);color:var(--amber);border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700">FRAGILE</span>'
+    : v.sensitivity_verdict === 'ROBUST'
+    ? '<span style="background:rgba(34,197,94,.15);color:var(--green);border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700">ROBUST</span>'
+    : '';
   return '<div style="background:var(--bg2);border:1px solid rgba(34,197,94,.4);border-radius:8px;padding:10px 14px;cursor:pointer;transition:transform .1s" onmouseenter="this.style.transform=\'scale(1.02)\'" onmouseleave="this.style.transform=\'scale(1)\'" onclick="openStrategyOverlay(\'' + name + '\')">'
-    + '<div style="font-weight:700;font-size:12px;margin-bottom:2px">' + name + '</div>'
-    + '<div style="font-size:11px;color:var(--text2)">Sharpe ' + fmt2(v.default_sharpe) + ' \u00b7 ' + v.cv_profitable_days + '/12 days'
-    + ' \u00b7 <span style="color:' + sensColor + '">' + (v.sensitivity_verdict || '\u2014') + '</span></div>'
+    + '<div style="font-weight:700;font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px">' + name + sensBadge + '</div>'
+    // BUG 1: clarify this is the DEFAULT (unoptimized) Sharpe, not the CV-fold Sharpe
+    + '<div style="font-size:11px;color:var(--text2)">Default Sharpe: <span style="' + ((v.default_sharpe||0) < 0 ? 'color:var(--red)' : '') + '">' + fmt2(v.default_sharpe) + '</span>'
+    + ' \u00b7 OOS: ' + v.cv_profitable_days + '/12 profitable days</div>'
     + '</div>';
 }
 
@@ -41,19 +48,29 @@ function renderLeaderboard(el, data) {
 
   let banner = '';
   if (cvPassed.length > 0) {
+    // BUG 2: note if all passed strategies are FRAGILE
+    const allFragile = cvPassed.every(function(e) { return e[1].sensitivity_verdict === 'FRAGILE'; });
+    const fragileNote = allFragile
+      ? '<div style="margin-top:10px;padding:6px 10px;background:rgba(245,158,11,.1);border-radius:6px;font-size:11px;color:var(--amber)">'
+        + '\u26a0 All ' + cvPassed.length + ' strategies are sensitivity-FRAGILE — Sharpe degrades under \u00b120% parameter perturbation. '
+        + 'CV pass does not imply robustness. Trade with caution and use conservative position sizing.</div>'
+      : '';
     banner = '<div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:16px 20px;margin-bottom:16px">'
       + '<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:8px">'
       + '<span style="font-size:16px">\u2713</span> ' + cvPassed.length + ' STRATEGIES PASSED NESTED LOO-CV'
-      + '<span style="font-weight:400;color:var(--text2);font-size:11px">(9/12+ profitable out-of-sample days)</span></div>'
+      + '<span style="font-weight:400;color:var(--text2);font-size:11px">(9/12+ profitable out-of-sample days, tested with OPTIMIZED params per fold)</span></div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
       + cvPassed.map(function(e) { return _cvCard(e[0], e[1]); }).join('')
-      + '</div></div>';
+      + '</div>' + fragileNote + '</div>';
   }
   if (robustOnly.length > 0) {
-    banner += '<div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px 20px;margin-bottom:16px">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:8px">'
-      + '\u25c8 ' + robustOnly.length + ' SENSITIVITY-ROBUST strategies'
-      + '<span style="font-weight:400;color:var(--text2);font-size:11px">(failed CV \u2014 in-sample only, top 10)</span></div>'
+    // BUG 3: rename section to make clear these are NOT out-of-sample validated
+    banner += '<div style="background:rgba(139,144,167,.05);border:1px solid rgba(139,144,167,.2);border-radius:10px;padding:14px 20px;margin-bottom:16px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:8px">'
+      + '\u25a6 ' + robustOnly.length + ' IN-SAMPLE-ONLY strategies'
+      + '<span style="font-weight:400;font-size:11px">(sensitivity-stable, but CV-FAILED \u2014 not out-of-sample validated)</span></div>'
+      + '<div style="font-size:11px;color:var(--red);margin-bottom:8px">'
+      + '\u26a0 These did NOT pass out-of-sample cross-validation. Do not trade. Showing top 10 of ' + robustOnly.length + '.</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
       + robustOnly.slice(0,10).map(function(e) { return _robustChip(e[0], e[1]); }).join('')
       + '</div></div>';
@@ -77,7 +94,7 @@ function renderLeaderboard(el, data) {
     const famId = 'fam-' + fam.family.replace(/[^a-z0-9]/gi,'_');
     const cvN = fam.n_cv_passed || 0;
     const cvCell = cvN > 0 ? '<span class="badge badge-green">' + cvN + '</span>' : '\u2014';
-    const vecCell = fam.n_flagged_vectorized > 0 ? '<span class="badge badge-yellow">' + fam.n_flagged_vectorized + '</span>' : '0';
+    const vecCell = fam.n_flagged_vectorized > 0 ? '<span class="badge badge-yellow">' + fam.n_flagged_vectorized + '</span>' : '\u2014';
     const corrCell = fam.avg_intra_family_corr != null ? fmt2(fam.avg_intra_family_corr) : '\u2014';
     html += '<tr class="family-row" onclick="toggleFamily(\'' + famId + '\',\'' + fam.family + '\',this)">'
       + '<td><b>' + fam.family + '</b></td>'

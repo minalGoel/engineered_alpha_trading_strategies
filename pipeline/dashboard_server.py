@@ -58,6 +58,7 @@ def _make_app():
 
     from pipeline.result_store import get_store, extract_strategy_family
     from pipeline.dsr import compute_dsr, compute_effective_n, compute_expected_max_sr
+    from pipeline.cost_model import compute_trade_costs, NIFTY_LOT, CAPITAL_PER_ENTRY
 
     app = FastAPI(title="Strategy Dashboard", version="1.0")
     app.add_middleware(
@@ -226,8 +227,11 @@ def _make_app():
             from pipeline.config import STRATEGY_DIR
             mod = importlib.import_module(f"pipeline.strategies.{strategy_id}")
             s = mod.Strategy()
-            # Extract docstring from strategy module or class
-            description = (inspect.getdoc(mod.Strategy) or inspect.getdoc(mod) or "").strip()
+            # M1 fix: prefer module docstring (per-strategy) over class docstring
+            # (class docstring is inherited from BaseStrategy: "Every strategy implements this.")
+            # mod.Strategy.__doc__ is None when the class has no direct docstring.
+            class_doc = mod.Strategy.__doc__ or ""  # None if inherited only
+            description = (inspect.getdoc(mod) or class_doc or "").strip()
             # Also extract tunable params info
             tunable = []
             try:
@@ -286,9 +290,14 @@ def _make_app():
                     "sharpe_raw": row.get("sharpe_raw"),
                     "sharpe_deflated": row.get("sharpe_deflated"),
                     "net_edge_bps": row.get("net_edge_bps"),
+                    "gross_edge_bps": row.get("gross_edge_bps"),
+                    "fees_cost_bps": row.get("fees_cost_bps"),
+                    "total_cost_bps": row.get("total_cost_bps"),
                     "total_trades": row.get("total_trades"),
                     "win_rate": row.get("win_rate"),
+                    "max_drawdown": row.get("max_drawdown"),  # M13: was missing
                     "kill_triggered": bool(row.get("kill_condition_triggered")),
+                    "notes": run.get("notes"),
                 }
             params = store.get_run_parameters(rid)
             param_summary = {p["param_name"]: p["param_value"] for p in params}
@@ -331,7 +340,7 @@ def _make_app():
         start = (page - 1) * page_size
         page_df = df.slice(start, page_size)
 
-        # Convert timestamps to strings for JSON
+        # Convert timestamps to strings for JSON and enrich with per-trade costs
         rows = []
         for row in page_df.iter_rows(named=True):
             r = {}
@@ -342,6 +351,39 @@ def _make_app():
                     r[k] = None
                 else:
                     r[k] = v
+
+            # Compute per-trade net PnL using the cost model with full
+            # capital deployment (₹5L).  lots=0 → auto-compute from capital,
+            # exactly matching how compute_metrics() computes Sharpe/DSR.
+            # The stored 'pnl' is 1-lot gross; we replace it with the
+            # capital-deployed figures so Gross/Net columns are meaningful.
+            ep = r.get("entry_premium") or 0.0
+            xp = r.get("exit_premium") or 0.0
+            if ep > 0 and xp >= 0:
+                try:
+                    cost_info = compute_trade_costs(
+                        ep, xp, NIFTY_LOT, lots=0, capital=CAPITAL_PER_ENTRY,
+                    )
+                    qty = cost_info["qty"]
+                    r["lots"] = cost_info["lots"]
+                    r["qty"] = qty
+                    r["gross_pnl"] = round(cost_info["gross_pnl"], 2)
+                    r["net_pnl"] = round(cost_info["net_pnl"], 2)
+                    r["total_cost"] = round(cost_info["total_cost"], 2)
+                    deployed = ep * qty
+                    r["net_pnl_bps"] = round(
+                        (cost_info["net_pnl"] / deployed) * 10000, 1
+                    ) if deployed > 0 else None
+                    r["slippage_actual_bps"] = 0.0  # limit order model
+                except Exception:
+                    r["gross_pnl"] = r.get("pnl")
+                    r["net_pnl"] = r.get("pnl")
+                    r["net_pnl_bps"] = None
+            else:
+                r["gross_pnl"] = r.get("pnl")
+                r["net_pnl"] = r.get("pnl")
+                r["net_pnl_bps"] = None
+
             rows.append(r)
 
         return {"trades": rows, "total": total, "page": page, "page_size": page_size}

@@ -395,9 +395,12 @@ class ResultStore:
             for k in ("gross_edge_bps", "spread_cost_bps", "slippage_cost_bps",
                       "impact_cost_bps", "fees_cost_bps", "total_cost_bps", "net_edge_bps"):
                 r.setdefault(k, bps.get(k, 0.0))
-            # Fill DSR
-            r.setdefault("sharpe_deflated", dsr_result["sharpe_deflated"])
-            r.setdefault("sharpe_raw", dsr_result["sharpe_raw"])
+            # Fill DSR — always overwrite: build_result_record pre-sets
+            # sharpe_deflated=None, so setdefault would be a no-op.
+            if dsr_result.get("sharpe_deflated") is not None:
+                r["sharpe_deflated"] = dsr_result["sharpe_deflated"]
+            if dsr_result.get("sharpe_raw") is not None and r.get("sharpe_raw") is None:
+                r["sharpe_raw"] = dsr_result["sharpe_raw"]
             # Kill condition: after-cost sharpe < 0.5
             sharpe = r.get("sharpe_raw") or 0.0
             kill = sharpe < KILL_SHARPE_THRESHOLD
@@ -558,7 +561,7 @@ class ResultStore:
                        MAX(res.sharpe_raw) as best_sharpe_raw,
                        MAX(res.sharpe_deflated) as best_sharpe_deflated,
                        MAX(res.net_edge_bps) as best_net_edge_bps,
-                       MAX(res.kill_condition_triggered) as any_kill,
+                       MAX(CASE WHEN res.split = 'full' THEN res.kill_condition_triggered ELSE 0 END) as any_kill,
                        MAX(rn.backtest_engine = 'vectorized') as has_vectorized,
                        COUNT(DISTINCT r.run_id) as n_runs
                 FROM runs r

@@ -99,7 +99,8 @@ function loadStrategyDetail(strategyId) { openStrategyOverlay(strategyId); }
 function renderOverviewTab(el, detail, runs) {
   const spec = detail.strategy_spec || {};
   const runList = runs.runs || [];
-  const latest = runList[0] || {};
+  // M2: use the DEFAULT (unoptimized) run, not the most-recent (which could be a CV fold or sensitivity run)
+  const latest = runList.find(r => r.notes === 'default_params_full') || runList[0] || {};
   const res = latest.result_summary || {};
 
   const sharpe = res.sharpe_raw || 0;
@@ -110,9 +111,11 @@ function renderOverviewTab(el, detail, runs) {
   const isCurrent = costVer.includes('apr_2025') || costVer.includes('post');
 
   let vecBanner = isVec ? '<div class="vec-banner">!! SUSPECT \u2014 vectorized backtest, no fill model. Do not use for promotion decisions.</div>' : '';
+  // M1: hide description block if it's empty or the inherited BaseStrategy placeholder
   let descBlock = '';
-  if (spec.description) {
-    descBlock = '<div class="strategy-desc">' + _escHtml(spec.description) + '</div>';
+  const descText = (spec.description || '').trim();
+  if (descText && descText !== 'Every strategy implements this.') {
+    descBlock = '<div class="strategy-desc">' + _escHtml(descText) + '</div>';
   }
 
   const gross = res.gross_edge_bps || 0;
@@ -171,9 +174,15 @@ function renderOverviewTab(el, detail, runs) {
     + '<div class="cost-bar-seg ' + netCls + '" style="width:' + netPct + '%">Net ' + fmt2(net) + '</div>'
     + '</div></div>'
     + '<div style="font-size:11px;color:var(--text2)">'
-    + 'Spread cost: 0 bps (limit orders at close) &nbsp;|&nbsp; Slippage: 0 bps (no slippage model) &nbsp;|&nbsp; '
+    + 'Spread: 0 bps (limit orders, no bid-ask) &nbsp;|&nbsp; '
+    + 'Slippage: 0 bps &nbsp;|&nbsp; '
     + 'Cost model: <span style="' + (isCurrent?'color:var(--green)':'color:var(--yellow)') + '">' + costVer + '</span>'
     + (isCurrent ? '' : ' <span class="badge badge-yellow">NOT CURRENT</span>')
+    + '</div>'
+    // M3: explicit warning that no fill/slippage model is active
+    + '<div style="margin-top:6px;padding:5px 8px;background:rgba(245,158,11,.08);border-radius:4px;font-size:11px;color:var(--amber)">'
+    + '\u26a0 No slippage or market-impact model is active. NSE fees (STT, brokerage, exchange, GST) ARE deducted. '
+    + 'Real-world edge will be lower for illiquid strikes or large lot sizes.'
     + '</div></div>';
 }
 
@@ -205,7 +214,8 @@ async function renderCVAnalysisTab(el, detail) {
   const foldRows = folds.map(function(f) {
     const rowStyle = (f.net_edge_bps||0) > 0 ? 'background:rgba(34,197,94,.04)' : '';
     const hold = f.avg_hold_seconds ? (f.avg_hold_seconds/60).toFixed(1)+'min' : '\u2014';
-    const killCell = f.kill_triggered ? '<span class="badge badge-red">KILL</span>' : '<span class="badge badge-green">OK</span>';
+    // M5: Sharpe is always 0 for single-day folds (1 obs → std=0). Show "—" when < 3 trades.
+    const sharpeCell = (f.trades||0) < 3 ? '\u2014' : (f.sharpe ? fmt2(f.sharpe) : '\u2014');
     return '<tr style="' + rowStyle + '">'
       + '<td>#' + f.fold + '</td>'
       + '<td style="font-size:11px">' + (f.test_date||'\u2014') + '</td>'
@@ -213,9 +223,8 @@ async function renderCVAnalysisTab(el, detail) {
       + '<td style="' + colorNum(f.net_edge_bps) + ';font-weight:600">' + fmtBps(f.net_edge_bps) + '</td>'
       + '<td style="' + colorNum(f.gross_edge_bps) + '">' + fmtBps(f.gross_edge_bps) + '</td>'
       + '<td>' + fmtPct(f.win_rate) + '</td>'
-      + '<td style="' + colorNum(f.sharpe) + '">' + fmt2(f.sharpe) + '</td>'
+      + '<td>' + sharpeCell + '</td>'
       + '<td>' + hold + '</td>'
-      + '<td>' + killCell + '</td>'
       + '</tr>';
   }).join('');
 
@@ -236,7 +245,10 @@ async function renderCVAnalysisTab(el, detail) {
     ? '<div class="note">No sensitivity runs stored for this strategy.</div>'
     : '<div style="margin-bottom:10px;font-size:11px;color:var(--text2)">'
       + 'Baseline Sharpe: <b>' + fmt2(baseline.sharpe) + '</b> \u00b7 Net Edge: <b>' + fmtBps(baseline.net_edge_bps) + '</b><br>'
-      + 'Each bar = Sharpe change when one parameter is perturbed \u00b120%.</div>'
+      + 'Each bar = Sharpe change when one parameter is perturbed \u00b120%. '
+      // M7: identical +/- values for binary params (e.g. 0/1 flags) are expected — ±20% of 1 gives 0.8 and 1.2, which round to the same integer value
+      + '<span style="color:var(--amber)">\u26a0 If +20% and \u221220% rows show identical Sharpe, the parameter is likely binary (0/1 flag) — both perturbations resolve to the same integer value. This is expected, not a data error.</span>'
+      + '</div>'
       + '<div class="chart-wrap"><canvas id="c-sens-chart"></canvas></div>'
       + '<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr>'
       + '<th' + tip('sens_param') + '>Parameter</th><th' + tip('sens_dir') + '>Direction</th>'
@@ -254,8 +266,10 @@ async function renderCVAnalysisTab(el, detail) {
     + '<div class="stat-value" style="color:' + sensColor + '">' + (sensVerdict || '\u2014') + '</div></div>'
     + '<div class="stat"><div class="stat-label"' + tip('sharpe_default') + '>Default Sharpe (in-sample)</div>'
     + '<div class="stat-value ' + sharpeClass + '">' + fmt2(ds.sharpe) + '</div></div></div>'
-    + '<div class="note" style="margin-bottom:16px"><b>Nested LOO-CV:</b> Each fold optimizes on 11 training days, tests on 1 held-out day. '
-    + 'Pass = \u22659/12 profitable out-of-sample days (net_edge_bps &gt; 0).</div>'
+    + '<div class="note" style="margin-bottom:16px"><b>Nested LOO-CV:</b> Each fold trains on 11 days (optimized params) and tests on 1 held-out day. '
+    + 'Pass = \u22659/12 profitable OOS days (net_edge_bps &gt; 0). '
+    + 'Sharpe is \u2014 for single-day folds (1 observation = undefined std). '
+    + 'M6: Kill is always triggered on single-day folds (Sharpe\u22480 &lt; 0.5 threshold) \u2014 it is an artifact of the kill gate applied to 1-day windows, not a sign of a losing fold.</div>'
     + '<div class="card" style="margin-bottom:16px"><div class="card-title">Out-of-Sample Net Edge per Fold (bps)</div>'
     + '<div class="chart-wrap"><canvas id="c-fold-pnl"></canvas></div>'
     + '<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr>'
@@ -263,7 +277,7 @@ async function renderCVAnalysisTab(el, detail) {
     + '<th' + tip('trades') + '>Trades</th><th' + tip('net_edge_bps') + '>Net Edge</th>'
     + '<th' + tip('gross_edge') + '>Gross Edge</th><th' + tip('win_rate') + '>Win Rate</th>'
     + '<th' + tip('sharpe_raw') + '>Sharpe</th><th' + tip('avg_hold') + '>Avg Hold</th>'
-    + '<th' + tip('kill') + '>Kill</th></tr></thead>'
+    + '</tr></thead>'
     + '<tbody>' + foldRows + '</tbody></table></div></div>'
     + '<div class="card"><div class="card-title">Sensitivity Analysis \u2014 Sharpe \u0394 vs default params'
     + '<span style="margin-left:8px;font-weight:400;color:' + sensColor + '">' + (sensVerdict ? '[' + sensVerdict + ']' : '') + '</span></div>'
@@ -302,7 +316,11 @@ function renderFeaturesTab(el, detail, runs) {
     ? '<div class="note">No parameter records stored.</div>'
     : (function() {
         const hasOpt = params.some(function(p) { return p.is_optimized; });
-        return '<table><thead><tr><th' + tip('param_name') + '>Name</th><th' + tip('param_value') + '>Value</th>'
+        // M11: tunable params also appear in Overview's "Tunable Parameters" table — this table shows
+        //      the ACTUAL VALUES used in this specific run (default or optimized), with all param types.
+        return '<div style="font-size:11px;color:var(--text2);margin-bottom:8px">'
+          + 'Actual values used in the most recent run. Tunable ranges are shown in the Overview tab.</div>'
+          + '<table><thead><tr><th' + tip('param_name') + '>Name</th><th' + tip('param_value') + '>Value</th>'
           + '<th' + tip('param_type') + '>Type</th><th' + tip('param_optimized') + '>Optimized?</th></tr></thead><tbody>'
           + params.map(function(p) {
               const rowStyle = p.is_optimized ? ' style="background:rgba(245,158,11,.06)"' : '';
@@ -315,7 +333,8 @@ function renderFeaturesTab(el, detail, runs) {
           + (hasOpt ? '<div class="note" style="margin-top:8px">!! Amber rows are optimized parameters \u2014 highest overfitting risk</div>' : '');
       })();
 
-  el.innerHTML = '<div class="grid2" style="margin-bottom:16px">'
+  // M10: align-items:start so Parameters card doesn't stretch to match a very tall Features table
+  el.innerHTML = '<div class="grid2" style="margin-bottom:16px;align-items:start">'
     + '<div class="card"><div class="card-title">Features</div>' + featuresHtml + '</div>'
     + '<div class="card"><div class="card-title">Parameters</div>' + paramsHtml + '</div></div>'
     + '<div class="card"><div class="card-title">DSR Analysis <span style="font-weight:400;color:var(--text2)">(multiple-testing corrected)</span></div>'
@@ -323,9 +342,9 @@ function renderFeaturesTab(el, detail, runs) {
     + '<div class="stat"><div class="stat-label"' + tip('total_n') + '>Total Runs (N)</div><div class="stat-value">' + n_total + '</div></div>'
     + '<div class="stat"><div class="stat-label"' + tip('effective_n') + '>Effective N</div><div class="stat-value">' + eff_n + '</div></div>'
     + '<div class="stat"><div class="stat-label"' + tip('sr_benchmark') + '>E[max SR] Benchmark</div><div class="stat-value" style="color:var(--amber)">' + fmt4(sr_bench) + '</div></div>'
-    + '<div class="stat"><div class="stat-label"' + tip('dsr') + '>DSR (must beat benchmark)</div><div class="stat-value ' + dsrClass + '">' + fmt4(latestRes.sharpe_deflated) + '</div></div></div>'
-    + '<div class="note">DSR is P(true SR &gt; E[max SR | N_eff]). Passes if DSR &gt; 0.5. '
-    + 'Benchmark is NOT zero \u2014 it is the expected max Sharpe from ' + eff_n + ' independent trials.</div></div></div>';
+    + '<div class="stat"><div class="stat-label"' + tip('dsr') + '>DSR (prob. SR &gt; E[max SR])</div><div class="stat-value ' + dsrClass + '">' + fmt4(latestRes.sharpe_deflated) + '</div></div></div>'
+    + '<div class="note">DSR = P(true Sharpe &gt; E[max SR | N_eff]) \u2014 probability that this strategy genuinely beats the best you\'d expect by chance from ' + eff_n + ' trials. '
+    + 'DSR &gt; 0.5 = passes (more likely real signal than noise). Benchmark E[max SR] = ' + fmt4(sr_bench) + ' is NOT zero.</div></div></div>';
 }
 
 // ── Tab: Backtest Results ────────────────────────────────────────────────
@@ -344,8 +363,10 @@ async function renderBacktestTab(el, detail, runs) {
   const results = resultsData.results || [];
   const fullResults = results.filter(r => r.run_id === rid);
   const latestRes = latestRun.result_summary || {};
+  // M2: for backtest tab, use the first run (may not be default_params) — run selector handles the rest
   const sharpeRaw = latestRes.sharpe_raw || 0;
   const sharpeDefl = latestRes.sharpe_deflated || 0;
+  // M13: max_drawdown is now included in result_summary; show in % of capital if > 0
   const maxDD = latestRes.max_drawdown || 0;
   const winRate = latestRes.win_rate || 0;
   let vecBanner = isVec ? '<div class="vec-banner">!! SUSPECT \u2014 vectorized backtest. No fill model.</div>' : '';
@@ -355,8 +376,10 @@ async function renderBacktestTab(el, detail, runs) {
     return '<option value="' + r.run_id + '"' + sel + '>' + r.run_id.slice(0,8) + '\u2026 \u2014 '
       + (r.created_at||'').slice(0,16) + ' \u2014 Sharpe: ' + fmt2(r.result_summary && r.result_summary.sharpe_raw) + '</option>';
   }).join('');
-  const checkboxes = runList.slice(0,5).map(function(r) {
-    return '<label style="font-size:11px"><input type="checkbox" onchange="runCompare()" class="cmp-run" data-rid="' + r.run_id + '"> ' + r.run_id.slice(0,6) + '\u2026</label>';
+  // M18: show ALL runs (not just first 5) — container is scrollable
+  const checkboxes = runList.map(function(r) {
+    const label = r.run_id.slice(0,6) + '\u2026 ' + fmt2(r.result_summary && r.result_summary.sharpe_raw);
+    return '<label style="font-size:11px;white-space:nowrap"><input type="checkbox" onchange="runCompare()" class="cmp-run" data-rid="' + r.run_id + '"> ' + label + '</label>';
   }).join(' ');
 
   const foldRows = fullResults.map(function(r) {
@@ -367,25 +390,58 @@ async function renderBacktestTab(el, detail, runs) {
       + '<td style="' + colorNum(r.net_edge_bps) + '">' + fmtBps(r.net_edge_bps) + '</td>'
       + '<td>' + fmtPct(r.win_rate) + '</td><td>' + (r.total_trades||0) + '</td><td>' + killBadge + '</td></tr>';
   }).join('');
-  const foldTable = fullResults.length === 0 ? '<div class="note">No fold results stored.</div>'
-    : '<table><thead><tr><th' + tip('fold') + '>Fold</th><th>Split</th><th' + tip('sharpe_raw') + '>Sharpe (raw)</th>'
+  // M19: only the 'full' split result appears here (CV fold results belong to separate run_ids — see CV Analysis tab)
+  const foldTable = fullResults.length === 0 ? '<div class="note">No results stored for this run.</div>'
+    : '<div style="font-size:11px;color:var(--text2);margin-bottom:8px">'
+      + 'Showing results for the selected run only. For out-of-sample cross-validation results, see the <b>CV Analysis</b> tab.</div>'
+      + '<table><thead><tr><th' + tip('fold') + '>Fold</th><th>Split</th><th' + tip('sharpe_raw') + '>Sharpe (raw)</th>'
       + '<th' + tip('dsr') + '>DSR</th><th' + tip('net_edge_bps') + '>Net Edge</th>'
       + '<th' + tip('win_rate') + '>Win Rate</th><th' + tip('trades') + '>Trades</th>'
       + '<th' + tip('kill') + '>Kill</th></tr></thead><tbody>' + foldRows + '</tbody></table>';
-  const ddStr = maxDD.toLocaleString('en-IN', {maximumFractionDigits:0});
+  // M13: display max drawdown as % of capital (₹5L), fallback to raw INR
+  const CAPITAL = 500000;
+  const ddPct = maxDD > 0 ? (maxDD / CAPITAL * 100).toFixed(2) + '% of capital' : null;
+  const ddStr = maxDD > 0
+    ? '\u20b9' + maxDD.toLocaleString('en-IN', {maximumFractionDigits:0}) + (ddPct ? ' (' + ddPct + ')' : '')
+    : '\u2014';
 
-  el.innerHTML = vecBanner
+  el.innerHTML = '<div id="backtest-metrics-wrap">' + vecBanner
     + '<div style="margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
     + '<span style="color:var(--text2);font-size:12px;font-weight:600">Run:</span>'
     + '<select class="run-select" id="run-selector" onchange="loadBacktestRun(this.value,\'' + sid + '\')">' + optionRows + '</select>'
-    + '<span style="font-size:11px;color:var(--text2)">Select 2+ for comparison:</span>' + checkboxes + '</div>'
-    + '<div class="grid4" style="margin-bottom:16px">'
+    // M18: all runs as scrollable checkboxes (not just first 5)
+    + '<span style="font-size:11px;color:var(--text2)">Select 2+ for comparison:</span>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;max-height:48px;overflow-y:auto">' + checkboxes + '</div></div>'
+    + '<div class="grid4" style="margin-bottom:16px" id="backtest-stats-cards">'
     + '<div class="stat"><div class="stat-label"' + tip('sharpe_raw') + '>Sharpe (raw)</div><div class="stat-value ' + (sharpeRaw > 0.5 ? 'pos' : '') + '">' + fmt4(sharpeRaw) + '</div></div>'
     + '<div class="stat"><div class="stat-label"' + tip('dsr') + '>DSR</div><div class="stat-value ' + (sharpeDefl > 0.5 ? 'pos' : 'neg') + '">' + fmt4(sharpeDefl) + '</div></div>'
-    + '<div class="stat"><div class="stat-label"' + tip('max_drawdown') + '>Max Drawdown</div><div class="stat-value neg">\u20b9' + ddStr + '</div></div>'
+    + '<div class="stat"><div class="stat-label"' + tip('max_drawdown') + '>Max Drawdown</div><div class="stat-value neg">' + ddStr + '</div></div>'
     + '<div class="stat"><div class="stat-label"' + tip('win_rate') + '>Win Rate</div><div class="stat-value">' + fmtPct(winRate) + '</div></div></div>'
-    + '<div class="card" style="margin-bottom:16px"><div class="card-title">Metrics by Fold</div>' + foldTable + '</div>'
-    + '<div id="compare-section"></div>';
+    + '<div class="card" style="margin-bottom:16px"><div class="card-title">Run Metrics (this run only \u2014 CV splits in CV Analysis tab)</div>' + foldTable + '</div>'
+    + '</div><div id="compare-section"></div>';
+}
+
+// M14: update metric cards when a different run is selected from the dropdown
+async function loadBacktestRun(rid, sid) {
+  const runList = state.strategyRuns?.runs || [];
+  const run = runList.find(r => r.run_id === rid) || {};
+  const res = run.result_summary || {};
+  const CAPITAL = 500000;
+  const maxDD = res.max_drawdown || 0;
+  const ddPct = maxDD > 0 ? (maxDD / CAPITAL * 100).toFixed(2) + '% of capital' : null;
+  const ddStr = maxDD > 0 ? '\u20b9' + maxDD.toLocaleString('en-IN', {maximumFractionDigits:0}) + (ddPct ? ' (' + ddPct + ')' : '') : '\u2014';
+  const sharpeRaw = res.sharpe_raw || 0;
+  const sharpeDefl = res.sharpe_deflated || 0;
+  const winRate = res.win_rate || 0;
+  // Update the stat cards
+  const cards = document.getElementById('backtest-stats-cards');
+  if (cards) {
+    cards.innerHTML = ''
+      + '<div class="stat"><div class="stat-label"' + tip('sharpe_raw') + '>Sharpe (raw)</div><div class="stat-value ' + (sharpeRaw > 0.5 ? 'pos' : '') + '">' + fmt4(sharpeRaw) + '</div></div>'
+      + '<div class="stat"><div class="stat-label"' + tip('dsr') + '>DSR</div><div class="stat-value ' + (sharpeDefl > 0.5 ? 'pos' : 'neg') + '">' + fmt4(sharpeDefl) + '</div></div>'
+      + '<div class="stat"><div class="stat-label"' + tip('max_drawdown') + '>Max Drawdown</div><div class="stat-value neg">' + ddStr + '</div></div>'
+      + '<div class="stat"><div class="stat-label"' + tip('win_rate') + '>Win Rate</div><div class="stat-value">' + fmtPct(winRate) + '</div></div>';
+  }
 }
 
 async function runCompare() {
@@ -402,12 +458,18 @@ function renderComparison(el, cmp, rids) {
   const rows = cmp.comparison || [];
   const diffs = cmp.param_diffs || [];
   const thCols = rids.map(function(r) { return '<th>' + r.slice(0,8) + '\u2026</th>'; }).join('');
+  // M16: human-readable metric labels
   const metricKeys = ['sharpe_raw','sharpe_deflated','net_edge_bps','win_rate','max_drawdown','total_trades','cagr','gross_edge_bps','fees_cost_bps'];
+  const metricLabels = {
+    sharpe_raw: 'Sharpe (raw)', sharpe_deflated: 'DSR', net_edge_bps: 'Net Edge (bps)',
+    win_rate: 'Win Rate', max_drawdown: 'Max Drawdown (₹)', total_trades: 'Total Trades',
+    cagr: 'CAGR', gross_edge_bps: 'Gross Edge (bps)', fees_cost_bps: 'Fees (bps)',
+  };
   let tbody = '';
   for (const key of metricKeys) {
     const vals = rids.map(function(rid) { const r = rows.find(function(r){return r.run_id===rid;}); return r ? r[key] : null; });
     const allSame = vals.every(function(v){return v == vals[0];});
-    tbody += '<tr><td style="color:var(--text2);font-weight:600">' + key + '</td>';
+    tbody += '<tr><td style="color:var(--text2);font-weight:600">' + (metricLabels[key] || key) + '</td>';
     for (const v of vals) { tbody += '<td style="' + (!allSame ? 'background:rgba(99,102,241,.1)' : '') + '">' + fmt4(v) + '</td>'; }
     tbody += '</tr>';
   }
@@ -434,10 +496,14 @@ async function renderTradesTab(el, detail, runs) {
   const sid = detail.strategy_id;
   const runList = runs.runs || [];
   if (runList.length === 0) { el.innerHTML = '<div class="empty-state">No runs stored yet.</div>'; return; }
-  const rid = runList[0].run_id;
+  // M21: prefer the default_params_full run for the trade log, fallback to latest
+  const defaultRun = runList.find(r => r.notes === 'default_params_full') || runList[0];
+  const rid = defaultRun.run_id;
   state.tradeFilters.page = 1;
   state.tradeFilters._sid = sid;
   state.tradeFilters._rid = rid;
+  // M21: store label info for display
+  state.tradeFilters._runLabel = (defaultRun.notes || rid.slice(0,8)) + ' — Sharpe: ' + fmt2(defaultRun.result_summary && defaultRun.result_summary.sharpe_raw);
   await _loadAndRenderTrades(el, sid, rid);
 }
 
@@ -467,7 +533,8 @@ function renderTradeTable(el, data, sid, rid) {
 
   let tradeRows = '';
   trades.forEach(t => {
-    const pnl = t.net_pnl || t.pnl || 0;
+    const grossPnl = t.gross_pnl != null ? t.gross_pnl : (t.pnl || 0);
+    const netPnl   = t.net_pnl   != null ? t.net_pnl   : grossPnl;
     const side = t.side === 1 ? '<span class="badge badge-blue">CE</span>' : '<span class="badge badge-purple">PE</span>';
     const hold = t.holding_bars != null ? (t.holding_bars * 5 / 60).toFixed(1) : '\u2014';
     tradeRows += '<tr>'
@@ -475,8 +542,8 @@ function renderTradeTable(el, data, sid, rid) {
       + '<td style="font-size:11px">' + (t.exit_time||'').slice(0,19) + '</td>'
       + '<td>' + hold + '</td><td>' + side + '</td>'
       + '<td>' + fmt2(t.entry_premium) + '</td><td>' + fmt2(t.exit_premium) + '</td>'
-      + '<td style="' + colorNum(t.pnl||0) + '">\u20b9' + ((t.pnl||0)).toFixed(0) + '</td>'
-      + '<td style="' + colorNum(pnl) + ';font-weight:600">\u20b9' + pnl.toFixed(0) + '</td>'
+      + '<td style="' + colorNum(grossPnl) + '">\u20b9' + grossPnl.toFixed(0) + '</td>'
+      + '<td style="' + colorNum(netPnl) + ';font-weight:600">\u20b9' + netPnl.toFixed(0) + '</td>'
       + '<td style="' + colorNum(t.net_pnl_bps||0) + '">' + fmtBps(t.net_pnl_bps) + '</td>'
       + '<td><span class="badge badge-blue">' + (t.exit_reason||'\u2014') + '</span></td>'
       + '<td>' + (t.fill_type||'limit') + '</td>'
@@ -490,7 +557,10 @@ function renderTradeTable(el, data, sid, rid) {
     scatterSelect += '</select>';
   }
 
-  el.innerHTML = '<div class="filter-row">'
+  // M21: show which run the trades belong to
+  const runLabel = state.tradeFilters._runLabel || '';
+  el.innerHTML = (runLabel ? '<div style="font-size:11px;color:var(--text2);margin-bottom:8px;padding:4px 8px;background:var(--bg2);border-radius:4px">Showing: <b>' + runLabel + '</b></div>' : '')
+    + '<div class="filter-row">'
     + '<label style="color:var(--text2);font-weight:600;font-size:11px">DIRECTION:</label>'
     + '<select onchange="applyTradeFilter(\'direction\',this.value,\'' + sid + '\',\'' + rid + '\')">'
     + '<option value="">All</option>'
@@ -499,12 +569,13 @@ function renderTradeTable(el, data, sid, rid) {
     + '<label style="color:var(--text2);font-weight:600;font-size:11px">EXIT REASON:</label>'
     + '<select onchange="applyTradeFilter(\'exit_reason\',this.value,\'' + sid + '\',\'' + rid + '\')">' + exitReasonOptions + '</select>'
     + '<span style="margin-left:auto;font-size:11px;color:var(--text2);font-weight:500">Total: ' + total + ' trades</span></div>'
-    + '<div class="tbl-wrap"><table><thead><tr>'
+    // M22: min-width keeps all 12 columns stable; prevents column misalignment on narrow viewports
+    + '<div class="tbl-wrap"><table style="min-width:900px"><thead><tr>'
     + '<th' + tip('entry_time') + '>Entry</th><th' + tip('exit_time') + '>Exit</th>'
     + '<th' + tip('hold_min') + '>Hold (min)</th><th' + tip('direction') + '>Dir</th>'
     + '<th' + tip('entry_prem') + '>Entry Prem</th><th' + tip('exit_prem') + '>Exit Prem</th>'
     + '<th' + tip('gross_pnl') + '>Gross PnL</th><th' + tip('net_pnl') + '>Net PnL</th>'
-    + '<th' + tip('net_bps') + '>Net (bps)</th><th' + tip('exit_reason') + '>Exit</th>'
+    + '<th' + tip('net_bps') + '>Net (bps)</th><th' + tip('exit_reason') + '>Reason</th>'
     + '<th' + tip('fill_type') + '>Fill</th><th' + tip('slippage') + '>Slip (bps)</th>'
     + '</tr></thead><tbody>' + tradeRows + '</tbody></table></div>'
     + '<div class="pagination">'
@@ -574,7 +645,7 @@ function _renderSensChart(sensRuns) {
 }
 
 function _renderTradeCharts(trades, defaultFeature, hasSignals) {
-  _renderHistogram('c-pnl-hist', trades.map(t => t.net_pnl || t.pnl || 0).filter(v => v != null), 'Net PnL (INR)', 'rgba(59,130,246,.7)');
+  _renderHistogram('c-pnl-hist', trades.map(t => t.net_pnl != null ? t.net_pnl : (t.pnl || 0)).filter(v => v != null), 'Net PnL (INR)', 'rgba(59,130,246,.7)');
   _renderHistogram('c-hold-hist', trades.map(t => (t.holding_bars || 0) * 5).filter(v => v > 0), 'Hold (seconds)', 'rgba(167,139,250,.7)');
   if (hasSignals && defaultFeature) renderSignalScatter(defaultFeature);
 }

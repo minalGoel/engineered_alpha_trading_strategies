@@ -3,7 +3,9 @@
  * Loaded first by index.html before other dashboard scripts.
  */
 
-const API = '';  // same-origin
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? ''  // same-origin when running locally
+  : (window.__API_URL__ || '');  // set via tunnel URL for Pages deployment
 
 // ── Tooltip definitions ──────────────────────────────────────────────────
 const TIPS = {

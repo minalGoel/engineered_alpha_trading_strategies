@@ -209,8 +209,17 @@ def run_optimization(
     total_trading_days: int,
     lot_size: int,
     progress_callback=None,
+    n_trials: int | None = None,
+    timeout_secs: int | None = None,
+    save_trials: bool = True,
 ) -> dict:
-    """Run Optuna optimization on full training data.
+    """Run Optuna optimization on the provided data.
+
+    Args:
+        n_trials:     Override OPTUNA_TRIALS (e.g. 50 for per-fold in nested CV).
+        timeout_secs: Override OPTUNA_TIMEOUT_SECS (e.g. 120 for per-fold).
+        save_trials:  If False, skip the ResultStore save callback (nested CV mode
+                      — individual train-fold trials are not useful to persist).
 
     Returns optimization results dict.
     """
@@ -263,18 +272,26 @@ def run_optimization(
     )
 
     # Attach result-store save callback (add only — do not alter study config)
-    save_cb = make_optuna_save_callback(
-        strategy, spot_df, option_df, vix_df, lot_size, study_id,
-    )
-    callbacks = [save_cb] if save_cb is not None else []
+    # Disabled in nested CV mode (save_trials=False) to avoid persisting
+    # thousands of train-fold Optuna trials that have no out-of-sample value.
+    callbacks = []
+    if save_trials:
+        save_cb = make_optuna_save_callback(
+            strategy, spot_df, option_df, vix_df, lot_size, study_id,
+        )
+        if save_cb is not None:
+            callbacks.append(save_cb)
+
+    _n_trials = n_trials if n_trials is not None else OPTUNA_TRIALS
+    _timeout = timeout_secs if timeout_secs is not None else OPTUNA_TIMEOUT_SECS
 
     start_time = time.time()
 
     try:
         study.optimize(
             objective,
-            n_trials=OPTUNA_TRIALS,
-            timeout=OPTUNA_TIMEOUT_SECS,
+            n_trials=_n_trials,
+            timeout=_timeout,
             show_progress_bar=False,
             callbacks=callbacks,
         )
@@ -282,7 +299,7 @@ def run_optimization(
         log.warning("Optuna error for %s: %s", strategy.name, e)
 
     elapsed = time.time() - start_time
-    timeout_hit = elapsed >= OPTUNA_TIMEOUT_SECS - 5
+    timeout_hit = elapsed >= _timeout - 5
 
     try:
         best_trial = study.best_trial

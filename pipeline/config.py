@@ -55,7 +55,9 @@ MIN_POINTS_VIABLE = 1.5       # minimum premium move per trade to be viable
 
 # ── Optimization ────────────────────────────────────────────────────────
 OPTUNA_TRIALS = 100
+OPTUNA_TRIALS_PER_FOLD = 50     # Reduced per-fold in nested CV (12 folds × 50 = 600 total)
 OPTUNA_TIMEOUT_SECS = 30 * 60   # 30-minute safety timeout per strategy
+OPTUNA_FOLD_TIMEOUT_SECS = 120  # 2-min timeout per CV fold optimization
 OVERFIT_SHARPE_RATIO = 3.0      # flag if optimized/default > 3x
 SUSPICIOUS_SHARPE = 3.0         # Sharpe > 3.0 is suspicious
 

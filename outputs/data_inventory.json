@@ -5,9 +5,9 @@
   "option_exists": true,
   "spot_rows": 922500,
   "spot_symbols": [
+    "NSE:NIFTY50-INDEX",
     "NSE:NIFTYBANK-INDEX",
-    "NSE:INDIAVIX-INDEX",
-    "NSE:NIFTY50-INDEX"
+    "NSE:INDIAVIX-INDEX"
   ],
   "spot_date_range": [
     "2025-12-01",

@@ -78,6 +78,7 @@ def _sanitise_for_json(obj):
 
 
 import json
+import multiprocessing as mp
 import threading
 import concurrent.futures
 import numpy as np
@@ -429,22 +430,33 @@ def _resolve_data(strategy, all_data):
         return all_data["nifty_spot"], all_data["nifty_options"], NIFTY_LOT
 
 
-def _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> dict:
-    """Full pipeline: default backtest → optimize → LOO-CV → sensitivity.
+def _run_nested_cv_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> dict:
+    """Nested LOO-CV pipeline: default backtest → {per-fold: optimize on train → test on held-out} → sensitivity.
 
-    LOO-CV is proper leave-one-day-out: for each fold the model is TESTED on one day
-    while the state-machine is initialised from the full dataset (indicators warm up
-    from all 12 days).  This is more representative than a cold-start single-day test.
+    For each of 12 folds:
+        1. Split: train = 11 days, test = 1 held-out day
+        2. Optimize parameters on TRAIN data only (Optuna, 50 trials)
+        3. Backtest on FULL data with fold-optimal params (indicators warm up from all days)
+        4. Evaluate ONLY trades that entered on the held-out test day
+
+    This eliminates the train-test leakage in the old pipeline where Optuna
+    saw all 12 days and then CV "validated" on those same days.
 
     Returns a summary dict with all stage results.
     """
-    from pipeline.config import MIN_TRADES_FULL, MIN_PROFITABLE_DAYS
+    from pipeline.config import (
+        MIN_TRADES_FULL, MIN_PROFITABLE_DAYS,
+        OPTUNA_TRIALS_PER_FOLD, OPTUNA_FOLD_TIMEOUT_SECS,
+    )
     from pipeline.optimizer import run_optimization
     from pipeline.sensitivity import run_sensitivity
+    from pipeline.metrics import compute_metrics as _compute_metrics, _empty_metrics
 
     name = strategy.name
     default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
-    total_days = spot_df["day_id"].n_unique() if "day_id" in spot_df.columns else 12
+    day_ids = sorted(spot_df["day_id"].unique().to_list())
+    total_days = len(day_ids)
+    has_tunable = len(strategy.tunable_params()) > 0
 
     summary = {
         "name": name,
@@ -453,12 +465,15 @@ def _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> dict:
         "optimized_sharpe": 0.0,
         "cv_passed": None,
         "cv_profitable_days": 0,
+        "cv_fold_details": [],
         "sensitivity_verdict": None,
         "n_optuna_trials": 0,
         "total_runs_saved": 0,
     }
 
-    # ── Stage 1: Default params full backtest ────────────────────────────────
+    # ══════════════════════════════════════════════════════════════════════════
+    # Stage 1: Default params full backtest (baseline, no optimization)
+    # ══════════════════════════════════════════════════════════════════════════
     trades_df, metrics = backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size)
     n_trades = metrics.get("total_trades", 0)
     default_sharpe = metrics.get("sharpe_annualized", 0.0)
@@ -474,131 +489,130 @@ def _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> dict:
     )
     if run_id:
         summary["total_runs_saved"] += 1
-        log.info("  [%s] Stage 1 saved: run_id=%s default_sr=%.2f trades=%d",
-                 name, run_id[:8], default_sharpe, n_trades)
     summary["stages_completed"].append("default_backtest")
 
-    # ── Stage 2: Optuna optimization ────────────────────────────────────────
-    best_params = default_params
-    has_tunable = len(strategy.tunable_params()) > 0
+    # ══════════════════════════════════════════════════════════════════════════
+    # Stage 2+3 merged: Nested LOO-CV
+    #   For each held-out day:
+    #     - Optimize on the OTHER 11 days (Optuna, 50 trials, no trial-level saves)
+    #     - Test the fold-optimal params on the held-out day
+    # ══════════════════════════════════════════════════════════════════════════
+    cv_fold_results = []
+    all_fold_params = []
+    total_optuna_trials = 0
 
-    if n_trades >= MIN_TRADES_FULL and has_tunable:
+    for fold_num, test_day_id in enumerate(day_ids):
+        # ── Split ────────────────────────────────────────────────────────────
+        train_spot = spot_df.filter(pl.col("day_id") != test_day_id)
+        train_days = train_spot["day_id"].n_unique()
+
+        # ── Check train viability ────────────────────────────────────────────
+        train_trades, train_metrics = backtest_strategy(
+            strategy, train_spot, option_df, vix_df, lot_size, default_params,
+        )
+        train_n_trades = train_metrics.get("total_trades", 0)
+        train_sharpe = train_metrics.get("sharpe_annualized", 0.0)
+
+        # ── Optimize on TRAIN only ───────────────────────────────────────────
+        fold_best_params = default_params
+        fold_optuna_trials = 0
+
+        if train_n_trades >= MIN_TRADES_FULL and has_tunable:
+            try:
+                fold_opt = run_optimization(
+                    strategy, train_spot, option_df, vix_df,
+                    train_sharpe, train_days, lot_size,
+                    n_trials=OPTUNA_TRIALS_PER_FOLD,
+                    timeout_secs=OPTUNA_FOLD_TIMEOUT_SECS,
+                    save_trials=False,  # Don't persist train-fold Optuna trials
+                )
+                fold_best_params = fold_opt.get("optimized_params", default_params)
+                fold_optuna_trials = fold_opt.get("optuna_trials_completed", 0)
+                total_optuna_trials += fold_optuna_trials
+            except Exception as e:
+                log.warning("  [%s] Fold %d/%d optimization failed: %s",
+                            name, fold_num, total_days, e)
+
+        all_fold_params.append(fold_best_params)
+
+        # ── Test on held-out day ─────────────────────────────────────────────
+        # Run the FULL 12-day backtest with fold_best_params so indicators
+        # are warm (causal — no look-ahead).  Then filter to test-day trades.
+        test_trades_all, _ = backtest_strategy(
+            strategy, spot_df, option_df, vix_df, lot_size, fold_best_params,
+        )
+
+        # Filter trades to only those ENTERING on the test day
+        fold_trades = None
+        if test_trades_all is not None and not test_trades_all.is_empty():
+            test_spot_day = spot_df.filter(pl.col("day_id") == test_day_id)
+            if not test_spot_day.is_empty() and "entry_time" in test_trades_all.columns:
+                test_date = test_spot_day["session_date"].head(1).to_list()[0]
+                fold_trades = test_trades_all.filter(
+                    pl.col("entry_time").cast(pl.Date) == test_date
+                )
+                if fold_trades.is_empty():
+                    fold_trades = None
+
+        # Compute test-day metrics
+        if fold_trades is not None:
+            fold_metrics = _compute_metrics(fold_trades, lot_size=lot_size, total_trading_days=1)
+        else:
+            fold_metrics = _empty_metrics()
+
+        day_pnl = fold_metrics.get("total_pnl", 0.0)
+        fold_n_trades = fold_metrics.get("total_trades", 0)
+
+        # Save each fold to ResultStore
+        test_spot_fold = spot_df.filter(pl.col("day_id") == test_day_id)
+        if fold_n_trades > 0 and fold_trades is not None:
+            rid = _save_strategy_run(
+                strategy, fold_trades, fold_metrics, test_spot_fold,
+                option_df, vix_df, lot_size, fold_best_params,
+                notes=f"nested_cv_fold_{fold_num}",
+                split="test", fold_number=fold_num, split_type="nested_loo",
+                test_day_id=test_day_id, is_optimized=has_tunable,
+            )
+            if rid:
+                summary["total_runs_saved"] += 1
+
+        cv_fold_results.append({
+            "fold": fold_num,
+            "day_id": int(test_day_id),
+            "pnl": round(day_pnl, 2),
+            "trades": fold_n_trades,
+            "train_trades": train_n_trades,
+            "train_sharpe": round(train_sharpe, 4),
+            "optuna_trials": fold_optuna_trials,
+            "profitable": day_pnl > 0,
+        })
+
+    # ── Aggregate CV results ─────────────────────────────────────────────────
+    days_profitable = sum(1 for d in cv_fold_results if d["profitable"])
+    cv_passed = days_profitable >= MIN_PROFITABLE_DAYS
+    summary["cv_passed"] = cv_passed
+    summary["cv_profitable_days"] = days_profitable
+    summary["cv_fold_details"] = cv_fold_results
+    summary["n_optuna_trials"] = total_optuna_trials
+    summary["stages_completed"].append("nested_cross_validation")
+
+    # Mean out-of-sample PnL across folds
+    fold_pnls = [d["pnl"] for d in cv_fold_results if d["trades"] > 0]
+    if fold_pnls:
+        summary["optimized_sharpe"] = round(sum(fold_pnls) / max(len(fold_pnls), 1), 2)
+    log.info("  [%s] Nested CV: %d/%d profitable, passed=%s, %d total Optuna trials",
+             name, days_profitable, total_days, cv_passed, total_optuna_trials)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Stage 4: Sensitivity analysis on consensus params
+    # ══════════════════════════════════════════════════════════════════════════
+    # Use element-wise median of fold-optimized params as the "consensus" set.
+    if has_tunable and n_trades >= 10 and all_fold_params:
         try:
-            opt_result = run_optimization(
-                strategy, spot_df, option_df, vix_df,
-                default_sharpe, total_days, lot_size,
-            )
-            best_params = opt_result.get("optimized_params", default_params)
-            summary["optimized_sharpe"] = opt_result.get("optimized_sharpe", default_sharpe)
-            n_trials = opt_result.get("optuna_trials_completed", 0)
-            summary["n_optuna_trials"] = n_trials
-            # Optuna save callback stores qualifying individual trials (sharpe > 0)
-            summary["total_runs_saved"] += n_trials
-            summary["stages_completed"].append("optimization")
-            log.info("  [%s] Stage 2 done: %d trials, best_sr=%.2f overfit=%s",
-                     name, n_trials, summary["optimized_sharpe"],
-                     opt_result.get("overfit_flag", False))
-
-            # Save the best-params full run explicitly (the single "canonical" optimized run)
-            opt_trades, opt_metrics = backtest_strategy(
-                strategy, spot_df, option_df, vix_df, lot_size, params=best_params,
-            )
-            if opt_trades is not None and opt_metrics.get("total_trades", 0) > 0:
-                rid = _save_strategy_run(
-                    strategy, opt_trades, opt_metrics, spot_df, option_df, vix_df,
-                    lot_size, best_params, notes="optimized_params_full",
-                    split="full", is_optimized=True,
-                )
-                if rid:
-                    summary["total_runs_saved"] += 1
-
-        except Exception as e:
-            log.warning("  [%s] Optimization failed: %s", name, e)
-    else:
-        summary["optimized_sharpe"] = round(default_sharpe, 4)
-        reason = "no_tunable_params" if not has_tunable else "too_few_trades"
-        summary["stages_completed"].append(f"optimization_skipped_{reason}")
-
-    # ── Stage 3: Leave-one-day-out CV with best params ───────────────────────
-    # Proper LOO: signals are computed on the full dataset so indicators warm up
-    # correctly.  Only the TRADES that fall on the test day are evaluated.
-    try:
-        day_ids = sorted(spot_df["day_id"].unique().to_list())
-        cv_fold_results = []
-
-        # Pre-compute full-dataset signals once (avoids 12× recomputation)
-        full_signals = strategy.compute(spot_df, option_df, vix_df, best_params)
-
-        for fold_num, test_day_id in enumerate(day_ids):
-            # Run full backtest on all data with best params
-            fold_trades_all, fold_metrics_all = backtest_strategy(
-                strategy, spot_df, option_df, vix_df, lot_size, best_params,
-            )
-            # Filter trades to only those that entered on the test day
-            if fold_trades_all is not None and not fold_trades_all.is_empty():
-                test_spot_day = spot_df.filter(pl.col("day_id") == test_day_id)
-                if not test_spot_day.is_empty():
-                    test_date = test_spot_day["session_date"].head(1).to_list()[0]
-                    fold_trades = fold_trades_all.filter(
-                        pl.col("entry_time").cast(pl.Date) == test_date
-                    ) if "entry_time" in fold_trades_all.columns else fold_trades_all.head(0)
-                else:
-                    fold_trades = fold_trades_all.head(0)
-            else:
-                fold_trades = None
-
-            # Recompute metrics for this fold's trades only
-            if fold_trades is not None and not fold_trades.is_empty():
-                from pipeline.metrics import compute_metrics
-                fold_metrics = compute_metrics(
-                    fold_trades, lot_size=lot_size, total_trading_days=1,
-                )
-            else:
-                from pipeline.metrics import _empty_metrics
-                fold_metrics = _empty_metrics()
-
-            day_pnl = fold_metrics.get("total_pnl", 0.0)
-            fold_n_trades = fold_metrics.get("total_trades", 0)
-
-            # Save each fold's trades to ResultStore
-            test_spot_fold = spot_df.filter(pl.col("day_id") == test_day_id)
-            if fold_n_trades > 0:
-                rid = _save_strategy_run(
-                    strategy, fold_trades, fold_metrics, test_spot_fold,
-                    option_df, vix_df, lot_size, best_params,
-                    notes=f"cv_fold_{fold_num}",
-                    split="test", fold_number=fold_num, split_type="leave_one_out",
-                    test_day_id=test_day_id, is_optimized=has_tunable,
-                )
-                if rid:
-                    summary["total_runs_saved"] += 1
-
-            cv_fold_results.append({
-                "fold": fold_num,
-                "day_id": test_day_id,
-                "pnl": day_pnl,
-                "trades": fold_n_trades,
-                "profitable": day_pnl > 0,
-            })
-
-        days_profitable = sum(1 for d in cv_fold_results if d["profitable"])
-        passed_cv = days_profitable >= MIN_PROFITABLE_DAYS
-        summary["cv_passed"] = passed_cv
-        summary["cv_profitable_days"] = days_profitable
-        summary["stages_completed"].append("cross_validation")
-        log.info("  [%s] Stage 3 done: %d/%d profitable days, cv_passed=%s",
-                 name, days_profitable, total_days, passed_cv)
-
-    except Exception as e:
-        log.warning("  [%s] CV failed: %s", name, e)
-
-    # ── Stage 4: Sensitivity analysis with best params ───────────────────────
-    if n_trades >= 10 and has_tunable:
-        try:
+            consensus_params = _median_params(all_fold_params)
             sens_result = run_sensitivity(
-                strategy, spot_df, option_df, vix_df, lot_size, params=best_params,
+                strategy, spot_df, option_df, vix_df, lot_size, params=consensus_params,
             )
-            # run_sensitivity internally saves perturbed runs via _save_sensitivity_runs_to_store
             summary["sensitivity_verdict"] = sens_result.get("verdict", "UNKNOWN")
             n_perturbations = sum(
                 1 for pname, dirs in sens_result.get("param_results", {}).items()
@@ -606,18 +620,31 @@ def _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> dict:
             )
             summary["total_runs_saved"] += n_perturbations
             summary["stages_completed"].append("sensitivity")
-            log.info("  [%s] Stage 4 done: %d perturbations, verdict=%s",
-                     name, n_perturbations, summary["sensitivity_verdict"])
         except Exception as e:
             log.warning("  [%s] Sensitivity failed: %s", name, e)
 
-    summary["verdict"] = "FULL_PIPELINE_OK"
+    summary["verdict"] = "NESTED_CV_PIPELINE_OK"
     return summary
 
 
-# ── Checkpoint helpers ──────────────────────────────────────────────────────
+def _median_params(param_list: list[dict]) -> dict:
+    """Element-wise median across a list of parameter dicts.
 
-_CHECKPOINT_LOCK = threading.Lock()
+    Used to pick "consensus" parameters from 12 CV folds for sensitivity analysis.
+    """
+    if not param_list:
+        return {}
+    keys = param_list[0].keys()
+    result = {}
+    for k in keys:
+        vals = sorted(d[k] for d in param_list if k in d)
+        if vals:
+            mid = len(vals) // 2
+            result[k] = vals[mid]
+    return result
+
+
+# ── Checkpoint helpers ──────────────────────────────────────────────────────
 
 def _load_checkpoint(path: Path) -> dict:
     """Load {strategy_id: summary_dict} checkpoint. Returns {} if not found."""
@@ -634,10 +661,106 @@ def _save_checkpoint(path: Path, checkpoint: dict) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(checkpoint, indent=2))
+        tmp.write_text(json.dumps(checkpoint, indent=2, default=str))
         os.replace(tmp, path)
     except Exception as e:
         log.warning("Checkpoint write failed: %s", e)
+
+
+# ── ProcessPoolExecutor worker infrastructure ───────────────────────────────
+#
+# --full mode uses ProcessPoolExecutor (spawn) for TRUE CPU parallelism.
+# Each spawned worker loads data from disk independently (no GIL sharing).
+# --save mode keeps ThreadPoolExecutor (fast enough for single-pass).
+
+_WORKER_DATA: dict | None = None   # Set by _worker_init in each spawned process
+
+
+def _worker_init():
+    """Called once per spawned worker process. Loads data and warms Numba.
+
+    Takes ~3 seconds (Parquet decompression + JIT compilation).
+    Data is ~50MB per process; 9 processes = ~450MB.
+    On 16GB M4 with swap this is trivial.
+    """
+    global _WORKER_DATA
+    import resource as _resource
+    try:
+        _soft, _hard = _resource.getrlimit(_resource.RLIMIT_NOFILE)
+        _target = min(max(_hard, 4096), 65536)
+        _resource.setrlimit(_resource.RLIMIT_NOFILE, (_target, _hard))
+    except Exception:
+        pass
+
+    os.environ.setdefault("NUMBA_NUM_THREADS", "1")
+
+    from pipeline.data_loader import load_all_data, add_atm_strike
+    from pipeline.option_utils import get_strike_step
+    from pipeline.state_machine import warmup_numba as _warmup
+
+    all_data = load_all_data()
+    for key, symbol in [("nifty_spot", NIFTY_SYMBOL), ("banknifty_spot", BANKNIFTY_SYMBOL)]:
+        if all_data[key] is not None:
+            step = get_strike_step(symbol)
+            all_data[key] = add_atm_strike(all_data[key], step)
+    _warmup()
+    _WORKER_DATA = all_data
+
+
+def _process_one_strategy(q: dict) -> dict:
+    """Top-level function for ProcessPoolExecutor workers (must be picklable).
+
+    Runs one strategy through the full nested CV pipeline.
+    Accesses per-process _WORKER_DATA set by _worker_init().
+    """
+    name = q["name"]
+    mode = q.get("mode", "full")
+
+    strategy = _load_strategy_class(name)
+    if strategy is None:
+        return {"name": name, "verdict": "FAILED_LOAD_ERROR"}
+
+    all_data = _WORKER_DATA
+    if all_data is None:
+        return {"name": name, "verdict": "FAILED_WORKER_INIT"}
+
+    spot_df, option_df, lot_size = _resolve_data(strategy, all_data)
+    vix_df = all_data["vix"]
+
+    if spot_df is None or option_df is None:
+        return {"name": name, "verdict": "FAILED_NO_DATA"}
+
+    try:
+        if mode == "full":
+            t0 = time.time()
+            result = _run_nested_cv_pipeline(strategy, spot_df, option_df, vix_df, lot_size)
+            result["elapsed_seconds"] = round(time.time() - t0, 1)
+            return result
+
+        # Quick mode
+        trades_df, metrics = backtest_strategy(strategy, spot_df, option_df, vix_df, lot_size)
+        n_trades = metrics.get("total_trades", 0)
+
+        result_entry = {
+            "name": name,
+            "verdict": "BACKTEST_OK" if n_trades > 0 else "ZERO_TRADES",
+            "underlying": strategy.underlying.upper(),
+            "metrics": metrics,
+        }
+
+        if mode == "save" and n_trades > 0:
+            default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
+            _save_strategy_run(
+                strategy=strategy, trades_df=trades_df, metrics=metrics,
+                spot_df=spot_df, option_df=option_df, vix_df=vix_df,
+                lot_size=lot_size, params=default_params,
+                notes="quick_default_params",
+            )
+
+        return result_entry
+
+    except Exception as e:
+        return {"name": name, "verdict": "FAILED_COMPUTE_ERROR", "error": str(e)}
 
 
 def main():
@@ -651,8 +774,8 @@ def main():
     parser.add_argument("--save", action="store_true",
                         help="Quick mode: default-params backtest only, save to ResultStore")
     parser.add_argument("--full", action="store_true",
-                        help="Full pipeline: optimize → CV → sensitivity per strategy. "
-                        "Saves all results to ResultStore. Expect 2-4 hours for 291 strategies.")
+                        help="Nested LOO-CV: per-fold optimize on 11 days, test on 1 held-out day. "
+                        "Saves all results to ResultStore. ~1 hour for 291 strategies × 9 processes.")
     parser.add_argument("--resume", action="store_true",
                         help="With --full: skip strategies already recorded in "
                         "outputs/full_pipeline_checkpoint.json. Safe to re-run after a crash.")
@@ -690,7 +813,12 @@ def main():
         return
 
     log.info("=" * 70)
-    mode_label = "FULL PIPELINE" if args.full else ("QUICK + SAVE" if args.save else "QUICK (no save)")
+    if args.full:
+        mode_label = "NESTED LOO-CV (ProcessPool)"
+    elif args.save:
+        mode_label = "QUICK + SAVE (ThreadPool)"
+    else:
+        mode_label = "QUICK (no save)"
     log.info("5-Second Option Trading Pipeline — %s", mode_label)
     log.info("=" * 70)
 
@@ -708,7 +836,7 @@ def main():
     # Integration test: verify UTC→IST conversion
     integration_test()
 
-    # ── Load all data ──
+    # ── Load all data (in parent — quick modes use it directly) ──
     log.info("Loading all 5-second data...")
     all_data = load_all_data()
     log.info("Data loaded: %d trading days", all_data["trading_days"])
@@ -740,7 +868,7 @@ def main():
                      status, name, strat.underlying if strat else "?")
         return
 
-    # ── Warmup Numba ──
+    # ── Warmup Numba (parent process — also caches to disk for child processes) ──
     log.info("Warming up Numba JIT compiler...")
     warmup_numba()
     log.info("Numba warmup complete")
@@ -755,115 +883,149 @@ def main():
             log.info("RESUME: %d strategies already completed in checkpoint, skipping them",
                      n_already_done)
 
-    # ── Process strategies ──
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Full pipeline: ProcessPoolExecutor with spawn
+    #   - Each process loads data independently (no GIL contention)
+    #   - True CPU parallelism on numpy + Numba
+    #   - ~50MB data per process × 9 = 450MB (trivial on 16GB)
+    # ═══════════════════════════════════════════════════════════════════════════
     n_workers = max(1, args.parallel_strategies)
-    log.info("Processing %d strategies with %d worker thread(s)", len(qualified), n_workers)
     all_results = []
-    results_lock = threading.Lock()
-    counter = {"done": 0}
 
-    def _run_one_strategy(q: dict) -> dict:
-        """Process one strategy (quick or full mode)."""
-        name = q["name"]
+    if args.full:
+        # Filter out checkpoint-completed strategies
+        to_process = []
+        for q in qualified:
+            if args.resume and q["name"] in checkpoint:
+                all_results.append(checkpoint[q["name"]])
+            else:
+                q["mode"] = "full"
+                to_process.append(q)
 
-        # ── Resume: skip already-completed strategies ──
-        if args.full and args.resume:
-            with results_lock:
-                already = checkpoint.get(name)
-            if already:
-                with results_lock:
-                    counter["done"] += 1
-                    idx = counter["done"]
-                log.info("[%d/%d] %s — SKIPPED (checkpoint)", idx, len(qualified), name)
-                return already
+        n_already = len(all_results)
+        n_remaining = len(to_process)
+        log.info("Processing %d strategies with %d worker PROCESSES "
+                 "(%d already in checkpoint)",
+                 n_remaining, n_workers, n_already)
 
-        strategy = _load_strategy_class(name)
-        if strategy is None:
-            return {"name": name, "verdict": "FAILED_LOAD_ERROR"}
+        if n_remaining > 0:
+            log.info("Spawning %d worker processes (each loads ~50MB data + Numba warmup)...",
+                     n_workers)
+            ctx = mp.get_context("spawn")
+            with concurrent.futures.ProcessPoolExecutor(
+                max_workers=n_workers,
+                mp_context=ctx,
+                initializer=_worker_init,
+            ) as pool:
+                futures = {pool.submit(_process_one_strategy, q): q["name"]
+                           for q in to_process}
 
-        spot_df, option_df, lot_size = _resolve_data(strategy, all_data)
-        vix_df = all_data["vix"]
+                completed = n_already
+                for future in concurrent.futures.as_completed(futures):
+                    fname = futures[future]
+                    try:
+                        result = future.result()
+                    except Exception as e:
+                        log.error("Process error for %s: %s", fname, e)
+                        result = {"name": fname, "verdict": "FAILED_PROCESS_ERROR",
+                                  "error": str(e)}
 
-        if spot_df is None or option_df is None:
-            log.warning("No data for %s underlying=%s", name, strategy.underlying)
-            return {"name": name, "verdict": "FAILED_NO_DATA"}
+                    all_results.append(result)
+                    completed += 1
 
-        try:
-            # ── Full pipeline mode ──
-            if args.full:
-                t0 = time.time()
-                result = _run_full_pipeline(strategy, spot_df, option_df, vix_df, lot_size)
-
-                with results_lock:
-                    counter["done"] += 1
-                    idx = counter["done"]
-                    # Write checkpoint immediately after each strategy completes
-                    checkpoint[name] = result
+                    # Checkpoint from main process (only process with write access)
+                    checkpoint[fname] = result
                     _save_checkpoint(CHECKPOINT_FILE, checkpoint)
 
-                elapsed_s = time.time() - t0
-                log.info(
-                    "[%d/%d] %s — %s | default_sr=%.2f opt_sr=%.2f "
-                    "cv=%s sens=%s saved=%d (%.0fs)",
-                    idx, len(qualified), name, result.get("verdict", "?"),
-                    result.get("default_sharpe", 0), result.get("optimized_sharpe", 0),
-                    result.get("cv_passed", "?"), result.get("sensitivity_verdict", "?"),
-                    result.get("total_runs_saved", 0), elapsed_s,
-                )
-                return result
+                    elapsed_s = result.get("elapsed_seconds", 0)
+                    log.info(
+                        "[%d/%d] %s — %s | sr=%.2f cv=%s sens=%s saved=%d (%.0fs)",
+                        completed, len(qualified), fname,
+                        result.get("verdict", "?"),
+                        result.get("default_sharpe", 0),
+                        result.get("cv_passed", "?"),
+                        result.get("sensitivity_verdict", "?"),
+                        result.get("total_runs_saved", 0),
+                        elapsed_s,
+                    )
 
-            # ── Quick mode (default params only) ──
-            trades_df, metrics = backtest_strategy(
-                strategy, spot_df, option_df, vix_df, lot_size,
-            )
-            n_trades = metrics.get("total_trades", 0)
-            sharpe = metrics.get("sharpe_annualized", 0.0)
-            total_pnl = metrics.get("total_pnl", 0.0)
-
-            with results_lock:
-                counter["done"] += 1
-                idx = counter["done"]
-            log.info("[%d/%d] %s — trades=%d sharpe=%.4f pnl=INR%.0f",
-                     idx, len(qualified), name, n_trades, sharpe, total_pnl)
-
-            result_entry = {
-                "name": name,
-                "verdict": "BACKTEST_OK" if n_trades > 0 else "ZERO_TRADES",
-                "underlying": strategy.underlying.upper(),
-                "metrics": metrics,
-            }
-
-            # Auto-save if --save flag
-            if args.save and n_trades > 0:
-                default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
-                _save_strategy_run(
-                    strategy=strategy, trades_df=trades_df, metrics=metrics,
-                    spot_df=spot_df, option_df=option_df, vix_df=vix_df,
-                    lot_size=lot_size, params=default_params,
-                    notes="quick_default_params",
-                )
-
-            return result_entry
-
-        except Exception as e:
-            log.error("  [%s] Error: %s", name, e)
-            return {"name": name, "verdict": "FAILED_COMPUTE_ERROR", "error": str(e)}
-
-    if n_workers == 1:
-        for q in qualified:
-            all_results.append(_run_one_strategy(q))
     else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as pool:
-            futures = {pool.submit(_run_one_strategy, q): q["name"] for q in qualified}
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    all_results.append(future.result())
-                except Exception as e:
-                    name = futures[future]
-                    log.error("Unexpected thread error for %s: %s", name, e)
-                    all_results.append({"name": name, "verdict": "FAILED_THREAD_ERROR", "error": str(e)})
+        # ═══════════════════════════════════════════════════════════════════════
+        # Quick mode: ThreadPoolExecutor (fast enough, avoids spawn overhead)
+        # ═══════════════════════════════════════════════════════════════════════
+        mode = "save" if args.save else "quick"
+        for q in qualified:
+            q["mode"] = mode
 
-    # ── Summary ──
+        log.info("Processing %d strategies with %d worker thread(s)",
+                 len(qualified), n_workers)
+
+        results_lock = threading.Lock()
+        counter = {"done": 0}
+
+        def _thread_run(q: dict) -> dict:
+            name = q["name"]
+            strategy = _load_strategy_class(name)
+            if strategy is None:
+                return {"name": name, "verdict": "FAILED_LOAD_ERROR"}
+
+            spot_df_t, option_df_t, lot_size_t = _resolve_data(strategy, all_data)
+            vix_df_t = all_data["vix"]
+
+            if spot_df_t is None or option_df_t is None:
+                return {"name": name, "verdict": "FAILED_NO_DATA"}
+
+            try:
+                trades_df, metrics = backtest_strategy(
+                    strategy, spot_df_t, option_df_t, vix_df_t, lot_size_t,
+                )
+                n_trades = metrics.get("total_trades", 0)
+
+                with results_lock:
+                    counter["done"] += 1
+                    idx = counter["done"]
+                log.info("[%d/%d] %s — trades=%d sharpe=%.4f pnl=INR%.0f",
+                         idx, len(qualified), name, n_trades,
+                         metrics.get("sharpe_annualized", 0),
+                         metrics.get("total_pnl", 0))
+
+                result_entry = {
+                    "name": name,
+                    "verdict": "BACKTEST_OK" if n_trades > 0 else "ZERO_TRADES",
+                    "metrics": metrics,
+                }
+
+                if args.save and n_trades > 0:
+                    default_params = {tp.name: tp.default for tp in strategy.tunable_params()}
+                    _save_strategy_run(
+                        strategy=strategy, trades_df=trades_df, metrics=metrics,
+                        spot_df=spot_df_t, option_df=option_df_t, vix_df=vix_df_t,
+                        lot_size=lot_size_t, params=default_params,
+                        notes="quick_default_params",
+                    )
+
+                return result_entry
+
+            except Exception as e:
+                return {"name": name, "verdict": "FAILED_COMPUTE_ERROR", "error": str(e)}
+
+        if n_workers == 1:
+            for q in qualified:
+                all_results.append(_thread_run(q))
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as pool:
+                futures = {pool.submit(_thread_run, q): q["name"] for q in qualified}
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        all_results.append(future.result())
+                    except Exception as e:
+                        fname = futures[future]
+                        log.error("Thread error for %s: %s", fname, e)
+                        all_results.append({"name": fname, "verdict": "FAILED_THREAD_ERROR"})
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Summary
+    # ═══════════════════════════════════════════════════════════════════════════
     elapsed = time.time() - start_time
     log.info("=" * 70)
     log.info("Pipeline complete in %.1f seconds (%.1f minutes)", elapsed, elapsed / 60)
@@ -879,8 +1041,10 @@ def main():
         total_saved = sum(r.get("total_runs_saved", 0) for r in all_results)
         n_cv_passed = sum(1 for r in all_results if r.get("cv_passed") is True)
         n_robust = sum(1 for r in all_results if r.get("sensitivity_verdict") == "ROBUST")
+        total_trials = sum(r.get("n_optuna_trials", 0) for r in all_results)
         log.info("  Total runs saved to ResultStore: %d", total_saved)
-        log.info("  CV passed: %d / %d", n_cv_passed, len(all_results))
+        log.info("  Total Optuna trials (across all folds): %d", total_trials)
+        log.info("  Nested CV passed: %d / %d", n_cv_passed, len(all_results))
         log.info("  Sensitivity ROBUST: %d / %d", n_robust, len(all_results))
 
     log.info("=" * 70)
@@ -894,9 +1058,10 @@ def main():
     })
 
     if args.full:
-        # Save detailed full pipeline results
         _save_json(OUTPUTS_DIR / "full_pipeline_results.json", {
             "elapsed_seconds": round(elapsed, 1),
+            "validation_method": "nested_leave_one_day_out",
+            "parallelism": f"ProcessPoolExecutor(spawn, workers={n_workers})",
             "strategies": all_results,
         })
         log.info("Detailed results saved to %s", OUTPUTS_DIR / "full_pipeline_results.json")

@@ -32,6 +32,24 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = ROOT / "dashboard" / "static"
+_PIPELINE_RESULTS_FILE = ROOT / "outputs" / "full_pipeline_results.json"
+
+
+def _load_pipeline_results() -> dict[str, dict]:
+    """Load nested-CV + sensitivity verdicts from the pipeline results JSON.
+
+    Returns dict keyed by strategy name, e.g.:
+        {"vwap_rsi_volume_hybrid_v1": {"cv_passed": True, "cv_profitable_days": 9, ...}, ...}
+    """
+    if not _PIPELINE_RESULTS_FILE.exists():
+        return {}
+    try:
+        import orjson
+        data = orjson.loads(_PIPELINE_RESULTS_FILE.read_bytes())
+    except ImportError:
+        import json
+        data = json.loads(_PIPELINE_RESULTS_FILE.read_text())
+    return {s["name"]: s for s in data.get("strategies", [])}
 
 
 def _make_app():
@@ -65,6 +83,7 @@ def _make_app():
         store = get_store()
         strategies = store.get_strategy_list()
         n_total = store.count_total_runs()
+        cv_data = _load_pipeline_results()
 
         # Group by family
         families: dict[str, list] = {}
@@ -113,6 +132,7 @@ def _make_app():
             )
             n_vectorized = sum(1 for m in members if m.get("has_vectorized"))
 
+            n_cv_passed = sum(1 for m in members if cv_data.get(m["strategy_id"], {}).get("cv_passed"))
             result.append({
                 "family": fam_name,
                 "n_strategies": len(members),
@@ -121,13 +141,19 @@ def _make_app():
                 "avg_intra_family_corr": avg_corr,
                 "n_passing_kill": n_passing,
                 "n_flagged_vectorized": n_vectorized,
-                "strategies": [_strategy_row(m, n_total, store) for m in members],
+                "n_cv_passed": n_cv_passed,
+                "strategies": [_strategy_row(m, n_total, store, cv_data) for m in members],
             })
 
         result.sort(key=lambda x: x["best_dsr"], reverse=True)
-        return {"families": result, "n_total_runs": n_total}
+        return {"families": result, "n_total_runs": n_total, "cv_data": {k: {
+            "cv_passed": v.get("cv_passed", False),
+            "cv_profitable_days": v.get("cv_profitable_days", 0),
+            "sensitivity_verdict": v.get("sensitivity_verdict"),
+            "default_sharpe": v.get("default_sharpe"),
+        } for k, v in cv_data.items()}}
 
-    def _strategy_row(m: dict, n_total: int, store) -> dict:
+    def _strategy_row(m: dict, n_total: int, store, cv_data: dict | None = None) -> dict:
         sid = m["strategy_id"]
         sharpe = m.get("best_sharpe_raw") or 0.0
         dsr = m.get("best_sharpe_deflated") or 0.0
@@ -136,10 +162,16 @@ def _make_app():
         engine = "event_driven"
         if m.get("has_vectorized"):
             engine = "vectorized"
-        # Colour code
-        if net_edge > 10 and not kill and engine == "event_driven":
+        # CV/sensitivity data
+        cv_info = (cv_data or {}).get(sid, {})
+        cv_passed = bool(cv_info.get("cv_passed", False))
+        cv_profitable_days = int(cv_info.get("cv_profitable_days") or 0)
+        sensitivity_verdict = cv_info.get("sensitivity_verdict")  # "ROBUST", "FRAGILE", or None
+        default_sharpe = cv_info.get("default_sharpe")
+        # Colour code: green = cv pass, yellow = robust sens only, red = both fail
+        if cv_passed:
             color = "green"
-        elif 5 <= net_edge <= 10 or engine == "vectorized":
+        elif sensitivity_verdict == "ROBUST" and not kill and engine == "event_driven":
             color = "yellow"
         else:
             color = "red"
@@ -153,6 +185,10 @@ def _make_app():
             "kill_triggered": kill,
             "engine": engine,
             "color": color,
+            "cv_passed": cv_passed,
+            "cv_profitable_days": cv_profitable_days,
+            "sensitivity_verdict": sensitivity_verdict,
+            "default_sharpe": round(default_sharpe, 4) if default_sharpe is not None else None,
         }
 
     # ── /api/strategy/{strategy_id} ───────────────────────────────────────────
@@ -186,12 +222,27 @@ def _make_app():
         # Strategy spec from BaseStrategy fields
         strategy_spec = {}
         try:
-            import importlib
+            import importlib, inspect
             from pipeline.config import STRATEGY_DIR
             mod = importlib.import_module(f"pipeline.strategies.{strategy_id}")
             s = mod.Strategy()
+            # Extract docstring from strategy module or class
+            description = (inspect.getdoc(mod.Strategy) or inspect.getdoc(mod) or "").strip()
+            # Also extract tunable params info
+            tunable = []
+            try:
+                for tp in s.tunable_params():
+                    tunable.append({
+                        "name": tp.name,
+                        "default": tp.default,
+                        "low": tp.low,
+                        "high": tp.high,
+                    })
+            except Exception:
+                pass
             strategy_spec = {
                 "name": s.name,
+                "description": description,
                 "underlying": s.underlying,
                 "timeframe": s.timeframe,
                 "session_start_minutes": s.session_start_minutes,
@@ -199,9 +250,10 @@ def _make_app():
                 "max_trades_per_day": s.max_trades_per_day,
                 "max_lookback": s.max_lookback,
                 "assumptions": s.assumptions or [],
+                "tunable_params": tunable,
             }
         except Exception:
-            strategy_spec = {"name": strategy_id}
+            strategy_spec = {"name": strategy_id, "description": ""}
 
         return {
             "strategy_id": strategy_id,
@@ -483,6 +535,171 @@ def _make_app():
             "strategies": rows,
         }
 
+    # ── /api/nested-cv ────────────────────────────────────────────────────────
+    @app.get("/api/nested-cv")
+    def get_nested_cv():
+        """Summary of nested LOO-CV results for all strategies (from pipeline results JSON)."""
+        cv_data = _load_pipeline_results()
+        strategies = []
+        for name, s in cv_data.items():
+            strategies.append({
+                "name": name,
+                "cv_passed": bool(s.get("cv_passed", False)),
+                "cv_profitable_days": int(s.get("cv_profitable_days") or 0),
+                "sensitivity_verdict": s.get("sensitivity_verdict"),
+                "default_sharpe": s.get("default_sharpe"),
+                "optimized_sharpe": s.get("optimized_sharpe"),
+                "n_optuna_trials": int(s.get("n_optuna_trials") or 0),
+                "total_runs_saved": int(s.get("total_runs_saved") or 0),
+                "verdict": s.get("verdict"),
+                "elapsed_seconds": s.get("elapsed_seconds"),
+            })
+        # Sort: CV passed first, then by profitable days desc
+        strategies.sort(key=lambda x: (-int(x["cv_passed"]), -(x["cv_profitable_days"] or 0)))
+        n_passed = sum(1 for s in strategies if s["cv_passed"])
+        n_robust = sum(1 for s in strategies if s["sensitivity_verdict"] == "ROBUST")
+        return {
+            "strategies": strategies,
+            "n_total": len(strategies),
+            "n_cv_passed": n_passed,
+            "n_sensitivity_robust": n_robust,
+        }
+
+    # ── /api/strategy/{id}/cv-folds ───────────────────────────────────────────
+    @app.get("/api/strategy/{strategy_id}/cv-folds")
+    def get_cv_folds(strategy_id: str):
+        """Per-fold test results for a strategy's nested LOO-CV run."""
+        store = get_store()
+        all_runs = store.get_all_runs()
+        strategy_runs = [r for r in all_runs if r["strategy_id"] == strategy_id]
+
+        fold_runs = [r for r in strategy_runs
+                     if (r.get("notes") or "").startswith("nested_cv_fold_")]
+        default_run = next(
+            (r for r in strategy_runs if (r.get("notes") or "") == "default_params_full"), None
+        )
+
+        folds = []
+        for run in fold_runs:
+            notes = run.get("notes", "")  # "nested_cv_fold_11"
+            suffix = notes.split("_")[-1]
+            fold_num = int(suffix) if suffix.isdigit() else 0
+
+            full_run = store.load_run(run["run_id"])
+            if not full_run:
+                continue
+            results = full_run.get("results", [])
+            result = results[0] if results else {}
+            splits = full_run.get("splits", [])
+            split = splits[0] if splits else {}
+
+            folds.append({
+                "fold": fold_num,
+                "test_date": (split.get("test_start") or "")[:10],
+                "trades": int(result.get("total_trades") or 0),
+                "net_edge_bps": result.get("net_edge_bps") or 0.0,
+                "gross_edge_bps": result.get("gross_edge_bps") or 0.0,
+                "win_rate": result.get("win_rate") or 0.0,
+                "sharpe": result.get("sharpe_raw") or 0.0,
+                "avg_hold_seconds": result.get("avg_hold_seconds"),
+                "kill_triggered": bool(result.get("kill_condition_triggered", 0)),
+            })
+
+        folds.sort(key=lambda x: x["fold"])
+
+        # Default-params run stats
+        default_stats: dict = {}
+        if default_run:
+            full_default = store.load_run(default_run["run_id"])
+            if full_default:
+                r = (full_default.get("results") or [{}])[0]
+                default_stats = {
+                    "sharpe": r.get("sharpe_raw"),
+                    "total_trades": r.get("total_trades"),
+                    "win_rate": r.get("win_rate"),
+                    "net_edge_bps": r.get("net_edge_bps"),
+                    "gross_edge_bps": r.get("gross_edge_bps"),
+                    "avg_hold_seconds": r.get("avg_hold_seconds"),
+                    "max_drawdown": r.get("max_drawdown"),
+                }
+
+        # Count profitable folds by net_edge_bps (kill is a separate metric, not synonymous with unprofitable)
+        n_profitable = sum(1 for f in folds if (f.get("net_edge_bps") or 0) > 0)
+
+        # Merge pipeline-level CV verdict
+        cv_info = _load_pipeline_results().get(strategy_id, {})
+
+        return {
+            "strategy_id": strategy_id,
+            "folds": folds,
+            "n_folds": len(folds),
+            "n_profitable_folds": n_profitable,
+            "cv_passed": bool(cv_info.get("cv_passed", False)),
+            "cv_profitable_days": int(cv_info.get("cv_profitable_days") or 0),
+            "sensitivity_verdict": cv_info.get("sensitivity_verdict"),
+            "default_stats": default_stats,
+        }
+
+    # ── /api/strategy/{id}/sensitivity-details ───────────────────────────────
+    @app.get("/api/strategy/{strategy_id}/sensitivity-details")
+    def get_sensitivity_details(strategy_id: str):
+        """Per-parameter sensitivity runs for a strategy."""
+        store = get_store()
+        all_runs = store.get_all_runs()
+        strategy_runs = [r for r in all_runs if r["strategy_id"] == strategy_id]
+        sens_runs = [r for r in strategy_runs
+                     if (r.get("notes") or "").startswith("sensitivity:")]
+
+        results = []
+        for run in sens_runs:
+            notes = run.get("notes", "")  # "sensitivity:stop_pts:+20%"
+            parts = notes.split(":", 2)
+            param = parts[1] if len(parts) > 1 else ""
+            direction = parts[2] if len(parts) > 2 else ""
+
+            full_run = store.load_run(run["run_id"])
+            if not full_run:
+                continue
+            run_results = full_run.get("results") or []
+            r = run_results[0] if run_results else {}
+
+            results.append({
+                "param": param,
+                "direction": direction,
+                "label": f"{param} {direction}",
+                "sharpe": r.get("sharpe_raw"),
+                "net_edge_bps": r.get("net_edge_bps"),
+                "total_trades": r.get("total_trades"),
+                "win_rate": r.get("win_rate"),
+            })
+
+        results.sort(key=lambda x: (x["param"], x["direction"]))
+
+        # Get baseline (default params) for comparison
+        default_run = next(
+            (r for r in strategy_runs if (r.get("notes") or "") == "default_params_full"), None
+        )
+        baseline: dict = {}
+        if default_run:
+            full_default = store.load_run(default_run["run_id"])
+            if full_default:
+                r = (full_default.get("results") or [{}])[0]
+                baseline = {"sharpe": r.get("sharpe_raw"), "net_edge_bps": r.get("net_edge_bps")}
+
+        # Compute delta vs baseline
+        base_sharpe = baseline.get("sharpe") or 0.0
+        for s in results:
+            s["sharpe_delta"] = ((s["sharpe"] or 0.0) - base_sharpe)
+
+        cv_info = _load_pipeline_results().get(strategy_id, {})
+
+        return {
+            "strategy_id": strategy_id,
+            "sensitivity_verdict": cv_info.get("sensitivity_verdict"),
+            "baseline": baseline,
+            "sensitivity_runs": results,
+        }
+
     # ── Root redirect to dashboard ────────────────────────────────────────────
     @app.get("/")
     def root():
@@ -506,8 +723,10 @@ def start_server(host: str = "127.0.0.1", port: int = 8765):
 
 if __name__ == "__main__":
     import argparse
+    # Allow PORT env var override (used by Claude Code preview tool)
+    _default_port = int(os.environ.get("PORT", 8765))
     parser = argparse.ArgumentParser(description="Strategy Dashboard Server")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--port", type=int, default=_default_port)
     args = parser.parse_args()
     start_server(host=args.host, port=args.port)

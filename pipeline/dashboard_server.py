@@ -58,7 +58,7 @@ def _make_app():
 
     from pipeline.result_store import get_store, extract_strategy_family
     from pipeline.dsr import compute_dsr, compute_effective_n, compute_expected_max_sr
-    from pipeline.cost_model import compute_trade_costs, NIFTY_LOT, CAPITAL_PER_ENTRY
+    from pipeline.cost_model import compute_trade_costs, net_pnl_quick, NIFTY_LOT, CAPITAL_PER_ENTRY
 
     app = FastAPI(title="Strategy Dashboard", version="1.0")
     app.add_middleware(
@@ -146,13 +146,49 @@ def _make_app():
                 "strategies": [_strategy_row(m, n_total, store, cv_data) for m in members],
             })
 
+        # Look up optimized_full run metrics for each strategy
+        optimized_metrics = {}
+        with store._connect() as conn:
+            rows = conn.execute(
+                "SELECT r.strategy_id, r.data_start, r.data_end, "
+                "res.sharpe_raw, res.net_edge_bps, res.total_trades, "
+                "res.win_rate, res.max_drawdown, res.trades_per_day "
+                "FROM runs r JOIN results res ON r.run_id = res.run_id "
+                "WHERE r.notes = 'optimized_full' AND res.split = 'full'"
+            ).fetchall()
+            for row in rows:
+                optimized_metrics[row["strategy_id"]] = {
+                    "sharpe": round(row["sharpe_raw"], 4),
+                    "net_edge_bps": round(row["net_edge_bps"], 2) if row["net_edge_bps"] else 0,
+                    "total_trades": row["total_trades"],
+                    "win_rate": round(row["win_rate"], 4) if row["win_rate"] else 0,
+                    "max_drawdown": round(row["max_drawdown"], 0) if row["max_drawdown"] else 0,
+                    "trades_per_day": round(row["trades_per_day"], 2) if row["trades_per_day"] else 0,
+                }
+            # Get data period from any optimized_full run
+            data_period = {}
+            if rows:
+                data_period = {"data_start": rows[0]["data_start"], "data_end": rows[0]["data_end"]}
+
         result.sort(key=lambda x: x["best_dsr"], reverse=True)
-        return {"families": result, "n_total_runs": n_total, "cv_data": {k: {
-            "cv_passed": v.get("cv_passed", False),
-            "cv_profitable_days": v.get("cv_profitable_days", 0),
-            "sensitivity_verdict": v.get("sensitivity_verdict"),
-            "default_sharpe": v.get("default_sharpe"),
-        } for k, v in cv_data.items()}}
+        return {
+            "families": result,
+            "n_total_runs": n_total,
+            "n_strategies_evaluated": len(optimized_metrics),
+            "data_period": data_period,
+            "cv_data": {k: {
+                "cv_passed": v.get("cv_passed", False),
+                "cv_profitable_days": v.get("cv_profitable_days", 0),
+                "sensitivity_verdict": v.get("sensitivity_verdict"),
+                "default_sharpe": v.get("default_sharpe"),
+                "optimized_sharpe": (optimized_metrics.get(k) or {}).get("sharpe"),
+                "optimized_net_edge": (optimized_metrics.get(k) or {}).get("net_edge_bps"),
+                "optimized_trades": (optimized_metrics.get(k) or {}).get("total_trades"),
+                "optimized_win_rate": (optimized_metrics.get(k) or {}).get("win_rate"),
+                "optimized_max_dd": (optimized_metrics.get(k) or {}).get("max_drawdown"),
+                "optimized_trades_per_day": (optimized_metrics.get(k) or {}).get("trades_per_day"),
+            } for k, v in cv_data.items()},
+        }
 
     def _strategy_row(m: dict, n_total: int, store, cv_data: dict | None = None) -> dict:
         sid = m["strategy_id"]
@@ -208,8 +244,9 @@ def _make_app():
         if best_results.is_empty():
             best_results = store.load_strategy_results(strategy_id, split=None)
 
-        # Load most recent run's features and parameters
-        latest_run_id = runs[0]["run_id"]
+        # Prefer optimized_full run for features/parameters, fall back to latest
+        opt_run = next((r for r in runs if r.get("notes") == "optimized_full"), None)
+        latest_run_id = (opt_run or runs[0])["run_id"]
         features = store.get_run_features(latest_run_id)
         params = store.get_run_parameters(latest_run_id)
 
@@ -279,6 +316,9 @@ def _make_app():
         store = get_store()
         runs = [r for r in store.get_all_runs() if r["strategy_id"] == strategy_id]
         # Attach result summary to each run
+        # Batch-fetch daily returns for all runs in this strategy
+        all_return_series = store.get_all_return_series()
+
         enriched = []
         for run in runs:
             rid = run["run_id"]
@@ -286,6 +326,9 @@ def _make_app():
             summary = {}
             if not results.is_empty():
                 row = results.to_dicts()[0]
+                # Avg daily return from daily_returns table (net, as % of capital)
+                daily_rets = all_return_series.get(rid)
+                avg_daily_pct = float(daily_rets.mean() * 100) if daily_rets is not None and len(daily_rets) > 0 else None
                 summary = {
                     "sharpe_raw": row.get("sharpe_raw"),
                     "sharpe_deflated": row.get("sharpe_deflated"),
@@ -295,10 +338,55 @@ def _make_app():
                     "total_cost_bps": row.get("total_cost_bps"),
                     "total_trades": row.get("total_trades"),
                     "win_rate": row.get("win_rate"),
-                    "max_drawdown": row.get("max_drawdown"),  # M13: was missing
+                    "max_drawdown": row.get("max_drawdown"),
                     "kill_triggered": bool(row.get("kill_condition_triggered")),
                     "notes": run.get("notes"),
+                    "avg_daily_return_pct": round(avg_daily_pct, 2) if avg_daily_pct is not None else None,
+                    "trades_per_day": row.get("trades_per_day"),
+                    "avg_hold_seconds": row.get("avg_hold_seconds"),
+                    "cagr": row.get("cagr"),
+                    "data_start": run.get("data_start"),
+                    "data_end": run.get("data_end"),
                 }
+                # Compute trade-level stats for key runs (optimized_full, default_params_full)
+                run_notes = run.get("notes", "")
+                if run_notes in ("optimized_full", "default_params_full"):
+                    try:
+                        trades_df = store.load_trades(strategy_id, rid)
+                        if trades_df is not None and not trades_df.is_empty():
+                            import numpy as _np
+                            entry_p = trades_df["entry_premium"].to_numpy()
+                            exit_p = trades_df["exit_premium"].to_numpy()
+                            lot_size = NIFTY_LOT  # TODO: resolve per underlying
+                            net_pnls = _np.array([
+                                net_pnl_quick(ep, xp, lot_size, capital=CAPITAL_PER_ENTRY)
+                                for ep, xp in zip(entry_p, exit_p)
+                            ])
+                            winners = net_pnls[net_pnls > 0]
+                            losers = net_pnls[net_pnls < 0]
+                            gross_profit = float(_np.sum(winners)) if len(winners) > 0 else 0.0
+                            gross_loss = float(_np.abs(_np.sum(losers))) if len(losers) > 0 else 0.0
+                            # Days profitable (from daily aggregation)
+                            if "exit_time" in trades_df.columns:
+                                import polars as _pl
+                                daily = trades_df.with_columns(
+                                    _pl.Series("_net", net_pnls),
+                                    _pl.col("exit_time").cast(_pl.Date).alias("_date"),
+                                ).group_by("_date").agg(_pl.col("_net").sum().alias("day_pnl"))
+                                days_profitable = int((daily["day_pnl"] > 0).sum())
+                                days_total = len(daily)
+                            else:
+                                days_profitable = None
+                                days_total = None
+                            summary["total_pnl"] = round(float(_np.sum(net_pnls)), 0)
+                            summary["avg_winner"] = round(float(_np.mean(winners)), 0) if len(winners) > 0 else 0
+                            summary["avg_loser"] = round(float(_np.mean(losers)), 0) if len(losers) > 0 else 0
+                            summary["profit_factor"] = round(gross_profit / gross_loss, 2) if gross_loss > 0 else None
+                            summary["days_profitable"] = days_profitable
+                            summary["days_total"] = days_total
+                    except Exception:
+                        pass  # trade-level stats are optional
+
             params = store.get_run_parameters(rid)
             param_summary = {p["param_name"]: p["param_value"] for p in params}
             enriched.append({**run, "result_summary": summary, "param_summary": param_summary})
@@ -443,17 +531,23 @@ def _make_app():
         all_series = store.get_all_return_series()
         strategy_ids = [s["strategy_id"] for s in strategies]
 
-        # Map strategy -> latest run's return series
+        # Map strategy -> preferred run (optimized_full > latest)
         all_runs = store.get_all_runs()
         strategy_latest_run = {}
+        strategy_optimized_run = {}
         for run in all_runs:
             sid = run["strategy_id"]
             if sid not in strategy_latest_run:
                 strategy_latest_run[sid] = run["run_id"]
+            if run.get("notes") == "optimized_full":
+                strategy_optimized_run[sid] = run["run_id"]
+        # Prefer optimized_full, fall back to latest
+        strategy_best_run = {sid: strategy_optimized_run.get(sid, rid)
+                             for sid, rid in strategy_latest_run.items()}
 
         corr_series = {}
         for sid in strategy_ids:
-            rid = strategy_latest_run.get(sid)
+            rid = strategy_best_run.get(sid)
             if rid and rid in all_series:
                 corr_series[sid] = all_series[rid]
 
@@ -475,7 +569,7 @@ def _make_app():
 
         for s in strategies:
             sid = s["strategy_id"]
-            rid = strategy_latest_run.get(sid)
+            rid = strategy_best_run.get(sid)
             series_data = all_series.get(rid, []) if rid else []
             if len(series_data) >= 5:
                 import numpy as _np
@@ -506,7 +600,7 @@ def _make_app():
         cost_summary = []
         for s in strategies:
             sid = s["strategy_id"]
-            rid = strategy_latest_run.get(sid)
+            rid = strategy_best_run.get(sid)
             if rid:
                 results_df = store.compare_runs([rid])
                 if not results_df.is_empty():
@@ -717,16 +811,20 @@ def _make_app():
 
         results.sort(key=lambda x: (x["param"], x["direction"]))
 
-        # Get baseline (default params) for comparison
-        default_run = next(
-            (r for r in strategy_runs if (r.get("notes") or "") == "default_params_full"), None
+        # Get baseline for comparison — prefer optimized_full (the actual sensitivity baseline),
+        # fall back to default_params_full
+        baseline_run = next(
+            (r for r in strategy_runs if (r.get("notes") or "") == "optimized_full"),
+            next((r for r in strategy_runs if (r.get("notes") or "") == "default_params_full"), None),
         )
         baseline: dict = {}
-        if default_run:
-            full_default = store.load_run(default_run["run_id"])
-            if full_default:
-                r = (full_default.get("results") or [{}])[0]
+        baseline_label = "default"
+        if baseline_run:
+            full_base = store.load_run(baseline_run["run_id"])
+            if full_base:
+                r = (full_base.get("results") or [{}])[0]
                 baseline = {"sharpe": r.get("sharpe_raw"), "net_edge_bps": r.get("net_edge_bps")}
+                baseline_label = baseline_run.get("notes", "unknown")
 
         # Compute delta vs baseline
         base_sharpe = baseline.get("sharpe") or 0.0
@@ -739,6 +837,7 @@ def _make_app():
             "strategy_id": strategy_id,
             "sensitivity_verdict": cv_info.get("sensitivity_verdict"),
             "baseline": baseline,
+            "baseline_label": baseline_label,
             "sensitivity_runs": results,
         }
 

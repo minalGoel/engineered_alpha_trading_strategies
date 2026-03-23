@@ -99,8 +99,11 @@ function loadStrategyDetail(strategyId) { openStrategyOverlay(strategyId); }
 function renderOverviewTab(el, detail, runs) {
   const spec = detail.strategy_spec || {};
   const runList = runs.runs || [];
-  // M2: use the DEFAULT (unoptimized) run, not the most-recent (which could be a CV fold or sensitivity run)
-  const latest = runList.find(r => r.notes === 'default_params_full') || runList[0] || {};
+  // Prefer the optimized_full run (consensus params, full period). Fall back to best Sharpe.
+  const latest = runList.find(r => r.notes === 'optimized_full')
+    || runList.reduce(function(best, r) {
+      return ((r.result_summary && r.result_summary.sharpe_raw) || 0) > ((best.result_summary && best.result_summary.sharpe_raw) || 0) ? r : best;
+    }, runList[0] || {});
   const res = latest.result_summary || {};
 
   const sharpe = res.sharpe_raw || 0;
@@ -119,13 +122,6 @@ function renderOverviewTab(el, detail, runs) {
   }
 
   const gross = res.gross_edge_bps || 0;
-  const fees = res.fees_cost_bps || 0;
-  const net = res.net_edge_bps || 0;
-  const total = Math.max(Math.abs(gross) + Math.abs(fees), 1);
-  const grossPct = (Math.abs(gross)/total*100).toFixed(1);
-  const feesPct = (Math.abs(fees)/total*100).toFixed(1);
-  const netPct = (Math.abs(net)/total*100).toFixed(1);
-  const netCls = net >= 0 ? 'cost-bar-net-pos' : 'cost-bar-net-neg';
 
   let specRows = '';
   const specFields = [
@@ -151,39 +147,119 @@ function renderOverviewTab(el, detail, runs) {
     tunableHtml += '</tbody></table></div>';
   }
 
+  // ── Derived display values ──────────────────────────────────────────────
+  const avgDaily = res.avg_daily_return_pct;
+  const avgDailyStr = avgDaily != null ? (avgDaily >= 0 ? '+' : '') + avgDaily.toFixed(2) + '%' : 'N/A';
+  const avgDailyCls = avgDaily != null ? (avgDaily > 0 ? 'pos' : avgDaily < 0 ? 'neg' : '') : '';
+  const totalPnl = res.total_pnl;
+  const totalPnlStr = totalPnl != null ? '\u20b9' + Math.abs(totalPnl).toLocaleString('en-IN', {maximumFractionDigits:0}) : 'N/A';
+  const totalPnlCls = totalPnl != null ? (totalPnl > 0 ? 'pos' : 'neg') : '';
+  const totalPnlSign = totalPnl != null && totalPnl < 0 ? '\u2212' : '';
+  const maxDD = res.max_drawdown || 0;
+  const maxDDPct = maxDD > 0 ? ' (' + (maxDD / 500000 * 100).toFixed(1) + '% of \u20b95L)' : '';
+  const profitFactor = res.profit_factor;
+  const avgWin = res.avg_winner;
+  const avgLoss = res.avg_loser;
+  const holdSec = res.avg_hold_seconds;
+  const holdStr = holdSec != null ? (holdSec < 60 ? holdSec.toFixed(0) + 's' : (holdSec/60).toFixed(1) + 'min') : 'N/A';
+  const daysProfitable = res.days_profitable;
+  const daysTotal = res.days_total;
+  const daysStr = daysProfitable != null ? daysProfitable + '/' + daysTotal : 'N/A';
+  const daysCls = daysProfitable != null ? (daysProfitable/daysTotal >= 0.75 ? 'pos' : daysProfitable/daysTotal < 0.5 ? 'neg' : '') : '';
+
+  // ── Data period banner ────────────────────────────────────────────────
+  const dataStart = (res.data_start || '').slice(0, 10);
+  const dataEnd = (res.data_end || '').slice(0, 10);
+  const dataPeriod = dataStart && dataEnd ? dataStart + ' \u2192 ' + dataEnd : 'unknown';
+  const nDays = daysTotal || 12;
+  const sampleWarn = nDays <= 20
+    ? '<span style="color:var(--red);font-weight:700"> \u26a0 VERY SHORT — metrics are statistically unreliable at ' + nDays + ' days</span>'
+    : nDays <= 60
+    ? '<span style="color:var(--amber)"> \u26a0 Short sample — interpret with caution</span>'
+    : '';
+
+  // ── Run label ─────────────────────────────────────────────────────────
+  const _notes = latest.notes || '';
+  var bestRunLabel;
+  if (_notes === 'optimized_full')
+    bestRunLabel = 'Optimized params (consensus of 12 CV folds)';
+  else if (_notes === 'default_params_full')
+    bestRunLabel = 'Default params run';
+  else if (latest.is_sensitivity_run)
+    bestRunLabel = 'Sensitivity run (' + _notes.replace('sensitivity:','') + ')';
+  else
+    bestRunLabel = 'Run ' + (latest.run_id||'').slice(0,8);
+
   el.innerHTML = vecBanner + descBlock
-    + '<div class="grid4" style="margin-bottom:16px">'
-    + '<div class="stat"><div class="stat-label"' + tip('dsr') + '>DSR (deflated)</div>'
-    + '<div class="stat-value ' + (dsr>0.5?'pos':dsr<0.5?'neg':'') + '">' + fmt4(dsr) + '</div></div>'
+    // ── Data period + sample size banner ─────────────────────────────────
+    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px">'
+    + '<span style="color:var(--text2)">Data period:</span> <strong>' + dataPeriod + '</strong>'
+    + ' &nbsp;\u00b7&nbsp; <span style="color:var(--text2)">Trading days:</span> <strong>' + nDays + '</strong>'
+    + ' &nbsp;\u00b7&nbsp; <span style="color:var(--text2)">Capital:</span> <strong>\u20b95,00,000 per entry</strong>'
+    + sampleWarn
+    + '<br><span style="color:var(--text2)">' + bestRunLabel + ' &nbsp;\u00b7&nbsp; Cost model: '
+    + '<span style="' + (isCurrent?'color:var(--green)':'color:var(--yellow)') + '">' + costVer + '</span></span>'
+    + '</div>'
+    // ── Row 1: Core performance ──────────────────────────────────────────
+    + '<div class="grid4" style="margin-bottom:8px">'
     + '<div class="stat"><div class="stat-label"' + tip('sharpe_raw') + '>Sharpe (raw)</div>'
     + '<div class="stat-value ' + (sharpe>0.5?'pos':'') + '">' + fmt4(sharpe) + '</div></div>'
-    + '<div class="stat"><div class="stat-label"' + tip('net_edge_bps') + '>Net Edge</div>'
-    + '<div class="stat-value ' + (netEdge>0?'pos':'neg') + '">' + fmtBps(netEdge) + '</div></div>'
+    + '<div class="stat"><div class="stat-label">Total P&L (net)</div>'
+    + '<div class="stat-value ' + totalPnlCls + '">' + totalPnlSign + totalPnlStr + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">on \u20b95L capital</div></div>'
+    + '<div class="stat"><div class="stat-label">Avg Daily Gain (net)</div>'
+    + '<div class="stat-value ' + avgDailyCls + '">' + avgDailyStr + '</div></div>'
+    + '<div class="stat"><div class="stat-label"' + tip('dsr') + '>DSR (deflated)</div>'
+    + '<div class="stat-value ' + (dsr>0.5?'pos':dsr<0.5?'neg':'') + '">' + fmt4(dsr) + '</div></div>'
+    + '</div>'
+    // ── Row 2: Risk ──────────────────────────────────────────────────────
+    + '<div class="grid4" style="margin-bottom:8px">'
+    + '<div class="stat"><div class="stat-label">Max Drawdown</div>'
+    + '<div class="stat-value neg">\u20b9' + maxDD.toLocaleString('en-IN', {maximumFractionDigits:0}) + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">' + maxDDPct + '</div></div>'
     + '<div class="stat"><div class="stat-label"' + tip('win_rate') + '>Win Rate</div>'
     + '<div class="stat-value">' + fmtPct(res.win_rate) + '</div></div>'
+    + '<div class="stat"><div class="stat-label">Profit Factor</div>'
+    + '<div class="stat-value ' + (profitFactor!=null&&profitFactor>1?'pos':profitFactor!=null&&profitFactor<1?'neg':'') + '">'
+    + (profitFactor != null ? profitFactor.toFixed(2) : 'N/A') + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">gross win / gross loss</div></div>'
+    + '<div class="stat"><div class="stat-label">Profitable Days</div>'
+    + '<div class="stat-value ' + daysCls + '">' + daysStr + '</div></div>'
     + '</div>'
+    // ── Row 3: Trade economics ───────────────────────────────────────────
+    + '<div class="grid4" style="margin-bottom:8px">'
+    + '<div class="stat"><div class="stat-label">Gross Edge</div>'
+    + '<div class="stat-value ' + (gross>0?'pos':'neg') + '">' + fmtBps(gross) + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">avg per trade</div></div>'
+    + '<div class="stat"><div class="stat-label">Total Costs</div>'
+    + '<div class="stat-value neg">\u2212' + fmtBps(Math.abs(res.total_cost_bps||0)) + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">STT \u00b7 brok \u00b7 GST \u00b7 exch</div></div>'
+    + '<div class="stat"><div class="stat-label"' + tip('net_edge_bps') + '>Net Edge</div>'
+    + '<div class="stat-value ' + (netEdge>0?'pos':'neg') + '">' + fmtBps(netEdge) + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">gross minus costs</div></div>'
+    + '<div class="stat"><div class="stat-label">Avg Win / Loss</div>'
+    + '<div class="stat-value" style="font-size:14px">'
+    + (avgWin != null ? '<span class="pos">\u20b9' + Math.abs(avgWin).toLocaleString('en-IN',{maximumFractionDigits:0}) + '</span>' : 'N/A')
+    + ' / '
+    + (avgLoss != null ? '<span class="neg">\u20b9' + Math.abs(avgLoss).toLocaleString('en-IN',{maximumFractionDigits:0}) + '</span>' : 'N/A')
+    + '</div></div>'
+    + '</div>'
+    // ── Row 4: Activity ──────────────────────────────────────────────────
+    + '<div class="grid4" style="margin-bottom:16px">'
+    + '<div class="stat"><div class="stat-label">Trades</div>'
+    + '<div class="stat-value">' + (res.total_trades || 0) + '</div>'
+    + '<div style="font-size:10px;color:var(--text2)">' + fmt2(res.trades_per_day||0) + '/day avg</div></div>'
+    + '<div class="stat"><div class="stat-label">Avg Hold Time</div>'
+    + '<div class="stat-value">' + holdStr + '</div></div>'
+    + '<div class="stat" style="grid-column:span 2"><div style="font-size:10px;color:var(--amber);padding:4px 0">'
+    + '\u26a0 No slippage or market-impact model. NSE fees ARE deducted. Real-world edge will be lower for illiquid strikes.'
+    + '</div></div>'
+    + '</div>'
+    // ── Strategy Spec + Tunable Params ───────────────────────────────────
     + '<div class="card" style="margin-bottom:16px">'
     + '<div class="card-title">Strategy Specification</div>'
     + '<table class="spec-table">' + specRows + '</table>'
-    + tunableHtml + '</div>'
-    + '<div class="card" style="margin-bottom:16px">'
-    + '<div class="card-title">Cost Breakdown <span style="font-weight:400;color:var(--text2)">(avg per trade in bps)</span></div>'
-    + '<div style="margin-bottom:8px"><div class="cost-bar">'
-    + '<div class="cost-bar-seg cost-bar-gross" style="width:' + grossPct + '%">Gross ' + fmt2(gross) + '</div>'
-    + '<div class="cost-bar-seg cost-bar-fees" style="width:' + feesPct + '%">Fees ' + fmt2(fees) + '</div>'
-    + '<div class="cost-bar-seg ' + netCls + '" style="width:' + netPct + '%">Net ' + fmt2(net) + '</div>'
-    + '</div></div>'
-    + '<div style="font-size:11px;color:var(--text2)">'
-    + 'Spread: 0 bps (limit orders, no bid-ask) &nbsp;|&nbsp; '
-    + 'Slippage: 0 bps &nbsp;|&nbsp; '
-    + 'Cost model: <span style="' + (isCurrent?'color:var(--green)':'color:var(--yellow)') + '">' + costVer + '</span>'
-    + (isCurrent ? '' : ' <span class="badge badge-yellow">NOT CURRENT</span>')
-    + '</div>'
-    // M3: explicit warning that no fill/slippage model is active
-    + '<div style="margin-top:6px;padding:5px 8px;background:rgba(245,158,11,.08);border-radius:4px;font-size:11px;color:var(--amber)">'
-    + '\u26a0 No slippage or market-impact model is active. NSE fees (STT, brokerage, exchange, GST) ARE deducted. '
-    + 'Real-world edge will be lower for illiquid strikes or large lot sizes.'
-    + '</div></div>';
+    + tunableHtml + '</div>';
 }
 
 // ── Tab: CV Analysis ─────────────────────────────────────────────────────
@@ -244,7 +320,8 @@ async function renderCVAnalysisTab(el, detail) {
   const sensBody = sensRuns.length === 0
     ? '<div class="note">No sensitivity runs stored for this strategy.</div>'
     : '<div style="margin-bottom:10px;font-size:11px;color:var(--text2)">'
-      + 'Baseline Sharpe: <b>' + fmt2(baseline.sharpe) + '</b> \u00b7 Net Edge: <b>' + fmtBps(baseline.net_edge_bps) + '</b><br>'
+      + 'Baseline (' + (sensData.baseline_label === 'optimized_full' ? 'optimized params' : sensData.baseline_label || 'default') + '): '
+      + 'Sharpe <b>' + fmt2(baseline.sharpe) + '</b> \u00b7 Net Edge <b>' + fmtBps(baseline.net_edge_bps) + '</b><br>'
       + 'Each bar = Sharpe change when one parameter is perturbed \u00b120%. '
       // M7: identical +/- values for binary params (e.g. 0/1 flags) are expected — ±20% of 1 gives 0.8 and 1.2, which round to the same integer value
       + '<span style="color:var(--amber)">\u26a0 If +20% and \u221220% rows show identical Sharpe, the parameter is likely binary (0/1 flag) — both perturbations resolve to the same integer value. This is expected, not a data error.</span>'
@@ -353,7 +430,8 @@ async function renderBacktestTab(el, detail, runs) {
   const runList = runs.runs || [];
   if (runList.length === 0) { el.innerHTML = '<div class="empty-state">No runs stored yet. Run with --save flag.</div>'; return; }
   const sid = detail.strategy_id;
-  const latestRun = runList[0];
+  // Prefer optimized_full, fall back to most recent
+  const latestRun = runList.find(r => r.notes === 'optimized_full') || runList[0];
   const rid = latestRun.run_id;
   const isVec = (latestRun.backtest_engine || '') === 'vectorized';
   let resultsData;
@@ -373,8 +451,10 @@ async function renderBacktestTab(el, detail, runs) {
 
   const optionRows = runList.map(function(r) {
     const sel = r.run_id === rid ? ' selected' : '';
-    return '<option value="' + r.run_id + '"' + sel + '>' + r.run_id.slice(0,8) + '\u2026 \u2014 '
-      + (r.created_at||'').slice(0,16) + ' \u2014 Sharpe: ' + fmt2(r.result_summary && r.result_summary.sharpe_raw) + '</option>';
+    const label = r.notes === 'optimized_full' ? '\u2605 optimized_full'
+      : r.notes === 'default_params_full' ? 'default_params'
+      : r.notes || r.run_id.slice(0,8) + '\u2026';
+    return '<option value="' + r.run_id + '"' + sel + '>' + label + ' \u2014 Sharpe: ' + fmt2(r.result_summary && r.result_summary.sharpe_raw) + '</option>';
   }).join('');
   // M18: show ALL runs (not just first 5) — container is scrollable
   const checkboxes = runList.map(function(r) {
@@ -496,14 +576,16 @@ async function renderTradesTab(el, detail, runs) {
   const sid = detail.strategy_id;
   const runList = runs.runs || [];
   if (runList.length === 0) { el.innerHTML = '<div class="empty-state">No runs stored yet.</div>'; return; }
-  // M21: prefer the default_params_full run for the trade log, fallback to latest
-  const defaultRun = runList.find(r => r.notes === 'default_params_full') || runList[0];
+  // Prefer optimized_full run, fall back to best Sharpe (same logic as Overview tab)
+  const defaultRun = runList.find(r => r.notes === 'optimized_full')
+    || runList.reduce(function(best, r) {
+      return ((r.result_summary && r.result_summary.sharpe_raw) || 0) > ((best.result_summary && best.result_summary.sharpe_raw) || 0) ? r : best;
+    }, runList[0]);
   const rid = defaultRun.run_id;
   state.tradeFilters.page = 1;
   state.tradeFilters._sid = sid;
   state.tradeFilters._rid = rid;
-  // M21: store label info for display
-  state.tradeFilters._runLabel = (defaultRun.notes || rid.slice(0,8)) + ' — Sharpe: ' + fmt2(defaultRun.result_summary && defaultRun.result_summary.sharpe_raw);
+  state.tradeFilters._runLabel = 'Best run (Sharpe ' + fmt2(defaultRun.result_summary && defaultRun.result_summary.sharpe_raw) + ') · ' + rid.slice(0,8);
   await _loadAndRenderTrades(el, sid, rid);
 }
 

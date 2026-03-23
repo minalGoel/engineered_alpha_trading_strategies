@@ -610,6 +610,21 @@ def _run_nested_cv_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> d
     if has_tunable and n_trades >= 10 and all_fold_params:
         try:
             consensus_params = _median_params(all_fold_params)
+
+            # Stage 3.5: Store full-period run with consensus (optimized) params
+            opt_trades, opt_metrics = backtest_strategy(
+                strategy, spot_df, option_df, vix_df, lot_size, consensus_params,
+            )
+            if opt_trades is not None and not opt_trades.is_empty():
+                rid = _save_strategy_run(
+                    strategy, opt_trades, opt_metrics, spot_df, option_df, vix_df,
+                    lot_size, consensus_params, notes="optimized_full",
+                    split="full", is_optimized=True,
+                )
+                if rid:
+                    summary["total_runs_saved"] += 1
+                log.info("  [%s] Saved optimized_full run", name)
+
             sens_result = run_sensitivity(
                 strategy, spot_df, option_df, vix_df, lot_size, params=consensus_params,
             )

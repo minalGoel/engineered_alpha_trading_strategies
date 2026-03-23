@@ -27,24 +27,24 @@ function _cvCard(name, v) {
     : '';
   return '<div style="background:var(--bg2);border:1px solid rgba(34,197,94,.4);border-radius:8px;padding:10px 14px;cursor:pointer;transition:transform .1s" onmouseenter="this.style.transform=\'scale(1.02)\'" onmouseleave="this.style.transform=\'scale(1)\'" onclick="openStrategyOverlay(\'' + name + '\')">'
     + '<div style="font-weight:700;font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px">' + name + sensBadge + '</div>'
-    // BUG 1: clarify this is the DEFAULT (unoptimized) Sharpe, not the CV-fold Sharpe
-    + '<div style="font-size:11px;color:var(--text2)">Default Sharpe: <span style="' + ((v.default_sharpe||0) < 0 ? 'color:var(--red)' : '') + '">' + fmt2(v.default_sharpe) + '</span>'
+    + '<div style="font-size:11px;color:var(--text2)">Optimized Sharpe: <span style="' + ((v.optimized_sharpe||v.default_sharpe||0) < 0 ? 'color:var(--red)' : 'color:var(--green)') + '">' + fmt2(v.optimized_sharpe||v.default_sharpe) + '</span>'
     + ' \u00b7 OOS: ' + v.cv_profitable_days + '/12 profitable days</div>'
     + '</div>';
 }
 
 function _robustChip(name, v) {
   return '<span style="background:var(--bg3);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;transition:all .1s" onmouseenter="this.style.borderColor=\'var(--amber)\'" onmouseleave="this.style.borderColor=\'rgba(245,158,11,.3)\'" onclick="openStrategyOverlay(\'' + name + '\')">'
-    + name + ' <span style="color:var(--text2)">' + fmt2(v.default_sharpe) + '</span></span>';
+    + name + ' <span style="color:var(--text2)">' + fmt2(v.optimized_sharpe||v.default_sharpe) + '</span></span>';
 }
 
 function renderLeaderboard(el, data) {
   const cvData = data.cv_data || {};
+  const _optSharpe = function(v) { return v.optimized_sharpe || v.default_sharpe || 0; };
   const cvPassed = Object.entries(cvData).filter(function(e) { return e[1].cv_passed; })
-    .sort(function(a,b) { return (b[1].default_sharpe||0) - (a[1].default_sharpe||0); });
+    .sort(function(a,b) { return _optSharpe(b[1]) - _optSharpe(a[1]); });
   const robustOnly = Object.entries(cvData)
     .filter(function(e) { return !e[1].cv_passed && e[1].sensitivity_verdict === 'ROBUST'; })
-    .sort(function(a,b) { return (b[1].default_sharpe||0) - (a[1].default_sharpe||0); });
+    .sort(function(a,b) { return _optSharpe(b[1]) - _optSharpe(a[1]); });
 
   let banner = '';
   if (cvPassed.length > 0) {

@@ -539,11 +539,12 @@ function renderComparison(el, cmp, rids) {
   const diffs = cmp.param_diffs || [];
   const thCols = rids.map(function(r) { return '<th>' + r.slice(0,8) + '\u2026</th>'; }).join('');
   // M16: human-readable metric labels
-  const metricKeys = ['sharpe_raw','sharpe_deflated','net_edge_bps','win_rate','max_drawdown','total_trades','cagr','gross_edge_bps','fees_cost_bps'];
+  // CAGR suppressed: extrapolating from 12 days (252/12 = 21x exponent) produces meaningless 1000%+ values
+  const metricKeys = ['sharpe_raw','sharpe_deflated','net_edge_bps','win_rate','max_drawdown','total_trades','gross_edge_bps','fees_cost_bps'];
   const metricLabels = {
     sharpe_raw: 'Sharpe (raw)', sharpe_deflated: 'DSR', net_edge_bps: 'Net Edge (bps)',
     win_rate: 'Win Rate', max_drawdown: 'Max Drawdown (₹)', total_trades: 'Total Trades',
-    cagr: 'CAGR', gross_edge_bps: 'Gross Edge (bps)', fees_cost_bps: 'Fees (bps)',
+    gross_edge_bps: 'Gross Edge (bps)', fees_cost_bps: 'Fees (bps)',
   };
   let tbody = '';
   for (const key of metricKeys) {

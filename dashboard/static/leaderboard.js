@@ -1,6 +1,6 @@
 /**
- * leaderboard.js — Leaderboard tab rendering + family expand/collapse.
- * Depends on: core.js (state, api, tip, fmt*, colorNum)
+ * leaderboard.js — Leaderboard tab rendering with 5-tier classification.
+ * Depends on: core.js (state, api, tip, fmt*, colorNum, fmtPct, fmtBps)
  */
 
 // ── LEADERBOARD TAB ──────────────────────────────────────────────────────
@@ -17,67 +17,169 @@ async function loadLeaderboard() {
   }
 }
 
-function _cvCard(name, v) {
-  // BUG 2: show sensitivity status explicitly — all 6 happen to be FRAGILE
-  const sensColor = v.sensitivity_verdict === 'ROBUST' ? 'var(--green)' : 'var(--amber)';
-  const sensBadge = v.sensitivity_verdict === 'FRAGILE'
+// ── Tier Classification ──────────────────────────────────────────────────
+function _classifyStrategies(cvData) {
+  var tiers = { deploy: [], promising: [], watchlist: [], needsWork: [], noEdge: [] };
+  var entries = Object.entries(cvData);
+  for (var i = 0; i < entries.length; i++) {
+    var name = entries[i][0], v = entries[i][1];
+    var cvPass = v.cv_passed;
+    var sens = v.sensitivity_verdict;
+    var optSharpe = v.optimized_sharpe || v.default_sharpe || 0;
+
+    if (cvPass && sens === 'ROBUST') {
+      tiers.deploy.push([name, v]);
+    } else if (cvPass) {
+      tiers.promising.push([name, v]);
+    } else if (sens === 'ROBUST' && optSharpe > 0) {
+      tiers.watchlist.push([name, v]);
+    } else if (optSharpe > 0) {
+      tiers.needsWork.push([name, v]);
+    } else {
+      tiers.noEdge.push([name, v]);
+    }
+  }
+  // Sort each tier by optimized Sharpe descending
+  var byS = function(a, b) { return ((b[1].optimized_sharpe||0) - (a[1].optimized_sharpe||0)); };
+  tiers.deploy.sort(byS);
+  tiers.promising.sort(byS);
+  tiers.watchlist.sort(byS);
+  tiers.needsWork.sort(byS);
+  tiers.noEdge.sort(byS);
+  return tiers;
+}
+
+// ── Strategy Card (detailed — for top tiers) ─────────────────────────────
+function _tierCard(name, v, borderColor) {
+  var sharpe = v.optimized_sharpe || v.default_sharpe || 0;
+  var edge = v.optimized_net_edge || 0;
+  var wr = v.optimized_win_rate;
+  var dd = v.optimized_max_dd || 0;
+  var tpd = v.optimized_trades_per_day || 0;
+  var days = v.cv_profitable_days || 0;
+  var sensBadge = v.sensitivity_verdict === 'FRAGILE'
     ? '<span style="background:rgba(245,158,11,.15);color:var(--amber);border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700">FRAGILE</span>'
     : v.sensitivity_verdict === 'ROBUST'
     ? '<span style="background:rgba(34,197,94,.15);color:var(--green);border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700">ROBUST</span>'
     : '';
-  return '<div style="background:var(--bg2);border:1px solid rgba(34,197,94,.4);border-radius:8px;padding:10px 14px;cursor:pointer;transition:transform .1s" onmouseenter="this.style.transform=\'scale(1.02)\'" onmouseleave="this.style.transform=\'scale(1)\'" onclick="openStrategyOverlay(\'' + name + '\')">'
-    + '<div style="font-weight:700;font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px">' + name + sensBadge + '</div>'
-    + '<div style="font-size:11px;color:var(--text2)">Optimized Sharpe: <span style="' + ((v.optimized_sharpe||v.default_sharpe||0) < 0 ? 'color:var(--red)' : 'color:var(--green)') + '">' + fmt2(v.optimized_sharpe||v.default_sharpe) + '</span>'
-    + ' \u00b7 OOS: ' + v.cv_profitable_days + '/12 profitable days</div>'
-    + '</div>';
+
+  return '<div style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:8px;padding:10px 14px;cursor:pointer;transition:transform .1s;min-width:200px" '
+    + 'onmouseenter="this.style.transform=\'scale(1.02)\'" onmouseleave="this.style.transform=\'scale(1)\'" '
+    + 'onclick="openStrategyOverlay(\'' + name + '\')">'
+    + '<div style="font-weight:700;font-size:12px;margin-bottom:6px;display:flex;align-items:center;gap:6px">' + name + ' ' + sensBadge + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:11px">'
+    + '<div style="color:var(--text2)">Sharpe: <span style="color:' + (sharpe > 0 ? 'var(--green)' : 'var(--red)') + ';font-weight:600">' + fmt2(sharpe) + '</span></div>'
+    + '<div style="color:var(--text2)">Net Edge: <span style="' + colorNum(edge) + ';font-weight:600">' + fmtBps(edge) + '</span></div>'
+    + '<div style="color:var(--text2)">Win Rate: ' + (wr != null ? fmtPct(wr) : '\u2014') + '</div>'
+    + '<div style="color:var(--text2)">Max DD: <span style="color:var(--red)">\u20b9' + Math.round(dd).toLocaleString('en-IN') + '</span></div>'
+    + '<div style="color:var(--text2)">OOS Days: <span style="color:' + (days >= 9 ? 'var(--green)' : 'var(--amber)') + '">' + days + '/12</span></div>'
+    + '<div style="color:var(--text2)">Trades/day: ' + fmt2(tpd) + '</div>'
+    + '</div></div>';
 }
 
-function _robustChip(name, v) {
-  return '<span style="background:var(--bg3);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;transition:all .1s" onmouseenter="this.style.borderColor=\'var(--amber)\'" onmouseleave="this.style.borderColor=\'rgba(245,158,11,.3)\'" onclick="openStrategyOverlay(\'' + name + '\')">'
-    + name + ' <span style="color:var(--text2)">' + fmt2(v.optimized_sharpe||v.default_sharpe) + '</span></span>';
+// ── Compact chip (for lower tiers) ───────────────────────────────────────
+function _tierChip(name, v, borderColor) {
+  var sharpe = v.optimized_sharpe || v.default_sharpe || 0;
+  var edge = v.optimized_net_edge || 0;
+  return '<span style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;transition:all .1s;display:inline-flex;align-items:center;gap:6px" '
+    + 'onmouseenter="this.style.borderColor=\'var(--text)\'" onmouseleave="this.style.borderColor=\'' + borderColor + '\'" '
+    + 'onclick="openStrategyOverlay(\'' + name + '\')">'
+    + '<b>' + name + '</b>'
+    + ' <span style="' + colorNum(sharpe) + '">' + fmt2(sharpe) + '</span>'
+    + ' <span style="color:var(--text2);font-size:10px">' + fmtBps(edge) + '</span>'
+    + '</span>';
 }
 
+// ── Main Render ──────────────────────────────────────────────────────────
 function renderLeaderboard(el, data) {
-  const cvData = data.cv_data || {};
-  const _optSharpe = function(v) { return v.optimized_sharpe || v.default_sharpe || 0; };
-  const cvPassed = Object.entries(cvData).filter(function(e) { return e[1].cv_passed; })
-    .sort(function(a,b) { return _optSharpe(b[1]) - _optSharpe(a[1]); });
-  const robustOnly = Object.entries(cvData)
-    .filter(function(e) { return !e[1].cv_passed && e[1].sensitivity_verdict === 'ROBUST'; })
-    .sort(function(a,b) { return _optSharpe(b[1]) - _optSharpe(a[1]); });
+  var cvData = data.cv_data || {};
+  var tiers = _classifyStrategies(cvData);
+  var dp = data.data_period || {};
+  var nStrats = data.n_strategies_evaluated || 0;
+  var dataStart = (dp.data_start || '').slice(0, 10);
+  var dataEnd = (dp.data_end || '').slice(0, 10);
 
-  let banner = '';
-  if (cvPassed.length > 0) {
-    // BUG 2: note if all passed strategies are FRAGILE
-    const allFragile = cvPassed.every(function(e) { return e[1].sensitivity_verdict === 'FRAGILE'; });
-    const fragileNote = allFragile
-      ? '<div style="margin-top:10px;padding:6px 10px;background:rgba(245,158,11,.1);border-radius:6px;font-size:11px;color:var(--amber)">'
-        + '\u26a0 All ' + cvPassed.length + ' strategies are sensitivity-FRAGILE — Sharpe degrades under \u00b120% parameter perturbation. '
-        + 'CV pass does not imply robustness. Trade with caution and use conservative position sizing.</div>'
-      : '';
-    banner = '<div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:16px 20px;margin-bottom:16px">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:16px">\u2713</span> ' + cvPassed.length + ' STRATEGIES PASSED NESTED LOO-CV'
-      + '<span style="font-weight:400;color:var(--text2);font-size:11px">(9/12+ profitable out-of-sample days, tested with OPTIMIZED params per fold)</span></div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:8px">'
-      + cvPassed.map(function(e) { return _cvCard(e[0], e[1]); }).join('')
-      + '</div>' + fragileNote + '</div>';
-  }
-  if (robustOnly.length > 0) {
-    // BUG 3: rename section to make clear these are NOT out-of-sample validated
-    banner += '<div style="background:rgba(139,144,167,.05);border:1px solid rgba(139,144,167,.2);border-radius:10px;padding:14px 20px;margin-bottom:16px">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:8px">'
-      + '\u25a6 ' + robustOnly.length + ' IN-SAMPLE-ONLY strategies'
-      + '<span style="font-weight:400;font-size:11px">(sensitivity-stable, but CV-FAILED \u2014 not out-of-sample validated)</span></div>'
-      + '<div style="font-size:11px;color:var(--red);margin-bottom:8px">'
-      + '\u26a0 These did NOT pass out-of-sample cross-validation. Do not trade. Showing top 10 of ' + robustOnly.length + '.</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-      + robustOnly.slice(0,10).map(function(e) { return _robustChip(e[0], e[1]); }).join('')
+  // ── Global Banner ──────────────────────────────────────────────────────
+  var html = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+    + '<div style="font-size:12px">'
+    + '<span style="color:var(--text2)">Data:</span> <strong>' + dataStart + ' \u2192 ' + dataEnd + '</strong>'
+    + ' &nbsp;\u00b7&nbsp; <span style="color:var(--text2)">Strategies evaluated:</span> <strong>' + nStrats + '</strong>'
+    + ' &nbsp;\u00b7&nbsp; <span style="color:var(--text2)">Capital:</span> <strong>\u20b95L per entry</strong>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--red);font-weight:700">'
+    + '\u26a0 12 TRADING DAYS \u2014 all metrics are preliminary, not deployment-grade'
+    + '</div></div></div>';
+
+  // ── Tier 1: Ready to Paper Trade ───────────────────────────────────────
+  if (tiers.deploy.length > 0) {
+    html += _tierSection(
+      '\ud83d\udfe2', 'READY TO PAPER TRADE', tiers.deploy.length + ' strategies',
+      'rgba(34,197,94,.4)', 'rgba(34,197,94,.07)',
+      'CV validated + parameter-ROBUST. Best candidates for live testing.',
+      tiers.deploy.map(function(e) { return _tierCard(e[0], e[1], 'rgba(34,197,94,.5)'); }).join('')
+    );
+  } else {
+    html += '<div style="background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:14px 20px;margin-bottom:12px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:8px">'
+      + '\ud83d\udfe2 READY TO PAPER TRADE <span style="font-weight:400;color:var(--text2);font-size:11px">\u2014 0 strategies</span></div>'
+      + '<div style="font-size:11px;color:var(--text2);margin-top:4px">'
+      + 'No strategies meet the full bar (CV validated + parameter-ROBUST). '
+      + 'The 6 CV-passed strategies below are all sensitivity-FRAGILE.'
       + '</div></div>';
   }
 
-  let html = banner
-    + '<div class="card" style="margin-bottom:16px">'
+  // ── Tier 2: Promising ──────────────────────────────────────────────────
+  if (tiers.promising.length > 0) {
+    html += _tierSection(
+      '\ud83d\udfe1', 'PROMISING \u2014 VALIDATE FURTHER', tiers.promising.length + ' strategies',
+      'rgba(245,158,11,.4)', 'rgba(245,158,11,.05)',
+      'Edge confirmed out-of-sample (9/12+ profitable days) but parameters are sensitive to \u00b120% perturbation. Paper-trade with conservative sizing.',
+      '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      + tiers.promising.map(function(e) { return _tierCard(e[0], e[1], 'rgba(245,158,11,.4)'); }).join('')
+      + '</div>'
+    );
+  }
+
+  // ── Tier 3: Watch List ─────────────────────────────────────────────────
+  if (tiers.watchlist.length > 0) {
+    var showN = Math.min(tiers.watchlist.length, 15);
+    html += _tierSection(
+      '\ud83d\udd35', 'WATCH LIST', tiers.watchlist.length + ' strategies',
+      'rgba(59,130,246,.3)', 'rgba(59,130,246,.04)',
+      'Positive optimized edge + parameter-ROBUST, but failed out-of-sample CV. Signal exists but unproven on held-out data. Showing top ' + showN + '.',
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      + tiers.watchlist.slice(0, showN).map(function(e) { return _tierChip(e[0], e[1], 'rgba(59,130,246,.3)'); }).join('')
+      + '</div>'
+    );
+  }
+
+  // ── Tier 4: Needs Work ─────────────────────────────────────────────────
+  if (tiers.needsWork.length > 0) {
+    var showM = Math.min(tiers.needsWork.length, 10);
+    html += _tierSection(
+      '\u26ab', 'NEEDS WORK', tiers.needsWork.length + ' strategies',
+      'rgba(139,144,167,.2)', 'rgba(139,144,167,.03)',
+      'Positive in-sample edge but both OOS validation and parameter stability fail. Needs more data, different approach, or regularization. Showing top ' + showM + '.',
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      + tiers.needsWork.slice(0, showM).map(function(e) { return _tierChip(e[0], e[1], 'rgba(139,144,167,.2)'); }).join('')
+      + '</div>'
+    );
+  }
+
+  // ── Tier 5: No Edge ────────────────────────────────────────────────────
+  if (tiers.noEdge.length > 0) {
+    html += '<div style="background:rgba(239,68,68,.03);border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:12px 20px;margin-bottom:12px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--red);display:flex;align-items:center;gap:8px">'
+      + '\ud83d\udd34 NO EDGE <span style="font-weight:400;color:var(--text2);font-size:11px">\u2014 '
+      + tiers.noEdge.length + ' strategies</span></div>'
+      + '<div style="font-size:11px;color:var(--text2);margin-top:4px">'
+      + 'Negative or zero net edge even after optimization. No tradeable signal found \u2014 skip.'
+      + '</div></div>';
+  }
+
+  // ── Family Table (unchanged, below tiers) ──────────────────────────────
+  html += '<div class="card" style="margin-bottom:16px">'
     + '<div class="card-title">Strategy Families</div>'
     + '<div class="tbl-wrap"><table id="lb-table"><thead><tr>'
     + '<th' + tip('family') + '>Family</th>'
@@ -90,12 +192,13 @@ function renderLeaderboard(el, data) {
     + '<th' + tip('n_vectorized') + ' onclick="sortLB(\'n_flagged_vectorized\')"># Vec</th>'
     + '</tr></thead><tbody id="lb-body">';
 
-  for (const fam of data.families) {
-    const famId = 'fam-' + fam.family.replace(/[^a-z0-9]/gi,'_');
-    const cvN = fam.n_cv_passed || 0;
-    const cvCell = cvN > 0 ? '<span class="badge badge-green">' + cvN + '</span>' : '\u2014';
-    const vecCell = fam.n_flagged_vectorized > 0 ? '<span class="badge badge-yellow">' + fam.n_flagged_vectorized + '</span>' : '\u2014';
-    const corrCell = fam.avg_intra_family_corr != null ? fmt2(fam.avg_intra_family_corr) : '\u2014';
+  for (var fi = 0; fi < data.families.length; fi++) {
+    var fam = data.families[fi];
+    var famId = 'fam-' + fam.family.replace(/[^a-z0-9]/gi,'_');
+    var cvN = fam.n_cv_passed || 0;
+    var cvCell = cvN > 0 ? '<span class="badge badge-green">' + cvN + '</span>' : '\u2014';
+    var vecCell = fam.n_flagged_vectorized > 0 ? '<span class="badge badge-yellow">' + fam.n_flagged_vectorized + '</span>' : '\u2014';
+    var corrCell = fam.avg_intra_family_corr != null ? fmt2(fam.avg_intra_family_corr) : '\u2014';
     html += '<tr class="family-row" onclick="toggleFamily(\'' + famId + '\',\'' + fam.family + '\',this)">'
       + '<td><b>' + fam.family + '</b></td>'
       + '<td>' + fam.n_strategies + '</td>'
@@ -119,17 +222,18 @@ function renderLeaderboard(el, data) {
       + '<th' + tip('engine') + '>Engine</th>'
       + '</tr></thead><tbody>';
 
-    for (const s of (fam.strategies||[])) {
-      const colorCls = 'row-' + (s.color||'red');
-      const killBadge = s.kill_triggered ? '<span class="badge badge-red">KILL</span>' : '<span class="badge badge-green">OK</span>';
-      const engineBadge = s.engine === 'vectorized' ? '<span class="badge badge-yellow">VEC</span>' : '<span class="badge badge-cyan">EVENT</span>';
-      const cvBadge = s.cv_passed ? '<span class="badge badge-green">PASS</span>' : '<span class="badge badge-red">FAIL</span>';
-      const sensBadge = s.sensitivity_verdict === 'ROBUST' ? '<span class="badge badge-green">ROBUST</span>'
+    for (var si = 0; si < (fam.strategies||[]).length; si++) {
+      var s = fam.strategies[si];
+      var colorCls = 'row-' + (s.color||'red');
+      var killBadge = s.kill_triggered ? '<span class="badge badge-red">KILL</span>' : '<span class="badge badge-green">OK</span>';
+      var engineBadge = s.engine === 'vectorized' ? '<span class="badge badge-yellow">VEC</span>' : '<span class="badge badge-cyan">EVENT</span>';
+      var cvBadge2 = s.cv_passed ? '<span class="badge badge-green">PASS</span>' : '<span class="badge badge-red">FAIL</span>';
+      var sensBadge2 = s.sensitivity_verdict === 'ROBUST' ? '<span class="badge badge-green">ROBUST</span>'
         : s.sensitivity_verdict === 'FRAGILE' ? '<span class="badge badge-red">FRAGILE</span>'
         : '<span style="color:var(--text2)">\u2014</span>';
-      let profCell = '\u2014';
+      var profCell = '\u2014';
       if (s.cv_profitable_days > 0) {
-        const c = s.cv_profitable_days >= 9 ? 'var(--green)' : s.cv_profitable_days >= 7 ? 'var(--amber)' : 'var(--red)';
+        var c = s.cv_profitable_days >= 9 ? 'var(--green)' : s.cv_profitable_days >= 7 ? 'var(--amber)' : 'var(--red)';
         profCell = '<span style="color:' + c + ';font-weight:600">' + s.cv_profitable_days + '/12</span>';
       }
       html += '<tr class="' + colorCls + '" style="cursor:pointer" onclick="openStrategyOverlay(\'' + s.strategy_id + '\')">'
@@ -137,9 +241,9 @@ function renderLeaderboard(el, data) {
         + '<td><b style="color:var(--text)">' + s.strategy_id + '</b></td>'
         + '<td style="' + colorNum(s.default_sharpe) + '">' + fmt2(s.default_sharpe) + '</td>'
         + '<td style="' + colorNum(s.net_edge_bps) + '">' + fmtBps(s.net_edge_bps) + '</td>'
-        + '<td>' + cvBadge + '</td>'
+        + '<td>' + cvBadge2 + '</td>'
         + '<td>' + profCell + '</td>'
-        + '<td>' + sensBadge + '</td>'
+        + '<td>' + sensBadge2 + '</td>'
         + '<td>' + killBadge + '</td>'
         + '<td>' + engineBadge + '</td>'
         + '</tr>';
@@ -151,17 +255,27 @@ function renderLeaderboard(el, data) {
   el.innerHTML = html;
 }
 
+// ── Tier section helper ──────────────────────────────────────────────────
+function _tierSection(icon, title, count, borderColor, bgColor, description, content) {
+  return '<div style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:10px;padding:14px 20px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">'
+    + icon + ' ' + title
+    + ' <span style="font-weight:400;color:var(--text2);font-size:11px">\u2014 ' + count + '</span></div>'
+    + '<div style="font-size:11px;color:var(--text2);margin-bottom:10px">' + description + '</div>'
+    + content + '</div>';
+}
+
 function toggleFamily(famId, famName, tr) {
-  const row = document.getElementById(famId);
-  const open = row.style.display === '';
+  var row = document.getElementById(famId);
+  var open = row.style.display === '';
   row.style.display = open ? 'none' : '';
   tr.classList.toggle('open', !open);
 }
 
 function sortLB(col) {
   if (!state.leaderboard) return;
-  const fams = state.leaderboard.families;
+  var fams = state.leaderboard.families;
   if (state.sortCol === col) state.sortDir *= -1; else { state.sortCol = col; state.sortDir = -1; }
-  fams.sort((a,b) => state.sortDir * ((a[col]||0) - (b[col]||0)));
+  fams.sort(function(a,b) { return state.sortDir * ((a[col]||0) - (b[col]||0)); });
   renderLeaderboard(document.getElementById('tab-leaderboard'), state.leaderboard);
 }

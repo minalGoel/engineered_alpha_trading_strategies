@@ -99,7 +99,9 @@ def compute_metrics(
             sorted_net = sorted_df["pnl"].to_numpy().astype(np.float64)
     else:
         sorted_net = net_pnls
-    cumulative_pnl = np.cumsum(sorted_net)
+    # Prepend 0 so drawdown is measured from before the first trade
+    cum_arr = np.concatenate([[0.0], sorted_net])
+    cumulative_pnl = np.cumsum(cum_arr)
     running_max = np.maximum.accumulate(cumulative_pnl)
     drawdowns = running_max - cumulative_pnl
     max_drawdown = float(np.max(drawdowns)) if len(drawdowns) > 0 else 0.0

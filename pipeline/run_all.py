@@ -599,7 +599,8 @@ def _run_nested_cv_pipeline(strategy, spot_df, option_df, vix_df, lot_size) -> d
     # Mean out-of-sample PnL across folds
     fold_pnls = [d["pnl"] for d in cv_fold_results if d["trades"] > 0]
     if fold_pnls:
-        summary["optimized_sharpe"] = round(sum(fold_pnls) / max(len(fold_pnls), 1), 2)
+        # avg_oos_pnl_inr = average net PnL per held-out day (INR), NOT a Sharpe ratio
+        summary["avg_oos_pnl_inr"] = round(sum(fold_pnls) / max(len(fold_pnls), 1), 2)
     log.info("  [%s] Nested CV: %d/%d profitable, passed=%s, %d total Optuna trials",
              name, days_profitable, total_days, cv_passed, total_optuna_trials)
 

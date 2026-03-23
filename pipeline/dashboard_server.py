@@ -313,11 +313,13 @@ def _make_app():
     # ── /api/strategy/{strategy_id}/runs ──────────────────────────────────────
     @app.get("/api/strategy/{strategy_id}/runs")
     def get_strategy_runs(strategy_id: str):
+        import numpy as _np
         store = get_store()
         runs = [r for r in store.get_all_runs() if r["strategy_id"] == strategy_id]
         # Attach result summary to each run
         # Batch-fetch daily returns for all runs in this strategy
         all_return_series = store.get_all_return_series()
+        n_strategies = store.count_total_strategies()  # correct N for DSR
 
         enriched = []
         for run in runs:
@@ -329,9 +331,15 @@ def _make_app():
                 # Avg daily return from daily_returns table (net, as % of capital)
                 daily_rets = all_return_series.get(rid)
                 avg_daily_pct = float(daily_rets.mean() * 100) if daily_rets is not None and len(daily_rets) > 0 else None
+                # Recompute DSR live with correct N (stored value used wrong N = total runs)
+                if daily_rets is not None and len(daily_rets) >= 5:
+                    live_dsr = compute_dsr(_np.array(daily_rets), n_strategies)
+                    sharpe_deflated_live = live_dsr.get("sharpe_deflated")
+                else:
+                    sharpe_deflated_live = row.get("sharpe_deflated")
                 summary = {
                     "sharpe_raw": row.get("sharpe_raw"),
-                    "sharpe_deflated": row.get("sharpe_deflated"),
+                    "sharpe_deflated": sharpe_deflated_live,
                     "net_edge_bps": row.get("net_edge_bps"),
                     "gross_edge_bps": row.get("gross_edge_bps"),
                     "fees_cost_bps": row.get("fees_cost_bps"),
@@ -357,7 +365,15 @@ def _make_app():
                             import numpy as _np
                             entry_p = trades_df["entry_premium"].to_numpy()
                             exit_p = trades_df["exit_premium"].to_numpy()
-                            lot_size = NIFTY_LOT  # TODO: resolve per underlying
+                            # Resolve lot_size from strategy's underlying (NIFTY=65, BANKNIFTY=30)
+                            try:
+                                import importlib as _il
+                                from pipeline.cost_model import BANKNIFTY_LOT as _BANK_LOT
+                                _mod = _il.import_module(f"pipeline.strategies.{strategy_id}")
+                                _ul = _mod.Strategy().underlying.upper()
+                                lot_size = _BANK_LOT if "BANK" in _ul else NIFTY_LOT
+                            except Exception:
+                                lot_size = NIFTY_LOT
                             net_pnls = _np.array([
                                 net_pnl_quick(ep, xp, lot_size, capital=CAPITAL_PER_ENTRY)
                                 for ep, xp in zip(entry_p, exit_p)
@@ -525,7 +541,8 @@ def _make_app():
         import numpy as np
         store = get_store()
         strategies = store.get_strategy_list()
-        n_total = store.count_total_runs()
+        n_total = store.count_total_runs()  # for display
+        n_strategies = store.count_total_strategies()  # for DSR N
 
         # Correlation heatmap: all strategies with stored return series
         all_series = store.get_all_return_series()
@@ -573,7 +590,7 @@ def _make_app():
             series_data = all_series.get(rid, []) if rid else []
             if len(series_data) >= 5:
                 import numpy as _np
-                dsr_info = compute_dsr(_np.array(series_data), n_total)
+                dsr_info = compute_dsr(_np.array(series_data), n_strategies)
             else:
                 dsr_info = {"sharpe_raw": 0.0, "sharpe_deflated": 0.0, "passes_dsr": False}
 
@@ -635,7 +652,7 @@ def _make_app():
     def get_dsr_summary():
         import numpy as np
         store = get_store()
-        n_total = store.count_total_runs()
+        n_strategies = store.count_total_strategies()
         all_series = store.get_all_return_series()
         raw_n, eff_n = compute_effective_n(all_series) if all_series else (0, 0)
         sr_bench = compute_expected_max_sr(max(eff_n, 1), 252) * math.sqrt(252)
@@ -651,7 +668,7 @@ def _make_app():
         for sid, rid in strategy_latest.items():
             series = all_series.get(rid, [])
             if len(series) >= 5:
-                dsr = compute_dsr(np.array(series), n_total)
+                dsr = compute_dsr(np.array(series), n_strategies)
             else:
                 dsr = {"sharpe_raw": 0.0, "sharpe_deflated": 0.0, "passes_dsr": False}
             rows.append({
@@ -684,7 +701,7 @@ def _make_app():
                 "cv_profitable_days": int(s.get("cv_profitable_days") or 0),
                 "sensitivity_verdict": s.get("sensitivity_verdict"),
                 "default_sharpe": s.get("default_sharpe"),
-                "optimized_sharpe": s.get("optimized_sharpe"),
+                "avg_oos_pnl_inr": s.get("avg_oos_pnl_inr"),  # avg net PnL per OOS day (INR), not Sharpe
                 "n_optuna_trials": int(s.get("n_optuna_trials") or 0),
                 "total_runs_saved": int(s.get("total_runs_saved") or 0),
                 "verdict": s.get("verdict"),
@@ -705,9 +722,20 @@ def _make_app():
     @app.get("/api/strategy/{strategy_id}/cv-folds")
     def get_cv_folds(strategy_id: str):
         """Per-fold test results for a strategy's nested LOO-CV run."""
+        import numpy as _np
         store = get_store()
         all_runs = store.get_all_runs()
         strategy_runs = [r for r in all_runs if r["strategy_id"] == strategy_id]
+
+        # Resolve lot_size for PnL computation (matches pipeline's profitable = total_pnl > 0)
+        try:
+            import importlib as _il
+            from pipeline.cost_model import BANKNIFTY_LOT as _BANK_LOT
+            _mod = _il.import_module(f"pipeline.strategies.{strategy_id}")
+            _ul = _mod.Strategy().underlying.upper()
+            _lot = _BANK_LOT if "BANK" in _ul else NIFTY_LOT
+        except Exception:
+            _lot = NIFTY_LOT
 
         fold_runs = [r for r in strategy_runs
                      if (r.get("notes") or "").startswith("nested_cv_fold_")]
@@ -729,6 +757,21 @@ def _make_app():
             splits = full_run.get("splits", [])
             split = splits[0] if splits else {}
 
+            # Compute actual net PnL for the fold from trades (matches pipeline profitable definition)
+            day_pnl = None
+            try:
+                fold_trades = store.load_trades(strategy_id, run["run_id"])
+                if fold_trades is not None and not fold_trades.is_empty():
+                    ep_arr = fold_trades["entry_premium"].to_numpy()
+                    xp_arr = fold_trades["exit_premium"].to_numpy()
+                    fold_net = _np.array([
+                        net_pnl_quick(ep, xp, _lot, capital=CAPITAL_PER_ENTRY)
+                        for ep, xp in zip(ep_arr, xp_arr)
+                    ])
+                    day_pnl = round(float(_np.sum(fold_net)), 2)
+            except Exception:
+                pass
+
             folds.append({
                 "fold": fold_num,
                 "test_date": (split.get("test_start") or "")[:10],
@@ -739,6 +782,7 @@ def _make_app():
                 "sharpe": result.get("sharpe_raw") or 0.0,
                 "avg_hold_seconds": result.get("avg_hold_seconds"),
                 "kill_triggered": bool(result.get("kill_condition_triggered", 0)),
+                "day_pnl": day_pnl,
             })
 
         folds.sort(key=lambda x: x["fold"])
@@ -759,8 +803,12 @@ def _make_app():
                     "max_drawdown": r.get("max_drawdown"),
                 }
 
-        # Count profitable folds by net_edge_bps (kill is a separate metric, not synonymous with unprofitable)
-        n_profitable = sum(1 for f in folds if (f.get("net_edge_bps") or 0) > 0)
+        # Count profitable folds: use actual net PnL > 0 (matches pipeline's cv_profitable_days)
+        # Falls back to net_edge_bps > 0 if trades couldn't be loaded
+        n_profitable = sum(
+            1 for f in folds
+            if (f["day_pnl"] > 0 if f["day_pnl"] is not None else (f.get("net_edge_bps") or 0) > 0)
+        )
 
         # Merge pipeline-level CV verdict
         cv_info = _load_pipeline_results().get(strategy_id, {})

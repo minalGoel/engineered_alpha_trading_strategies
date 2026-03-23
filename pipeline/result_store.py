@@ -379,8 +379,10 @@ class ResultStore:
         daily_returns = _compute_daily_returns(trades, lot_size, capital) if trades is not None else np.array([])
 
         # ── Compute DSR ──
-        n_current = self.count_total_runs()  # query before inserting this run
-        n_total = max(n_current + 1, 1)
+        # N = number of distinct strategies (independent trials), not total runs.
+        # Sensitivity runs and CV folds for the same strategy are NOT independent.
+        n_strategies = self.count_total_strategies()  # query before inserting this run
+        n_total = max(n_strategies + 1, 1)
         dsr_result = compute_dsr(daily_returns, n_total)
 
         # ── Enrich result records ──
@@ -506,9 +508,20 @@ class ResultStore:
         return pl.from_dicts([dict(r) for r in rows])
 
     def count_total_runs(self) -> int:
-        """Total number of run records in the store (for DSR N computation)."""
+        """Total number of run records in the store (for display only)."""
         with self._connect() as conn:
             row = conn.execute("SELECT COUNT(*) FROM runs").fetchone()
+            return int(row[0]) if row else 0
+
+    def count_total_strategies(self) -> int:
+        """Number of distinct strategies in the store.
+
+        Used as N for DSR / multiple-testing correction.
+        Each strategy is one independent trial regardless of how many
+        sensitivity runs, CV folds, or optimized runs it has.
+        """
+        with self._connect() as conn:
+            row = conn.execute("SELECT COUNT(DISTINCT strategy_id) FROM runs").fetchone()
             return int(row[0]) if row else 0
 
     def strategy_run_count(self, strategy_id: str, notes_contains: str = "") -> int:
@@ -561,7 +574,12 @@ class ResultStore:
                        MAX(res.sharpe_raw) as best_sharpe_raw,
                        MAX(res.sharpe_deflated) as best_sharpe_deflated,
                        MAX(res.net_edge_bps) as best_net_edge_bps,
-                       MAX(CASE WHEN res.split = 'full' THEN res.kill_condition_triggered ELSE 0 END) as any_kill,
+                       COALESCE(
+                           MAX(CASE WHEN r.notes = 'optimized_full' AND res.split = 'full'
+                                    THEN res.kill_condition_triggered END),
+                           MAX(CASE WHEN r.notes = 'default_params_full' AND res.split = 'full'
+                                    THEN res.kill_condition_triggered ELSE 0 END)
+                       ) as any_kill,
                        MAX(rn.backtest_engine = 'vectorized') as has_vectorized,
                        COUNT(DISTINCT r.run_id) as n_runs
                 FROM runs r
@@ -963,7 +981,8 @@ def build_result_record(
         "total_trades": total_trades,
         "trades_per_day": round(trades_per_day, 2),
         "fill_rate": None,  # not modelled
-        "kill_condition_triggered": int(sharpe < KILL_SHARPE_THRESHOLD),
+        # Kill only meaningful on full-period runs; 1-day test folds always have Sharpe ≈ 0
+        "kill_condition_triggered": int(split == "full" and sharpe < KILL_SHARPE_THRESHOLD),
     }
 
 

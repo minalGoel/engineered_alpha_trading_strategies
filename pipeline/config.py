@@ -42,15 +42,13 @@ DEFAULT_STOP_POINTS = 5.0         # default stop in option premium points
 MIN_TRADES_FULL = 50              # minimum trades on full training period
 MIN_TRADES_PER_UNDERLYING = 30    # Chan's minimum for statistical validity
 
-# ── Lot sizes ────────────────────────────────────────────────────────────
-NIFTY_LOT = 65
-BANKNIFTY_LOT = 30
-
-# ── Cost model ───────────────────────────────────────────────────────────
-STT_RATE = 0.0015             # 0.15% on sell-side premium (from 1 Apr 2025)
-BROKERAGE_PER_ORDER = 20      # INR flat per order
-EXCHANGE_TXN_RATE = 0.0003553 # 0.03553% on premium turnover (both sides, NSE Mar 2026)
-CAPITAL_PER_ENTRY = 500_000   # ₹5 lakh per strategy entry order
+# ── Lot sizes & cost model constants ─────────────────────────────────────
+# Authoritative definitions live in pipeline/cost_model.py.
+# Import from there to avoid divergence.
+from pipeline.cost_model import (  # noqa: E402
+    NIFTY_LOT, BANKNIFTY_LOT,
+    STT_RATE, BROKERAGE_PER_ORDER, EXCHANGE_TXN_RATE, CAPITAL_PER_ENTRY,
+)
 MIN_POINTS_VIABLE = 1.5       # minimum premium move per trade to be viable
 
 # ── Optimization ────────────────────────────────────────────────────────

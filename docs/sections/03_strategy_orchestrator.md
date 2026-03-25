@@ -7,7 +7,7 @@
 - Provide the `LiveStrategy` plugin interface — the sole contract a strategy author must implement
 - Aggregate ticks into configurable-interval OHLCV bars via per-strategy `BarBuilder` instances
 - Route market data to strategies via Redis Streams consumer groups
-- Collect signals from strategies, deduplicate, and forward to the Signal Router
+- Collect signals from strategies and forward to the Signal Router (deduplication is handled downstream by the Capital Allocator's SignalDeduplicator)
 - Enforce strategy isolation: crash containment, resource caps, execution timeouts
 - Validate strategy configurations at startup before any process is spawned
 - **Does NOT** place orders, manage positions, allocate capital, or interact with the broker
@@ -339,7 +339,7 @@ class KillCondition(pydantic.BaseModel):
     metric: str                      # "sharpe_60d", "consecutive_losses", "drawdown_pct", etc.
     threshold: float
     lookback_days: int
-    action: Literal["stop_new_entries", "flatten_immediately"]
+    action: Literal["stop_new_entries", "flatten_immediately", "halt_all"]
 
 
 class ScheduleSpec(pydantic.BaseModel):
@@ -394,6 +394,7 @@ class FillNotification(pydantic.BaseModel):
     fill_status: Literal["FULL_FILL", "PARTIAL_FILL", "REJECTED", "CANCELLED", "TIMEOUT"]
     fill_ts: int                      # epoch ms
     sl_order_id: str | None           # paired SL order, if placed
+    account_id: str                   # Account that received this fill.
 
 
 class PositionUpdate(pydantic.BaseModel):
@@ -408,6 +409,8 @@ class PositionUpdate(pydantic.BaseModel):
     realized_pnl: float
     sl_order_id: str | None
     sl_trigger_price: float | None
+    account_id: str                   # Account this position belongs to. In multi-account
+                                      # mode, strategies receive one update per account.
 
 
 class StrategySignal(pydantic.BaseModel):
@@ -419,6 +422,7 @@ class StrategySignal(pydantic.BaseModel):
     instrument_hint: Literal["CE", "PE", "FUT", "EQ"]
     expiry_preference: Literal["WEEKLY", "MONTHLY", "NEAREST"] | None
     urgency: Literal["NORMAL", "URGENT"]
+    legs: list["LegSpec"] | None = None  # v2 extensibility: multi-leg orders. v1: always None.
     metadata: dict                    # indicator values, bar data for audit trail
 
 
@@ -1248,10 +1252,10 @@ class SignalDeduplicator:
         "S2": 86_400_000, # 24 hours — overnight fires exactly once per day
         "S3": 60_000,     # 1 min — VWAP MR can fire multiple times per day,
                           #          but not within the same minute
-        "S4": 86_400_000, # 24 hours — monthly rebalance, one signal per stock per day
-        "S5": 30_000,     # 30s — fast 0-DTE, needs tight window
-        "S6": 3_600_000,  # 1 hour — patient vol selling, no rapid re-entry
-        "S7": 300_000,    # 5 min — pairs spread can recross quickly
+        "S4": 2_592_000_000, # 30 days — monthly rebalance, one signal per stock per month
+        "S5": 21_600_000,    # 6 hours — 0-DTE, wide enough to avoid re-entry same half-day
+        "S6": 604_800_000,   # 7 days — patient vol selling, weekly cooldown
+        "S7": 86_400_000,    # 24 hours — pairs spread, daily cooldown
     }
 
     # Fallback for strategies not in the map (e.g., new S8)

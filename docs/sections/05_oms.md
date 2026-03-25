@@ -410,7 +410,7 @@ class DhanOrderWS:
         self._ws = await websockets.connect(
             self.WS_URL,
             extra_headers={
-                "access-token": self.account.api_key,
+                "access-token": self.account.dhan_access_token,
             },
             ping_interval=30,        # send ping every 30s to keep alive
             ping_timeout=10,
@@ -422,7 +422,7 @@ class DhanOrderWS:
             "LoginReq": {
                 "MsgCode": 42,
                 "ClientId": self.account.dhan_client_id,
-                "Token": self.account.api_key,
+                "Token": self.account.dhan_access_token,
             }
         }
         await self._ws.send(orjson.dumps(auth_msg))
@@ -2655,7 +2655,7 @@ def _fetch_market_from_dhan(
     rate_limiter = self._account_rate_limiters[account.account_id]
     # Don't acquire rate limit here — caller already acquired
     resp = self._dhan_client.get_quote(
-        account.api_key,
+        account.dhan_access_token,
         security_id=instrument_id,
     )
     return MarketSnapshot(

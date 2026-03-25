@@ -1,8 +1,0 @@
-{
-  "strategy_name": "expiry_afternoon_v1",
-  "category": "time_of_day",
-  "thesis": "Expiry day afternoons have extreme gamma. 5-point spot moves cause 4-point option moves instead of 2.5.",
-  "signal_source": "SPOT_DIRECTION",
-  "underlying": "NIFTY",
-  "implementation": "pipeline/strategies/expiry_afternoon_v1.py"
-}

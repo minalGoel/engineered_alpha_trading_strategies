@@ -1,3 +1,0 @@
-RESULT: kalman_filter_trend_v1 STATUS=CONVERTED
-ilter_trend_v1.json
-py=pipeline/strategies/kalman_filter_trend_v1.py

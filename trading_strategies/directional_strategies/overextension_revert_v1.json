@@ -1,8 +1,0 @@
-{
-  "strategy_name": "overextension_revert_v1",
-  "category": "mean_reversion",
-  "thesis": "Extreme 30s moves (15+ pts) tend to snap back 5-10 pts. Classic microstructure mean reversion.",
-  "signal_source": "SPOT_DIRECTION",
-  "underlying": "NIFTY",
-  "implementation": "pipeline/strategies/overextension_revert_v1.py"
-}

@@ -1,8 +1,0 @@
-{
-  "strategy_name": "closing_momentum_v1",
-  "category": "time_of_day",
-  "thesis": "Last 30 minutes see institutional rebalancing creating predictable directional flow patterns.",
-  "signal_source": "SPOT_DIRECTION",
-  "underlying": "NIFTY",
-  "implementation": "pipeline/strategies/closing_momentum_v1.py"
-}

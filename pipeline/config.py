@@ -8,7 +8,7 @@ import math
 
 # ── Root paths ──────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent.parent
-STRATEGY_DIR = ROOT / "trading_strategies" / "unique_strategies"
+STRATEGY_DIR = ROOT / "unique_strategies"
 DATA_DIR = ROOT / "data"
 FIVE_SEC_DIR = ROOT / "5second_data"
 RESULTS_DIR = ROOT / "strategy_results"

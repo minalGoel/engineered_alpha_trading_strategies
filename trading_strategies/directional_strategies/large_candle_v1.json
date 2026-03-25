@@ -1,8 +1,0 @@
-{
-  "strategy_name": "large_candle_v1",
-  "category": "microstructure",
-  "thesis": "A single 5s candle with range far exceeding average signals institutional flow and predicts follow-through.",
-  "signal_source": "SPOT_DIRECTION",
-  "underlying": "NIFTY",
-  "implementation": "pipeline/strategies/large_candle_v1.py"
-}

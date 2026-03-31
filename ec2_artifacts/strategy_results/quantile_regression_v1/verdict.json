@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: QR_P10', 'Entry condition references unparseable indicator: QR_P90', 'Entry condition references unparseable indicator: QR_Median']"
+}

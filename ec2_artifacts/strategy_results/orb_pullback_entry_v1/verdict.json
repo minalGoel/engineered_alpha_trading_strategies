@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: pullback_bar_count', 'Entry condition references unavailable column: breakout_confirmed', 'Entry condition references unavailable column: pullback_to_ORB', 'Entry condition references unavailable column: support_test', 'Entry condition references unavailable column: EMA_9']"
+}

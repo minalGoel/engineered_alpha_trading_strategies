@@ -1,0 +1,4 @@
+{
+  "verdict": "VALIDATED",
+  "reason": "Test Sharpe=1.6126, PF=1.10, Sharpe decay=67.5%"
+}

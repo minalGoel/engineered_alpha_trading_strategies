@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: premium_discount', 'Entry condition references unavailable column: etf_volume_ratio', 'Entry condition references unavailable column: pd_z']"
+}

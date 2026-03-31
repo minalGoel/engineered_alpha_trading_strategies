@@ -1,0 +1,682 @@
+{
+  "total_families": 69,
+  "families": {
+    "momentum trend_following ema": {
+      "total": 8,
+      "validated": 0,
+      "failed": 8,
+      "verdicts": {
+        "FAILED_NO_TRADES": 3,
+        "FAILED_PARSE_ERROR": 5
+      },
+      "validated_names": []
+    },
+    "null": {
+      "total": 110,
+      "validated": 1,
+      "failed": 109,
+      "verdicts": {
+        "FAILED_NO_TRADES": 14,
+        "FAILED_OVERFIT": 2,
+        "VALIDATED": 1,
+        "FAILED_PARSE_ERROR": 93
+      },
+      "validated_names": [
+        "stochastic_reversion_v1"
+      ]
+    },
+    "breakout momentum orb": {
+      "total": 9,
+      "validated": 0,
+      "failed": 9,
+      "verdicts": {
+        "FAILED_NO_TRADES": 3,
+        "FAILED_PARSE_ERROR": 6
+      },
+      "validated_names": []
+    },
+    "mean_reversion pullback oversold": {
+      "total": 11,
+      "validated": 6,
+      "failed": 5,
+      "verdicts": {
+        "FAILED_NO_TRADES": 2,
+        "VALIDATED": 6,
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": [
+        "rsi_connors_pullback_v41",
+        "rsi_connors_pullback_v42",
+        "rsi_connors_pullback_v46",
+        "rsi_connors_pullback_v49",
+        "rsi_connors_pullback_v50",
+        "rsi_connors_pullback_v54"
+      ]
+    },
+    "bollinger mean_reversion volatility": {
+      "total": 4,
+      "validated": 0,
+      "failed": 4,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "breakout atr volatility": {
+      "total": 7,
+      "validated": 0,
+      "failed": 7,
+      "verdicts": {
+        "FAILED_NO_TRADES": 3,
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "breakout volume volume_profile": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_NO_TRADES": 2,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "breakout mean_reversion support_resistance": {
+      "total": 5,
+      "validated": 0,
+      "failed": 5,
+      "verdicts": {
+        "FAILED_OVERFIT": 2,
+        "FAILED_NO_TRADES": 1,
+        "FAILED_OOS": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "sector_rotation momentum relative_strength": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "stat_arb pairs sector": {
+      "total": 8,
+      "validated": 0,
+      "failed": 8,
+      "verdicts": {
+        "FAILED_NO_TRADES": 3,
+        "FAILED_PARSE_ERROR": 5
+      },
+      "validated_names": []
+    },
+    "keltner volatility trend_following": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "volatility intraday implied_vol": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "gap momentum intraday": {
+      "total": 16,
+      "validated": 0,
+      "failed": 16,
+      "verdicts": {
+        "FAILED_NO_TRADES": 2,
+        "FAILED_PARSE_ERROR": 14
+      },
+      "validated_names": []
+    },
+    "gap relative_strength index_comparison": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "time_of_day microstructure closing_auction": {
+      "total": 3,
+      "validated": 1,
+      "failed": 2,
+      "verdicts": {
+        "VALIDATED": 1,
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": [
+        "closing_auction_anticipation_v1"
+      ]
+    },
+    "volume-weighted momentum vol-price-trend": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "vwap rsi confluence": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_OOS": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "donchian breakout trend_following": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "stat_arb relative_strength pairs": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "volatility vix mean_reversion": {
+      "total": 12,
+      "validated": 0,
+      "failed": 12,
+      "verdicts": {
+        "FAILED_NO_TRADES": 2,
+        "FAILED_OVERFIT": 2,
+        "FAILED_PARSE_ERROR": 8
+      },
+      "validated_names": []
+    },
+    "stat_arb lead_lag cross_asset": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "vwap mean_reversion intraday": {
+      "total": 11,
+      "validated": 2,
+      "failed": 9,
+      "verdicts": {
+        "FAILED_TIMEOUT": 1,
+        "FAILED_OVERFIT": 6,
+        "VALIDATED": 2,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": [
+        "vwap_mean_reversion_v12",
+        "vwap_mean_reversion_v19"
+      ]
+    },
+    "macd momentum mean_reversion": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "volatility breakout momentum": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "vwap intraday crossover": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "momentum relative-strength index-relative": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "range high-low mean-reversion": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "institutional large-order flow-detection": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "microstructure price_impact mean_reversion": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "gap intraday gap_fill": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "pivot-points support-resistance breakout": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_OVERFIT": 1,
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "gap mean_reversion momentum": {
+      "total": 5,
+      "validated": 0,
+      "failed": 5,
+      "verdicts": {
+        "FAILED_NO_TRADES": 1,
+        "FAILED_PARSE_ERROR": 4
+      },
+      "validated_names": []
+    },
+    "momentum index market": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "reversal s_r mean_reversion": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "price_action mean_reversion breakout": {
+      "total": 4,
+      "validated": 0,
+      "failed": 4,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 4
+      },
+      "validated_names": []
+    },
+    "relative_value mean_reversion industry_group": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "expiry event_driven options": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "multi-timeframe 1min-5min alignment": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "orb intraday index_aligned": {
+      "total": 4,
+      "validated": 0,
+      "failed": 4,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 4
+      },
+      "validated_names": []
+    },
+    "divergence mean_reversion rsi": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "ensemble hybrid meta-strategy": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "breakout intraday volatility": {
+      "total": 5,
+      "validated": 0,
+      "failed": 5,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 5
+      },
+      "validated_names": []
+    },
+    "mean_reversion microstructure psychological_level": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "momentum factor composite": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "vwap momentum trend": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "momentum stat_arb relative_strength": {
+      "total": 9,
+      "validated": 0,
+      "failed": 9,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 9
+      },
+      "validated_names": []
+    },
+    "breakout momentum volatility": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "z-score statistical mean-reversion": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "microstructure imbalance order-flow": {
+      "total": 4,
+      "validated": 0,
+      "failed": 4,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 4
+      },
+      "validated_names": []
+    },
+    "hull-ma weighted-ma low-lag": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "orb intraday breakout": {
+      "total": 7,
+      "validated": 0,
+      "failed": 7,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 7
+      },
+      "validated_names": []
+    },
+    "consolidation breakout intraday": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "fibonacci retracement breakout": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "index-correlated nifty-confirmed breakout": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "relative_value sector_rotation stat_arb": {
+      "total": 4,
+      "validated": 0,
+      "failed": 4,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 4
+      },
+      "validated_names": []
+    },
+    "cointegration stat_arb engle_granger": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "correlation stat_arb regime_change": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "stat_arb exchange_arb cross_listed": {
+      "total": 1,
+      "validated": 0,
+      "failed": 1,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    },
+    "momentum gap sector_leader": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "intraday volatility low_vol_anomaly": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "hmm volatility regime_detection": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "orb intraday opening_range": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "orb intraday failure": {
+      "total": 3,
+      "validated": 0,
+      "failed": 3,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 3
+      },
+      "validated_names": []
+    },
+    "event_driven volatility rbi": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "momentum hybrid adaptive": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "mean-variance markowitz optimal-timing": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "quantitative entropy information-theory": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "mean_reversion momentum event_driven": {
+      "total": 2,
+      "validated": 0,
+      "failed": 2,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 2
+      },
+      "validated_names": []
+    },
+    "breakout volatility narrow_range": {
+      "total": 1,
+      "validated": 0,
+      "failed": 1,
+      "verdicts": {
+        "FAILED_PARSE_ERROR": 1
+      },
+      "validated_names": []
+    }
+  }
+}

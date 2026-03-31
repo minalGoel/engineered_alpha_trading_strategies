@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: RSI_14', 'Entry condition references unavailable column: vol_ratio', 'Entry condition references unavailable column: price_z', 'Entry condition references unavailable column: adaptive_threshold']"
+}

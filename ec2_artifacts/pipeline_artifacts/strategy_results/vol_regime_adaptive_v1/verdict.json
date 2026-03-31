@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: LOW', 'Entry condition references unavailable column: HIGH', 'Entry condition references unparseable indicator: Vol_Regime']"
+}

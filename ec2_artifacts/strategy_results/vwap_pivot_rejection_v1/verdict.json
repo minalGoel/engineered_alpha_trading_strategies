@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: vwap_pivot_zone', 'Entry condition references unparseable indicator: rejection', 'Entry condition references unavailable column: zone', 'Entry condition references unavailable column: price']"
+}

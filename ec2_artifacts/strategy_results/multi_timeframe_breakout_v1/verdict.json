@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: DC_upper_1m', 'Entry condition references unparseable indicator: DC_upper_5m', 'Entry condition references unavailable column: 5min_close', 'Entry condition references unparseable indicator: DC_lower_5m', 'Entry condition references unparseable indicator: DC_lower_1m']"
+}

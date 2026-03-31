@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: Reopen_Volume_Ratio', 'Entry condition references unparseable indicator: Order_Imbalance', 'Entry condition references unparseable indicator: Halt_Direction', 'Entry condition references unparseable indicator: Reopen_Gap']"
+}

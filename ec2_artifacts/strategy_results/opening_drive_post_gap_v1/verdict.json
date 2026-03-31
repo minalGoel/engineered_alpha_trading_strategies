@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: time', 'Entry condition references unavailable column: drive_alignment', 'Entry condition references unavailable column: volume_surge', 'Entry condition references unavailable column: bar_body_ratio']"
+}

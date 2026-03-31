@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: price_diff_bps', 'Entry condition references unavailable column: diff_z', 'Entry condition references unavailable column: combined_spread_bps']"
+}

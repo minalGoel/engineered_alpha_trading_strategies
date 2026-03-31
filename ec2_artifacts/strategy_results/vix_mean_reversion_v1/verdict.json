@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: NIFTY_drawdown', 'Entry condition references unavailable column: VIX_30min_change', 'Entry condition references unavailable column: VIX_z', 'Entry condition references unavailable column: NIFTY_RSI_14', 'Entry condition references unavailable column: VIX_spike']"
+}

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: RSI_Upper_Threshold', 'Entry condition references unparseable indicator: RSI_Lower_Threshold', 'Entry condition references unavailable column: was', 'Entry condition references unparseable indicator: BB_Width_Threshold', 'Entry condition references unavailable column: 10000']"
+}

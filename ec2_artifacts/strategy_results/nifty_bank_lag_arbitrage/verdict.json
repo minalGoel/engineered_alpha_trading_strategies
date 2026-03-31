@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: stock_ret_5', 'Entry condition references unparseable indicator: index_ret_5']"
+}

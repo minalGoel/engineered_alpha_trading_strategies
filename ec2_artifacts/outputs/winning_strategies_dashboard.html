@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Winning Strategies Dashboard</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --panel: #fffaf3;
+      --ink: #1f1f1f;
+      --muted: #675d50;
+      --line: #d8c8b3;
+      --accent: #c9583a;
+      --accent-2: #1f7a8c;
+      --accent-3: #3f6b39;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(201, 88, 58, 0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(31, 122, 140, 0.14), transparent 24%),
+        var(--bg);
+      color: var(--ink);
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1, h2 { margin: 0 0 12px; font-weight: 700; }
+    p { margin: 0; color: var(--muted); line-height: 1.5; }
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(77, 55, 31, 0.08);
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .card, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 24px rgba(77, 55, 31, 0.06);
+    }
+    .card-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .card-value { font-size: 28px; margin-top: 8px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .chart { width: 100%; height: auto; display: block; }
+    .chart-title { font-size: 20px; fill: var(--ink); }
+    .grid line, .grid-v { stroke: #e9dece; stroke-width: 1; }
+    .tick { font-size: 11px; fill: var(--muted); }
+    .x-label, .point-label, .bar-label, .axis-label { fill: var(--ink); font-size: 11px; }
+    .families { margin: 0; padding-left: 18px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .section-title { margin-bottom: 10px; }
+    @media (min-width: 980px) {
+      .grid.two { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Winning Strategies Dashboard</h1>
+      <p>Local view of the validated strategies from <code>winning_strategies.json</code>. Ranking uses score = test Sharpe × sqrt(passing stocks).</p>
+      <div class="cards">
+        <div class="card"><div class="card-label">Winners</div><div class="card-value">10</div></div><div class="card"><div class="card-label">Total PnL</div><div class="card-value">Rs 14,761,858</div></div><div class="card"><div class="card-label">Total Trades</div><div class="card-value">674,286</div></div><div class="card"><div class="card-label">Avg Test Sharpe</div><div class="card-value">5.07</div></div><div class="card"><div class="card-label">Avg Profit Factor</div><div class="card-value">1.14</div></div><div class="card"><div class="card-label">Significance Threshold</div><div class="card-value">0.91</div></div>
+      </div>
+    </section>
+
+    <section class="grid two" style="margin-top: 16px;">
+      <div class="panel">
+        <h2 class="section-title">Family Concentration</h2>
+        <ul class="families"><li><strong>mean_reversion pullback oversold</strong>: 6</li><li><strong>vwap mean_reversion intraday</strong>: 2</li><li><strong>Unclassified</strong>: 1</li><li><strong>time_of_day microstructure closing_auction</strong>: 1</li></ul>
+      </div>
+      <div class="panel">
+        <h2 class="section-title">How To Read This</h2>
+        <p>High score means strong out-of-sample Sharpe plus breadth across symbols. Use PnL for scale, profit factor for edge quality, and compare train vs test Sharpe to judge decay.</p>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
+      <svg viewBox="0 0 900 360" class="chart" role="img" aria-label="Ranked Score by Strategy"><text x="70" y="24" class="chart-title">Ranked Score by Strategy</text><line x1="70" y1="260.0" x2="880" y2="260.0" class="grid" /><text x="60" y="264.0" class="tick" text-anchor="end">0.0</text><line x1="70" y1="186.7" x2="880" y2="186.7" class="grid" /><text x="60" y="190.7" class="tick" text-anchor="end">50.0</text><line x1="70" y1="113.3" x2="880" y2="113.3" class="grid" /><text x="60" y="117.3" class="tick" text-anchor="end">100.0</text><line x1="70" y1="40.0" x2="880" y2="40.0" class="grid" /><text x="60" y="44.0" class="tick" text-anchor="end">150.0</text><rect x="70" y="69.0" width="70" height="191.0" rx="6" fill="#1f7a8c"><title>vwap_mean_reversion_v12: 130.2</title></rect><text x="105.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 105.0 304)">vwap_mean_reversion_v12</text><text x="105.0" y="61.0" class="bar-label" text-anchor="middle">130.2</text><rect x="152" y="90.3" width="70" height="169.7" rx="6" fill="#1f7a8c"><title>vwap_mean_reversion_v19: 115.7</title></rect><text x="187.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 187.0 304)">vwap_mean_reversion_v19</text><text x="187.0" y="82.3" class="bar-label" text-anchor="middle">115.7</text><rect x="234" y="183.5" width="70" height="76.5" rx="6" fill="#1f7a8c"><title>stochastic_reversion_v1: 52.1</title></rect><text x="269.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 269.0 304)">stochastic_reversion_v1</text><text x="269.0" y="175.5" class="bar-label" text-anchor="middle">52.1</text><rect x="316" y="199.1" width="70" height="60.9" rx="6" fill="#1f7a8c"><title>closing_auction_anticipation_v1: 41.5</title></rect><text x="351.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 351.0 304)">closing_auction_anticipation_v1</text><text x="351.0" y="191.1" class="bar-label" text-anchor="middle">41.5</text><rect x="398" y="227.2" width="70" height="32.8" rx="6" fill="#1f7a8c"><title>rsi_connors_pullback_v49: 22.3</title></rect><text x="433.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 433.0 304)">rsi_connors_pullback_v49</text><text x="433.0" y="219.2" class="bar-label" text-anchor="middle">22.3</text><rect x="480" y="232.8" width="70" height="27.2" rx="6" fill="#1f7a8c"><title>rsi_connors_pullback_v42: 18.6</title></rect><text x="515.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 515.0 304)">rsi_connors_pullback_v42</text><text x="515.0" y="224.8" class="bar-label" text-anchor="middle">18.6</text><rect x="562" y="239.4" width="70" height="20.6" rx="6" fill="#1f7a8c"><title>rsi_connors_pullback_v46: 14.1</title></rect><text x="597.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 597.0 304)">rsi_connors_pullback_v46</text><text x="597.0" y="231.4" class="bar-label" text-anchor="middle">14.1</text><rect x="644" y="240.3" width="70" height="19.7" rx="6" fill="#1f7a8c"><title>rsi_connors_pullback_v54: 13.4</title></rect><text x="679.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 679.0 304)">rsi_connors_pullback_v54</text><text x="679.0" y="232.3" class="bar-label" text-anchor="middle">13.4</text><rect x="726" y="242.6" width="70" height="17.4" rx="6" fill="#1f7a8c"><title>rsi_connors_pullback_v50: 11.9</title></rect><text x="761.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 761.0 304)">rsi_connors_pullback_v50</text><text x="761.0" y="234.6" class="bar-label" text-anchor="middle">11.9</text><rect x="808" y="243.4" width="70" height="16.6" rx="6" fill="#1f7a8c"><title>rsi_connors_pullback_v41: 11.3</title></rect><text x="843.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 843.0 304)">rsi_connors_pullback_v41</text><text x="843.0" y="235.4" class="bar-label" text-anchor="middle">11.3</text></svg>
+    </section>
+
+    <section class="grid two">
+      <div class="panel">
+        <svg viewBox="0 0 900 360" class="chart" role="img" aria-label="Total PnL by Strategy"><text x="70" y="24" class="chart-title">Total PnL by Strategy</text><line x1="70" y1="260.0" x2="880" y2="260.0" class="grid" /><text x="60" y="264.0" class="tick" text-anchor="end">Rs 0</text><line x1="70" y1="186.7" x2="880" y2="186.7" class="grid" /><text x="60" y="190.7" class="tick" text-anchor="end">Rs 1,000,000</text><line x1="70" y1="113.3" x2="880" y2="113.3" class="grid" /><text x="60" y="117.3" class="tick" text-anchor="end">Rs 2,000,000</text><line x1="70" y1="40.0" x2="880" y2="40.0" class="grid" /><text x="60" y="44.0" class="tick" text-anchor="end">Rs 3,000,000</text><rect x="70" y="53.4" width="70" height="206.6" rx="6" fill="#3f6b39"><title>vwap_mean_reversion_v12: Rs 2,817,772</title></rect><text x="105.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 105.0 304)">vwap_mean_reversion_v12</text><text x="105.0" y="45.4" class="bar-label" text-anchor="middle">Rs 2,817,772</text><rect x="152" y="48.5" width="70" height="211.5" rx="6" fill="#3f6b39"><title>vwap_mean_reversion_v19: Rs 2,884,553</title></rect><text x="187.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 187.0 304)">vwap_mean_reversion_v19</text><text x="187.0" y="40.5" class="bar-label" text-anchor="middle">Rs 2,884,553</text><rect x="234" y="254.7" width="70" height="5.3" rx="6" fill="#3f6b39"><title>stochastic_reversion_v1: Rs 72,873</title></rect><text x="269.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 269.0 304)">stochastic_reversion_v1</text><text x="269.0" y="246.7" class="bar-label" text-anchor="middle">Rs 72,873</text><rect x="316" y="210.0" width="70" height="50.0" rx="6" fill="#3f6b39"><title>closing_auction_anticipation_v1: Rs 681,445</title></rect><text x="351.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 351.0 304)">closing_auction_anticipation_v1</text><text x="351.0" y="202.0" class="bar-label" text-anchor="middle">Rs 681,445</text><rect x="398" y="135.6" width="70" height="124.4" rx="6" fill="#3f6b39"><title>rsi_connors_pullback_v49: Rs 1,696,093</title></rect><text x="433.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 433.0 304)">rsi_connors_pullback_v49</text><text x="433.0" y="127.6" class="bar-label" text-anchor="middle">Rs 1,696,093</text><rect x="480" y="149.5" width="70" height="110.5" rx="6" fill="#3f6b39"><title>rsi_connors_pullback_v42: Rs 1,506,250</title></rect><text x="515.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 515.0 304)">rsi_connors_pullback_v42</text><text x="515.0" y="141.5" class="bar-label" text-anchor="middle">Rs 1,506,250</text><rect x="562" y="136.2" width="70" height="123.8" rx="6" fill="#3f6b39"><title>rsi_connors_pullback_v46: Rs 1,688,790</title></rect><text x="597.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 597.0 304)">rsi_connors_pullback_v46</text><text x="597.0" y="128.2" class="bar-label" text-anchor="middle">Rs 1,688,790</text><rect x="644" y="194.6" width="70" height="65.4" rx="6" fill="#3f6b39"><title>rsi_connors_pullback_v54: Rs 892,341</title></rect><text x="679.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 679.0 304)">rsi_connors_pullback_v54</text><text x="679.0" y="186.6" class="bar-label" text-anchor="middle">Rs 892,341</text><rect x="726" y="164.8" width="70" height="95.2" rx="6" fill="#3f6b39"><title>rsi_connors_pullback_v50: Rs 1,297,951</title></rect><text x="761.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 761.0 304)">rsi_connors_pullback_v50</text><text x="761.0" y="156.8" class="bar-label" text-anchor="middle">Rs 1,297,951</text><rect x="808" y="170.3" width="70" height="89.7" rx="6" fill="#3f6b39"><title>rsi_connors_pullback_v41: Rs 1,223,791</title></rect><text x="843.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 843.0 304)">rsi_connors_pullback_v41</text><text x="843.0" y="162.3" class="bar-label" text-anchor="middle">Rs 1,223,791</text></svg>
+      </div>
+      <div class="panel">
+        <svg viewBox="0 0 900 360" class="chart" role="img" aria-label="Profit Factor by Strategy"><text x="70" y="24" class="chart-title">Profit Factor by Strategy</text><line x1="70" y1="260.0" x2="880" y2="260.0" class="grid" /><text x="60" y="264.0" class="tick" text-anchor="end">0.00</text><line x1="70" y1="186.7" x2="880" y2="186.7" class="grid" /><text x="60" y="190.7" class="tick" text-anchor="end">0.50</text><line x1="70" y1="113.3" x2="880" y2="113.3" class="grid" /><text x="60" y="117.3" class="tick" text-anchor="end">1.00</text><line x1="70" y1="40.0" x2="880" y2="40.0" class="grid" /><text x="60" y="44.0" class="tick" text-anchor="end">1.50</text><rect x="70" y="89.9" width="70" height="170.1" rx="6" fill="#c9583a"><title>vwap_mean_reversion_v12: 1.16</title></rect><text x="105.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 105.0 304)">vwap_mean_reversion_v12</text><text x="105.0" y="81.9" class="bar-label" text-anchor="middle">1.16</text><rect x="152" y="91.3" width="70" height="168.7" rx="6" fill="#c9583a"><title>vwap_mean_reversion_v19: 1.15</title></rect><text x="187.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 187.0 304)">vwap_mean_reversion_v19</text><text x="187.0" y="83.3" class="bar-label" text-anchor="middle">1.15</text><rect x="234" y="78.1" width="70" height="181.9" rx="6" fill="#c9583a"><title>stochastic_reversion_v1: 1.24</title></rect><text x="269.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 269.0 304)">stochastic_reversion_v1</text><text x="269.0" y="70.1" class="bar-label" text-anchor="middle">1.24</text><rect x="316" y="79.6" width="70" height="180.4" rx="6" fill="#c9583a"><title>closing_auction_anticipation_v1: 1.23</title></rect><text x="351.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 351.0 304)">closing_auction_anticipation_v1</text><text x="351.0" y="71.6" class="bar-label" text-anchor="middle">1.23</text><rect x="398" y="98.7" width="70" height="161.3" rx="6" fill="#c9583a"><title>rsi_connors_pullback_v49: 1.10</title></rect><text x="433.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 433.0 304)">rsi_connors_pullback_v49</text><text x="433.0" y="90.7" class="bar-label" text-anchor="middle">1.10</text><rect x="480" y="91.3" width="70" height="168.7" rx="6" fill="#c9583a"><title>rsi_connors_pullback_v42: 1.15</title></rect><text x="515.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 515.0 304)">rsi_connors_pullback_v42</text><text x="515.0" y="83.3" class="bar-label" text-anchor="middle">1.15</text><rect x="562" y="97.2" width="70" height="162.8" rx="6" fill="#c9583a"><title>rsi_connors_pullback_v46: 1.11</title></rect><text x="597.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 597.0 304)">rsi_connors_pullback_v46</text><text x="597.0" y="89.2" class="bar-label" text-anchor="middle">1.11</text><rect x="644" y="97.2" width="70" height="162.8" rx="6" fill="#c9583a"><title>rsi_connors_pullback_v54: 1.11</title></rect><text x="679.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 679.0 304)">rsi_connors_pullback_v54</text><text x="679.0" y="89.2" class="bar-label" text-anchor="middle">1.11</text><rect x="726" y="98.7" width="70" height="161.3" rx="6" fill="#c9583a"><title>rsi_connors_pullback_v50: 1.10</title></rect><text x="761.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 761.0 304)">rsi_connors_pullback_v50</text><text x="761.0" y="90.7" class="bar-label" text-anchor="middle">1.10</text><rect x="808" y="100.1" width="70" height="159.9" rx="6" fill="#c9583a"><title>rsi_connors_pullback_v41: 1.09</title></rect><text x="843.0" y="304" class="x-label" text-anchor="end" transform="rotate(-35 843.0 304)">rsi_connors_pullback_v41</text><text x="843.0" y="92.1" class="bar-label" text-anchor="middle">1.09</text></svg>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
+      <svg viewBox="0 0 900 420" class="chart" role="img" aria-label="Breadth vs Test Sharpe (bubble size = trades)"><text x="80" y="24" class="chart-title">Breadth vs Test Sharpe (bubble size = trades)</text><line x1="80" y1="350.0" x2="870" y2="350.0" class="grid" /><text x="68" y="354.0" class="tick" text-anchor="end">0.0</text><line x1="80" y1="248.3" x2="870" y2="248.3" class="grid" /><text x="68" y="252.3" class="tick" text-anchor="end">5.0</text><line x1="80" y1="146.7" x2="870" y2="146.7" class="grid" /><text x="68" y="150.7" class="tick" text-anchor="end">10.0</text><line x1="80" y1="45.0" x2="870" y2="45.0" class="grid" /><text x="68" y="49.0" class="tick" text-anchor="end">15.0</text><line x1="80.0" y1="45" x2="80.0" y2="350" class="grid grid-v" /><text x="80.0" y="398" class="tick" text-anchor="middle">0</text><line x1="277.5" y1="45" x2="277.5" y2="350" class="grid grid-v" /><text x="277.5" y="398" class="tick" text-anchor="middle">50</text><line x1="475.0" y1="45" x2="475.0" y2="350" class="grid grid-v" /><text x="475.0" y="398" class="tick" text-anchor="middle">100</text><line x1="672.5" y1="45" x2="672.5" y2="350" class="grid grid-v" /><text x="672.5" y="398" class="tick" text-anchor="middle">150</text><line x1="870.0" y1="45" x2="870.0" y2="350" class="grid grid-v" /><text x="870.0" y="398" class="tick" text-anchor="middle">200</text><circle cx="463.1" cy="81.2" r="28.0" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>vwap_mean_reversion_v12 | passing_stocks: 97 | test_sharpe: 13.2 | trades: 214,846</title></circle><text x="495.1" y="85.2" class="point-label">vwap_mean_reversion_v12</text><circle cx="494.8" cy="120.3" r="27.3" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>vwap_mean_reversion_v19 | passing_stocks: 105 | test_sharpe: 11.3 | trades: 199,614</title></circle><text x="526.0" y="124.3" class="point-label">vwap_mean_reversion_v19</text><circle cx="443.4" cy="239.5" r="11.3" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>stochastic_reversion_v1 | passing_stocks: 92 | test_sharpe: 5.4 | trades: 5,800</title></circle><text x="458.7" y="243.5" class="point-label">stochastic_reversion_v1</text><circle cx="696.2" cy="282.4" r="15.4" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>closing_auction_anticipation_v1 | passing_stocks: 156 | test_sharpe: 3.3 | trades: 29,489</title></circle><text x="715.6" y="286.4" class="point-label">closing_auction_anticipation_v1</text><circle cx="198.5" cy="267.1" r="19.5" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>rsi_connors_pullback_v49 | passing_stocks: 30 | test_sharpe: 4.1 | trades: 71,403</title></circle><text x="222.0" y="271.1" class="point-label">rsi_connors_pullback_v49</text><circle cx="143.2" cy="255.7" r="15.6" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>rsi_connors_pullback_v42 | passing_stocks: 16 | test_sharpe: 4.6 | trades: 30,973</title></circle><text x="162.8" y="259.7" class="point-label">rsi_connors_pullback_v42</text><circle cx="313.0" cy="312.8" r="15.9" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>rsi_connors_pullback_v46 | passing_stocks: 59 | test_sharpe: 1.8 | trades: 33,804</title></circle><text x="333.0" y="316.8" class="point-label">rsi_connors_pullback_v46</text><circle cx="131.3" cy="274.4" r="15.5" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>rsi_connors_pullback_v54 | passing_stocks: 13 | test_sharpe: 3.7 | trades: 30,185</title></circle><text x="150.8" y="278.4" class="point-label">rsi_connors_pullback_v54</text><circle cx="293.3" cy="317.2" r="15.2" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>rsi_connors_pullback_v50 | passing_stocks: 54 | test_sharpe: 1.6 | trades: 27,993</title></circle><text x="312.5" y="321.2" class="point-label">rsi_connors_pullback_v50</text><circle cx="289.4" cy="318.4" r="15.5" fill="rgba(201, 88, 58, 0.65)" stroke="#8e2f18" stroke-width="2"><title>rsi_connors_pullback_v41 | passing_stocks: 53 | test_sharpe: 1.6 | trades: 30,179</title></circle><text x="308.8" y="322.4" class="point-label">rsi_connors_pullback_v41</text><text x="475.0" y="416" class="axis-label" text-anchor="middle">Passing stocks</text><text x="18" y="197.5" class="axis-label" text-anchor="middle" transform="rotate(-90 18 197.5)">Test Sharpe</text></svg>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
+      <h2 class="section-title">Winner Table</h2>
+      <table><thead><tr><th>Rank</th><th>Name</th><th>Family</th><th>Score</th><th>Test Sharpe</th><th>Train Sharpe</th><th>Stocks</th><th>Trades</th><th>PF</th><th>Win Rate</th><th>PnL</th></tr></thead><tbody><tr><td>1</td><td>vwap_mean_reversion_v12</td><td>vwap mean_reversion intraday</td><td>130.22</td><td>13.22</td><td>20.65</td><td>97</td><td>214,846</td><td>1.16</td><td>20.8%</td><td>Rs 2,817,772</td></tr><tr><td>2</td><td>vwap_mean_reversion_v19</td><td>vwap mean_reversion intraday</td><td>115.74</td><td>11.29</td><td>16.91</td><td>105</td><td>199,614</td><td>1.15</td><td>16.1%</td><td>Rs 2,884,553</td></tr><tr><td>3</td><td>stochastic_reversion_v1</td><td>Unclassified</td><td>52.14</td><td>5.44</td><td>9.49</td><td>92</td><td>5,800</td><td>1.24</td><td>44.2%</td><td>Rs 72,873</td></tr><tr><td>4</td><td>closing_auction_anticipation_v1</td><td>time_of_day microstructure closing_auction</td><td>41.53</td><td>3.33</td><td>5.97</td><td>156</td><td>29,489</td><td>1.23</td><td>50.5%</td><td>Rs 681,445</td></tr><tr><td>5</td><td>rsi_connors_pullback_v49</td><td>mean_reversion pullback oversold</td><td>22.33</td><td>4.08</td><td>6.97</td><td>30</td><td>71,403</td><td>1.10</td><td>25.5%</td><td>Rs 1,696,093</td></tr><tr><td>6</td><td>rsi_connors_pullback_v42</td><td>mean_reversion pullback oversold</td><td>18.56</td><td>4.64</td><td>3.85</td><td>16</td><td>30,973</td><td>1.15</td><td>24.9%</td><td>Rs 1,506,250</td></tr><tr><td>7</td><td>rsi_connors_pullback_v46</td><td>mean_reversion pullback oversold</td><td>14.05</td><td>1.83</td><td>2.90</td><td>59</td><td>33,804</td><td>1.11</td><td>7.8%</td><td>Rs 1,688,790</td></tr><tr><td>8</td><td>rsi_connors_pullback_v54</td><td>mean_reversion pullback oversold</td><td>13.41</td><td>3.72</td><td>4.23</td><td>13</td><td>30,185</td><td>1.11</td><td>21.9%</td><td>Rs 892,341</td></tr><tr><td>9</td><td>rsi_connors_pullback_v50</td><td>mean_reversion pullback oversold</td><td>11.85</td><td>1.61</td><td>2.88</td><td>54</td><td>27,993</td><td>1.10</td><td>6.6%</td><td>Rs 1,297,951</td></tr><tr><td>10</td><td>rsi_connors_pullback_v41</td><td>mean_reversion pullback oversold</td><td>11.31</td><td>1.55</td><td>2.91</td><td>53</td><td>30,179</td><td>1.09</td><td>7.4%</td><td>Rs 1,223,791</td></tr></tbody></table>
+    </section>
+  </main>
+</body>
+</html>

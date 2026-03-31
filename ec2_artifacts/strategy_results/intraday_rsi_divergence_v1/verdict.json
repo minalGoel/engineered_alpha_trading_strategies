@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: rsi_at_swing_high', 'Entry condition references unparseable indicator: prev_swing_low_price', 'Entry condition references unparseable indicator: prev_swing_high_price', 'Entry condition references unavailable column: rsi_at_prev_swing_high', 'Entry condition references unparseable indicator: swing_low_price', 'Entry condition references unparseable indicator: swing_high_price']"
+}

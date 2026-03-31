@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: OR30_high', 'Entry condition references unparseable indicator: OR30_vol', 'Entry condition references unparseable indicator: OR30_low', 'Entry condition references unavailable column: VWAP', 'Entry condition references unavailable column: bar']"
+}

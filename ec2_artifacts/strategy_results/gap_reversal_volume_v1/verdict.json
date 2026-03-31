@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: OBV_slope', 'Entry condition references unavailable column: volume_imbalance']"
+}

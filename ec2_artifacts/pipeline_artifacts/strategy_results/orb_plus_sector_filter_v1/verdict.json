@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: sector_orb_high', 'Entry condition references unparseable indicator: sector_orb_low', 'Entry condition references unparseable indicator: stock_orb_high', 'Entry condition references unparseable indicator: stock_orb_low', 'Entry condition references unavailable column: sector_index_close']"
+}

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: fib_level', 'Entry condition references unavailable column: VWAP', 'Entry condition references unavailable column: SMA']"
+}

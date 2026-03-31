@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: mode_strength', 'Entry condition references unparseable indicator: Nearest_Resistance', 'Entry condition references unparseable indicator: Nearest_Support']"
+}

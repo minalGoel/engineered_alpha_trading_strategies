@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: crossing', 'Entry condition references unavailable column: EMA_8', 'Entry condition references unavailable column: RSI_14', 'Entry condition references unavailable column: BB_pct_b', 'Entry condition references unavailable column: ema_21']"
+}

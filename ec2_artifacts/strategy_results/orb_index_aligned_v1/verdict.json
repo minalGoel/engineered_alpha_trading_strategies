@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: aligned_short', 'Entry condition references unavailable column: breakdown', 'Entry condition references unavailable column: stock_beta', 'Entry condition references unavailable column: aligned_long', 'Entry condition references unavailable column: breakout']"
+}

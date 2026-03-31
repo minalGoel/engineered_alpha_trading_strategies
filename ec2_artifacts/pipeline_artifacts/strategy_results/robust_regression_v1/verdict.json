@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: Residual_Std', 'Entry condition references unparseable indicator: Slope_TScore', 'Entry condition references unparseable indicator: Residual']"
+}

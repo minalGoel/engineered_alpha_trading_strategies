@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: mom_slope', 'Entry condition references unavailable column: squeeze_confirmed', 'Entry condition references unavailable column: for', 'Entry condition references unavailable column: BB_mid']"
+}

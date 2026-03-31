@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_OOS",
+  "reason": "test PF=0.92 < 1.0; test Sharpe=-0.6584 < 0.0; test Sharpe=-0.6584 < 30% of train (1.1875); profitable stocks 44.8% < 50%"
+}

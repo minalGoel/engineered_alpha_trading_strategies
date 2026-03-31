@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: ema_200_5min', 'Entry condition references unparseable indicator: multi_day_support']"
+}

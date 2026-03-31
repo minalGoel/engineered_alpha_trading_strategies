@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: gap_spread', 'Entry condition references unavailable column: lagger_close', 'Entry condition references unavailable column: leader_gap', 'Entry condition references unavailable column: sector_index_gap', 'Entry condition references unavailable column: lagger_open']"
+}

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: RANGING', 'Entry condition references unavailable column: TRENDING', 'Entry condition references unparseable indicator: State', 'Entry condition references unavailable column: crosses', 'Entry condition references unavailable column: ema']"
+}

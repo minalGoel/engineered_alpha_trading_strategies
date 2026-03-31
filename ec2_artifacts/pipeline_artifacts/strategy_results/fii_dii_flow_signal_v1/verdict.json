@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: Institutional_Pressure', 'Entry condition references unparseable indicator: Prev_Day_FII_Flow', 'Entry condition references unparseable indicator: Flow_Divergence']"
+}

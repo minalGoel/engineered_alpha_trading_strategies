@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_OVERFIT",
+  "reason": "Only 3/5 CV folds profitable with default params"
+}

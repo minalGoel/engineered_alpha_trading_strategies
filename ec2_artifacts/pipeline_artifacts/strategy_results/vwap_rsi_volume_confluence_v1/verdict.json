@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_OOS",
+  "reason": "test Sharpe=3.9294 < 30% of train (4.3052)"
+}

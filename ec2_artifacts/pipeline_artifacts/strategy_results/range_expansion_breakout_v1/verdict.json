@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: max', 'Entry condition references unparseable indicator: base_range', 'Entry condition references unavailable column: min']"
+}

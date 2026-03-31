@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: side_before_break', 'Entry condition references unparseable indicator: vwap_touch_count', 'Entry condition references unavailable column: India_VIX']"
+}

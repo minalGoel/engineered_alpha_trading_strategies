@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: price_pivot_high[t]', 'Entry condition references unavailable column: price_pivot_high', 'Entry condition references unavailable column: hist_at_pivot[t]', 'Entry condition references unparseable indicator: price_pivot_low', 'Entry condition references unavailable column: price_pivot_low[t]', 'Entry condition references unparseable indicator: hist_at_pivot']"
+}

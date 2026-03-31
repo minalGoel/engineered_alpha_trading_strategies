@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: positive', 'Entry condition references unavailable column: SGX_Nifty_direction', 'Entry condition references unavailable column: negative', 'Entry condition references unparseable indicator: PM_high', 'Entry condition references unparseable indicator: PM_low', 'Entry condition references unavailable column: India_VIX']"
+}

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: stock_low_of_day', 'Entry condition references unavailable column: time', 'Entry condition references unavailable column: stock_high_of_day', 'Entry condition references unparseable indicator: sector_reaction_rank', 'Entry condition references unavailable column: stock_close']"
+}

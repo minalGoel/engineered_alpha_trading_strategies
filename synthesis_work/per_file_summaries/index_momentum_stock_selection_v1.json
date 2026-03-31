@@ -1,0 +1,17 @@
+{
+  "name": "index_momentum_stock_selection_v1",
+  "mechanism": "When NIFTY has established >0.5% return from the day's open by 10:00 IST, large institutional TWAP/VWAP algorithms executing buy-side mandates (FII inflows, mutual fund SIPs deployed intraday) remain active through the morning session, absorbing short-term supply and creating a persistent directional bias. At 5-second resolution, this regime manifests as a drift where 2-minute counter-moves are quickly followed by resumptions — the institutional buy queue has not cleared. A bearish morning regime (NIFTY down >0.5% from open) creates the mirror dynamic with seller-driven TWAP flow overwhelming intraday bounces. We confirm the regime is still live with a 2-minute spot return aligned to the morning direction before entering, filtering dips/pops that temporarily break the regime.",
+  "tags": ["momentum", "regime", "trend_following", "morning_momentum"],
+  "core_signal_oneliner": "NIFTY morning momentum regime (>0.5% from open by 10:00) confirmed by 2-minute aligned return for re-entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["morning_return", "fast_ret_24"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

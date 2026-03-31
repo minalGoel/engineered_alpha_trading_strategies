@@ -1,0 +1,17 @@
+{
+  "name": "straddle_proxy_v1",
+  "mechanism": "On NIFTY, after the first 45 minutes absorb overnight information, the index frequently consolidates near the previous day's close — a critical reference level monitored by every institutional VWAP desk, passive fund, and algorithmic market-maker as a benchmark anchor. When NIFTY's 5-minute ATR compresses below 75% of its 20-minute average AND Bollinger Band width falls into its lowest 20th percentile of the past 20 minutes, the order book is in equilibrium and neither side has conviction. This coiled state precedes sharp directional moves: once price crosses the PDC ± 0.5×ATR(5min) trigger band, clustered stop-loss orders above/below the pivot activate, index options gamma-hedging desks amplify the impulse, and NIFTY can travel 10-20 spot points within 30-60 seconds — sufficient to capture 5-8 option premium points on a correctly-timed CE (upside break) or PE (downside break) entry.",
+  "tags": ["volatility", "compression", "breakout", "pivot", "atr"],
+  "core_signal_oneliner": "ATR compresses below 75% of its 20-min average near the previous day's close pivot and price breaks the PDC ± 0.5×ATR band, triggering stop-cascade and gamma-hedging impulse",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pdc", "atr60", "atr60_sma240", "bb_width60", "bb_pctl", "upper_trigger", "lower_trigger"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

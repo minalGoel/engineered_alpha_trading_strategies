@@ -1,0 +1,17 @@
+{
+  "name": "vol_clustering_v1",
+  "mechanism": "On NIFTY, GARCH-style volatility clustering is especially pronounced at 5-second resolution because institutional TWAP/VWAP algorithms submit bursts of child orders when executing large directional trades — each burst creates a high-vol bar which triggers further algorithmic participation, compounding volatility for 15-45 consecutive seconds. When a GARCH(1,1) conditional sigma rank exceeds the 75th percentile for 3+ consecutive 5-second bars AND price simultaneously breaks above/below the prior 100 seconds of closes, the order flow imbalance is almost certainly driven by a large institutional order still executing — not a noise spike. The EMA alignment (8-bar over 21-bar = 40s over 105s) confirms multi-scale momentum, reducing the probability of fading a transient spike.",
+  "tags": ["volatility", "garch", "clustering", "breakout", "momentum"],
+  "core_signal_oneliner": "GARCH(1,1) sigma in 75th percentile for 3+ consecutive bars with 100s breakout and multi-scale EMA alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ret_5s", "garch_sigma", "vol_pct_60", "high_vol_cluster", "ema_8", "ema_21", "roll_high_20", "roll_low_20"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

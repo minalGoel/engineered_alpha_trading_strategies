@@ -1,0 +1,17 @@
+{
+  "name": "gap_reversal_volume_v1",
+  "mechanism": "When NIFTY opens with an overnight gap (>0.3%), the first 1-2 minutes of 5-second bars reveal institutional contra-positioning through volume microstructure: if NIFTY gapped down yet most 5-second bars in the opening minute close above their opens (positive cumulative bar pressure), and session OBV is rising despite the gap-down price, VWAP-benchmarked institutional buyers are accumulating aggressively at sub-benchmark prices. This contra-volume signal — buying into a gap-down, or selling into a gap-up — precedes price reversal by 60-90 seconds as institutional flows progressively overwhelm gap-direction momentum. We enter when bar pressure plus rising OBV both confirm the contra-flow, while price remains on the wrong side of VWAP (confirming the reversal has not yet been fully priced in).",
+  "tags": ["gap", "reversal", "volume_confirmation", "contrarian", "intraday", "morning"],
+  "core_signal_oneliner": "Gap 0.3-1.5% day: OBV rising and net bar pressure opposing gap direction within 1 minute of open, while price still on gap-direction side of VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "bar_pressure_12", "obv_session", "obv_slope_12", "vwap"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

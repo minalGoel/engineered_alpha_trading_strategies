@@ -1,0 +1,17 @@
+{
+  "name": "gap_fill_stall_001",
+  "mechanism": "On NIFTY, overnight gap-downs exceeding 1.2% reflect FII-driven or macro-driven price dislocation. During the first 15 minutes (09:15-09:30), algorithmic market makers and liquidity providers absorb order flow and establish the opening range. When NIFTY subsequently dips below the OR low within a single 5-second bar — triggering resting stop-loss orders and programmatic short entries — but fails to sustain below it (close recovers back above OR low in the same bar), the short-side flow is exhausted and absorbed. VWAP-benchmarked institutional buyers, who are already tracking a benchmark significantly above current price, step in aggressively to exploit the dip, driving a reversal toward session VWAP.",
+  "tags": ["gap", "mean_reversion", "opening_range", "fakeout", "vwap"],
+  "core_signal_oneliner": "Large gap day (>1.2%): opening-range fake breakdown — single 5s bar wicks below OR low then closes back above it with volume surge and no strong trend",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "or_high", "or_low", "gap_pct", "rel_vol_120", "nifty_ret_60"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

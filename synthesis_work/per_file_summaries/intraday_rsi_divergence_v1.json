@@ -1,0 +1,17 @@
+{
+  "name": "intraday_rsi_divergence_v1",
+  "mechanism": "On NIFTY, when institutional algo selling (or buying) drives the index to a new 1-minute price extreme, but RSI at that extreme is higher (for a lower low) or lower (for a higher high) than it was at the prior extreme 1 minute earlier, it signals that the directional order flow is decelerating — fewer contracts are absorbing per tick even as price extends. At 5-second resolution this deceleration is visible before the full reversal, giving a 30-90 second lead. Market-maker delta-hedging amplifies the initial snap-back because they are unwinding hedges placed during the directional leg as flow exhausts. The divergence must form in RSI oversold (<45) or overbought (>55) territory to confirm the exhaustion context rather than catching mid-range noise.",
+  "tags": ["mean_reversion", "divergence", "rsi", "momentum_exhaustion"],
+  "core_signal_oneliner": "Price makes new 1-minute extreme but RSI diverges, confirming directional momentum deceleration in oversold/overbought territory",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_18", "low_recent_12", "low_prior_12", "high_recent_12", "high_prior_12", "rsi_12ago"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

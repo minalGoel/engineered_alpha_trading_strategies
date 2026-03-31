@@ -1,0 +1,17 @@
+{
+  "name": "orb_15min_filtered_v1",
+  "mechanism": "NIFTY's first 15 minutes (09:15-09:30 = 180 bars at 5s) is the overnight information absorption window \u2014 gap resolution, pre-open auction clearing, and large institutional limit book repricing all happen here. When VIX sits in the 13-20 Goldilocks zone, NIFTY's opening range is meaningful: below 13, ranges are too compressed and breakouts whipsaw as market makers trivially fade them; above 20, institutional flow is erratic and gap risk dominates. When price closes outside the 15-min range for two consecutive 5s bars and aligns with session VWAP, it signals that VWAP-benchmarked programs and CTA momentum algos have begun aggressively entering in the breakout direction \u2014 their flow sustains the move for 30-90 seconds before the first mean-reversion attempt.",
+  "tags": ["ORB", "opening_range", "VIX_filter", "breakout", "intraday", "NIFTY"],
+  "core_signal_oneliner": "15-minute ORB breakout with 2-bar persistence, VWAP alignment, and VIX in the 13-20 Goldilocks zone restricting entries to 09:30-10:30",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high_15", "orb_low_15", "vwap", "vix_at_930", "vol_ratio_12"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

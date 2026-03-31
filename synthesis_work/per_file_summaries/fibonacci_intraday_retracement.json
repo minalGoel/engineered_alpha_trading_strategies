@@ -1,0 +1,17 @@
+{
+  "name": "fibonacci_intraday_retracement",
+  "mechanism": "On NIFTY, the 09:15-10:15 opening range crystallizes overnight positioning and early institutional order flow into a single high-low anchor. The 61.8% Fibonacci retracement of this range is pre-loaded into virtually every systematic algo and institutional desk as a standing limit-order cluster — making it a self-fulfilling magnet at the index level (more so than on individual stocks, because more strategies monitor NIFTY Fibonacci levels simultaneously). When NIFTY price wicks into this level mid-session and closes back through it within a 5-second bar, the dense resting order queue at the level provides the microstructure impulse: on the long side, VWAP-benchmarked funds accumulating below their benchmark price absorb the dip aggressively; on the short side, delta-hedging from option sellers adds directional supply at the resistance.",
+  "tags": ["mean_reversion", "pivots", "fibonacci", "morning_range"],
+  "core_signal_oneliner": "Price wicks through the 61.8% Fibonacci retracement of the first-hour morning range and closes back beyond it, with VWAP direction confirming",
+  "entry_type": "ce_pe",
+  "indicators_used": ["morning_high", "morning_low", "fib_618", "vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vol_regime_adaptive_v1",
+  "mechanism": "On NIFTY, intraday volatility clusters in two structurally distinct regimes visible at 5-second resolution. In LOW-vol regimes (ATR-14 below the 30th percentile of the rolling 240-bar intraday distribution), passive market makers dominate order flow — small Bollinger Band deviations below VWAP attract aggressive limit-order replenishment within 15-30 seconds because every algo benchmarked to VWAP has favorable fills; the bounce is mechanical. In HIGH-vol regimes (ATR-14 above the 70th percentile), institutional TWAP and momentum algos are simultaneously working larger directional orders, creating EMA-aligned bursts that persist 30-90 seconds because the underlying institutional queue is only 30-50% filled on the first visible bar — selling begets selling, buying begets buying. The strategy is flat in ambiguous MED-vol transitions where neither mechanism dominates.",
+  "tags": ["volatility-regime", "adaptive", "mean_reversion", "momentum", "ATR-regime", "BB"],
+  "core_signal_oneliner": "ATR percentile regime classifier: BB deviation mean-reversion in low-vol, EMA crossover momentum in high-vol, flat in mid-vol",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ATR_14", "ATR_Percentile_Rank", "BB_upper", "BB_lower", "EMA_9", "EMA_21", "VWAP"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 10
+}

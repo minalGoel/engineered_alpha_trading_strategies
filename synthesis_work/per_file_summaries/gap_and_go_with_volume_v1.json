@@ -1,0 +1,17 @@
+{
+  "name": "gap_and_go_with_volume_v1",
+  "mechanism": "When NIFTY gaps open with elevated institutional participation (first-5-minute cumulative volume > 2.5x the session's average 5-minute volume rate), VWAP-benchmarked execution algorithms face a rapidly diverging benchmark — their VWAP is drifting away from their fill price. The first pullback to session VWAP (within 09:20-10:00 IST) is where these VWAP algos aggressively re-engage: they are getting fills AT or BELOW their day's benchmark, making incremental accumulation cost-optimal. On NIFTY at 5-second resolution, the exact VWAP touch bar (low <= session_VWAP for gap-up; high >= session_VWAP for gap-down) followed by a close back in the gap direction signals this institutional re-engagement, creating a 15-30 spot point continuation as the VWAP algo orders absorb residual supply/demand.",
+  "tags": ["gap", "momentum", "volume", "vwap", "opening"],
+  "core_signal_oneliner": "Gap > 0.4% day with opening 5-min volume > 2.5x average: enter on first VWAP touch-and-bounce back in gap direction within 40 minutes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "session_vwap", "vol_ratio", "vwap_touch"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

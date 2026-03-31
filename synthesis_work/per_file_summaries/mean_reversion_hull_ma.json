@@ -1,0 +1,17 @@
+{
+  "name": "mean_reversion_hull_ma",
+  "mechanism": "On NIFTY, during mid-session ranging periods (flat HMA slope), the Hull Moving Average over 3 minutes (36 \u00d7 5s bars) serves as a real-time equilibrium anchor because its lag-less construction tracks where sustained institutional order flow has been placed. When NIFTY deviates >0.12% (\u224825-27 spot points) from this HMA while the slope is near-zero, VWAP-benchmarked execution algos and market makers see the index as statistically cheap or expensive relative to recent flow \u2014 their delta-hedging and mean-reversion fills push price back toward the HMA within 30-90 seconds. The flat-slope filter is critical: it rules out trending regimes where the overshoot is justified by sustained directional order flow, isolating only the pure microstructure overshoots.",
+  "tags": ["mean_reversion", "hull_ma", "ranging", "intraday"],
+  "core_signal_oneliner": "Price deviating more than 0.12% from a flat 3-minute Hull Moving Average, signaling a microstructure overshoot in a ranging regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["hma_36", "dist_hma", "hma_slope_12"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

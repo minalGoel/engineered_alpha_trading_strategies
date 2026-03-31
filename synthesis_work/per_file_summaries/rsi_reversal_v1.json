@@ -1,0 +1,17 @@
+{
+  "name": "rsi_reversal_v1",
+  "mechanism": "On NIFTY, sharp 2-minute directional moves push RSI(24) into extreme territory (<30 or >70) as stop-loss cascades or momentum-chasing algos overshoot fair value. When this exhaustion occurs while the index is displaced from its 30-minute EMA — meaning price has deviated from where VWAP-benchmarked institutional algorithms are anchored — market makers absorb the terminal flow and resting limit orders accumulate. Within 30-90 seconds, the overshoot reverses as VWAP-tracking algorithms and gamma-hedging desks push the index back toward the 30-minute mean, creating a 10-20 spot point bounce (or fade) that option buyers can capture at ATM delta ~0.5.",
+  "tags": ["mean_reversion", "rsi", "exhaustion", "oscillator"],
+  "core_signal_oneliner": "2-minute RSI below 30 (or above 70) while price is displaced below (or above) the 30-min EMA, signaling overshoot reversal back toward the intraday mean",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_24", "ema_360"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

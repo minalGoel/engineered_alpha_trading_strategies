@@ -1,0 +1,17 @@
+{
+  "name": "gap_fill_partial_v1",
+  "mechanism": "On NIFTY gap-up or gap-down days of 0.4-1.2% (roughly 36-108 spot points), short-term gap traders who positioned at the open begin profit-taking as price approaches the half-gap level — the exact midpoint between today's open and yesterday's close. This midpoint acts as an intraday support/resistance magnet because retail and semi-algorithmic traders anchor their 'give back 50%' exit rules there, clustering limit orders at that price. At 5-second resolution, the first EMA(12) cross of EMA(36) in the fill direction — before the half-gap is reached — marks the onset of this profit-taking flow and offers a 15-90 second directional window of 8-12 NIFTY spot points.",
+  "tags": ["gap", "gap_fill", "mean_reversion", "opening", "ema", "partial_fill"],
+  "core_signal_oneliner": "Gap 0.4-1.2% day: first EMA(12) cross of EMA(36) in the fill direction while price has not yet reached the halfway midpoint between open and prev close",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "half_gap", "ema_12", "ema_36"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

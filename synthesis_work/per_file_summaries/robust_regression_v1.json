@@ -1,0 +1,17 @@
+{
+  "name": "robust_regression_v1",
+  "mechanism": "On NIFTY, institutional TWAP and VWAP algorithms executing large directional orders create persistent micro-trends over 3-7 minute windows. Individual block trades and sudden micro-news events generate outlier bars that bias OLS regression and obscure the genuine institutional flow direction; Huber IRLS down-weights these spike bars (residual > 1.35 * MAD) to reveal the true gradient of underlying demand. When the Huber slope t-statistic exceeds 2.0 on a 5-minute window (60 bars) and price dips back below the regression line, we are entering a confirmed TWAP buy-flow at a momentary intraday imbalance point — the ongoing order execution will absorb that imbalance and push spot back through the trend line within 30-90 seconds.",
+  "tags": ["robust-regression", "Huber", "trend-following", "pullback", "microstructure"],
+  "core_signal_oneliner": "Huber-IRLS regression on 5-min window shows t-stat > 2.0 uptrend and price dips below the regression line, signaling a TWAP-supported pullback entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["huber_t_stat", "huber_residual", "huber_residual_mad", "vwap"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

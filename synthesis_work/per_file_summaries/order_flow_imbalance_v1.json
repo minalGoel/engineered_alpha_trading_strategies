@@ -1,0 +1,17 @@
+{
+  "name": "order_flow_imbalance_v1",
+  "mechanism": "On NIFTY, when institutional algorithms are working large directional orders via TWAP/VWAP execution, each 5-second bar exhibits a measurable volume tilt: heavier volume on uptick bars (close > open) than downtick bars during accumulation, and the reverse during distribution. Cumulating this volume-weighted bar_delta (volume × sign(close − open)) over a 1-minute window and z-scoring it against a 5-minute rolling baseline captures abnormal buy/sell pressure before it fully manifests in price. When this z-score exceeds ±1.5 and price confirms direction relative to session VWAP, the unexecuted tail of the institutional order typically pushes NIFTY a further 10-20 spot points within 30-90 seconds — unlike the unweighted direction proxy, high-volume bars carry proportionally more signal weight, making the z-score more sensitive to genuine institutional size rather than routine tick noise.",
+  "tags": ["microstructure", "order_flow", "volume_delta", "momentum"],
+  "core_signal_oneliner": "Volume-weighted bar delta z-score exceeds 1.5 standard deviations above 5-minute baseline, confirming abnormal institutional buy or sell pressure",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bar_delta", "cum_delta_12", "delta_zscore", "vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

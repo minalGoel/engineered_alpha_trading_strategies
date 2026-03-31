@@ -1,0 +1,17 @@
+{
+  "name": "rsi_divergence_vwap_v1",
+  "mechanism": "On NIFTY, institutional TWAP selling programs execute in size bursts separated by absorption pauses: the index makes a new 1-minute low yet RSI (measuring momentum velocity, not price) fails to confirm because resting buy orders at each lower tick partially absorb the selling. This momentum-price divergence signals that the marginal seller is nearly exhausted. When NIFTY is also within 0.15% below session VWAP, VWAP-benchmarked algorithms — which receive adverse fills below their benchmark — begin accelerating accumulation, creating a 30-90 second demand surge that reverts price toward VWAP. The entry fires at the moment the divergence is detectable (2-minute window comparison) while the demand response is just beginning.",
+  "tags": ["mean_reversion", "divergence", "rsi", "vwap", "momentum_exhaustion"],
+  "core_signal_oneliner": "Price makes a lower low over 2 minutes but RSI makes a higher low, signaling seller exhaustion while price is just below VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_24", "vwap_session", "divergence_recent_window", "divergence_prior_window"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

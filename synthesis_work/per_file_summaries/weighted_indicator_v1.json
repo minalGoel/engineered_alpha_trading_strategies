@@ -1,0 +1,17 @@
+{
+  "name": "weighted_indicator_v1",
+  "mechanism": "On NIFTY, the relative predictiveness of momentum vs. mean-reversion signals rotates across intraday sessions — EMA crossovers dominate trending mornings when institutional TWAP flows are active, while RSI thresholds predict better in choppy afternoon sessions when market makers are fading extremes. This strategy tracks each indicator's recent 50-signal hit rate and applies softmax performance weighting (temperature α=2.0), automatically concentrating composite weight on whichever signal type has been most predictive in the current regime. When the weighted composite of VWAP position, 2-min RSI, MACD histogram, EMA(18/42) crossover, and OBV-vs-SMA trend exceeds 0.55 with at least 3 of 5 indicators aligned directionally, NIFTY is exhibiting coordinated multi-timescale order flow that typically sustains a 12-18 spot point move over 60-90 seconds as the dominant algorithmic flow completes its execution cycle.",
+  "tags": ["dynamic-weighting", "indicator-composite", "performance-weighted", "adaptive", "multi-signal"],
+  "core_signal_oneliner": "Softmax-weighted composite of 5 indicators (VWAP, RSI, MACD, EMA cross, OBV) exceeds 0.55 with at least 3 of 5 aligned, weights updated by rolling 50-signal hit rate",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_position", "rsi_24", "macd_24_52_18", "ema_18_42", "obv_vs_sma60", "hit_rate_weights"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

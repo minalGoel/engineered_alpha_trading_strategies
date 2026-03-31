@@ -1,0 +1,17 @@
+{
+  "name": "implied_vol_dislocation_v1",
+  "mechanism": "On NIFTY, when India VIX is significantly elevated relative to the index's own rolling 5-minute realized volatility, options market makers are pricing in more risk than actual price action warrants — they have accumulated excess long-delta spot positions from delta-hedging short puts at inflated IV, and as each bar passes without the feared volatility materializing, that hedge-unwind pressure eases and creates a mild upward drift (buy CE when ratio z-score is high and 1-min return turns positive). Conversely, when NIFTY's 5-minute realized vol sharply exceeds VIX, an unexpected volatility burst is underway: institutional stop-loss cascades are moving the index faster than options participants priced, and the directional momentum — confirmed by the 1-minute return — tends to persist for another 15-45 seconds before options repricing can catch up (buy PE when RV > VIX and 1-min return is negative).",
+  "tags": ["volatility", "vix", "implied_realized_spread", "regime", "contrarian"],
+  "core_signal_oneliner": "VIX vs 5-minute realized vol z-score dislocation with 1-minute directional momentum confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rv_60", "vix_close", "iv_rv_ratio", "ratio_zscore", "mom_12"],
+  "hold_time_seconds": [15, 45],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

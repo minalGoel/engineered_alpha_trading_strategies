@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_squeeze_breakout",
+  "mechanism": "On NIFTY, micro-consolidation periods lasting 1-3 minutes produce a measurable Bollinger Band width compression (2-minute rolling std at session lows) as institutional algorithms pause directional flow and resting limit orders accumulate on both sides of the range. When price breaks above the upper band on a simultaneous volume spike, net buy-side order flow has absorbed the accumulated sell-side resting orders at the squeeze ceiling. This initiates a stop-cascade above the range (stops placed by participants who shorted the squeeze boundary) and VWAP-chasing algorithms pile in, producing a 10-20 NIFTY spot-point directional move in the subsequent 30-90 seconds before the momentum exhausts.",
+  "tags": ["volatility", "momentum", "breakout", "bollinger", "squeeze"],
+  "core_signal_oneliner": "2-minute Bollinger Band width below 0.0015 threshold followed by close outside band with 1.5x volume ratio, signaling micro-consolidation breakout",
+  "entry_type": "ce_pe",
+  "indicators_used": ["sma_24", "bb_width_24", "upper_bb_24", "lower_bb_24", "vol_ratio_24"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

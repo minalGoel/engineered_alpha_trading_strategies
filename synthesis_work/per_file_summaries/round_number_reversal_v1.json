@@ -1,0 +1,17 @@
+{
+  "name": "round_number_reversal_v1",
+  "mechanism": "When NIFTY approaches a 100-point psychological level (22000, 22100, 22200, etc.), short call writers at that strike must sell NIFTY futures to maintain delta neutrality as gamma spikes — creating mechanical resistance as price rises toward the level. Symmetrically, short put writers buy NIFTY as it falls toward their strike, creating a mechanical demand floor. Retail traders simultaneously cluster limit orders and stop-losses at these round numbers (anchoring bias), so when NIFTY arrives at a 100-multiple with 2-minute RSI at an extreme (oversold near support, overbought near resistance) and 1-minute momentum waning, the combined mechanical delta-hedging demand plus order-book absorption generates a 10-15 spot point reversal over the next 30-90 seconds.",
+  "tags": ["mean_reversion", "psychological_level", "microstructure", "order_clustering"],
+  "core_signal_oneliner": "NIFTY within 12 pts of a 100-multiple with 1-min momentum waning and 2-min RSI in extreme territory, triggering delta-hedging-driven reversal",
+  "entry_type": "ce_pe",
+  "indicators_used": ["nearest_100", "dist_to_100", "mom_12", "rsi_24"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

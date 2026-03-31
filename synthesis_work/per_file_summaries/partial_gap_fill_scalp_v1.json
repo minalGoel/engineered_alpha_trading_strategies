@@ -1,0 +1,17 @@
+{
+  "name": "partial_gap_fill_scalp_v1",
+  "mechanism": "When NIFTY gaps up 0.5–1.5% at open, institutional VWAP algorithms benchmarked to the previous close face immediate adverse fills and systematically begin selling against the gap within the first few minutes to close their benchmark gap; market makers who delta-hedged overnight at the prior close also reduce exposure at the elevated open. This dual flow creates a magnetic pull toward the 50% gap level — the midpoint between the gap open and the prior close — that typically initiates within 1–5 minutes of the open. At 5-second resolution, a 2-minute RSI overbought/oversold reading pinpoints when the initial gap-direction momentum has stalled and the VWAP anchor flow is about to dominate, allowing entry at the precise turn rather than after a full 1-minute bar confirms the reversal.",
+  "tags": ["gap", "scalp", "mean_reversion", "opening_range", "vwap_anchor"],
+  "core_signal_oneliner": "Opening gap (0.5-1.5%) partial fill scalp triggered by 2-min RSI exhaustion of the initial gap-direction thrust within the first 25 minutes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "rsi_24", "gap_moved_fraction"],
+  "hold_time_seconds": [30, 300],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

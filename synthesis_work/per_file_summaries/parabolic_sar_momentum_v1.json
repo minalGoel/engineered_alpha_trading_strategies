@@ -1,0 +1,17 @@
+{
+  "name": "parabolic_sar_momentum_v1",
+  "mechanism": "On NIFTY, Parabolic SAR flips (from above to below price) mark the moment where directional order-flow imbalance shifts. At 5-second resolution, a SAR flip confirmed by ADX(36) > 20 (3-min trend filter) and price above session VWAP signals that VWAP-benchmarked institutional algorithms have pivoted to net-buy mode — their execution algorithms are now absorbing sell-side resting orders. The anti-whipsaw filter (fewer than 4 SAR flips in the prior 3 minutes) screens out the range-bound sessions where SAR oscillates uselessly; in genuine trending NIFTY conditions, the confirmed flip initiates a 10-20 spot-point continuation wave over the next 30-90 seconds as the institutional order continues to execute.",
+  "tags": ["parabolic-sar", "trend-following", "momentum", "adx", "vwap"],
+  "core_signal_oneliner": "Parabolic SAR direction flip confirmed by 3-min ADX trending filter, VWAP alignment, and anti-whipsaw check (fewer than 4 flips in prior 3 min)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["psar", "psar_direction", "adx_36", "vwap", "vol_avg_60", "flip_count_36"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

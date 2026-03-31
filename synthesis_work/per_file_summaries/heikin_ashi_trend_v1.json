@@ -1,0 +1,17 @@
+{
+  "name": "heikin_ashi_trend_v1",
+  "mechanism": "On NIFTY, institutional TWAP algorithms executing large directional orders create 30-90 second micro-trends where each 5-second bar is consistently one-directional — price opens, moves in the trend direction, and closes near the extreme with minimal opposition. Heikin Ashi candles detect this by averaging OHLC: when 3+ consecutive green HA bars have no lower wick (HA_low ≈ HA_open), it confirms that NIFTY sellers are absent within every 5-second interval — not just that closing price drifted higher, but that the full bar interior belongs to buyers. This HA streak pattern, confirmed by price above session VWAP and 3-min EMA above 9-min EMA, identifies the 30-90 second continuation window before the institutional batch order completes or exhausts its available supply.",
+  "tags": ["trend_following", "heikin_ashi", "noise_reduction", "ema_filter", "microstructure"],
+  "core_signal_oneliner": "3+ consecutive no-wick Heikin Ashi bars above VWAP with dual EMA trend alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ha_close", "ha_open", "ha_high", "ha_low", "consec_green", "consec_red", "vwap", "ema_fast", "ema_slow"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "volume_spike_exhaustion_fade",
+  "mechanism": "On NIFTY, when a 5-second bar shows a volume spike (4x+ the recent 5-minute average) but the price body is less than 30% of the bar's high-low range (a doji or spinning-top candle), it signals that a large institutional VWAP/TWAP algo or a momentum cascade hit the order book but was immediately absorbed by opposing resting limit orders at that level. The aggressive flow exhausts itself — buyers who chased up or sellers who dumped have completed their program — and the residual imbalance unwinds as market makers and short-gamma desks fade the move within the next 15-90 seconds. The key is the combination: high volume confirms real participation, doji body confirms the participants failed to move price, making imminent reversion highly probable.",
+  "tags": ["mean_reversion", "microstructure", "volume", "exhaustion"],
+  "core_signal_oneliner": "Volume spike 4x+ 5-minute average on a doji candle (body < 30% of range), signaling institutional flow absorbed without directional follow-through",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vol_sma_60", "vol_spike", "range_body_ratio", "ret_1"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

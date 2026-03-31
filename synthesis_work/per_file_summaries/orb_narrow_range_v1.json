@@ -1,0 +1,17 @@
+{
+  "name": "orb_narrow_range_v1",
+  "mechanism": "When NIFTY's 15-minute opening range (09:15-09:30) is narrower than each of the prior 4 sessions' opening ranges, it signals that FII and institutional participants have withheld their directional aggression at the open — a cross-session compression that is qualitatively different from typical ORB days. The thin stop-order stack just above OR_high and below OR_low (because both bulls and bears were cautious this open) means the first breakout bar faces minimal resting limit supply at the OR boundary, allowing NIFTY to extend 20-35 spot points without the usual resistance from participants who positioned during the opening range. At 5-second resolution we can enter within 5 seconds of the close breaking above OR_high (vs. waiting for a 1-minute bar confirm), capturing the initial institutional acceleration before the next wave of TWAP orders fills in the liquidity vacuum.",
+  "tags": ["orb", "narrow-range", "NR4", "cross-session", "compression", "breakout"],
+  "core_signal_oneliner": "Opening range breakout only on days where the 15-min ORB is narrower than all 4 prior sessions, signalling cross-session institutional restraint",
+  "entry_type": "ce_pe",
+  "indicators_used": ["or_high", "or_low", "or_range", "nr4_condition", "or_vol_avg", "vol_3"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 9,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

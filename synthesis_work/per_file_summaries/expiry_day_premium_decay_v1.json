@@ -1,0 +1,17 @@
+{
+  "name": "expiry_day_premium_decay_v1",
+  "mechanism": "On NIFTY weekly expiry Thursdays, option market makers who have sold near-ATM calls and puts are net short gamma across thousands of crore in notional. As NIFTY deviates from session VWAP — which on expiry days closely tracks the aggregate gamma-neutral pin level — dealers must delta-hedge directionally, amplifying the move beyond what fundamental order flow would justify. Once VIX begins declining from the session open (typically 45-90 minutes after open), gamma exposure has partially decayed and dealer hedge ratios stabilize; at that point, the accumulated overshoot unwinds rapidly over 30-120 seconds as dealers lighten delta hedges. On NIFTY, this produces measurable 15-30 spot point VWAP reversions that begin predictably when a confirmed VIX decline signals gamma pressure is easing and the z-score of deviation from VWAP starts recovering direction.",
+  "tags": ["expiry", "gamma", "mean_reversion", "vwap", "time_of_day"],
+  "core_signal_oneliner": "Thursday expiry only: VWAP z-score > 1.5 std with active z-score recovery AND declining VIX from open, signaling gamma-hedge unwinding reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_zscore", "zscore_delta_12", "vix_change_from_open"],
+  "hold_time_seconds": [30, 180],
+  "timeframe": "5s",
+  "exit_target_points": 9,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "fibonacci_breakout_v1",
+  "mechanism": "On NIFTY, intraday swings of 30-80 spot points create strong institutional memory: VWAP-benchmarked desks and quant algos pre-place resting limit orders at 38.2%, 50%, and 61.8% retracement levels of the dominant 5-minute swing. When NIFTY pulls back into one of these precise Fibonacci zones, the concentrated passive buy/sell order clusters absorb directional flow and flip short-term order imbalance within 2-4 bars (10-20 seconds), producing a 15-30 spot-point reversal leg. At 5-second resolution, we can enter the moment the candle closes bullish/bearish within the Fib zone rather than waiting for a full 1-minute bar confirmation, capturing the acceleration phase of the reversal.",
+  "tags": ["fibonacci", "retracement", "mean_reversion", "intraday", "level-based"],
+  "core_signal_oneliner": "Price wicks into 38.2/50/61.8% Fibonacci zone of the 5-minute swing and closes bullish/bearish with positive 15s momentum confirming bounce",
+  "entry_type": "ce_pe",
+  "indicators_used": ["hi_60", "lo_60", "fib_382_bull", "fib_500_bull", "fib_618_bull", "mom_3"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

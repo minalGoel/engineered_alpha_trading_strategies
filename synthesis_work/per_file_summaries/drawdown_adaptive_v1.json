@@ -1,0 +1,17 @@
+{
+  "name": "drawdown_adaptive_v1",
+  "mechanism": "On NIFTY, large institutional TWAP/VWAP algorithms create directional micro-trends detectable by Supertrend(2-min ATR) — when NIFTY is in a bullish Supertrend AND trading above session VWAP, buy-side program flow is dominant at multiple timescales and 30-60 second continuation is high-probability. The drawdown-adaptive layer tracks NIFTY's intraday session high-water mark: beyond 0.4% session drawdown, CE entries are suppressed (market is in a distribution/sell-program regime where Supertrend bullish whipsaws are common), and beyond 0.7% session drawdown all entries halt (index is in stress/liquidation mode where the signal degrades entirely). This regime filter mirrors the original's anti-martingale logic — during index drawdown, the order book skews bearish and a Supertrend long is fighting institutional flow.",
+  "tags": ["trend-following", "supertrend", "vwap", "adaptive", "regime-filter", "drawdown"],
+  "core_signal_oneliner": "2-minute Supertrend direction aligned with VWAP position for 2+ consecutive bars, with session drawdown below 0.4% gating CE entries and 0.7% halting all entries",
+  "entry_type": "ce_pe",
+  "indicators_used": ["supertrend_24", "vwap_session", "session_drawdown_pct"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

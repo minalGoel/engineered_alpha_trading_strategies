@@ -1,0 +1,188 @@
+// This Pine Script™ is subject to the terms of the Mozilla Public License 2.0
+// https://mozilla.org/MPL/2.0/
+//@version=5
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ORB BREAKOUT — MULTI-HOUR HOLD
+//
+// APPLY TO: NIFTY1! continuous back-adjusted futures, 5-MINUTE resolution
+//
+// Edge: The 15-min opening range (09:15-09:30) is the first equilibrium between
+// overnight info and morning order flow. Breakout = new directional flow has
+// overwhelmed this equilibrium. Institutional algos triggered by OR levels
+// create cascading continuation. The move develops over HOURS, not minutes.
+//
+// The 291-strategy synthesis showed "Momentum × Open" was the strongest TAP
+// cell (100% win rate). The reference implementation was an ORB strategy that
+// worked in TradingView. The 291 tested ORB at the WRONG timescale (5s bars,
+// 15-90s holds, -473k). This uses the CORRECT timescale (5-min bars, multi-hr).
+//
+// R:R MEASURED FROM ACTUAL ENTRY (after 2-bar confirmation):
+//   Entry is ~15-30 pts beyond OR boundary after 10-min confirmation.
+//   Target: 100 pts FROM ENTRY (not from OR boundary).
+//   Stop: 45 pts FROM ENTRY.
+//   R:R from entry: 100:45 = 2.22:1. Breakeven WR: 43%.
+//
+// Cost: ~₹907 RT + ~₹260 buffer = ~18 pts. Cost ratio: 18%.
+// Frequency: 15-20 trades/month. Time to 100 trades: 5-7 weeks.
+//
+// TIMING: Signal at bar close → entry at next bar open
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("ORB Multi-Hour", overlay=true,
+  initial_capital=500000,
+  default_qty_type=strategy.fixed, default_qty_value=1,
+  commission_type=strategy.commission.percent, commission_value=0.028,
+  slippage=2,
+  process_orders_on_close=false,
+  calc_on_every_tick=false)
+
+// ─── INPUTS (5) ─────────────────────────────────────────────────────────────
+i_tgt    = input.float(100.0, "1. Target from Entry (pts)",  step=5.0, tooltip="Measured from entry price, NOT from OR boundary. 100 pts at 18 cost = 18% ratio.")
+i_stop   = input.float(45.0,  "2. Stop from Entry (pts)",    step=5.0, tooltip="45 pts ≈ entry back to OR midpoint. If price can't hold above midpoint, breakout failed.")
+i_trail  = input.float(35.0,  "3. Trail Offset (pts)",       step=5.0, tooltip="Trail follows peak at this distance. Activate at 60% of target.")
+i_or_min = input.float(30.0,  "4. Min OR Width (pts)",       step=5.0, tooltip="ORs < 30 pts are noise — no structural meaning.")
+i_or_max = input.float(100.0, "5. Max OR Width (pts)",       step=5.0, tooltip="ORs > 100 pts = already extended. Breakout from a 100-pt OR risks 50-pt retracement.")
+
+// ─── HARDCODED CONSTANTS ────────────────────────────────────────────────────
+VIX_MAX    = 25.0    // exclude high-vol regimes
+VOL_MULT   = 1.2     // breakout volume must exceed OR avg × this
+GAP_THR    = 0.10    // gap threshold for directional filter (%)
+ENTRY_END  = 720     // entry window closes at 12:00 (tmn)
+EOD_EXIT   = 910     // flatten at 15:10 (tmn)
+
+// ─── SESSION & TIME ─────────────────────────────────────────────────────────
+new_sess = ta.change(time("D"))
+hr       = hour(time, "Asia/Kolkata")
+mn       = minute(time, "Asia/Kolkata")
+tmn      = hr * 60 + mn
+
+// OR period on 5-min bars: bars at 09:15, 09:20, 09:25 (covers 09:15-09:30)
+in_or = tmn >= 555 and tmn < 570
+
+// Entry window: 09:35 (after 1-bar buffer post-OR) to 12:00
+in_window = tmn >= 575 and tmn < ENTRY_END
+
+// ─── VIX (previous day close) ───────────────────────────────────────────────
+vix    = request.security("NSE:INDIAVIX", "D", close[1], lookahead=barmerge.lookahead_on)
+vix_ok = na(vix) or vix < VIX_MAX
+
+// ─── GAP CLASSIFICATION ────────────────────────────────────────────────────
+var float prev_cl = na
+var float sess_op = na
+if new_sess
+    prev_cl := close[1]
+    sess_op := open
+
+gp = not na(prev_cl) ? (sess_op - prev_cl) / prev_cl * 100 : 0.0
+
+// Gap filter: don't breakout AGAINST the gap direction
+// Gap-up → only long breakouts. Gap-down → only short. Flat → both.
+gap_ok_l = gp >= -GAP_THR    // longs OK unless gap is significantly down
+gap_ok_s = gp <=  GAP_THR    // shorts OK unless gap is significantly up
+
+// ─── OR TRACKING ────────────────────────────────────────────────────────────
+var float or_h = na
+var float or_l = na
+var bool  or_done = false
+
+if new_sess
+    or_h    := na
+    or_l    := na
+    or_done := false
+
+if in_or
+    or_h := na(or_h) ? high : math.max(or_h, high)
+    or_l := na(or_l) ? low  : math.min(or_l, low)
+
+if not or_done and tmn >= 570
+    or_done := true
+
+or_w     = or_done ? or_h - or_l : 0.0
+or_valid = or_done and or_w >= i_or_min and or_w <= i_or_max
+
+// ─── OR VOLUME TRACKING ────────────────────────────────────────────────────
+// Average volume during the OR period (baseline for breakout volume comparison)
+var float or_vol_sum = 0.0
+var int   or_vol_cnt = 0
+if new_sess
+    or_vol_sum := 0.0
+    or_vol_cnt := 0
+
+if in_or and volume > 0
+    or_vol_sum += volume
+    or_vol_cnt += 1
+
+or_vol_avg = or_vol_cnt > 0 ? or_vol_sum / or_vol_cnt : 0.0
+vol_brk_ok = or_done and or_vol_avg > 0 and volume > or_vol_avg * VOL_MULT
+
+// ─── BREAKOUT DETECTION (2-bar confirmation) ────────────────────────────────
+// Both current bar AND previous bar must close beyond OR level.
+// At tmn >= 575 (09:35), close[1] is the 09:30 bar — first bar after OR. ✓
+brk_above = or_valid and close > or_h and nz(close[1]) > or_h
+brk_below = or_valid and close < or_l and nz(close[1]) < or_l
+
+// ─── TRADE LIMIT ────────────────────────────────────────────────────────────
+var int day_trades = 0
+if new_sess
+    day_trades := 0
+under_lim = day_trades < 1    // max 1 trade per day
+
+// ─── ENTRY ──────────────────────────────────────────────────────────────────
+flat = strategy.position_size == 0
+
+go_l = flat and in_window and under_lim and vix_ok
+  and brk_above and vol_brk_ok and gap_ok_l
+go_s = flat and in_window and under_lim and vix_ok
+  and brk_below and vol_brk_ok and gap_ok_s
+
+if go_l
+    strategy.entry("L", strategy.long, comment="ORB")
+    day_trades += 1
+if go_s
+    strategy.entry("S", strategy.short, comment="ORB")
+    day_trades += 1
+
+// ─── EXITS: TARGET + STOP + TRAIL ──────────────────────────────────────────
+// All measured from ENTRY PRICE (strategy.exit does this automatically).
+// Trail activates at 60% of target.
+tgt_t     = math.round(i_tgt / syminfo.mintick)
+stp_t     = math.round(i_stop / syminfo.mintick)
+trail_act = math.round(i_tgt * 0.60 / syminfo.mintick)
+trail_off = math.round(i_trail / syminfo.mintick)
+
+if strategy.position_size > 0
+    strategy.exit("XL", "L", profit=tgt_t, loss=stp_t,
+      trail_points=trail_act, trail_offset=trail_off)
+if strategy.position_size < 0
+    strategy.exit("XS", "S", profit=tgt_t, loss=stp_t,
+      trail_points=trail_act, trail_offset=trail_off)
+
+// ─── INVALIDATION EXIT ─────────────────────────────────────────────────────
+// If price closes back inside OR for 2 consecutive 5-min bars → breakout failed.
+// This is the thesis-based stop — fires before hard stop in failed breakouts.
+var int inv_cnt = 0
+if strategy.position_size > 0
+    inv_cnt := close < or_h ? inv_cnt + 1 : 0
+else if strategy.position_size < 0
+    inv_cnt := close > or_l ? inv_cnt + 1 : 0
+else
+    inv_cnt := 0
+
+if inv_cnt >= 2
+    strategy.close_all(comment="Inv")
+
+// ─── EOD FLATTEN ────────────────────────────────────────────────────────────
+if strategy.position_size != 0 and tmn >= EOD_EXIT
+    strategy.close_all(comment="EOD")
+
+// ─── PLOTS ──────────────────────────────────────────────────────────────────
+plot(or_done ? or_h : na, "OR High", color.green, style=plot.style_stepline, linewidth=2)
+plot(or_done ? or_l : na, "OR Low",  color.red,   style=plot.style_stepline, linewidth=2)
+plot(or_done ? (or_h + or_l) / 2 : na, "OR Mid", color.gray, style=plot.style_stepline)
+
+plotshape(go_l, "Long",  shape.triangleup,   location.belowbar, color.green, size=size.small)
+plotshape(go_s, "Short", shape.triangledown,  location.abovebar, color.red,   size=size.small)
+
+// Background: highlight OR period
+bgcolor(in_or ? color.new(color.yellow, 90) : na, title="OR Period")

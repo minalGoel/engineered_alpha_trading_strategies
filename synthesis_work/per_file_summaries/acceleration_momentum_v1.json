@@ -1,0 +1,17 @@
+{
+  "name": "acceleration_momentum_v1",
+  "mechanism": "On NIFTY, large directional institutional orders (FII flow, ETF rebalancing, index arb) are executed incrementally via TWAP/VWAP algos, causing the 1-minute ROC to ramp up progressively before the full move is obvious. When the 30-second change in 1-minute momentum (ROC_accel) turns positive for 15+ consecutive seconds and its own slope is rising, NIFTY is in the 'jerk phase' — the third derivative is positive, meaning algorithmic participation is actively growing. At 5-second resolution we can enter during this early acceleration window, capturing the first 6-12 option points before reactive momentum traders pile in and the acceleration peaks.",
+  "tags": ["momentum", "second-derivative", "acceleration", "early-entry", "trend-following"],
+  "core_signal_oneliner": "Positive and rising rate-of-change acceleration (third derivative of price) confirming institutional TWAP momentum buildup in the early phase of a directional move",
+  "entry_type": "ce_pe",
+  "indicators_used": ["roc_12", "roc_accel", "roc_accel_slope", "vwap", "vol_sma20"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 3,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

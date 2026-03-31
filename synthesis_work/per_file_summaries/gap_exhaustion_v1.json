@@ -1,0 +1,17 @@
+{
+  "name": "gap_exhaustion_v1",
+  "mechanism": "On NIFTY, gap openings (>0.5%) trigger 10-30 minutes of sustained directional participation — momentum algos, retail FOMO, and index arbitrage all push the index to successive new session extremes. As this absorption process nears completion, each new extreme is made on shrinking 5-second volume: the institutional buyers (gap-up) or sellers (gap-down) have been absorbed and remaining order flow is retail noise. When MFI(3-min) reaches extreme levels (>72 or <28) AND 5-second volume falls below the session average while price is at or near the session extreme, the exhaustion is confirmed. VWAP-benchmarked funds and short-gamma market-makers then initiate counter-trend flow.",
+  "tags": ["gap", "exhaustion", "reversal", "volume_divergence", "opening_session"],
+  "core_signal_oneliner": "Gap > 0.5% day with price near session extreme, recent volume < 72% of 3-min baseline, and MFI + RSI both in overbought/oversold territory signaling exhaustion reversal",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "session_high / session_low", "vol_ma_36", "vol_ma_6", "mfi_36", "rsi_24", "near_extreme"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

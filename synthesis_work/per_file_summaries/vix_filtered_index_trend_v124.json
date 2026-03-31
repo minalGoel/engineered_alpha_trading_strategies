@@ -1,0 +1,17 @@
+{
+  "name": "vix_filtered_index_trend_v124",
+  "mechanism": "When India VIX spikes above 21, NIFTY's intraday order flow shifts from retail-dominated mean-reverting noise to sustained institutional directional flow — FIIs either aggressively de-risking or accumulating in bulk. In this regime, the 60-second EMA crossing above the 5-minute EMA on NIFTY signals the onset of one of these institutional waves, confirmed by price trading above session VWAP (day's dominant direction). At 5-second resolution, we enter at the first crossover bar rather than waiting for a full 1-minute confirmation, capturing 20-40% more of the initial impulse before algorithmic followers pile in. The VIX ceiling at 35 avoids extreme panic conditions where NIFTY gaps erratically and limit-order fills become unreliable.",
+  "tags": ["vix_regime", "trend_following", "ema_crossover", "vwap"],
+  "core_signal_oneliner": "EMA(1min) crosses EMA(5min) during India VIX > 21 elevated-vol regime with VWAP directional confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_12", "ema_slow_60", "vwap", "india_vix"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

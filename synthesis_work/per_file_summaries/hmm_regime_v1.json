@@ -1,0 +1,17 @@
+{
+  "name": "hmm_regime_v1",
+  "mechanism": "On NIFTY, intraday microstructure alternates between trending micro-sessions — when institutional TWAP/VWAP algorithms are executing large directional orders — and mean-reverting periods dominated by market makers and liquidity providers absorbing order flow. This alternation is detectable in the sign autocorrelation of 5-second returns: during institutional execution windows, consecutive 5s bars trend in the same direction (directional consistency > 60% over 3 minutes), while market-maker-dominated periods show near-random or negatively autocorrelated returns (consistency < 42%). In trending regime, we follow the institutional direction using 2-min/6-min EMA alignment; in mean-reverting regime, we fade z-score extremes as market makers push price back toward the intraday mean within 30-60 seconds.",
+  "tags": ["regime-detection", "adaptive", "momentum", "mean_reversion", "microstructure"],
+  "core_signal_oneliner": "Rolling directional consistency proxy for HMM regime, switching between EMA-follow and z-score fade",
+  "entry_type": "ce_pe",
+  "indicators_used": ["dir_consistency_36", "ema_24", "ema_72", "zscore_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

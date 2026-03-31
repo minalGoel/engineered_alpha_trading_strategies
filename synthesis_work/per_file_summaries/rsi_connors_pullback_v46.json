@@ -1,0 +1,17 @@
+{
+  "name": "rsi_connors_pullback_v46",
+  "mechanism": "On NIFTY/BANKNIFTY, micro-corrections within an intraday trend create extreme RSI(2) readings at 5-second resolution. When RSI(2) drops below 20 while the index remains above its 10-minute SMA, two consecutive sell-dominated 5-second bars have absorbed nearby resting buy orders, briefly exhausting immediate demand. Market makers and VWAP-benchmarked algos recognise this as a deviation from the prevailing flow and begin stepping in, snapping the index back within 30-60 seconds as the order book rebalances. The RSI(2) extreme marks local selling exhaustion, not trend reversal — the 10-minute SMA confirms the macro direction remains intact.",
+  "tags": ["mean_reversion", "pullback", "rsi", "connors", "intraday_trend"],
+  "core_signal_oneliner": "Ultra-short 2-bar RSI drops below 20 within a 10-min SMA uptrend, marking 10-second selling exhaustion before order-book rebalancing resumes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["sma_120", "rsi_2"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

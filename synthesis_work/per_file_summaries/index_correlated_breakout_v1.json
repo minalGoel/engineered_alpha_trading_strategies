@@ -1,0 +1,17 @@
+{
+  "name": "index_correlated_breakout_v1",
+  "mechanism": "On NIFTY, whenever a bar closes above the running intraday session high, it signals that institutional VWAP-benchmarked algorithms that were patiently accumulating on earlier dips have finally absorbed all intraday supply — their execution models flip from 'passive fill' to 'active momentum' mode. This creates a cascade of order flow that typically extends 15-25 NIFTY spot points over the next 30-90 seconds. The edge is highest when: (1) the breakout occurs above VWAP — confirming the institutional side of the ledger is net-long for the session — and (2) a 1-minute momentum buildup precedes the new high, distinguishing a sustained institutional push from a retail spike that fails within 2-3 bars. Session-high breakouts that occur mid-session (after 09:30, when all opening range noise has cleared) carry stronger institutional weight than ORB breakouts because they overcome all intraday supply that accumulated post-open.",
+  "tags": ["breakout", "session-high-low", "intraday", "momentum", "vwap-confirmation"],
+  "core_signal_oneliner": "New intraday session high/low breakout with VWAP alignment, 1-minute momentum buildup, and volume surge",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_high", "session_low", "vwap", "momentum_12", "vol_avg_120"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

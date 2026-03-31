@@ -1,0 +1,17 @@
+{
+  "name": "entropy_regime_v1",
+  "mechanism": "When institutional TWAP/VWAP algorithms are actively working large directional NIFTY orders, the 5-second return distribution compresses into a tight cluster of small positive (buy program) or small negative (sell program) values — Shannon entropy over the preceding 60 bars (5 minutes) falls below 1.8 bits versus the random-walk baseline of 3.0 bits (log2(8) for 8 bins). This compressed entropy signals an order program with 40-60% unfilled lots remaining, which creates 30-90 second autocorrelation in NIFTY spot returns as the algorithm continues filling. We enter in the direction of the dominant 5-second mean return with VWAP and EMA confirmation, and exit within 90 seconds before the program completes and entropy reverts toward baseline.",
+  "tags": ["entropy", "information-theory", "regime", "Shannon", "quantitative", "trend-following"],
+  "core_signal_oneliner": "Shannon entropy of 5s returns over 60 bars falls below 1.8 bits, signaling an active institutional order program; entry direction from dominant mean return",
+  "entry_type": "ce_pe",
+  "indicators_used": ["log_ret", "entropy_60", "dom_ret", "ret_vol", "ema_12", "ema_36", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

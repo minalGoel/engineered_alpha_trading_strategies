@@ -1,0 +1,17 @@
+{
+  "name": "expiry_day_pattern_v1",
+  "mechanism": "On NIFTY and BANKNIFTY expiry days, option market makers who are short gamma at near-ATM strikes must delta-hedge: they buy the index on dips and sell on rallies relative to the strike cluster with maximum open interest (a proxy for max pain). In the morning session (09:20-13:30 IST), this creates a consistent magnetic pull — when NIFTY deviates 25+ spot points below the max-OI strike, market makers absorb selling and create a floor, reverting spot toward the pin level within 30-90 seconds; the mirror image holds when price is 25+ points above. In the final 90 minutes (13:30-15:25 IST), gamma decays toward zero and market makers unwind their delta hedges en masse: the pinning force collapses, and any directional push creates a rapid 30-60 second momentum burst as de-hedging amplifies the initial move rather than dampening it.",
+  "tags": ["event_driven", "expiry", "gamma", "mean_reversion", "momentum", "options"],
+  "core_signal_oneliner": "Expiry day dual-phase: morning mean-reversion toward max-OI pin strike, afternoon breakout momentum from gamma-unwind de-hedging",
+  "entry_type": "ce_pe",
+  "indicators_used": ["is_expiry", "max_oi_strike", "dist_to_max_oi", "mom_12", "roll_high_12 / roll_low_12"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

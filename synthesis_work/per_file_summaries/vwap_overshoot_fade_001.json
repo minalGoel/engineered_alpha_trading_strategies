@@ -1,0 +1,17 @@
+{
+  "name": "vwap_overshoot_fade_001",
+  "mechanism": "On NIFTY, when the index drifts 0.3%+ below (or above) session VWAP in a low-ADX tape, the move is driven by algorithmic momentum triggers and retail chase flow — not institutional directional conviction. RSI(24) (a 2-minute exhaustion read at 5s bars) hitting below 15 or above 85 signals that micro-momentum is fully spent and no new sellers/buyers are stepping in. VWAP-benchmarked institutional desks then begin rebalancing aggressively — fills at 0.3% from VWAP give them significant benchmark outperformance, creating strong buy/sell pressure back toward VWAP. The low ADX(36) filter (3-minute trend strength < 22) ensures no large TWAP/VWAP execution is underway, which would override the reversion tendency.",
+  "tags": ["mean_reversion", "vwap", "exhaustion", "early_session", "range_bound"],
+  "core_signal_oneliner": "0.3% VWAP deviation with 2-minute RSI at extreme exhaustion (<15/>85) in a low-ADX range-bound early session tape",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "rsi_24", "adx_36"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

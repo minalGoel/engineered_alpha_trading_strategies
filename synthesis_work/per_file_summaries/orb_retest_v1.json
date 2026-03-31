@@ -1,0 +1,17 @@
+{
+  "name": "orb_retest_v1",
+  "mechanism": "NIFTY's first 15 minutes (09:15-09:30) establishes an opening range whose high and low serve as the primary intraday reference levels for institutional VWAP algorithms, options market makers delta-hedging against gamma exposure accumulated at open, and systematic breakout programs that sized in on the initial move. When NIFTY retests the ORB high (for upside breakouts) or ORB low (for downside breakouts) mid-session, resting limit buy orders from participants who missed the initial breakout and stop-loss orders from trapped directional sellers concentrate at that level, creating a liquidity pool. At 5-second resolution, this absorption is detectable: NIFTY's low dips within 20-25 spot points of the ORB high, forms a micro-range over 60-90 seconds as aggressive sellers hit resting bids, then accelerates sharply away as the absorbed supply is exhausted and momentum programs re-enter in the original breakout direction.",
+  "tags": ["ORB", "retest", "level_confirmation", "support_resistance", "intraday"],
+  "core_signal_oneliner": "Mid-session ORB level retest where intrabar low touches within proximity of ORB high and 15s momentum confirms the bounce",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high", "orb_low", "breakout_up_seen", "breakout_down_seen", "near_orb_high_24", "near_orb_low_24", "momentum_3"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

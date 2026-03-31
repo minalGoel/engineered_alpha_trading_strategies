@@ -1,0 +1,17 @@
+{
+  "name": "gap_momentum_v1",
+  "mechanism": "When NIFTY gaps up at open (driven by overnight SGX Nifty futures or global equity moves), institutional desks and index arbitrageurs with pre-positioned buy orders push the index further in the first 30-90 seconds — their TWAP/VWAP execution algorithms are programmed to absorb the gap rather than mean-revert it. A 0.4-0.8% NIFTY opening gap (90-180 spot points) represents genuine overnight information flow, not noise, and the first 3 bars (15 seconds) of continuation confirm that resting sell orders at the opening level are being absorbed rather than reversing the move. We enter as continuation is confirmed and ride the next 10-15 spot points before institutional order flow exhausts.",
+  "tags": ["gap", "momentum", "opening", "continuation"],
+  "core_signal_oneliner": "Gap 0.4-0.8% day: 3-bar (15s) continuation momentum in gap direction confirms institutional absorption rather than immediate reversal, entry within first 20 minutes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "ret_3"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

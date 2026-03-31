@@ -1,0 +1,17 @@
+{
+  "name": "orb_15min_v1",
+  "mechanism": "On NIFTY, when the 09:15-09:29 opening range compresses into a tight band (0.3-1.5% of index price, roughly 60-300 points), it signals that FII/DII desks and domestic algo participants are in genuine price discovery equilibrium \u2014 neither side has printed a decisive gap or directional bias. This condensed coiled state means that the first close above the ORB high with a volume surge (>1.5x the 20-minute rolling average) represents a decisive supply-ceiling break: an institutional buy program has cleared the ask-side resting orders that defined the upper bound, and the same algorithms that created the range now accelerate the breakout as their sell-stop orders above are triggered and VWAP-benchmark algos scramble to avoid tracking error. The tight range also means the breakout signal has lower noise than wide-ORB days where price action is already directional from the open.",
+  "tags": ["breakout", "opening_range", "momentum", "orb", "width_filter"],
+  "core_signal_oneliner": "15-minute ORB breakout with 2-bar persistence, 1.5x volume surge, and OR width filter (0.3-1.5%) selecting coiled-spring sessions only, with entries restricted to 09:30-12:00",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high", "orb_low", "orb_width_pct", "vol_sma_240", "persist_2bar"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

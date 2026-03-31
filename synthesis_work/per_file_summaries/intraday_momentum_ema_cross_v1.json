@@ -1,0 +1,17 @@
+{
+  "name": "intraday_momentum_ema_cross_v1",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP desk algorithms executing large directional orders create sustained micro-trends visible as EMA alignment across 1-minute and 3-minute windows. When the 1-min EMA(12) freshly crosses above the 3-min EMA(36) with ADX(36) > 20 and price above session VWAP, it indicates order flow is directionally persistent across multiple successive 5-second bars — not a spike but continuous absorption by institutional buyers. The VWAP condition confirms that net institutional flow for the session is aligned with the signal direction, making algorithmic TWAP orders likely to continue pushing NIFTY in the same direction for the next 30-90 seconds. At 5-second resolution, entering at the fresh crossover bar captures the first 10-15 NIFTY spot points of the continuation impulse before the next wave of TWAP orders arrives.",
+  "tags": ["momentum", "trend_following", "ema_crossover", "micro_trend"],
+  "core_signal_oneliner": "Fresh 1-minute EMA cross above 3-minute EMA with ADX trend strength and VWAP alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_12", "ema_slow_36", "adx_36", "vwap", "slope_ema_slow_12"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

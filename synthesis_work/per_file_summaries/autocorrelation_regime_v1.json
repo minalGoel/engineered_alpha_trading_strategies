@@ -1,0 +1,17 @@
+{
+  "name": "autocorrelation_regime_v1",
+  "mechanism": "On NIFTY, the 5-minute rolling lag-1 autocorrelation of 5-second returns quantifies two competing microstructure forces simultaneously present in the index order book. Positive autocorrelation (> 0.20) signals institutional TWAP/VWAP algorithms executing large directional mandates whose resting orders persist across dozens of 5-second bars, creating momentum that lasts 30-90 seconds; we follow the prevailing 1-minute impulse. Negative autocorrelation (< -0.20) signals short-gamma market makers delta-hedging options books dominating the tape — they reflexively fade each 5-second tick with the opposite side, so every 1-minute move becomes self-correcting; we fade back toward VWAP. The 5-second bar resolution lets us classify and react to regime transitions 12× faster than the original 1-minute formulation, entering at the regime's onset rather than after confirmation.",
+  "tags": ["autocorrelation", "regime", "serial-correlation", "momentum-reversion", "quantitative", "microstructure"],
+  "core_signal_oneliner": "5-minute rolling lag-1 autocorrelation of returns classifies regime: positive (>0.20) triggers momentum follow, negative (<-0.20) triggers VWAP mean reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ret_1", "autocorr_60", "ret_12", "ema_12", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "spread_dynamics_v1",
+  "mechanism": "On NIFTY, when a 5-second bar's high-low range expands to 2× or more the 5-minute rolling average range, it signals a liquidity stress event — typically a stop-cascade execution, large institutional TWAP block completing, or aggressive momentum algo entry overwhelming resting orders. NIFTY's continuous futures depth means these stress bursts complete within 30-60 seconds and leave a directional overshoot as the aggressive initiator finishes, with resting limit orders on the other side temporarily absorbed. When the per-bar range contracts back below 1.5× normal (stress resolved), NIFTY futures market makers who widened their quotes and delta-hedged during the event begin rebalancing inventory, and VWAP-benchmarked algorithms resume passive fills at their benchmark prices — this systematic reversal flow drives a 40-60% reversion of the spike move within the next 60 seconds.",
+  "tags": ["microstructure", "mean_reversion", "volatility_spike_fade", "range_dynamics"],
+  "core_signal_oneliner": "Bar range expands to 2x the 5-min average then contracts below 1.5x, signaling liquidity stress resolution and fading the directional overshoot",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bar_range", "avg_range_60", "range_ratio", "peak_ratio_12", "momentum_6"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

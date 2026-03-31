@@ -1,0 +1,17 @@
+{
+  "name": "orb_closing_range_v1",
+  "mechanism": "NIFTY's 14:30-15:00 IST window is where mutual funds execute SIP-driven end-of-day equity deployment and FIIs flatten residual intraday delta before overnight risk. This sustained institutional two-way flow compresses NIFTY into a tight 20-40 spot point closing range. When NIFTY breaks above this range at 15:00+, buy-side MF flow has overwhelmed the supply ceiling — residual short-covering from derivatives participants (who need to square positions before close) accelerates the move and creates a 20-35 spot point continuation (10-17 option pts ATM) in the final trading window. The signal is only valid when NIFTY is already above its session VWAP, confirming that the breakout aligns with the day's net institutional direction rather than fighting accumulated sell-side pressure.",
+  "tags": ["closing_range", "breakout", "end_of_day", "institutional_positioning", "intraday"],
+  "core_signal_oneliner": "End-of-day closing range breakout (14:30-15:00) confirmed by VWAP alignment, 2-min momentum, and day-range position",
+  "entry_type": "ce_pe",
+  "indicators_used": ["crb_high", "crb_low", "session_vwap", "momentum_24", "close_vs_day_range"],
+  "hold_time_seconds": [30, 600],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

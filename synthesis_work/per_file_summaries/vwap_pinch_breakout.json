@@ -1,0 +1,17 @@
+{
+  "name": "vwap_pinch_breakout",
+  "mechanism": "On NIFTY, the session VWAP anchors institutional execution benchmarks while a 2-minute EMA tracks short-term directional drift. When these two anchors converge to within 0.05% of spot, NIFTY is in micro-equilibrium: VWAP-benchmarked algorithms (both buy-side and sell-side) are filling at similar prices and neither directional camp holds an advantage. When price breaks above BOTH anchors simultaneously with a volume surge, it signals that buy-side institutional order flow has overwhelmed the balance — their accumulated unfilled demand drives a 10-20 spot point continuation as sell-side algorithms step back and liquidity thins. The reverse applies on breaks below both anchors: trapped long positions and fresh sell flow compound into a quick downside continuation.",
+  "tags": ["momentum", "breakout", "vwap", "ema", "squeeze"],
+  "core_signal_oneliner": "Simultaneous breakout above EMA(24) and session VWAP when both are within 0.05% of each other (micro-equilibrium pinch), confirmed by volume surge",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_24", "vwap", "pinch", "avg_vol_12"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v10",
+  "mechanism": "On NIFTY, z-score deviations of -2.3 standard deviations from session VWAP (~50-70 spot points below the institutional benchmark at typical intraday volatility) represent the mid-level dislocation class — too deep for passive gamma-hedger fades but not deep enough to trigger the multi-buyer convergence of capitulation events. The VIX band filter 12-22 is the defining differentiator: VIX below 12 signals an ultra-calm regime where NIFTY VWAP gravitational pull is weak and 2.3-sigma events almost never occur; VIX above 22 signals a regime where sustained institutional directional flow can overwhelm VWAP reversion for minutes or hours, making the thesis unreliable. In the 12-22 band — normal to moderately elevated volatility — NIFTY's VWAP-benchmarked buy programs activate predictably at z=-2.3 because they face a 50-70 spot point lag against their benchmark, creating measurable urgency without the structural breakdown risk of VIX>22 sessions. The 1.4x volume confirmation (between panic threshold 1.7x and drift threshold 1.2x) detects the exact moment institutional programs",
+  "tags": ["mean_reversion", "vwap", "vix_band", "mid_depth_dislocation", "normal_regime"],
+  "core_signal_oneliner": "Mid-depth VWAP z-score dislocation (-2.3 sigma) with moderate volume surge, gated by normal-VIX band (12-22)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "close_std_180", "vwap_zscore", "rel_volume_36", "vix_close"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

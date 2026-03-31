@@ -1,0 +1,17 @@
+{
+  "name": "market_profile_poc_v1",
+  "mechanism": "On NIFTY, the developing session Market Profile concentrates the majority of traded volume within a Value Area (VA) that shifts incrementally as institutional TWAP/VWAP algorithms and market makers repeatedly transact near the session's fairest price \u2014 the Point of Control (POC). When NIFTY briefly probes outside the VA boundary (a 10-25 spot point excursion) but fails to sustain a close outside the VA for more than 30 seconds, it signals that the initiative selling/buying was absorbed rather than welcomed. VWAP-benchmarked algorithms that filled orders at the VA boundary now delta-hedge or rebalance toward POC, creating a directional pull of 10-20 NIFTY spot points within 30-90 seconds.",
+  "tags": ["mean_reversion", "market_profile", "volume_profile", "poc", "value_area", "intraday"],
+  "core_signal_oneliner": "Price probes outside the 15-minute+ Market Profile Value Area then re-enters, triggering a reversion toward the Point of Control",
+  "entry_type": "ce_pe",
+  "indicators_used": ["poc", "va_high", "va_low", "probe_below_va6", "probe_above_va6", "poc_distance_bps"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

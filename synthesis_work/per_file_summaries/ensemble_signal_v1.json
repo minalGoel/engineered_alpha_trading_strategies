@@ -1,0 +1,17 @@
+{
+  "name": "ensemble_signal_v1",
+  "mechanism": "On NIFTY, four algorithmically-watched signals — session VWAP deviation, EMA trend alignment (1-min vs 5-min), Bollinger Band position, and 2-min RSI — are monitored by distinct participant archetypes: VWAP-benchmarked institutional desks, short-term trend systems, volatility traders, and momentum-fade algos. When at least 3 of these 4 signals simultaneously agree on direction, it identifies the 'trend-pullback-oversold' microstructure state: NIFTY is in an established short-term uptrend (EMA12 > EMA60), has briefly dipped below session VWAP under selling pressure (VWAP deviation +1), and RSI has reached a short-term oversold level (<35), while Bollinger Bands remain neutral. This convergence signals that multiple algorithm types are about to layer buy orders simultaneously, creating a 10-20 spot point directional push over the next 30-90 seconds.",
+  "tags": ["ensemble", "meta-strategy", "consensus", "pullback", "trend", "mean_reversion"],
+  "core_signal_oneliner": "3-of-4 sub-signal consensus (VWAP, EMA alignment, Bollinger, RSI) with EMA trend anchor confirmed over 2 consecutive bars",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_vwap", "ema_12", "ema_60", "bollinger_60_2", "rsi_24", "ensemble_score"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

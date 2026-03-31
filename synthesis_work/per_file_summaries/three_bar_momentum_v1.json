@@ -1,0 +1,17 @@
+{
+  "name": "three_bar_momentum_v1",
+  "mechanism": "On NIFTY, when three consecutive 5-second bars each close in the same direction (close > open for bulls) with both volume and bar range expanding monotonically, it indicates an institutional TWAP or algo order is still actively routing — each successive 5-second slice consumes more liquidity at a wider spread than the previous, signaling the order has not yet completed its fill. Unlike individual FnO stocks where this pattern can reflect a single large order, NIFTY's index composition means three expanding-volume bullish bars reflect aggregate buy-side imbalance from multiple participants simultaneously, making continuation more persistent. The next 15-90 seconds captures the residual 'still-filling' phase before the algorithmic slice completes and the imbalance normalizes.",
+  "tags": ["momentum", "pattern", "order_flow", "short_term"],
+  "core_signal_oneliner": "Three consecutive 5s bars in the same direction with monotonically expanding volume and range, signaling an active TWAP order still routing",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bar_return_0", "bar_return_1", "bar_return_2", "vol_expanding", "range_expanding", "vol_context_20"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

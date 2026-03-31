@@ -1,0 +1,17 @@
+{
+  "name": "bb_squeeze_breakout_v1",
+  "mechanism": "When NIFTY's 5-minute Bollinger Band width compresses below the 10th-15th percentile of the prior 1-hour distribution, systematic market-making algos narrow their quotes and momentum programs stand aside — the index is in a low-uncertainty microstructure regime with order flow evenly balanced. The breakout fires when NIFTY closes outside the compressed band on above-average volume, triggering cascading entries from rule-based trend-following algorithms and breakout systems that share similar momentum filters. On NIFTY specifically, these cascades sustain for 30-90 seconds because FII-dominated institutional flow executes in TWAP/VWAP waves, meaning the initial breakout price is only partially absorbed and each subsequent 5-second bar sees renewed directional order pressure — a directional autocorrelation window that equity names lack.",
+  "tags": ["breakout", "volatility", "bollinger", "squeeze", "momentum"],
+  "core_signal_oneliner": "5-minute Bollinger Band width below 15th percentile of 1-hour history followed by close outside band with 1.5x volume surge",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_mid_60", "bb_std_60", "bb_width_60", "bb_width_pctile_720", "vol_sma_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

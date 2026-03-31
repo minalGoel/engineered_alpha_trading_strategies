@@ -1,0 +1,17 @@
+{
+  "name": "adx_trend_strength_v1",
+  "mechanism": "On NIFTY, large institutional TWAP algorithms executing directional orders over a 5-minute window create sustained directional pressure visible as ADX(60) rising through 25 — the cumulative high-low ranges skew consistently in one direction as the algorithm absorbs opposing liquidity. The +DI/-DI spread widening above 8 confirms the imbalance is directional rather than choppy two-sided volatility. At 5-second resolution, we enter when ADX is STILL RISING through the 25 level, meaning the institutional order is only partially filled and the next 30-90 seconds will see continued directional pressure before the order completes. The VWAP filter ensures we trade with the session flow, not against accumulated directional drift.",
+  "tags": ["adx", "trend-strength", "directional-movement", "momentum", "trend-following"],
+  "core_signal_oneliner": "ADX above 25 and still rising with DI spread confirming directional bias and price above/below VWAP, signaling an institutional order in progress",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ADX_60", "plus_DI_60", "minus_DI_60", "VWAP"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

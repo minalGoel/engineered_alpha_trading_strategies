@@ -1,0 +1,17 @@
+{
+  "name": "orb_gap_combo_v1",
+  "mechanism": "On NIFTY, an overnight gap encodes FII/DII directional conviction formed after previous close; when the 15-minute opening range breakout aligns with the gap direction, it reveals that domestic institutional and algorithmic participants agree with the overnight macro bias. This dual confirmation — gap direction + ORB breakout direction — triggers simultaneous execution from gap-continuation algos and ORB-breakout systems, creating a cascade of aggressive limit-order consumption above/below the ORB boundary that sustains for 30-90 seconds. Volume confirmation filters out low-conviction ORB breaks where algorithmic demand is thin, selecting only bars where order flow imbalance is measurably above the session mean.",
+  "tags": ["ORB", "gap", "opening_range", "breakout", "momentum", "dual_alignment"],
+  "core_signal_oneliner": "ORB breakout that aligns with overnight gap direction, confirmed by 2-bar persistence and volume surge above 20-min average",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "orb_high", "orb_low", "vol_sma_240", "vol_ratio"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

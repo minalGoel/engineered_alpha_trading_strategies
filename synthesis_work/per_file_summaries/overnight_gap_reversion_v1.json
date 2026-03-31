@@ -1,0 +1,17 @@
+{
+  "name": "overnight_gap_reversion_v1",
+  "mechanism": "When NIFTY opens with a 0.3-1.0% gap vs the previous close, the gap is produced by SGX Nifty futures and thin pre-market participation rather than genuine intraday price discovery. VWAP-benchmarked institutional desks (domestic MFs, FIIs) receive fill prices materially worse than their expected intraday VWAP at the open and immediately initiate counter-directional orders to exploit the mispricing, creating a systematic directional flow toward the gap fill within the first 20-30 minutes. At 5-second resolution we detect when the short-term RSI signals exhaustion of the opening spike (RSI below 40 for gap-down, above 60 for gap-up) and price is still away from session VWAP, then enter in the direction of the institutional reversion pressure to capture the next 30-120 second leg of this flow.",
+  "tags": ["mean_reversion", "gap", "opening", "institutional_flow"],
+  "core_signal_oneliner": "Moderate overnight gap (0.3-1.0%) reversion trade triggered by 1-min RSI exhaustion of the opening gap-direction thrust within 09:20-09:50 window",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "rsi_12", "session_vwap"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

@@ -1,0 +1,17 @@
+{
+  "name": "rsi_connors_pullback_v41",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms working large directional orders create persistent intraday trends over 20-45 minute windows. Within these trends, reactive retail stops and short-term momentum algos trigger brief 10-30 second counter-trend micro-pullbacks visible as extremely low RSI(6) readings (30-second RSI). The institutional order that created the trend has not been fully filled — when the micro-counter-move exhausts at RSI < 25, the underlying TWAP buy side resumes and NIFTY snaps back in the trend direction within 15-60 seconds. The edge is that RSI(6) detects the last sellers/buyers capitulating before the institutional engine resumes.",
+  "tags": ["mean_reversion", "pullback", "rsi", "trend_following"],
+  "core_signal_oneliner": "30-second RSI drops below 25 within a 30-min SMA uptrend, detecting micro-pullback exhaustion before TWAP engine resumes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["sma_360", "rsi_6"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "gap_vwap_momentum_trifecta_v1",
+  "mechanism": "NIFTY and BANKNIFTY gap at the open when overnight FII/DII order imbalances hit the market. During the first 90 minutes, institutional VWAP execution desks running gap-direction orders treat the session VWAP as their execution benchmark — they defend it actively by absorbing counter-trend flow whenever price approaches it. When the index pulls back to VWAP after a gap-up (or rallies to VWAP after a gap-down) and the 5-second bar closes back in the gap direction, multiple algorithmic VWAP desks simultaneously recognize the same support/resistance and accelerate their fills, compressing what takes 15-60 minutes on individual stocks into a 30-90 second burst on the index.",
+  "tags": ["gap", "vwap", "momentum", "opening-session", "institutional-flow"],
+  "core_signal_oneliner": "Gap-direction VWAP recross with 30-second momentum confirmation after intraday pullback",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "vwap", "vwap_touch", "mom_6"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 9,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

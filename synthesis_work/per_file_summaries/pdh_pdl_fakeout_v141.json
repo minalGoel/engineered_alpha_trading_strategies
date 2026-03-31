@@ -1,0 +1,17 @@
+{
+  "name": "pdh_pdl_fakeout_v141",
+  "mechanism": "On NIFTY, Previous Day High and Low are the most-referenced technical levels by retail stop-loss placement, options strike clustering, and institutional VWAP desks. When the index probes above PDH intraday, cascading stop-buy orders and breakout algos create a brief overshooting spike — but large institutional VWAP desks do not chase pokes above PDH, leaving only fast-money longs who entered the spike exposed. Within 30-90 seconds the spike fails, and option market makers who are short gamma near these strike-proximate levels delta-hedge aggressively on reversal, amplifying the return below PDH. The fakeout bar itself (5s bar has high > PDH but closes back below) is the cleanest entry signal available at 5-second resolution.",
+  "tags": ["mean_reversion", "liquidity_hunt", "support_resistance", "fakeout"],
+  "core_signal_oneliner": "Previous day high/low fakeout reversal: single 5s bar whose high exceeds PDH/PDL but closes back inside, confirming stop-hunt rejection",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pdh", "pdl", "breach_up", "breach_dn"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

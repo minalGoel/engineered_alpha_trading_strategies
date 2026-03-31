@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v1",
+  "mechanism": "On NIFTY, when the index deviates more than 1.5 rolling standard deviations below session VWAP AND RSI(36) simultaneously confirms oversold conditions (RSI < 38), two independent signals of short-term exhaustion align. The VWAP z-score catches the statistical magnitude of dislocation — at z=-1.5 with 10-min rolling std, this is approximately 15-25 spot points below the institutional benchmark price, triggering VWAP-benchmarked algorithms to begin accumulating. The RSI exhaustion filter removes false positives where VWAP is stretched but price momentum is still negative (indicating continued selling pressure), keeping only entries where both the deviation depth AND the velocity of selling have abated. This dual-confirmation is the specific differentiator from v18 (which uses pure deviation momentum without RSI) and v19 (which uses range contraction microstructure).",
+  "tags": ["mean_reversion", "vwap", "rsi", "dual_confirmation", "intraday"],
+  "core_signal_oneliner": "VWAP z-score below -1.5 (10-min rolling std) AND RSI(3min) below 38 confirming dual exhaustion of deviation depth and selling velocity",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "close_std_120", "vwap_zscore", "rsi_36", "vix_close"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

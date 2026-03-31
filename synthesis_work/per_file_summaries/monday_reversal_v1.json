@@ -1,0 +1,17 @@
+{
+  "name": "monday_reversal_v1",
+  "mechanism": "On NIFTY, when the index falls >0.5% on Friday, domestic institutional investors (DIIs), mutual funds processing weekend SIP inflows, and systematic rebalancing algorithms carry deferred buy orders into Monday morning. These buy programs hit the NIFTY order book in discrete 30-60 second waves during the first 90 minutes of trading, generating identifiable micro-upward bursts each time a wave of institutional limit orders absorbs available supply. At 5-second resolution, we detect each individual institutional buying wave as the 40-second RSI crosses above 45 while spot reclaims intraday VWAP \u2014 the reclaim signals that the transient supply has been absorbed and the next wave of institutional demand is pushing price higher.",
+  "tags": ["day_of_week", "mean_reversion", "vwap", "rsi", "institutional_flow"],
+  "core_signal_oneliner": "Monday morning RSI(8) crossing above 45 with price above VWAP after a >0.5% Friday decline, detecting individual institutional DII/SIP buying waves",
+  "entry_type": "ce_pe",
+  "indicators_used": ["prior_session_return", "vwap", "rsi_8"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

@@ -1,0 +1,292 @@
+// This Pine Script™ is subject to the terms of the Mozilla Public License 2.0
+// https://mozilla.org/MPL/2.0/
+//@version=5
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STRATEGY 2: TREND PULLBACK TO STRUCTURAL ANCHOR
+// Instrument: NSE:NIFTY1! continuous back-adjusted futures (1 lot = 65 units)
+//
+// TIMING RULE
+//   Signal evaluated at bar[0] close.
+//   Entry fills at bar[1] open.
+//   Enforced by process_orders_on_close=false — strategy.entry() on bar[0]
+//   produces a market order that fills at the open of bar[1].
+//
+// BRANCHES
+//   A — Trend pullback: morning trend day, price pulls back to EMA(36)
+//       with compression→expansion.  09:25–13:00.
+//   B — Structural bounce: price touches ORB/PDH/PDL level with rejection
+//       bar + volume spike + 2-bar confirmation.  09:45–15:00.
+//
+// FIXES v2 — Recalibrated for NIFTY futures on 5-second bars:
+//   1. Stops/targets 3× wider (10→30 pts stop, 16→48 / 12→36 pts targets)
+//   2. 5-minute cooldown between trades
+//   3. Max 8 trades per session
+//   4. Invalidation debounced: requires 3 consecutive bars (was 1 = noise)
+//   5. Pullback proximity check tightened: bar[0] or bar[1] only (was last 5 bars)
+//   6. Compression check tightened: bar[1] or bar[2] only (was last 5 bars)
+//   7. Time stops 2× wider to match wider targets
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("Trend Pullback to Structural Anchor", overlay=true, initial_capital=500000,
+  default_qty_type=strategy.fixed, default_qty_value=1,
+  commission_type=strategy.commission.percent, commission_value=0.028,
+  slippage=2, process_orders_on_close=false, calc_on_every_tick=false)
+
+// ─── INPUTS — exactly 5, per SYNTHESIS_REPORT.md §Parameters ────────────────
+i_ema_s = input.int(36,      "1. EMA Short (pullback anchor)",  minval=12, maxval=72,  tooltip="Spec: ema_short — 3 min at 5s bars")
+i_ema_l = input.int(120,     "2. EMA Long (trend confirm)",     minval=60, maxval=240, tooltip="Spec: ema_long — 10 min at 5s bars")
+i_prox  = input.float(0.08,  "3. Pullback Proximity %",        step=0.01, tooltip="Spec: pullback_proximity")
+i_gap   = input.float(0.3,   "4. Gap Threshold %",             step=0.05, tooltip="Spec: gap_threshold")
+i_stop  = input.float(30.0,  "5. Stop (Spot Points)",          step=1.0,  tooltip="Spec: stop_points — recalibrated 3× for futures (no gamma cushion)")
+
+// ─── HARDCODED CONSTANTS ────────────────────────────────────────────────────
+TGT_A       = 48.0   // was 16; Branch A target 3× for futures
+TGT_B       = 36.0   // was 12; Branch B target 3× for futures
+TIME_A      = 72     // was 36; 2× wider time stop (6 min)
+TIME_B      = 36     // was 18; 2× wider time stop (3 min)
+ORB_MIN     = 30.0   // ORB dead zone: width < 30 pts ⇒ noise
+PROX_B      = 0.15   // Branch B: level proximity %
+VOL_LEN     = 120    // 10-min volume SMA
+VOL_TOUCH   = 1.3    // volume multiple on touch bar
+COMP_R      = 0.6    // compression threshold
+EXP_R       = 1.2    // expansion threshold
+STRUCT_D    = 15.0   // structural confluence distance (pts)
+VIX_MAX     = 25.0   // VIX exclusion
+MAX_CROSS   = 3      // anti-whipsaw: max EMA crosses in 180 bars
+COOLDOWN    = 60     // NEW: 5 min between trades
+MAX_TRADES  = 4      // was 8; commission at 8/day = 28.7% of capital over test period
+INV_DEBOUNCE = 12    // was 3; v2 invalidation: 79 trades, 5% win rate, -93k. 3 bars (15s) = still noise. 12 bars (1 min) = sustained breakdown.
+INV_GRACE    = 24    // NEW: don't check invalidation for first 2 min after entry — pullback thesis needs time to develop
+
+// ─── SESSION & TIME ─────────────────────────────────────────────────────────
+new_sess = ta.change(time("D"))
+hr       = hour(time, "Asia/Kolkata")
+mn       = minute(time, "Asia/Kolkata")
+tmn      = hr * 60 + mn
+
+in_a     = tmn >= 565 and tmn < 780   // Branch A: 09:25 – 13:00
+in_b     = tmn >= 585 and tmn < 900   // Branch B: 09:45 – 15:00
+is_eod   = tmn >= 920                  // 15:20
+is_thu   = dayofweek(time) == dayofweek.thursday
+
+// VIX — daily resolution
+vix    = request.security("NSE:INDIAVIX", "D", close)
+vix_ok = na(vix) or vix < VIX_MAX
+
+// ─── GAP CLASSIFICATION ────────────────────────────────────────────────────
+var float prev_cl = na
+var float sess_op = na
+if new_sess
+    prev_cl := close[1]
+    sess_op := open
+
+gp      = not na(prev_cl) ? (sess_op - prev_cl) / prev_cl * 100 : 0.0
+gap_up  = gp >  i_gap
+gap_dn  = gp < -i_gap
+big_gap = math.abs(gp) > 1.0
+
+gap_allow_long  = gap_up or (not gap_up and not gap_dn)
+gap_allow_short = gap_dn or (not gap_up and not gap_dn)
+
+// ─── ORB TRACKING (09:15–09:30) ─────────────────────────────────────────────
+var float orb_h  = na
+var float orb_l  = na
+var bool  orb_ok = false
+
+if new_sess
+    orb_h  := na
+    orb_l  := na
+    orb_ok := false
+
+if hr == 9 and mn >= 15 and mn < 30
+    orb_h := na(orb_h) ? high : math.max(orb_h, high)
+    orb_l := na(orb_l) ? low  : math.min(orb_l, low)
+
+if not orb_ok and hr == 9 and mn >= 30
+    orb_ok := true
+
+orb_w     = orb_ok ? orb_h - orb_l : 0.0
+orb_valid = orb_ok and orb_w >= ORB_MIN
+
+// ─── PDH / PDL ──────────────────────────────────────────────────────────────
+pdh = request.security(syminfo.tickerid, "D", high)
+pdl = request.security(syminfo.tickerid, "D", low)
+
+// ─── VWAP ───────────────────────────────────────────────────────────────────
+vw = ta.vwap(hlc3)
+
+// ─── EMAs ───────────────────────────────────────────────────────────────────
+ema_s = ta.ema(close, i_ema_s)
+ema_l = ta.ema(close, i_ema_l)
+
+// ─── TREND CLASSIFICATION ───────────────────────────────────────────────────
+ema_l_slope = ema_l - nz(ema_l[1])
+trend_up    = ema_l_slope > 0 and close > vw and close > ema_l
+trend_dn    = ema_l_slope < 0 and close < vw and close < ema_l
+
+// ─── ANTI-WHIPSAW ───────────────────────────────────────────────────────────
+xf   = ta.cross(ema_s, ema_l) ? 1.0 : 0.0
+xc   = ta.sma(xf, 180) * 180.0
+whip = xc > MAX_CROSS
+
+// ─── VOLUME SMA ─────────────────────────────────────────────────────────────
+vol_sma = ta.sma(volume, VOL_LEN)
+
+// ─── COOLDOWN & TRADE LIMIT ────────────────────────────────────────────────
+var int  last_exit_bar = -COOLDOWN
+var bool was_in_pos    = false
+now_in_pos = strategy.position_size != 0
+if was_in_pos and not now_in_pos
+    last_exit_bar := bar_index
+was_in_pos := now_in_pos
+cooled = bar_index - last_exit_bar >= COOLDOWN
+
+var int day_trades = 0
+if new_sess
+    day_trades := 0
+under_limit = day_trades < MAX_TRADES
+
+// ─── BRANCH A — TREND PULLBACK ──────────────────────────────────────────────
+
+// FIX: Pullback proximity — only bar[0] and bar[1] (was last 5 bars = always true)
+pb_0 = nz(ema_s) > 0 and math.abs(close - ema_s) / ema_s * 100 < i_prox
+pb_1 = nz(ema_s[1]) > 0 and math.abs(close[1] - ema_s[1]) / ema_s[1] * 100 < i_prox
+recent_pb = pb_0 or pb_1
+
+// FIX: Compression — only bar[1] and bar[2] (was last 5 bars = always true)
+avg_rng = ta.sma(high - low, 10)
+comp_1 = nz(avg_rng[1]) > 0 and (high[1] - low[1]) < COMP_R * avg_rng[1]
+comp_2 = nz(avg_rng[2]) > 0 and (high[2] - low[2]) < COMP_R * avg_rng[2]
+recent_comp = comp_1 or comp_2
+
+// Expansion: current bar range > 1.2× prior bar range
+bar_rng  = high - low
+prev_rng = nz(high[1] - low[1])
+expanded = prev_rng > 0 and bar_rng > EXP_R * prev_rng
+
+// Confirmation: 2 consecutive closes above/below ema_s
+conf_l = close > ema_s and nz(close[1]) > nz(ema_s[1])
+conf_s = close < ema_s and nz(close[1]) < nz(ema_s[1])
+
+// Structural confluence (informational, not gated)
+struct_near = false
+if orb_valid
+    struct_near := struct_near or math.abs(ema_s - orb_h) < STRUCT_D
+    struct_near := struct_near or math.abs(ema_s - orb_l) < STRUCT_D
+if not na(pdh)
+    struct_near := struct_near or math.abs(ema_s - pdh) < STRUCT_D
+if not na(pdl)
+    struct_near := struct_near or math.abs(ema_s - pdl) < STRUCT_D
+
+// Exclusions
+is_flat = strategy.position_size == 0
+excl = not is_thu and not big_gap and vix_ok and not whip and is_flat and cooled and under_limit
+
+// Branch A entry
+entry_la = in_a and excl and trend_up and recent_pb and recent_comp and expanded and conf_l
+entry_sa = in_a and excl and trend_dn and recent_pb and recent_comp and expanded and conf_s
+
+// ─── BRANCH B — STRUCTURAL LEVEL BOUNCE ─────────────────────────────────────
+close_pct_1 = (high[1] - low[1]) > 0 ? (close[1] - low[1]) / (high[1] - low[1]) : 0.5
+
+touch_supp(float lvl) =>
+    c1 = not na(lvl)
+    c2 = low[1] >= lvl * (1 - PROX_B / 100) and low[1] <= lvl * (1 + PROX_B / 100)
+    c3 = close_pct_1 > 0.6
+    c4 = close[1] > lvl and close > lvl
+    c5 = volume[1] > VOL_TOUCH * nz(vol_sma[1])
+    c1 and c2 and c3 and c4 and c5
+
+touch_res(float lvl) =>
+    c1 = not na(lvl)
+    c2 = high[1] <= lvl * (1 + PROX_B / 100) and high[1] >= lvl * (1 - PROX_B / 100)
+    c3 = close_pct_1 < 0.4
+    c4 = close[1] < lvl and close < lvl
+    c5 = volume[1] > VOL_TOUCH * nz(vol_sma[1])
+    c1 and c2 and c3 and c4 and c5
+
+supp_orb_l = orb_valid and touch_supp(orb_l)
+supp_pdl   = touch_supp(pdl)
+supp_orb_h = orb_valid and touch_supp(orb_h)
+supp_pdh   = touch_supp(pdh)
+
+res_orb_h  = orb_valid and touch_res(orb_h)
+res_pdh    = touch_res(pdh)
+res_orb_l  = orb_valid and touch_res(orb_l)
+res_pdl    = touch_res(pdl)
+
+any_supp = supp_orb_l or supp_pdl or supp_orb_h or supp_pdh
+any_res  = res_orb_h  or res_pdh  or res_orb_l  or res_pdl
+
+trig_supp_level = supp_orb_l ? orb_l : (supp_pdl ? pdl : (supp_orb_h ? orb_h : (supp_pdh ? pdh : na)))
+trig_res_level  = res_orb_h  ? orb_h : (res_pdh  ? pdh : (res_orb_l  ? orb_l : (res_pdl  ? pdl : na)))
+
+entry_lb = in_b and excl and any_supp and gap_allow_long
+entry_sb = in_b and excl and any_res  and gap_allow_short
+
+// ─── ENTRY ──────────────────────────────────────────────────────────────────
+var int   ebar    = 0
+var int   ebrn    = 0
+var float inv_lvl = na
+
+if entry_la or entry_lb
+    strategy.entry("L", strategy.long)
+    ebar := bar_index
+    ebrn := entry_la ? 1 : 2
+    inv_lvl := entry_la ? na : trig_supp_level
+    day_trades += 1
+
+if entry_sa or entry_sb
+    strategy.entry("S", strategy.short)
+    ebar := bar_index
+    ebrn := entry_sa ? 1 : 2
+    inv_lvl := entry_sa ? na : trig_res_level
+    day_trades += 1
+
+// ─── EXITS ──────────────────────────────────────────────────────────────────
+in_pos = strategy.position_size != 0
+held   = bar_index - ebar
+
+tgt      = ebrn == 1 ? TGT_A : TGT_B
+time_lim = ebrn == 1 ? TIME_A : TIME_B
+
+tgt_ticks  = math.round(tgt    / syminfo.mintick)
+stop_ticks = math.round(i_stop / syminfo.mintick)
+
+if strategy.position_size > 0
+    strategy.exit("XL", "L", profit=tgt_ticks, loss=stop_ticks)
+if strategy.position_size < 0
+    strategy.exit("XS", "S", profit=tgt_ticks, loss=stop_ticks)
+
+// FIX v3: Invalidation exit — 12 consecutive bars (1 min) + 24-bar grace period (2 min)
+// v2 data: 79 invalidation exits, 5% win rate, -93k. Grace period + longer debounce = only
+// fire on genuine structural breakdowns, not EMA noise oscillation.
+var int inv_cnt_l = 0
+var int inv_cnt_s = 0
+inv_eligible = held >= INV_GRACE
+
+if strategy.position_size > 0 and inv_eligible
+    inv_a_l = ebrn == 1 and close < ema_s
+    inv_b_l = ebrn == 2 and not na(inv_lvl) and close < inv_lvl
+    inv_cnt_l := (inv_a_l or inv_b_l) ? inv_cnt_l + 1 : 0
+else
+    inv_cnt_l := 0
+
+if strategy.position_size < 0 and inv_eligible
+    inv_a_s = ebrn == 1 and close > ema_s
+    inv_b_s = ebrn == 2 and not na(inv_lvl) and close > inv_lvl
+    inv_cnt_s := (inv_a_s or inv_b_s) ? inv_cnt_s + 1 : 0
+else
+    inv_cnt_s := 0
+
+if inv_cnt_l >= INV_DEBOUNCE or inv_cnt_s >= INV_DEBOUNCE
+    strategy.close_all(comment="Invalidation")
+
+// Time stop
+if in_pos and held >= time_lim
+    strategy.close_all(comment="TimeStop")
+
+// EOD flatten 15:20 IST
+if in_pos and is_eod
+    strategy.close_all(comment="EOD")

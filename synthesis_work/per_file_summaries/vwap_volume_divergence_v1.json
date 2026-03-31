@@ -1,0 +1,17 @@
+{
+  "name": "vwap_volume_divergence_v1",
+  "mechanism": "On NIFTY, when the index drifts 1.5+ standard deviations below session VWAP while 5-second bar volumes are declining (price-volume exhaustion), the directional sell-flow is running out of fuel — retail stops and algo trigger cascades have completed their selling but large VWAP-benchmarked institutions have not yet accumulated enough. The divergence sharpens when OBV over the same 2-minute window is simultaneously rising (buyers absorbing inventory at depressed prices) even as the price is still below VWAP, signaling that net demand is recovering before spot prices visibly inflect. NIFTY then snaps back 8-15 spot points toward VWAP within 30-90 seconds as the algorithmic VWAP buyers push aggressively to close their benchmark gap. Symmetric logic applies for bearish divergence: price above VWAP with declining volume and falling OBV signals distribution exhaustion and downward reversion.",
+  "tags": ["vwap", "volume", "divergence", "mean_reversion", "obv"],
+  "core_signal_oneliner": "VWAP z-score below -1.5 sigma with declining volume (below 85% of 2-min SMA) but rising OBV — price-volume divergence signaling absorption before reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_dev_zscore", "vol_ratio", "obv", "obv_slope_24"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

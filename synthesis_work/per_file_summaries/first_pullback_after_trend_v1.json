@@ -1,0 +1,17 @@
+{
+  "name": "first_pullback_after_trend_v1",
+  "mechanism": "When NIFTY establishes a sustained directional move of 0.3%+ from session open (~70+ spot points), large institutional TWAP/VWAP orders driving that move are typically only 40-60% filled — their remaining allocation actively bids on pullbacks. The first time price retreats to the 3-minute EMA (the institutional 'add' level visible on all algo screens), these resting orders absorb the counter-trend selling, and price snaps back in the trend direction within 30-90 seconds. This bounce is detectable at 5-second resolution because the EMA retouch-and-rejection creates a 2-4 bar basing pattern with increasing closes — we enter as the close re-crosses EMA in the trend direction, capturing the first leg of the institutional re-accumulation.",
+  "tags": ["momentum", "pullback", "continuation", "trend-following"],
+  "core_signal_oneliner": "First EMA(36) retouch-and-cross-back after a 0.3%+ intraday trend, within VWAP confirmation and RSI non-extreme zone",
+  "entry_type": "ce_pe",
+  "indicators_used": ["return_from_open", "ema_36", "rsi_36", "vwap_session"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

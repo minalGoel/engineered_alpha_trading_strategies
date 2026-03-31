@@ -1,0 +1,17 @@
+{
+  "name": "bootstrap_confidence_v1",
+  "mechanism": "On NIFTY, large institutional and FII directional orders create persistent 5-second return autocorrelation that lasts 5-15 minutes as TWAP/VWAP algorithms steadily absorb liquidity. A block bootstrap CI (90%) built from the last 120 five-second log returns (10-min window) being entirely above zero means: accounting for the serial correlation structure, the positive directional bias is statistically robust — not a single-bar spike diluted in the average, but a sustained regime. When this condition fires on NIFTY, the same institutional order flow that created the statistical significance still has inventory to deploy, making the next 30-90 seconds of continuation probabilistically favorable. The CI width adapts naturally to current volatility regimes — wide in choppy markets (few signals) and narrow in trending markets (more signals), creating a self-filtering mechanism without explicit regime detection.",
+  "tags": ["bootstrap", "statistical", "momentum", "confidence-interval", "quantitative"],
+  "core_signal_oneliner": "90% block bootstrap confidence interval of the last 10 minutes of 5-second log returns is entirely above (or below) zero, confirming statistically significant directional bias",
+  "entry_type": "ce_pe",
+  "indicators_used": ["log_ret_5s", "block_bootstrap_ci_lower", "block_bootstrap_ci_upper"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_mean_reversion_v1",
+  "mechanism": "On NIFTY, every intraday selloff that pushes the index beyond its 5-minute Bollinger lower band (2.5σ) represents statistical exhaustion of the selling program — stop-loss cascades and TWAP sell algos running out of residual order. At this exact bar, VWAP-benchmarked institutional buyers (sitting on positive tracking error vs. session VWAP) begin absorbing with limit bids, and the 5-second candle closes back above the lower band with a bullish body (close > open). At 5-second resolution we enter immediately on this reversal candle rather than waiting for a full 1-minute bar, capturing the first 10-20 spot point bounce (4-6 option points) before mean-reversion algos drive price back toward the 5-minute SMA. The symmetric logic applies for upper band rejections: high-momentum buying programs exhaust residual buyers, delta-hedging from options market-makers accelerates the fade.",
+  "tags": ["bollinger", "mean_reversion", "volatility", "intraday", "band-touch"],
+  "core_signal_oneliner": "Price wick touches 5-minute Bollinger 2.5σ band then closes back inside with a confirming body (pinbar-style), indicating immediate selling/buying exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_mid", "bb_upper", "bb_lower", "bb_width_pct", "pct_b"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

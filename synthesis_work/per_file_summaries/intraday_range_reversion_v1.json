@@ -1,0 +1,17 @@
+{
+  "name": "intraday_range_reversion_v1",
+  "mechanism": "On NIFTY, the session high and low become self-reinforcing order magnets: systematic TWAP/VWAP algorithms, stop-limit clusters, and delta-hedging desks concentrate resting orders at these levels throughout the day. When NIFTY touches its session extreme and the 5-second bar forms a rejection candle (close in the upper 65% of bar range at session low, lower 65% at session high), it signals that the algorithmic buy or sell wall has absorbed the directional flow. Within 30-90 seconds, VWAP-benchmarked institutional algorithms aggressively fade the extreme because their fill price relative to benchmark has become highly attractive, driving a 12-25 spot point reversion toward the session midpoint.",
+  "tags": ["range", "high-low", "mean_reversion", "intraday-extremes", "pin-bar"],
+  "core_signal_oneliner": "Rejection pin bar at session high or low with meaningful intraday range and moderate VIX regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_high", "session_low", "range_pct", "pin_bar_long_score", "pin_bar_short_score"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

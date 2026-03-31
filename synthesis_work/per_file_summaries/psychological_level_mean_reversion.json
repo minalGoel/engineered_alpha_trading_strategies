@@ -1,0 +1,17 @@
+{
+  "name": "psychological_level_mean_reversion",
+  "mechanism": "On NIFTY, retail options traders and semi-institutional participants densely cluster stop-loss orders and protective limit orders at round 100-multiple levels (24000, 24100, 23900, etc.) because financial media and brokerage platforms display these levels as natural reference points. When NIFTY briefly pierces below a 100-multiple by 5-15 index points, it triggers stop-loss cascades and sweeps resting sell orders — but this selling is quickly absorbed by resting limit buy orders placed by VWAP-benchmarked algorithms and market makers who recognise the level as significant. The absorption creates a sharp snapback within 30-90 seconds: the very mechanism that caused the overshoot (stop hunting) ensures the subsequent reversal is fast and clean. At 5-second resolution we detect the pierce (price within 0.06% of the round level, just below it) combined with 3-minute RSI exhaustion below 35, entering as the bounce begins rather than waiting for a full bar confirmation.",
+  "tags": ["mean_reversion", "microstructure", "psychological_levels", "behavioral"],
+  "core_signal_oneliner": "NIFTY within 0.06% of a round 100-multiple level with 3-min RSI exhaustion below 35 (oversold) or above 65 (overbought), signalling stop-hunt snapback",
+  "entry_type": "ce_pe",
+  "indicators_used": ["round_level_100", "dist_signed", "rsi_36"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

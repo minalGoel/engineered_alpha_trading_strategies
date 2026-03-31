@@ -1,0 +1,17 @@
+{
+  "name": "support_resistance_reversal_v1",
+  "mechanism": "NIFTY's previous day high and low are the most-watched reference levels by all algorithmic market makers, institutional desks, and retail momentum traders simultaneously — making them genuine order-flow anchors, not arbitrary lines. When NIFTY probes the previous day's high, option writers (covered call desks, prop short-gamma positions) and fresh put buyers cluster limit orders within 15-25 spot points of that level, creating a dense supply wall that materialises as range contraction at 5-second resolution. At 5s granularity, we detect the micro-structural 'probe-and-reject' signature: price approaching within 0.15% of the prev day level, range contracting over the last 30 seconds (accumulation of resting limit orders), and a visible 15-second rejection move in the opposite direction — all before the full 1-minute bar closes. BANKNIFTY amplifies this effect due to 2-3x higher volatility, so the same proximity threshold generates larger option moves.",
+  "tags": ["reversal", "s_r", "mean_reversion", "microstructure"],
+  "core_signal_oneliner": "Price within 0.15% of previous day high/low with range contracting over 30s and a 15s rejection print, detecting probe-and-reject at key daily S/R",
+  "entry_type": "ce_pe",
+  "indicators_used": ["prev_day_high", "prev_day_low", "range_6", "range_prior_6", "ret_3"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

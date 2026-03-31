@@ -1,0 +1,17 @@
+{
+  "name": "pivot_point_breakout_v1",
+  "mechanism": "On NIFTY, the previous session's R1 and S1 pivot levels are pre-loaded by thousands of retail platforms (Zerodha, Upstox) and institutional execution algorithms before each open. When NIFTY closes a 5-second bar above R1, every long-only algo with a pivot-based entry receives a simultaneous signal — the collective institutional and retail response creates a compressed burst of 15-25 spot points within the next 60-90 seconds. At 5-second resolution we enter at the exact R1 crossover bar rather than waiting for 1-minute bar confirmation, capturing the leading edge of this pile-on rather than chasing it. The opposite applies for S1 breaks: stop-losses triggered below S1 cascade selling within 30-60 seconds.",
+  "tags": ["pivot-points", "support-resistance", "breakout", "intraday", "momentum"],
+  "core_signal_oneliner": "Pivot R1/S1 level crossover breakout confirmed by VWAP alignment and 1.5x volume surge above 5-minute baseline",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pivot_R1", "pivot_S1", "vwap", "vol_ma_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

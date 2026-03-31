@@ -1,0 +1,17 @@
+{
+  "name": "tick_direction_momentum_v1",
+  "mechanism": "On NIFTY/BANKNIFTY, institutional TWAP and momentum algorithms execute directional orders over multiple 5-second bars, imprinting a persistent bias in bar-by-bar close direction. When >62% of the last 3 minutes of 5-second bars close higher (tick_dir_ratio > 0.62) and this ratio is accelerating, large buy-side flow is continuously absorbing sell-side liquidity — market makers short gamma via ATM options must delta-hedge by buying the index in the same direction, compounding the upward pressure. We enter 30-60 seconds into this dominance phase, before the signal becomes visible on 1-minute charts, and ride the institutional order completion window (30-90 seconds). The converse applies for persistent downtick dominance signaling sell-side absorption.",
+  "tags": ["microstructure", "order_flow", "momentum", "tick_direction", "short_term"],
+  "core_signal_oneliner": "Over 62% of 3-min 5s bars close up (tick direction dominance) and this ratio is accelerating, with VWAP alignment confirming institutional buy-side pressure",
+  "entry_type": "ce_pe",
+  "indicators_used": ["tick_dir_ratio_36", "tick_dir_momentum_24", "price_roc_12", "session_vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

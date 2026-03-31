@@ -1,0 +1,17 @@
+{
+  "name": "orb_momentum_v32",
+  "mechanism": "When NIFTY compresses into a 30-minute rolling range (defined by the highest high and lowest low of the past 360 5-second bars), opposing institutional limit orders accumulate at both boundaries, creating a temporarily balanced book. A close above the rolling high for 3 consecutive 5-second bars — confirmed by the index trading above session VWAP — indicates that net buy-side flow has absorbed all resting supply at the range ceiling; the executing TWAP/VWAP order is typically only 40-60% filled and must continue buying, driving 15-25 spot point continuation. Unlike the fixed 09:15-09:35 opening range (orb_v22), this rolling range fires throughout the session, capturing afternoon re-accumulation breakouts that develop after news digestion or FII second-wave entries — a mechanistically distinct signal from the morning institutional calibration breakout.",
+  "tags": ["breakout", "momentum", "rolling_range", "orb"],
+  "core_signal_oneliner": "Session-wide rolling 30-minute Donchian range breakout with 3-bar persistence and VWAP alignment, fires throughout the trading day",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rolling_high_360", "rolling_low_360", "vwap", "persist_3bar", "vol_ratio_120"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

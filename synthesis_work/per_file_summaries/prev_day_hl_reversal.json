@@ -1,0 +1,17 @@
+{
+  "name": "prev_day_hl_reversal",
+  "mechanism": "On NIFTY, the Previous Day High (PDH) and Previous Day Low (PDL) are watched by every algorithmic participant as primary reference levels. Retail stop orders cluster above PDH (breakout entries and short stop-losses) and below PDL (long stop-losses). When NIFTY briefly pierces PDH within a 5-second bar (high > PDH) but closes back below it (close < PDH), the stop-order cluster above has been absorbed while leaving breakout buyers trapped at the worst price. Institutional algos pre-positioned to fade the liquidity grab activate their sell orders, and the resulting order-book imbalance — trapped longs unwinding, no fresh demand above the level — pushes NIFTY down 15-25 spot points toward session VWAP within 30-90 seconds. The mirror mechanism applies at PDL: a false breakdown flushes long stops, absorbs resting sell orders, then resting buy orders above the level initiate a quick 15-25 pt bounce as panicked shorts cover.",
+  "tags": ["mean_reversion", "level_fade", "liquidity_hunt", "support_resistance"],
+  "core_signal_oneliner": "Previous day high/low intrabar pierce-and-reject reversal: bar high exceeds PDH but closes back below, confirmed by 2-min RSI exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pdh", "pdl", "rsi_24"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

@@ -1,0 +1,17 @@
+{
+  "name": "volume_breakout_v1",
+  "mechanism": "On NIFTY, when price breaks above the 1-minute range high with concurrent volume spiking more than 2x the 5-minute baseline, it signals that directional institutional program order flow is actively driving the move rather than passive market-maker adjustment. NIFTY's deep, continuous order book means that random noise rarely produces both range expansion AND volume elevation simultaneously — the confluence indicates genuine buying programs (FIIs, algos executing TWAP/VWAP orders) have overwhelmed the resting sell side. This institutional order flow typically sustains directional pressure for 30-60 seconds as the program continues filling, creating a predictable continuation window for ATM call/put entries.",
+  "tags": ["breakout", "volume", "momentum", "intraday"],
+  "core_signal_oneliner": "Price breaks 1-minute range high/low with concurrent volume spike above 2x the 5-minute rolling average",
+  "entry_type": "ce_pe",
+  "indicators_used": ["range_high_12", "range_low_12", "avgvol_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

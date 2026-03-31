@@ -1,0 +1,17 @@
+{
+  "name": "adx_strong_trend_pullback",
+  "mechanism": "On NIFTY, when institutional TWAP algorithms execute large directional mandates, the index forms persistent 2-4 minute micro-trends reflected in ADX(36) rising above 25. Retail momentum chasers and short-term scalpers periodically take profit, pulling NIFTY 8-15 spot points back to the 2-minute EMA — the lowest bar of the pullback touches the EMA while the close stays near it. These shallow retracements are immediately absorbed by the institutional order flow still partially unfilled: the moment NIFTY's 5-second close reclaims above the 2-min EMA (+DI > -DI confirming buy-side dominance), the next wave of institutional program buys resumes, creating a 10-20 spot point continuation within 30-90 seconds. The EMA touch-and-reclaim specifically filters for entries where selling pressure exhausted at the EMA support rather than cutting through it, maximising directional probability.",
+  "tags": ["trend_following", "pullback", "adx", "ema"],
+  "core_signal_oneliner": "Price touches 2-minute EMA during ADX-confirmed strong trend then closes back above (or below) it, signaling shallow pullback exhaustion and trend continuation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["adx_36", "plus_di_36", "minus_di_36", "ema_24"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

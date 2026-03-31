@@ -1,0 +1,17 @@
+{
+  "name": "ema_crossover_momentum_v1",
+  "mechanism": "On NIFTY, when the 1-minute EMA (12 bars at 5s) crosses above the 3-minute EMA (36 bars at 5s), it marks the moment short-term institutional buying has overtaken the recent medium-term trend average — the characteristic microstructure footprint of FII/DII TWAP algorithms that are 40-60% through a directional order. These algorithms execute over 2-5 minute windows, so the 1-min vs 3-min EMA cross fires roughly at the midpoint of the order flow burst, leaving another 60-90 seconds of residual momentum before the order completes. The ADX(36) filter (>20 at 3-min scale) ensures the cross occurs while NIFTY is in a directed microstructure rather than the oscillatory, bid-ask-bouncing regime that generates false crosses, and VWAP alignment confirms the broader intraday institutional bias.",
+  "tags": ["ema", "crossover", "momentum", "trend-following", "intraday"],
+  "core_signal_oneliner": "EMA(12) crosses EMA(36) with ADX(36) > 20 confirming directional microstructure, and price on the VWAP-aligned side",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_12", "ema_36", "adx_36", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

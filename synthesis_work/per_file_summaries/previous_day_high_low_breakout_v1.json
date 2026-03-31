@@ -1,0 +1,17 @@
+{
+  "name": "previous_day_high_low_breakout_v1",
+  "mechanism": "When NIFTY or BANKNIFTY crosses its prior day's high or low, two simultaneous forces create a burst of directional flow in the first 15-60 seconds: (1) directional futures traders who placed protective stops just beyond PDH/PDL are forced out, fuelling an order-book cascade; (2) option market-makers who sold calls (at PDH resistance) or puts (at PDL support) must delta-hedge by buying/selling the underlying as their strikes go in-the-money, adding systematic buying/selling pressure. At 5-second resolution we can enter on the third consecutive bar closing beyond the level — confirming a genuine break rather than a wick — and capture the first 15-25 NIFTY spot points (7-12 BANKNIFTY option points) of continuation before the cascade exhausts.",
+  "tags": ["breakout", "levels", "momentum", "stop-cascade", "pdh-pdl"],
+  "core_signal_oneliner": "PDH/PDL breakout on NIFTY or BANKNIFTY confirmed by 3-bar persistence, 5-min volume surge >1.5x, VWAP alignment, and VIX < 22",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pdh", "pdl", "dist_from_pdh_bps", "dist_from_pdl_bps", "consec_above_pdh", "consec_below_pdl", "vol_surge_60", "session_vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

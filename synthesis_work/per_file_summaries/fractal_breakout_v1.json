@@ -1,0 +1,17 @@
+{
+  "name": "fractal_breakout_v1",
+  "mechanism": "On NIFTY, 5-bar fractal swing highs — where one bar's high exceeds the 2 bars on each side over a 25-second window — represent micro price-discovery peaks where short-sellers and profit-takers cluster limit sell orders. When NIFTY's close breaks above a recent fractal high with all three Alligator SMAs (25s/40s/65s) in bullish alignment, it signals that resting supply at that swing level has been absorbed and fresh institutional momentum is sweeping the order book — stop-loss orders on short positions trigger a secondary push that typically extends 15-25 NIFTY spot points. We require 2 consecutive 5-second bars above the fractal level to eliminate single-tick noise disproportionately common in NIFTY's 5-second candles due to constituent rebalancing lag.",
+  "tags": ["breakout", "fractals", "alligator", "swing_points", "momentum", "bill_williams"],
+  "core_signal_oneliner": "Two consecutive 5s closes above a recent 5-bar Williams Fractal high with all three Alligator SMAs in bullish alignment and price above VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["fractal_up", "fractal_down", "alligator_lips", "alligator_teeth", "alligator_jaw", "session_vwap"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

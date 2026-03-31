@@ -1,0 +1,17 @@
+{
+  "name": "bayesian_update_v1",
+  "mechanism": "On NIFTY, when three independent evidence streams — a 1-minute directional price push (ret_12 z-score), above-average volume confirming institutional participation (volume/avg_volume ratio), and VWAP positioning reflecting benchmark-driven flow — simultaneously point the same direction, a Bayesian running posterior accumulates per 5-second bar. When the posterior exceeds 0.68, the probability that the three-way alignment is coincidental falls below 32%, indicating that FII algorithmic buyers, domestic VWAP-benchmarked orders, and momentum algos are all aligned. NIFTY then sustains direction for another 60-90 seconds because the order flow driving each evidence stream is only partially filled and continues reinforcing the move. The posterior's 3-bar monotonic increase confirms that evidence is accumulating (new order flow arriving) rather than peaking (existing flow finishing), distinguishing a continuation from a reversal.",
+  "tags": ["bayesian", "probability", "multi-factor", "adaptive", "quantitative"],
+  "core_signal_oneliner": "Naive Bayes posterior combining 1-minute return z-score, volume ratio, and VWAP position exceeds 0.68 with 3-bar monotonic increase",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ret_12", "vol_ratio_24", "vwap_session", "mom_60", "ret_std_60", "posterior"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

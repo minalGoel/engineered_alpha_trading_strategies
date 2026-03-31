@@ -1,0 +1,17 @@
+{
+  "name": "vwap_overshoot_fade_002",
+  "mechanism": "On NIFTY, a 0.6%+ deviation from session VWAP (~135 spot points at 22500) crosses a threshold that activates two structural reversion forces absent at shallower levels: options market makers who accumulated long delta exposure from selling calls/puts during the move begin systematic gamma-hedging rebalances — their risk models flag 0.6%+ index deviations as outliers requiring immediate adjustment. Simultaneously, risk-parity and VWAP-indexed institutional programs that tolerate minor (0.3%) misalignments hit their rebalancing band and begin aggressive accumulation, creating sustained demand/supply flow back toward VWAP. The Bollinger band filter (20-minute ±2σ envelope, 240 bars at 5s) ensures the index has NOT broken out of its intraday stochastic range — price inside the envelope means the overshoot is likely a transient inventory imbalance, not a regime change. RSI(36) exhaustion below 20 (3-minute window, matching original RSI(3) on 1-min) confirms the 5-second directional momentum driving the overshoot has fully burned out before structural buyers arrive.",
+  "tags": ["mean_reversion", "vwap", "bollinger", "deep_overshoot", "early_session", "gamma_reversion"],
+  "core_signal_oneliner": "Deep 0.6% VWAP deviation with 3-minute RSI extreme exhaustion (<20/>80), ADX range-bound, and inside 20-minute Bollinger band (not a breakout)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "rsi_36", "adx_36", "bb_upper_240", "bb_lower_240"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

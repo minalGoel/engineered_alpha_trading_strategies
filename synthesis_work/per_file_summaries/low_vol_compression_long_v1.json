@@ -1,0 +1,17 @@
+{
+  "name": "low_vol_compression_long_v1",
+  "mechanism": "On NIFTY, when the 2-minute realized volatility (24 five-second bars) compresses to below 55% of the 30-minute session baseline, institutional TWAP and HFT algorithms have entered a passive, non-directional mode — neither sending large sweeps nor triggering momentum. This creates a coiled-spring microstructure: resting limit orders accumulate on both sides of the book, spreads tighten, and price oscillates within a narrow band. The first macro trigger — FII block order, global index impulse, or news reaction — causes a cascade of stop orders and momentum algos to activate simultaneously, producing a rapid 15-25 spot point expansion. VWAP position at the moment of expansion reveals which side of accumulated demand is larger: if NIFTY is above VWAP when the range expansion bar fires, VWAP-benchmarked buyers are still net accumulators and the move favors upside.",
+  "tags": ["volatility", "compression", "breakout", "realized-vol"],
+  "core_signal_oneliner": "2-minute realized vol below 55% of 30-minute baseline followed by range expansion bar in VWAP-aligned direction",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rvol_24", "rvol_360", "compression_ratio", "bar_range", "avg_range_10", "vwap", "ema_20"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "overnight_vol_carry_v1",
+  "mechanism": "On NIFTY, when today's overnight gap exceeds 1.5x the rolling average overnight gap (~15-20 spot pts vs the ~10 pt average), it typically reflects FII front-running in SGX Nifty that overshoots. By 09:25-09:30, these positions start unwinding — market makers who absorbed the opening imbalance flip short/long against the gap, creating predictable 20-40 spot pt mean-reversion pressure through the morning. Conversely, when NIFTY opens within 0.3x of its average overnight gap (a near-flat open with <3 pt gap), no overnight event absorbed directional order flow, so institutional algo desks accumulate in one direction from 09:20, manifesting as 30-minute momentum bursts. At 5-second resolution, the overnight ratio serves as a daily regime classifier; RSI(36) and EMA crossovers on 5-second bars then time precise 60-90 second entries within the regime's expected direction.",
+  "tags": ["volatility", "overnight", "carry", "regime", "gap", "mean_reversion", "momentum"],
+  "core_signal_oneliner": "Daily regime classifier based on overnight gap ratio: oversized gaps trigger mean-reversion trades, near-flat opens trigger momentum trades, using 3-min RSI and EMA crossover for timing",
+  "entry_type": "ce_pe",
+  "indicators_used": ["overnight_gap_pct", "avg_overnight_gap", "overnight_ratio", "gap_direction", "rsi_36", "ema_12", "ema_36"],
+  "hold_time_seconds": [60, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

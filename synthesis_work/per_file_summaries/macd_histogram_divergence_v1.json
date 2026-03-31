@@ -1,0 +1,17 @@
+{
+  "name": "macd_histogram_divergence_v1",
+  "mechanism": "When NIFTY experiences a sustained intraday decline, algorithmic momentum sellers execute in sequential waves. Each wave encounters better-rested resting buy orders at each new price low, causing the rate of decline to diminish even as price continues lower. The MACD histogram (12/26/9 on 5s bars ≈ 60s/130s/45s windows) captures this exhaustion precisely: a shallower histogram trough compared to the prior trough, while price prints a new low, reveals that NIFTY's net selling force is contracting. The histogram zero-cross above 0 then confirms that VWAP-benchmarked institutional buyers have begun active accumulation, producing a sharp 15-30 second bounce. The symmetric bearish divergence — higher price highs with lower histogram peaks — flags institutional buy-side exhaustion where resting sell orders at new highs are absorbing demand more effectively, preceding a sharp fade.",
+  "tags": ["mean_reversion", "divergence", "macd", "momentum_exhaustion"],
+  "core_signal_oneliner": "MACD histogram divergence at price swing extreme followed by histogram zero-cross confirming momentum exhaustion reversal",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_12", "ema_26", "macd_signal", "macd_hist", "pivot_lows"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

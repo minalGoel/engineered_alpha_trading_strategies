@@ -1,0 +1,17 @@
+{
+  "name": "ema_crossover_reversion_v1",
+  "mechanism": "On NIFTY, EMA(12)/(36) crossovers in range-bound intraday sessions attract late retail algo entries at precisely the moment the 60-90 second price impulse has exhausted — the crossover fires 1-2 minutes after the directional move began. When NIFTY's current 5-minute ATR is below 1.3x the 30-minute ATR baseline (range-bound regime), these crossover chasers create predictable supply/demand imbalance on the wrong side of an over-extended move. The 10-second confirmation wait (2 bars for price to cross back through the slow EMA) distinguishes genuine reversions from breakouts: if NIFTY is truly trending, it will NOT recross the slow EMA within 2 bars of the crossover, so only clean fade setups pass.",
+  "tags": ["mean_reversion", "ema", "crossover_fade", "range_bound"],
+  "core_signal_oneliner": "Fade an EMA(12)/EMA(36) crossover that reverses within 2 bars (10s), in a range-bound ATR regime, from the VWAP-extended side",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_12", "ema_36", "atr_60", "atr_baseline", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

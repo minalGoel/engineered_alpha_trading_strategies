@@ -1,0 +1,17 @@
+{
+  "name": "vwap_zscore_mean_reversion",
+  "mechanism": "On NIFTY, hundreds of concurrent institutional VWAP-benchmarked algorithms (mutual funds, FIIs, prop desks) compete to fill directional orders throughout the mid-session. When a large block or cascade of market orders temporarily drives NIFTY 2.5+ standard deviations away from session VWAP in a non-directional (low directional-efficiency) regime, these VWAP algos collectively accelerate in the opposite direction — each algo is getting fills significantly better than its VWAP benchmark and increases participation rate. The resulting institutional counter-flow produces a mean-reversion snap-back of 10-20 NIFTY spot points within 30-90 seconds. The ADX/directional-efficiency filter is critical: on trending days NIFTY can sustain 3-sigma VWAP deviations for hours, so we only trade when the session character is choppy (directional efficiency < 0.30).",
+  "tags": ["mean_reversion", "vwap", "stat_arb", "intraday"],
+  "core_signal_oneliner": "VWAP z-score at ±2.5 sigma in a low directional-efficiency regime (<0.30 over 5 minutes), with bullish/bearish pivot bar confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "vwap_z", "directional_efficiency_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

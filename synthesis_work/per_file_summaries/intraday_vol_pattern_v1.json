@@ -1,0 +1,17 @@
+{
+  "name": "intraday_vol_pattern_v1",
+  "mechanism": "NIFTY exhibits a structural U-shaped intraday volatility pattern driven by institutional order concentration: FIIs and domestic institutions front-load directional orders at the open (09:15-10:00) and close (14:30-15:25), creating algorithmic TWAP/VWAP-driven surges where EMA alignment holds for 30-90 seconds; during lunch (11:30-13:30) institutional desks park positions and retail/market-maker activity dominates, so NIFTY drifts in a narrow 30-50 spot pt range and Bollinger Band touches revert reliably because no sustained buy/sell programs are active. When current 3-minute realized vol rises 15%+ above the 30-minute baseline during open/close, the NIFTY order book is in a momentum regime — entries aligned with EMA direction capture the tail of the institutional push. When vol drops 15%+ below baseline during lunch, BB extremes represent temporary order-book imbalances that self-correct within 60-90 seconds as market makers fade the deviation.",
+  "tags": ["volatility", "U_shape", "intraday_pattern", "time_of_day", "multi_regime", "mean_reversion", "momentum"],
+  "core_signal_oneliner": "Time-of-day vol ratio switches between EMA momentum (open/close) and Bollinger Band mean-reversion (lunch) regimes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vol_short_36", "vol_long_360", "vol_ratio", "bb_120", "ema_fast_36", "ema_slow_120"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

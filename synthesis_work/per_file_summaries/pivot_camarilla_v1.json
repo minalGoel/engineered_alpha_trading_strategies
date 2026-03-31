@@ -1,0 +1,17 @@
+{
+  "name": "pivot_camarilla_v1",
+  "mechanism": "Camarilla S3/R3 levels (prev_close ± prev_range × 0.275) are displayed by default on every major Indian retail terminal — Zerodha Kite, Dhan, Moneycontrol — creating genuine limit-order clustering on NIFTY at these levels. When NIFTY spot touches S3, resting buy-limit orders and stop-buy orders from short-sellers absorb selling pressure simultaneously, producing a high-probability 15-40 spot point snap-back toward R3. At 5-second resolution we detect the precise touch-and-bounce (low reaches S3, then close reclaims above S3) without waiting a full minute, entering 30-60 seconds ahead of the crowd. For R4/S4 breakouts (prev_close ± prev_range × 0.55), the breach signals that institutional directional buying has overwhelmed all retail supply — NIFTY momentum algorithms pile in, extending the move 20-50 spot points beyond the level within 60-120 seconds.",
+  "tags": ["support_resistance", "pivot_points", "camarilla", "mean_reversion", "breakout"],
+  "core_signal_oneliner": "Camarilla S3/R3 mean-reversion bounce or R4/S4 trend-day breakout, using 15s touch window and VIX regime filter",
+  "entry_type": "ce_pe",
+  "indicators_used": ["cam_R3", "cam_R4", "cam_S3", "cam_S4", "touch_s3", "touch_r3"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

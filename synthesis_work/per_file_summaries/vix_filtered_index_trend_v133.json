@@ -1,0 +1,17 @@
+{
+  "name": "vix_filtered_index_trend_v133",
+  "mechanism": "When India VIX is actively rising (positive rate-of-change over 2 minutes), institutional options desks are increasing hedging demand faster than market makers can absorb, forcing market makers to delta-hedge their growing short-gamma exposure by trading NIFTY spot/futures in the prevailing direction — creating a self-reinforcing directional push. A fresh EMA crossover (2-min fast vs 7-min slow) during VIX acceleration confirms that hedge-driven flow is strong enough to shift the short-term NIFTY trend. Unlike v124's static VIX>21 filter and v126's VIX 12-22 band, this version detects VIX acceleration (the transition moment when the regime is shifting), capturing the initial push before the move becomes consensus and followers pile in.",
+  "tags": ["vix_momentum", "trend_following", "ema_crossover", "vwap", "regime_shift"],
+  "core_signal_oneliner": "EMA(2min) crosses EMA(7min) when India VIX is actively accelerating (5%+ in 2 min) above a base level of 17",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_24", "ema_slow_84", "vwap_session", "vix_roc_24"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

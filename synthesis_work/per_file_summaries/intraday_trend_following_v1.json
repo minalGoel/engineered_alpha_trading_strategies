@@ -1,0 +1,17 @@
+{
+  "name": "intraday_trend_following_v1",
+  "mechanism": "On NIFTY, when institutional TWAP/VWAP algorithms are working directional orders over 10-20 minute windows, they create a persistent EMA alignment visible as the 2-minute EMA sustaining itself above the 10-minute EMA. Brief pullbacks to the 2-minute EMA represent moments where short-term momentum sellers exhaust against resting institutional limit bids placed just below the recent micro-mean. At 5-second resolution, we detect the precise bar where NIFTY close returns above EMA(24) after the dip — signaling the institutional absorption has re-engaged — and ride the next 8-15 NIFTY spot points of continuation before the institutional order fill cycle completes.",
+  "tags": ["momentum", "trend_following", "ema", "pullback"],
+  "core_signal_oneliner": "EMA(24) pullback and bounce with 10-minute EMA trend alignment and VWAP above-filter",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_24", "ema_120", "rsi_24", "vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

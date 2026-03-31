@@ -1,0 +1,17 @@
+{
+  "name": "vix_mean_reversion_v1",
+  "mechanism": "On NIFTY, when India VIX surges >4% within 10 minutes, it reflects panic-driven put buying that temporarily dislocates implied volatility above fair value. The precise entry trigger is the moment VIX stops making new highs (3 consecutive declining 5-second bars) — this signals put-buying saturation. At that inflection point, option market makers who sold the panic puts begin aggressive NIFTY futures purchases to delta-hedge their short-gamma exposure, generating a 10-25 spot-point mean-reversion bounce within 30-90 seconds. The complementary short signal fires when VIX is crushed >3% in 10 minutes at NIFTY highs — complacency at elevated levels where the same MMs delta-hedge the opposite direction as volatility re-prices up.",
+  "tags": ["volatility", "vix", "mean_reversion", "fear_spike", "contrarian"],
+  "core_signal_oneliner": "VIX spikes 4%+ in 10 minutes then shows 3 consecutive declining 5s bars, signaling put-buying saturation and options MM delta-hedge reversal",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vix_change_120", "vix_zscore_360", "vix_declining_3", "rsi_36"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

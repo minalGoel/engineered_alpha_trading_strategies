@@ -1,0 +1,17 @@
+{
+  "name": "volume_momentum_v1",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing directional orders leave a measurable volume fingerprint: when more than 62% of the last 100 seconds of traded volume lands on up-bars (5-second candles closing above their open), it signals sustained buy-side order flow rather than noise. When this volume skew aligns with spot trading above session VWAP and a positive 60-second rate-of-change, the remaining unfilled institutional queue pushes NIFTY 15-25 spot points higher in the next 30-90 seconds — we buy ATM CE to capture approximately half of that continuation. The symmetrical condition (volume skew toward down-bars, below VWAP, negative 60s ROC) signals sell-side institutional flow and we buy PE.",
+  "tags": ["volume-weighted", "momentum", "vol-price-trend", "intraday"],
+  "core_signal_oneliner": "Over 62% of 100-second volume on up-bars, positive 60s ROC, above VWAP, and increasing volume skew over 30 seconds",
+  "entry_type": "ce_pe",
+  "indicators_used": ["up_vol_ratio_20", "roc_12", "vwap", "vol_sma_24", "vol_ratio_trend_6"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

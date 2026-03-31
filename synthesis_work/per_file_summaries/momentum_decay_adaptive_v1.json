@@ -1,0 +1,17 @@
+{
+  "name": "momentum_decay_adaptive_v1",
+  "mechanism": "On NIFTY, large institutional TWAP and VWAP algorithms working directional orders over 5-15 minute windows create positive autocorrelation in 5-second returns \u2014 the same institution keeps hitting the bid or ask repeatedly, producing runs of same-sign returns. When the rolling AR(1) coefficient on 5-second returns (over the prior 10 minutes) exceeds ~0.12, it signals an active directional algo is still working its order, and the current 1-minute momentum direction is likely to persist for another 30-90 seconds. We enter in the momentum direction only when AR(1) is positive and confirms persistence, and we widen stops/targets when AR(1) is high (long half-life, slow decay) versus tighter parameters when AR(1) is borderline (fast decay, quick in-out).",
+  "tags": ["momentum", "ar1", "regime-adaptive", "persistence", "autocorrelation"],
+  "core_signal_oneliner": "Rolling 10-minute AR(1) coefficient above threshold confirming positive return autocorrelation, with 1-minute directional momentum as the trade trigger",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ar1_120", "roc_12", "vwap_session"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": "5.0 to 10.0 (adaptive)",
+  "exit_stop_points": "3.0 to 6.0 (adaptive)",
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

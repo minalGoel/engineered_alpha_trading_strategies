@@ -1,0 +1,17 @@
+{
+  "name": "kalman_filter_trend_v1",
+  "mechanism": "NIFTY's intraday trends are driven by institutional TWAP/VWAP algorithms executing directional mandates over 5-20 minute windows, creating persistent but noise-embedded price drift visible in 5-second bars. A Kalman filter with 2 states (price level + velocity) optimally separates genuine trend velocity from observation noise by dynamically adjusting its gain: when the index is in persistent directional flow, the velocity state converges to a stable non-zero value with low estimation uncertainty, yielding a high velocity/uncertainty ratio. When NIFTY's Kalman velocity/sigma exceeds 1.5 in one direction AND price sits above/below the Kalman level estimate AND agrees with session VWAP direction — institutional order flow is active and unexhausted. On NIFTY, these confirmed velocity regimes persist for 30-90 additional seconds, delivering 5-15 option premium points before the institutional batch exhausts and velocity reverts toward zero.",
+  "tags": ["kalman-filter", "trend-following", "state-space", "adaptive", "momentum"],
+  "core_signal_oneliner": "Kalman velocity/uncertainty ratio above 1.5 sustained 30 seconds with VWAP directional agreement",
+  "entry_type": "ce_pe",
+  "indicators_used": ["kf_level", "kf_velocity", "kf_uncertainty", "kf_signal_strength", "session_vwap", "velocity_consec"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

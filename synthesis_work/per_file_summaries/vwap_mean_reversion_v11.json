@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v11",
+  "mechanism": "On NIFTY, when the z-score relative to the 20-minute rolling standard deviation drops below -2.5 (typically 60-90 spot points below session VWAP at VIX 15-25 sessions), the selling transitions from discretionary VWAP-urgency accumulation to forced margin liquidation of leveraged long positions hitting stop-loss limits — a qualitatively different seller archetype with a hard supply ceiling. Once this forced-sell pool is depleted, there is no new supply to replace it and the bid side re-asserts abruptly. The microstructure signature of exhaustion is price beginning to lift within the 30-second window even while the z-score remains deeply negative: the close reclaims more than 30% of the 6-bar (30-second) high-low range from below, indicating that the forced sellers have been absorbed and market makers are aggressively raising bid ladders. On NIFTY, this forced-exhaustion pattern at -2.5 sigma produces a 25-35 spot point snap-back within 60 seconds as the vacuum left by exhausted sellers fills with VWAP-benchmarked buy programs that had been holding back to avoid chasing the forced-sell cascade.",
+  "tags": ["mean_reversion", "vwap", "forced_liquidation", "exhaustion", "elevated_vix"],
+  "core_signal_oneliner": "Forced-liquidation exhaustion at -2.5 sigma VWAP deviation, confirmed by 30-second range reclaim above 30% from the low",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_stddev_240", "vwap_zscore", "range_position_6", "vix_close"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 9,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

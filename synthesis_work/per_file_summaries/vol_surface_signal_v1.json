@@ -1,0 +1,17 @@
+{
+  "name": "vol_surface_signal_v1",
+  "mechanism": "On NIFTY, the ratio of ATM put premium to ATM call premium tracks real-time intraday directional order flow between market participants. When institutions or hedgers aggressively buy puts for short-term protection, ATM PE premiums spike relative to ATM CE premiums, pushing the PE/CE ratio significantly above its 20-minute session baseline. At a 2-sigma intraday extreme, this put-buying burst has typically exhausted available demand — the feared event hasn't materialized — and NIFTY tends to recover over the next 30-90 seconds as market makers delta-hedge by purchasing index futures. Symmetrically, extreme call-buying (ratio z-score below -2sigma) signals bullish exhaustion as speculative call demand wanes, creating a short-term bearish fade opportunity.",
+  "tags": ["volatility", "skew", "options", "mean_reversion", "intraday"],
+  "core_signal_oneliner": "ATM put-to-call premium ratio z-score exceeds 2-sigma over 20-minute baseline, signaling directional demand exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["atm_ce_close", "atm_pe_close", "pe_ce_ratio", "ratio_zscore", "spot_mom_12"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

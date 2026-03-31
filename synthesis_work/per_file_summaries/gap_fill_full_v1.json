@@ -1,0 +1,17 @@
+{
+  "name": "gap_fill_full_v1",
+  "mechanism": "On NIFTY, overnight gaps of 0.3-1.0% create a marked divergence from the prior session's institutional benchmark levels. VWAP-benchmarked algorithms (mutual funds, FIIs executing large directional mandates) begin accumulating against the gap direction from the first bar, as they receive better-than-VWAP fills when NIFTY is below (gap down) or above (gap up) the intraday VWAP. The first cross of intraday VWAP — typically 15-45 minutes after open — signals that accumulated institutional pressure has overwhelmed retail gap-chasing flow, creating a directional impulse of 15-25 NIFTY spot points over the next 30-90 seconds as momentum followers pile in behind the institutional accumulation. At 5-second resolution we enter exactly at the VWAP cross bar.",
+  "tags": ["gap", "gap_fill", "mean_reversion", "opening", "vwap"],
+  "core_signal_oneliner": "Gap 0.3-1.0% day: first VWAP cross in the gap-fill direction within 09:20-10:30 IST, confirmed by RSI not at extreme",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "vwap_intraday", "rsi_36", "vwap_cross_bullish", "vwap_cross_bearish"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

@@ -1,0 +1,17 @@
+{
+  "name": "implied_vs_realized_vol_v1",
+  "mechanism": "On NIFTY, when VIX has spiked intraday but 20-minute realized volatility has not kept pace, market makers who sold calls into the fear spike are over-hedged short-delta and will buy the index to unwind as VIX begins to revert. We detect this regime by computing the intraday VRP (VIX/100 minus 20-min annualized realized vol) and z-scoring it over the trailing 60-minute window; when VRP z-score exceeds 1.5 and VIX's 5-minute rate-of-change turns negative (confirming the spike is reversing), NIFTY tends to drift upward 15-25 spot points over the following 30-90 seconds as dealer delta hedges unwind. The short leg fires when RV exceeds implied vol (VRP z-score < -1.5) with VIX rising, signaling complacency before a move.",
+  "tags": ["volatility", "variance_risk_premium", "vix", "mean_reversion", "regime"],
+  "core_signal_oneliner": "Intraday variance risk premium z-score with VIX rate-of-change direction confirmation for dealer delta unwind",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rv_240", "vrp", "vrp_z", "vix_roc_60", "rsi_36"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

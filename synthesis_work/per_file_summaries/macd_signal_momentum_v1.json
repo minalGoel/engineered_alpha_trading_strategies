@@ -1,0 +1,17 @@
+{
+  "name": "macd_signal_momentum_v1",
+  "mechanism": "On NIFTY, large institutional TWAP/VWAP execution algorithms running directional orders create persistent EMA divergence that is visible in MACD at any timescale. When the MACD histogram (EMA_24 minus EMA_72, net of its 18-bar EMA) accelerates for 3 consecutive 5-second bars \u2014 meaning the short-term momentum is compounding rather than plateauing \u2014 it signals the institutional order is mid-execution, not near completion. NIFTY's tight liquidity and high notional volume ensure this histogram acceleration reflects genuine cumulative order flow rather than noise. Adding VWAP directional confirmation means we trade only when the institutional momentum aligns with the dominant session benchmark, filtering signals where counter-flow will resist continuation.",
+  "tags": ["macd", "histogram-acceleration", "momentum", "institutional-flow", "intraday"],
+  "core_signal_oneliner": "MACD histogram accelerating monotonically for 3 consecutive 5-second bars, confirming mid-execution institutional directional order flow",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_24", "ema_slow_72", "macd_signal_18", "macd_hist", "hist_accel_3bar", "vwap", "vol_sma_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

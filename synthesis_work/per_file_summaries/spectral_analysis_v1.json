@@ -1,0 +1,17 @@
+{
+  "name": "spectral_analysis_v1",
+  "mechanism": "On NIFTY, large institutional participants executing TWAP/VWAP orders slice their inventory into fixed time-based tranches (typically 30-90 seconds each), and option market makers continuously delta-hedge by periodically buying or selling the index in rhythmic bursts. These execution patterns create measurable periodic micro-oscillations in NIFTY's 5-second price series at cycle lengths of 30-180 seconds. When the FFT of the last 20 minutes of 5-second closes reveals a dominant spectral peak at a 30-180 second period with power exceeding 3.5x the spectral noise floor — and that dominant period has been stable for the past 30 seconds — the institution-driven cycle is significant and exploitable. We enter at confirmed phase extrema: at cycle troughs (phase ≈ π, cosine minimum) with a 10-second positive ROC confirmation for CE, and at cycle peaks (phase ≈ 0, cosine maximum) with negative ROC for PE.",
+  "tags": ["spectral", "fourier", "cycle-detection", "frequency", "quantitative", "microstructure"],
+  "core_signal_oneliner": "FFT of 20-min 5s price series reveals a dominant 30-180s cycle with SNR > 3.5 and price at phase extremum (trough for CE, peak for PE)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["fft_window_close", "dominant_period", "spectral_ratio", "cycle_phase", "period_stable", "roc_2"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

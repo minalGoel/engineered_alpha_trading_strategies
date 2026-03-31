@@ -1,0 +1,17 @@
+{
+  "name": "intraday_volatility_breakout_v1",
+  "mechanism": "When NIFTY's 1-minute realized volatility (ATR over the last 12 bars at 5-second resolution) suddenly exceeds its 5-minute baseline ATR by 2x or more, institutional order flow or macro news has shifted market microstructure into a high-volatility regime. On NIFTY specifically, this expansion triggers delta-hedging cascades from options market makers who are short gamma: as the index accelerates directionally, market makers buy (or sell) index futures to hedge their delta exposure, amplifying the burst for the next 30-90 seconds until the hedging flow exhausts itself. We enter in the direction of the initial expansion bar — confirmed by a relative volume surge above the 5-minute average — to capture the first leg of this institutional feedback loop before the delta-hedge demand is absorbed.",
+  "tags": ["volatility", "breakout", "atr", "momentum", "regime"],
+  "core_signal_oneliner": "ATR expansion 2x above 5-minute baseline with directional volume surge and VWAP alignment for delta-hedge cascade entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["atr_12", "atr_60", "vol_expansion", "bar_direction", "rel_volume", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

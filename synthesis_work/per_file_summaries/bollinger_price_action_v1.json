@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_price_action_v1",
+  "mechanism": "On NIFTY and BANKNIFTY, when the index probes a 5-minute Bollinger Band extreme (±2σ around the 5-min mean) and a single 5-second bar forms a rejection pinbar — low wicking below the lower band then closing up, or high spiking above the upper band then closing down — it signals that resting institutional limit orders and market-maker delta-hedging have absorbed the directional momentum flow. At NIFTY's band extremes, VWAP-benchmarked algorithms see price 15-25 spot points offside and aggressively lift offers (at the lower band) or hit bids (at the upper band), creating the pinbar's rejection wick. In low-VIX regimes (VIX < 18) where NIFTY oscillates in a controlled range, institutions defend these band extremes rather than chase breakouts, triggering a 10-20 spot point mean reversion toward the 5-minute midband within 30-90 seconds.",
+  "tags": ["mean_reversion", "bollinger", "price_action", "pinbar"],
+  "core_signal_oneliner": "Single 5-second rejection pinbar at 5-minute Bollinger ±2σ extreme in low-VIX regime, showing wick penetration then body close back inside band",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_upper", "bb_lower", "bb_mid", "bullish_pinbar", "bearish_pinbar"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

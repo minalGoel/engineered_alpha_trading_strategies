@@ -1,0 +1,17 @@
+{
+  "name": "intraday_trend_channel_v1",
+  "mechanism": "On NIFTY, institutional TWAP algorithms executing large directional baskets create smooth micro-trends at 3-minute resolution — the index moves in an almost-linear ramp as these orders absorb liquidity one 5-second auction at a time. When a 3-minute linear regression channel carries a positive slope and price pulls back to the lower 2-sigma boundary, it signals a temporary deceleration within an ongoing institutional buying program, not a reversal. The regression midline acts as a dynamic magnet: delta-hedging market makers and VWAP-tracking algorithms that are long the micro-trend re-enter when price deviates from the regression fit, creating a 10-15 NIFTY spot point snap-back toward the midline within 30-90 seconds. The symmetric logic applies in downtrend channels — shorts defending the upper boundary get squeezed back to midline as short-covering resumes.",
+  "tags": ["linear-regression", "channel", "trend-following", "pullback", "intraday"],
+  "core_signal_oneliner": "Price touches 2-sigma lower/upper boundary of a stable 3-minute linear regression channel for midline reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["linreg_value_36", "linreg_slope_36", "linreg_std_36", "channel_position_36", "slope_stable_12"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

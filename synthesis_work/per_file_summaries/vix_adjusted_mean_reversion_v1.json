@@ -1,0 +1,17 @@
+{
+  "name": "vix_adjusted_mean_reversion_v1",
+  "mechanism": "On NIFTY, VWAP-benchmarked institutional algorithms (pension funds, FIIs executing large program orders) aggressively fade intraday deviations from session VWAP, but their activation threshold scales with current VIX. In low-VIX regimes (< 14), NIFTY's compressed realized vol makes even a 20-30 spot point deviation from VWAP statistically anomalous (z-score ~1.0), triggering immediate algo-driven fading within 30-60 seconds. In high-VIX regimes (> 20), those same institutions require 60-80 spot point deviations (z-score ~2.5+) before fading because intraday noise is genuinely wider and smaller deviations are not statistically significant. By scaling the entry z-score threshold dynamically with VIX — entering only when the deviation is anomalous relative to the current volatility regime — we isolate the conditions where the reverting institutional force is strong enough to produce a measurable 30-90 second bounce on the index.",
+  "tags": ["mean_reversion", "vwap", "vix", "adaptive", "regime_filter"],
+  "core_signal_oneliner": "VWAP z-score deviation fade where the entry threshold scales dynamically with current India VIX level",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "vwap_zscore", "adaptive_threshold", "rsi_24"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

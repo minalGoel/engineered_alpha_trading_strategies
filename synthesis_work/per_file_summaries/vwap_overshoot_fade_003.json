@@ -1,0 +1,17 @@
+{
+  "name": "vwap_overshoot_fade_003",
+  "mechanism": "On NIFTY, in moderate-VIX sessions (12-24), a 0.5% deviation from session VWAP is caused by structured retail stop-sweeps and short-horizon algo momentum triggers — not by institutional directional conviction (which would elevate VIX above 24) or by benign drift in dormant tapes (VIX below 12 where deviations are shallow and listless). When RSI(60) — a 5-minute exhaustion signal — reaches below 22 or above 78, the directional momentum engine has operated at maximum intensity for 5 full minutes without continuation: the triggering algos have exhausted their order queue. A green close bar (close > open) on the down-overshoot confirms that 5-second micro-momentum has already pivoted bullish before entry, rather than anticipating the turn — NIFTY's tight bid-ask and deep order book means a single pivot bar on the index reliably marks the order imbalance flip.",
+  "tags": ["mean_reversion", "vwap", "vix_regime", "exhaustion", "candlestick_confirmation"],
+  "core_signal_oneliner": "0.5% VWAP deviation with 5-minute RSI at extreme (<22/>78) in moderate VIX (12-24) regime, confirmed by bullish/bearish pivot bar",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "rsi_60"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

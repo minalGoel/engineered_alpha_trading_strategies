@@ -1,0 +1,17 @@
+{
+  "name": "opening_range_breakout_30_v1",
+  "mechanism": "NIFTY and BANKNIFTY spend the first 30 minutes (09:15-09:45 IST) absorbing overnight positioning, gap adjustments, and the first wave of institutional TWAP/VWAP flow. By 09:45, these forces are largely exhausted and the resulting OR high/low represents a genuine equilibrium boundary \u2014 wider and more robust than the 20-minute ORB because it absorbs the early retail momentum flushes too. When NIFTY/BANKNIFTY closes 3 consecutive 5-second bars above the OR high with above-average volume and price above VWAP, the supply ceiling has been systematically consumed by institutional buy-side flow, not spiked through by a single block. At 5-second resolution we enter within 15 seconds of confirmed breakout, capturing the initial 15-25 spot point directional thrust before the move extends into the next resistance zone or stalls.",
+  "tags": ["orb", "30-min", "breakout", "opening-range", "intraday", "momentum"],
+  "core_signal_oneliner": "30-minute opening range breakout with 3-bar (15s) close persistence above OR boundary, VWAP alignment, and 2x volume vs OR-period average confirming institutional commitment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["OR30_high", "OR30_low", "OR30_avg_vol", "session_vwap", "persistence_3bar"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

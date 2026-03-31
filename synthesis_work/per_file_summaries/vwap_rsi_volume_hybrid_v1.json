@@ -1,0 +1,17 @@
+{
+  "name": "vwap_rsi_volume_hybrid_v1",
+  "mechanism": "On NIFTY, when the index drops 20+ spot points below session VWAP with RSI(36) reading below 35 (3-minute oversold exhaustion) and volume spiking 1.5x the 20-minute average, VWAP-benchmarked institutional buy programs activate aggressively — they are filling significantly better than their intraday benchmark and are incentivized to accumulate at these levels. The volume surge distinguishes a genuine panic flush (where resting bid orders absorb aggressive selling) from a slow drift away from VWAP; only the former creates a sharp mean-reversion snap. At 5-second resolution we enter on the first uptick confirming selling exhaustion, capturing the initial 10-20 spot point bounce before 1-minute bar participants can react — an entry timing advantage unavailable at coarser timeframes.",
+  "tags": ["mean_reversion", "vwap", "rsi", "volume", "hybrid", "exhaustion"],
+  "core_signal_oneliner": "NIFTY 20+ spot points below VWAP with 3-minute RSI below 35 and volume 1.5x baseline, entry on first uptick (exhaustion confirmed)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["VWAP", "vwap_dist", "rsi_36", "vol_ratio"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

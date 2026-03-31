@@ -1,0 +1,17 @@
+{
+  "name": "vix_regime_breakout_v1",
+  "mechanism": "When India VIX spikes >10% above its intraday session baseline, FII desks and domestic risk engines execute simultaneous NIFTY futures sell programs as portfolio delta hedges, pushing NIFTY down 40-100 spot points within 3-10 minutes and compressing ATM CE premiums. The instant VIX begins retracing from its intraday peak (>3% pullback from session high), these same hedging programs are partially unwound — market makers short gamma from sold puts must delta-hedge by buying NIFTY futures, producing a sharp CE premium expansion in the first 30-90 seconds. Conversely, while VIX is still accelerating upward (VIX rising vs 30 seconds prior), directional selling has not yet exhausted and NIFTY continues lower, making PE purchases appropriate until the peak is confirmed.",
+  "tags": ["volatility", "regime", "mean_reversion", "vix"],
+  "core_signal_oneliner": "VIX spikes 10%+ from session baseline then pulls back 3%+ from its intraday high, confirming hedge-unwind buying impulse",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vix_session_min", "vix_spike_pct", "vix_intraday_high", "vix_pullback_pct", "vix_rising_30s", "nifty_ret_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

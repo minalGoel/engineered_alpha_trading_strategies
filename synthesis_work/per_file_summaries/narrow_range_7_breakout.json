@@ -1,0 +1,17 @@
+{
+  "name": "narrow_range_7_breakout",
+  "mechanism": "On NIFTY, when a 5-second bar's range (high-low) is smaller than every prior bar over the last ~1.7 minutes (20 bars), market-maker quotes have compressed to their tightest spread and resting orders cluster tightly at both sides. A subsequent close above that NR bar's high simultaneously triggers buy-stop activation and TWAP/momentum algo entries, releasing the compressed energy into a 10-20 spot point directional burst within 15-45 seconds. Volume expansion on the breakout bar confirms institutional participation rather than a low-liquidity false pierce.",
+  "tags": ["breakout", "volatility_compression", "narrow_range", "microstructure"],
+  "core_signal_oneliner": "5-second bar with narrowest range of the prior 20 bars (~1.7 min) followed by a breakout close above/below that bar's high/low with volume expansion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bar_range", "rolling_min_range", "vol_ma"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "order_block_entry_v1",
+  "mechanism": "On NIFTY, when institutional algorithms execute concentrated directional orders within a 15-second window (3 × 5s bars), the net 8+ spot point impulse consumes all opposing limit orders at those price levels. The last opposite-direction candle immediately before that impulse — the Order Block — contains residual unfilled resting orders from participants whose limit orders were never reached during the rush. When NIFTY retraces to this zone within 5-6 minutes, those resting limit buy/sell orders re-engage and absorb the pullback, launching a fresh directional push of 15-25 spot points. Fair Value Gaps (3-bar price discontinuities where candle i-2's extreme fails to overlap with candle i's extreme at 5-second resolution) mark levels where NIFTY's continuous auction skipped price tiers during aggressive institutional sweeps — market makers fill these gaps with directional pushes as NIFTY revisits the untraded zone, producing a short-lived but cleanly directional 15-30 spot point continuation.",
+  "tags": ["order_block", "fair_value_gap", "ICT", "price_action", "institutional_flow", "mean_reversion"],
+  "core_signal_oneliner": "Price returns to an Order Block or Fair Value Gap zone created by a 15-second institutional impulse, entry on first touch within 6 minutes of zone creation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bullish_ob_zone", "bearish_ob_zone", "bullish_fvg_zone", "bearish_fvg_zone", "max_zone_age", "session_vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

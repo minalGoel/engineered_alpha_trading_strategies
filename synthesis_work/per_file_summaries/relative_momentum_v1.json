@@ -1,0 +1,17 @@
+{
+  "name": "relative_momentum_v1",
+  "mechanism": "On NIFTY, large institutional directional orders (FII equity block deals, domestic fund rebalancing) execute over 30-180 minutes via TWAP algorithms that create a gentle session drift. When the 2-minute return rate suddenly exceeds twice the session drift rate, it signals these orders have entered an urgency phase — either a new buyer joined an existing trend or a staggered TWAP order accelerated near its deadline. At 5-second resolution, this acceleration is detectable ~15 seconds before a 1-minute bar confirms it, and the institutional flow typically sustains for another 30-90 seconds as the order continues filling. The session drift rate normalises for time-of-day effects: a 0.3% move at 09:45 (30 min in) is the same drift rate as 1.2% at 13:00 (240 min in), preventing false signals from large opening moves.",
+  "tags": ["momentum", "relative-strength", "acceleration", "institutional-flow", "intraday"],
+  "core_signal_oneliner": "2-minute return rate exceeds 2x the session drift rate, detecting TWAP urgency phase acceleration",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_return", "recent_return_24", "session_rate", "recent_rate"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_squeeze_reversion_v1",
+  "mechanism": "On NIFTY, when 5-second Bollinger bandwidth compresses to a 10-minute session low, latency-sensitive HFT algorithms probe the range edges with small directional orders looking for a breakout. When NIFTY closes outside the band without institutional follow-through — no sustained directional order flow visible as a series of higher closes — these probes are absorbed by market makers taking the opposite side, and the index snaps back toward the 20-bar SMA midline. At 5-second resolution we can enter the moment the probe closes outside the band (the failure signal itself), capturing the snap-back 30-90 seconds earlier than a 1-minute bar confirmation would allow. Reversion targets the midline typically 4-10 spot points away.",
+  "tags": ["mean_reversion", "bollinger", "volatility", "squeeze"],
+  "core_signal_oneliner": "Bollinger bandwidth in bottom 20th percentile of 10-minute history while price closes outside band, signaling a failed probe that will snap back to midline",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_upper", "bb_lower", "bb_mid", "bb_bandwidth", "bb_bandwidth_pctile"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

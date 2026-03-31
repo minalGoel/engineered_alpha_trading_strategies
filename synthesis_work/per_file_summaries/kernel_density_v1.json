@@ -1,0 +1,17 @@
+{
+  "name": "kernel_density_v1",
+  "mechanism": "On NIFTY, institutional TWAP and VWAP algorithms executing multi-hour directional mandates repeatedly transact at the same price bands within any given 10-minute window, creating high-density clusters in the Gaussian KDE of recent 5-second closes. These KDE modes act as mechanical support/resistance: when NIFTY approaches a high-density mode from above with short-term RSI exhausted below 40, residual buy algorithms still working their orders at that level absorb the incoming sell flow and produce a 10-20 spot-point bounce. The same logic applies in reverse at resistance modes (RSI > 60, approaching from below), where sellers who accumulated near that band provide friction against further advance. At 5-second resolution we enter as proximity to the mode tightens to within 0.1% of price, capturing the first 1-2 bars of bounce before the level either holds or breaks.",
+  "tags": ["kde", "support-resistance", "mean_reversion", "non-parametric", "price-clustering"],
+  "core_signal_oneliner": "Gaussian KDE mode proximity with RSI momentum exhaustion for bounce off high-density price cluster",
+  "entry_type": "ce_pe",
+  "indicators_used": ["kde_modes", "nearest_support", "nearest_resistance", "mode_strength", "rsi_36"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

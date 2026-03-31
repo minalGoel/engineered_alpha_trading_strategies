@@ -1,0 +1,17 @@
+{
+  "name": "sma_crossover_banknifty_v1",
+  "mechanism": "On BANKNIFTY, large institutional TWAP/VWAP algorithms working directional orders create persistent micro-trends visible as SMA alignment across 3-min, 15-min, and 60-min windows. When SMA(36) > SMA(180) > SMA(720) all align bullishly AND price retouches the fast SMA(36) after a brief pullback, the order flow is sustained at multiple timescales — not just a spike but continuous demand absorption by institutional desks still working their orders. This micro-pullback-to-fast-SMA entry captures the next 30-50 spot point continuation leg while limiting exposure by entering during a retracement rather than chasing breakouts.",
+  "tags": ["momentum", "trend_following", "sma", "multi_timeframe"],
+  "core_signal_oneliner": "Three-timeframe SMA stack (3/15/60-min) fully bullish with price pulling back to the 3-min SMA, detecting sustained multi-scale institutional trend",
+  "entry_type": "ce_pe",
+  "indicators_used": ["sma_36", "sma_180", "sma_720", "pullback_to_sma36", "sma_separation"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

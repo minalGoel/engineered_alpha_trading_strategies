@@ -1,0 +1,17 @@
+{
+  "name": "index_momentum_v1",
+  "mechanism": "NIFTY experiences sharp 1-minute directional bursts when macro news hits or algorithmic momentum strategies trigger cascading entries via TWAP/VWAP algorithms working large directional orders. These bursts exhibit autocorrelation at the 30-60 second scale because institutional orders are typically only 40-60% filled in the first 12-bar (1-min) window, leaving residual order flow that sustains the move. When both the 5-minute trend (ret_60) and the 1-minute acceleration (ret_12) confirm the same direction, we are entering during active institutional order completion rather than at the exhaustion of a move.",
+  "tags": ["momentum", "index", "continuation", "5s"],
+  "core_signal_oneliner": "5-minute trend confirmed by 1-minute acceleration alignment for institutional order completion continuation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ret_60", "ret_12"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

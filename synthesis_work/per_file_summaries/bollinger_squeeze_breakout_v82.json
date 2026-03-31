@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_squeeze_breakout_v82",
+  "mechanism": "On NIFTY, intraday consolidation phases see order book depth build on both sides as directional participants cancel positions and market makers tighten spreads. This compresses realized volatility, causing 3-minute Bollinger Bands to narrow inside Keltner Channels (the TTM Squeeze). When price pushes above the upper Bollinger Band while the squeeze is still active, it signals that aggressive buyers have begun absorbing the resting offers — the balance tips and algorithmic momentum strategies cascade in, initiating a 15-30 spot point directional push in 30-90 seconds. The asymmetry at entry is that the squeeze constrains the losing scenario (tight bands = limited adverse price range) while the breakout release gives an outsized winner.",
+  "tags": ["volatility", "breakout", "squeeze", "bollinger"],
+  "core_signal_oneliner": "3-minute Bollinger Bands inside Keltner Channel (TTM Squeeze active) with price closing above upper BB or below lower BB",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_upper_36", "bb_lower_36", "kc_upper_36", "kc_lower_36"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

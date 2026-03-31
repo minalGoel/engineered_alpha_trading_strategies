@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_band_reversion_v1",
+  "mechanism": "When NIFTY closes below its 5-minute Bollinger lower band (60-bar, 2σ), algorithmic sell programs have driven price beyond the normal micro-volatility range, exhausting near-term sell-side liquidity at that depth. Market makers net-short gamma from option selling immediately begin delta-hedging by buying NIFTY futures, and VWAP-benchmarked institutional desks see fills significantly better than their benchmark and start accumulating. This reactive buying typically pushes NIFTY back toward the 5-minute SMA within 30-90 seconds, covering 10-15 spot points of reversion. The converse holds at the upper band: overbought micro-conditions trigger gamma-hedgers selling futures and profit-taking from momentum players, producing a downward reversion to the midline.",
+  "tags": ["mean_reversion", "bollinger_bands", "microstructure"],
+  "core_signal_oneliner": "NIFTY closes outside 5-minute Bollinger 2σ band with volume surge, triggering gamma-hedger and VWAP-benchmarked counter-flow toward midline",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_mid_60", "bb_upper_60", "bb_lower_60", "vol_avg_60"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

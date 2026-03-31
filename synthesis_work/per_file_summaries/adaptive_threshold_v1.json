@@ -1,0 +1,17 @@
+{
+  "name": "adaptive_threshold_v1",
+  "mechanism": "On NIFTY, FII-driven directional flows create persistent RSI regimes where static 30/70 thresholds fail — during morning momentum sessions the index RSI(12) can stay above 65 for 5-10 minutes before a pullback. By calibrating overbought/oversold thresholds to the 90th/10th percentile of RSI over the past 20 minutes (240 bars), the strategy detects true regime extremes rather than absolute levels. When RSI hits the dynamic oversold threshold AND Bollinger Bands expand from a recent micro-squeeze (indicating a volatility compression release), VWAP-benchmarked algorithms that dominate NIFTY order flow are overextended and begin rebalancing, producing a 10-20 spot point mean reversion within 30-90 seconds as resting limit orders absorb the directional excess.",
+  "tags": ["adaptive", "threshold", "regime", "rsi", "mean_reversion", "bollinger"],
+  "core_signal_oneliner": "RSI at dynamic 10th/90th-percentile extreme combined with fresh Bollinger micro-squeeze release, signaling regime exhaustion and imminent mean reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_12", "rsi_pctile_lo", "rsi_pctile_hi", "bb_width_36", "bb_squeeze_thresh"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vix_mean_reversion_intraday_v1",
+  "mechanism": "On NIFTY, intraday VIX deviations anchored to the day's session-open level reflect the cumulative net put-buying pressure since 09:15. When VIX has risen > 3% from its day-open value and begins declining (2 consecutive 5-second bars), options market makers who sold puts during the fear wave start buying NIFTY futures to reduce their delta-hedge — generating a 15-30 second spot rally. The day-open anchor (vs. a rolling window) matters because institutional hedgers target their book to morning risk levels; deviations from that anchor are the directional signal, not short-term oscillations. The bearish mirror fires when VIX has been steadily crushed from open (complacency) and the first VIX uptick signals returning put demand, preceding a NIFTY correction.",
+  "tags": ["volatility", "vix", "mean_reversion", "intraday", "day_open_anchor"],
+  "core_signal_oneliner": "VIX deviation from day-open anchor exceeds 3% then shows 2-bar reversal, confirming options MM delta-hedge unwind",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vix_day_open", "vix_change_from_open_pct", "vix_ema_360", "vix_reversal_2bar", "nifty_open_return_pct"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

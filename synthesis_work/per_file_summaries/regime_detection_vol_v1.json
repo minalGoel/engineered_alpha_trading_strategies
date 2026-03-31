@@ -1,0 +1,17 @@
+{
+  "name": "regime_detection_vol_v1",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms switch between passive accumulation (quiet low-vol regime) and aggressive directional execution (high-vol regime) in bursts visible at 5-second resolution. When 3-minute realized vol spikes above 2x the 10-minute baseline vol, it signals that aggressive directional flow has activated — the side confirmed by EMA_24 vs EMA_72 alignment predicts 15-25 spot point continuation over the next 30-120 seconds as the institutional order works through remaining fills. Conversely, when the vol ratio collapses back below the threshold (flow exhausted), price has overshot VWAP by 15-30 spot points and market makers who delta-hedged during the high-vol burst close their hedges, snapping price back toward VWAP within 60-90 seconds.",
+  "tags": ["volatility", "regime_detection", "momentum", "mean_reversion", "realized_vol"],
+  "core_signal_oneliner": "3-min realized vol crosses above/below 2x the 10-min baseline, signaling a switch between aggressive institutional flow and post-burst VWAP reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rv_short", "rv_medium", "vol_ratio", "ema_fast", "ema_slow", "vwap"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

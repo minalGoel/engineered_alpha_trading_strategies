@@ -1,0 +1,17 @@
+{
+  "name": "european_open_momentum_continuation",
+  "mechanism": "When London opens at 13:30 IST, European institutional desks begin routing directional orders into NIFTY's largest ADR/GDR-linked constituents — HDFC Bank, RELIANCE, ICICI Bank, INFOSYS, and TCS collectively represent ~38% of NIFTY's weight. Simultaneous institutional buying or selling of these five heavyweights creates a measurable directional impulse on the NIFTY index that persists for 30-120 seconds as domestic market makers delta-hedge and momentum algorithms pile in behind the initial European order flow. We enter in the direction of this impulse at 13:30 IST when the 30-minute pre-European-open momentum and session VWAP alignment both confirm the directional bias, capturing the first burst before the effect dissipates as US pre-market liquidity competes for attention from 14:30 IST onward.",
+  "tags": ["momentum", "event_driven", "time_of_day"],
+  "core_signal_oneliner": "European open (13:30 IST) directional burst: 30-min pre-open momentum + 2-min acceleration burst both align with VWAP-side",
+  "entry_type": "ce_pe",
+  "indicators_used": ["mom_360", "vwap", "mom_24"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

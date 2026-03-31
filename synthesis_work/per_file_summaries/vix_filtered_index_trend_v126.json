@@ -1,0 +1,17 @@
+{
+  "name": "vix_filtered_index_trend_v126",
+  "mechanism": "On NIFTY, when India VIX is in the 12-22 range, institutional algorithmic desks run directional TWAP/VWAP programs that create persistent micro-trends detectable via EMA structure. A fresh bullish EMA crossover (3-min EMA crossing above 9-min EMA) while NIFTY trades above session VWAP signals that buy-side algo flow is gaining momentum — not a random spike, but sustained accumulation that typically extends 20-30 spot points over the next 30-90 seconds. The VIX band filter is critical: below 12, the market is too calm and crossovers are noise with no follow-through; above 22, volatile chop destroys EMA signal fidelity and whipsaws dominate.",
+  "tags": ["trend_following", "vix_regime", "ema_crossover", "vwap"],
+  "core_signal_oneliner": "EMA(3min) crosses EMA(9min) within VIX 12-22 sweet-spot band with VWAP directional confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_36", "ema_slow_108", "vwap_session", "india_vix"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

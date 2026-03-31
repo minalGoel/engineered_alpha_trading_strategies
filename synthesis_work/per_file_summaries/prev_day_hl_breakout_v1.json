@@ -1,0 +1,17 @@
+{
+  "name": "prev_day_hl_breakout_v1",
+  "mechanism": "When NIFTY closes above its previous day high (PDH) for three consecutive 5-second bars, overnight short-sellers' stop orders clustered just above PDH have been swept, removing the supply ceiling and creating a micro-liquidity vacuum. Simultaneously, breakout-scanning algorithms (dozens of which monitor PDH/PDL on NIFTY in real time) detect the confirmed level breach and inject fresh buy orders, accelerating the index 15-30 spot points beyond PDH within 30-90 seconds before the first wave of mean-reversion algos absorbs momentum. The symmetric logic applies at PDL for bearish breaks: trapped longs exit, shorts pile in, and the first 15-25 spot point decline is the most momentum-rich phase. PDH/PDL on NIFTY carries more weight than on individual stocks because every market participant — retail, institutional, FII — uses the same reference level for the same index.",
+  "tags": ["breakout", "support_resistance", "daily_levels", "momentum", "stop_sweep"],
+  "core_signal_oneliner": "Previous day high/low breakout confirmed by 3-bar (15s) persistence, 20-min relative volume > 1.5x, and VWAP directional alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pdh", "pdl", "vwap", "rel_vol_240", "consec_3"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

@@ -1,0 +1,17 @@
+{
+  "name": "multi_asset_signal_v1",
+  "mechanism": "On NIFTY/BANKNIFTY, when spot rises for 2 minutes while India VIX simultaneously rises, large institutions are buying protective puts against their long equity exposure even as futures tick higher \u2014 internal conflict between directional flow and hedging flow that resolves within 30-90 seconds as the hedge-buying overwhelms the bid and pulls the index down. The reverse pattern (spot falling, VIX also falling) is complacent retail stop-loss selling without institutional panic: resting buy orders from VWAP-benchmarked algorithms absorb the selling and snap the index back up within 60 seconds. This 'same-direction' NIFTY/VIX co-movement is statistically unusual (normal regime is negative correlation: index up, VIX down) and signals the divergence will resolve back toward the expected negative relationship.",
+  "tags": ["cross-asset", "vix-divergence", "macro-signal", "mean_reversion", "regime"],
+  "core_signal_oneliner": "2-minute NIFTY spot and VIX moving in the same direction (abnormal correlation), indicating an unstable institutional hedging divergence that will snap back within 30-90 seconds",
+  "entry_type": "ce_pe",
+  "indicators_used": ["spot_roc_24", "vix_roc_24", "divergence_bull", "divergence_bear", "persistence_3bar"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

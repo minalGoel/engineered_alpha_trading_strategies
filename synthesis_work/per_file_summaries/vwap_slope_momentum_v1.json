@@ -1,0 +1,17 @@
+{
+  "name": "vwap_slope_momentum_v1",
+  "mechanism": "When NIFTY's session VWAP sustains an elevated linear-regression slope (z-score > 1.5 persisting 25+ seconds), it reflects active institutional TWAP execution — large buy-side desks slicing directional orders into the NIFTY futures book, weighted by volume. NIFTY futures market makers continuously quote against VWAP benchmarks, so a persistently steep VWAP slope forces their delta-hedging in the same direction, amplifying the initial institutional push and creating short-term price momentum at the index level. The 5-bar persistence requirement (25 seconds at 5s bars) filters NIFTY's inherent single-candle noise and confirms the slope is institutionally sustained — we enter as that flow continues and ride the 30-90 second continuation.",
+  "tags": ["momentum", "vwap", "trend", "institutional_flow"],
+  "core_signal_oneliner": "VWAP slope z-score above 1.5 sigma (vs 20-minute baseline) sustained for 5 consecutive bars (25 seconds), confirming active institutional TWAP execution in progress",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_slope_bps", "vwap_slope_zscore", "price_above_vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

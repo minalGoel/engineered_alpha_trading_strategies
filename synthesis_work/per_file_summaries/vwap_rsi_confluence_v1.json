@@ -1,0 +1,17 @@
+{
+  "name": "vwap_rsi_confluence_v1",
+  "mechanism": "On NIFTY, when the index trades >0.3% below session VWAP while the 2-minute RSI (24 bars at 5s) falls below 30, two distinct institutional flows converge simultaneously: VWAP-benchmarked algorithms (pension funds, FII desks) begin aggressive accumulation because they are filling 30-50 points below their daily benchmark, and delta-hedging market makers who sold ATM puts at the RSI extreme begin unwinding their short delta. This dual-flow demand creates sharp 15-40 second reversions of 10-20 NIFTY spot points. The RSI slope turning positive from below 30 (within the same 5-second bar) signals the exhaustion of selling pressure before the 1-minute bar closes, enabling entry 45-55 seconds earlier than the original strategy's 1-min confirmation — capturing the steepest part of the reversion curve.",
+  "tags": ["vwap", "rsi", "confluence", "mean_reversion", "double-confirmation"],
+  "core_signal_oneliner": "VWAP deviation >0.3% with 2-minute RSI below 30 and RSI slope turning positive, plus bullish candle bar confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_dev_pct", "rsi_24", "rsi_slope"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

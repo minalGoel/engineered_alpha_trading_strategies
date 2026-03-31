@@ -1,0 +1,17 @@
+{
+  "name": "maximum_entropy_v1",
+  "mechanism": "On NIFTY, a 5-second return that falls beyond the 95th percentile of the past 5-minute return distribution represents a statistically anomalous flush of market orders \u2014 typically cascading stop-loss triggers or short-term momentum algos overshooting on thin liquidity. The maximum entropy distribution (approximated via Cornish-Fisher expansion using rolling mean, std, and skewness) correctly identifies when positive or negative skew makes an event truly extreme rather than just 'large under a normal assumption.' Within 30-90 seconds, NIFTY's structural mean-reversion forces (VWAP-anchored institutional accumulation, market-maker delta-hedging from gamma exposure) fade these overshoots.",
+  "tags": ["mean_reversion", "statistical", "tail-event", "entropy", "cornish-fisher", "intraday"],
+  "core_signal_oneliner": "5-second return crossing the skewness-adjusted Cornish-Fisher P5 or P95 threshold of the rolling 5-minute return distribution, signaling a statistically extreme move to revert",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ret_5s", "roll_mean_60", "roll_std_60", "roll_skew_60", "maxent_p5_cornish_fisher", "maxent_p95_cornish_fisher", "session_vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

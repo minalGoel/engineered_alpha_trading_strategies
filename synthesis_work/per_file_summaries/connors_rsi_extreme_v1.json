@@ -1,0 +1,17 @@
+{
+  "name": "connors_rsi_extreme_v1",
+  "mechanism": "On NIFTY, when the Connors RSI composite (averaging RSI(6) of the last 30-second price move, RSI(2) of the consecutive-bar streak, and 100-bar percentile rank of 5-second returns) drops below 10, three independent exhaustion signals converge simultaneously: the 30-second price RSI is deeply oversold, the streak of consecutive down-closes has worsened, and the current bar's return sits in the bottom percentile of the recent intraday distribution. At this confluence, VWAP-benchmarked institutional programs on NIFTY — which benchmark against the current session average — treat sub-VWAP prices at this extreme CRSI depth as below-benchmark accumulation opportunities, initiating buy-side absorption within 15-30 seconds. We enter on the turning bar where CRSI first crosses back above the oversold threshold, confirming the exhaustion is complete rather than catching a falling knife.",
+  "tags": ["mean_reversion", "connors_rsi", "oversold", "oscillator_extreme", "vwap_proximity"],
+  "core_signal_oneliner": "Connors RSI (composite of 30s price RSI, streak RSI, and 8-minute return percentile rank) crosses back above extreme oversold or below extreme overbought threshold near VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_6", "streak", "streak_rsi_2", "pct_rank_100", "crsi", "vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

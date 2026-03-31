@@ -1,0 +1,17 @@
+{
+  "name": "moc_drift_v1",
+  "mechanism": "In the 14:30\u201315:20 IST window, NIFTY experiences systematic directional drift driven by ETF rebalancers, passive-fund TWAP algos, and institutional MOC programs that are pre-committed to executing at or near the close price. When NIFTY has sustained above session VWAP and is up since 14:00 \u2014 indicating net afternoon buying pressure \u2014 these pre-committed buy programs create 15\u201330 second momentum bursts as they absorb resting sell liquidity in the order book faster than new sellers replenish it. At 5-second resolution, a 1-minute momentum confirmation (close > 60 seconds ago) signals that an active burst is underway; entering in that direction captures the tail of the institutional flow before it exhausts.",
+  "tags": ["momentum", "close_auction", "microstructure", "end_of_day", "vwap"],
+  "core_signal_oneliner": "Sustained afternoon NIFTY drift above VWAP since 14:00 with active 1-minute momentum burst, capturing ETF rebalancer and MOC program pre-committed buying flow",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_dev", "return_since_1400", "momentum_12"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

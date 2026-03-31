@@ -1,0 +1,17 @@
+{
+  "name": "keltner_channel_trend_v1",
+  "mechanism": "On NIFTY, when the index sustains above its 5-minute Keltner Channel upper band (EMA(60) + 2×ATR(60)) for 3 consecutive 5-second bars, it signals institutional directional flow has overwhelmed the volatility-adjusted supply ceiling — the band is harder to breach than Bollinger Bands because ATR widens in choppy conditions, so a sustained breach specifically means price velocity exceeds current micro-volatility regime, not just a single-bar noise spike. TWAP/VWAP algorithms filling large directional orders continue pushing for 30-90 seconds as only 40-60% of institutional orders are typically filled at the breakout bar. The ADX(36) filter confirms that +DI and -DI have diverged meaningfully over the past 3 minutes, validating that the breakout is driven by directional flow rather than a two-sided auction spike.",
+  "tags": ["trend_following", "keltner", "volatility", "momentum", "channel-breakout"],
+  "core_signal_oneliner": "Sustained 15-second breach of 5-minute Keltner band above VWAP with ADX trend strength confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["kc_mid", "atr_60", "kc_upper", "kc_lower", "adx_36", "vwap"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

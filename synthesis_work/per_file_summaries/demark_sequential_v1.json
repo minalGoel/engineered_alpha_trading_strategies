@@ -1,0 +1,17 @@
+{
+  "name": "demark_sequential_v1",
+  "mechanism": "On NIFTY at 5-second bars, a TD Sequential buy setup (9 consecutive 5s bars each closing below their 4-bar-ago close) captures a 45-second sustained micro-selldown where incremental sellers dominate at each price step. When the 9-count completes with DeMark perfection (bar 8 or 9 registers a lower low than bar 6 of the setup), the marginal sellers have been absorbed by resting buy orders at progressively deeper levels — supply is structurally exhausted. NIFTY's institutional-driven price discovery then snaps back within 1-3 bars as delta-hedging market makers and VWAP-benchmarked algos resume upward reference price tracking, producing a 10-20 spot point counter-move in the first 30-60 seconds. The sell setup is symmetric: 9 consecutive closes above close[4] with perfected higher high on bar 8 or 9 signals buyer exhaustion, triggering a buy PE.",
+  "tags": ["exhaustion", "counter_trend", "TD_sequential", "DeMark", "pattern_counting"],
+  "core_signal_oneliner": "9 consecutive 5-second bars each closing below/above the bar 4 periods ago, with DeMark perfection on bar 8 or 9 and RSI confirmation, marking micro-trend exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["td_buy_count", "td_sell_count", "td_buy_perfection", "td_sell_perfection", "rsi_12"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

@@ -1,0 +1,17 @@
+{
+  "name": "bollinger_squeeze_v1",
+  "mechanism": "On NIFTY, algorithmic participants — VWAP-execution bots and market-makers delta-hedging gamma from near-expiry option books — temporarily pause directional order flow during mid-session consolidations, creating 2-5 minute compressions where the 4-minute Bollinger Band width contracts inside the Keltner Channel. This squeeze state signals a temporary equilibrium between absorbed buy and sell pressure. When the squeeze releases (BB expands beyond KC), it marks the resumption of institutional directional flow: a single large TWAP or delta-hedge cascade typically drives NIFTY 12-20 spot points in the first 60-90 seconds. The normalized momentum oscillator slope over the preceding 60 seconds distinguishes accumulation (slope turning positive → buy CE) from distribution (slope turning negative → buy PE) at the moment of release.",
+  "tags": ["volatility", "bollinger", "squeeze", "breakout", "intraday"],
+  "core_signal_oneliner": "4-minute BB contracts inside Keltner Channel for 6+ bars then expands beyond KC, with momentum oscillator slope confirming direction at the release bar",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_48", "kc_48", "bb_width_min_240", "momentum_norm_48", "mom_slope_12"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

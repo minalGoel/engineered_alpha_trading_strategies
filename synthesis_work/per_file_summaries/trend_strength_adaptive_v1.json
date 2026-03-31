@@ -1,0 +1,17 @@
+{
+  "name": "trend_strength_adaptive_v1",
+  "mechanism": "On NIFTY, the strength of an intraday trend (measured by 3-minute ADX) determines how fast directional momentum can be captured: high-ADX regimes (ADX > 35) reflect concentrated institutional order flow where even a 30-second window is sufficient to confirm direction, while low-ADX regimes (ADX 18-25) require 2-3 minutes of EMA history to filter noise. The adaptive EMA crossover exploits this by contracting its lookback from ~36 bars (3 min) to ~12 bars (1 min) as ADX rises, making the signal faster precisely when fast signals are reliable. The +DI/-DI comparison on 3-minute bars confirms that directional pressure is asymmetric — not just overall volatility — while the VWAP filter ensures the trade aligns with the accumulated session-level institutional flow benchmarking on NIFTY.",
+  "tags": ["ADX", "adaptive", "EMA-crossover", "trend-following", "regime-adaptive"],
+  "core_signal_oneliner": "ADX-adaptive EMA crossover where lookback contracts as trend strength rises, confirmed by DI asymmetry and VWAP alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["adx_36", "plus_di_36", "minus_di_36", "adaptive_ema_fast", "adaptive_ema_slow", "vwap"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

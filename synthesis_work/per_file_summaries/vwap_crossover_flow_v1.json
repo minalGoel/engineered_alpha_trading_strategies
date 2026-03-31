@@ -1,0 +1,17 @@
+{
+  "name": "vwap_crossover_flow_v1",
+  "mechanism": "On NIFTY, when the index spends 2.5+ minutes (30+ bars at 5s) consistently below session VWAP, VWAP-benchmarked institutional algorithms accumulate a growing execution deficit versus their benchmark — every fill they get is worse than VWAP. A subsequent crossover back above VWAP accompanied by a 3x+ volume surge fingerprints multiple TWAP/VWAP algos crossing their internal trigger simultaneously, shifting from gradual accumulation to active catch-up. The cross bar closing in the top 25% of its range confirms the absorption is clean with no counter-selling, and these algos' residual order queues drive sustained directional momentum for 30-60 seconds. The inverse holds for downward crosses after price has been persistently above VWAP.",
+  "tags": ["vwap", "crossover", "volume", "institutional-flow", "microstructure"],
+  "core_signal_oneliner": "VWAP cross after 2.5+ minutes of persistent one-sided positioning, with 3x volume surge and close in top/bottom 25% of bar range",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "consec_below_vwap", "consec_above_vwap", "vol_surge", "bar_range_position"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

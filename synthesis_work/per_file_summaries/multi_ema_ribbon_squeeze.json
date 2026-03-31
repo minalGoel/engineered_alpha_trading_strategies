@@ -1,0 +1,17 @@
+{
+  "name": "multi_ema_ribbon_squeeze",
+  "mechanism": "On NIFTY, when the 60s, 3-min, and 5-min EMAs compress into a band tighter than ~0.06% of index level (~13 spot points at 22000), all near-term participants \u2014 scalpers, momentum algos, and institutional TWAP bots \u2014 are simultaneously in equilibrium with no directional edge. When price breaks decisively through this compressed ribbon on above-average volume, it signals that a directional institutional order has started absorbing the resting supply (bullish) or demand (bearish). At 5-second resolution, we enter within the first 15-30 seconds of the expansion, before the 1-minute bar closes and slower systems react, capturing the initial 15-25 spot point thrust.",
+  "tags": ["momentum", "trend_following", "breakout", "ema_ribbon"],
+  "core_signal_oneliner": "Three-EMA ribbon (1min/3min/5min) compressing below 0.06% width then price breaking out with above-average volume, releasing coiled directional energy",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_12", "ema_36", "ema_60", "ribbon_squeeze", "vol_sma_20"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

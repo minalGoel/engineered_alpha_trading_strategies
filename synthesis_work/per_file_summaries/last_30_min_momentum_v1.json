@@ -1,0 +1,17 @@
+{
+  "name": "last_30_min_momentum_v1",
+  "mechanism": "On NIFTY, the 14:45-15:20 closing window sees concentrated institutional order flow as VWAP-benchmarked funds must fill their final allocations before the 15:30 close. When NIFTY has accumulated a >0.3% directional day return and remains on the correct side of session VWAP at 14:45, these late institutional orders reinforce the day's direction in 30-90 second micro-bursts — not one sustained push but sequential order batches from different fund managers executing their end-of-day mandates at staggered times. At 5-second resolution we detect each burst as it begins (positive 1-minute momentum aligning with the day direction) rather than taking a single time-based entry held through noise until 15:29.",
+  "tags": ["time_of_day", "closing", "momentum", "institutional_flow"],
+  "core_signal_oneliner": "NIFTY closing window institutional burst detected by 1-minute momentum aligned to day direction and VWAP side",
+  "entry_type": "ce_pe",
+  "indicators_used": ["day_return", "session_vwap", "mom_12"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

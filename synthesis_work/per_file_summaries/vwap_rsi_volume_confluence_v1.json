@@ -1,0 +1,17 @@
+{
+  "name": "vwap_rsi_volume_confluence_v1",
+  "mechanism": "When NIFTY drops sharply below its session VWAP (z-score < -1.5 by rolling 20-minute stddev) while the 2-minute RSI falls below 25 AND index volume spikes 2x+ the 20-minute average, it signals a climax selloff from stop cascades or algorithmic de-risking that has overshot fair value. VWAP-benchmarked institutions — responsible for a large share of NIFTY intraday flow — become aggressive buyers when receiving fills well below their session benchmark, providing mechanical buy-side pressure within 30-90 seconds. The volume surge is critical: it distinguishes institutional participation (stop-cascade climax) from thin-market drift below VWAP, making the reversion higher-probability than z-score or RSI alone. All three conditions firing simultaneously reduces false positives by filtering out slow drifts (high z-score, low volume) and noise spikes (high volume, z-score not extreme).",
+  "tags": ["mean_reversion", "vwap", "rsi", "volume", "confluence", "multi-factor", "climax-reversal"],
+  "core_signal_oneliner": "Triple-confluence: VWAP z-score below -1.5 sigma AND 2-minute RSI below 25 AND volume 2x the 20-minute average (climax selloff identification)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_vwap", "vwap_dev_std_240", "vwap_zscore", "rsi_24", "vol_ratio_240"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

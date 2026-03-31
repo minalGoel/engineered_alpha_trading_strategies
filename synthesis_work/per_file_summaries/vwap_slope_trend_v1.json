@@ -1,0 +1,17 @@
+{
+  "name": "vwap_slope_trend_v1",
+  "mechanism": "On NIFTY, large institutional TWAP and VWAP execution algorithms are benchmarked against session VWAP — when they need to buy, they systematically lift offers at progressively higher prices, causing the VWAP slope to rise. At 5-second resolution, the 3-minute VWAP slope (linreg over 36 bars) captures this institutional directional pressure before it fully manifests in price. When the 1-minute slope (12 bars) exceeds the 3-minute slope, it signals that institutional demand is accelerating, not plateauing — the executing TWAP order has not finished and the remaining flow will push NIFTY spot another 10-20 points in the same direction. This acceleration window is the entry trigger: buy CE when slope is positive and building, buy PE when slope is negative and deepening, holding for the next 60-90 seconds while institutional execution continues.",
+  "tags": ["vwap", "slope", "trend-following", "institutional-flow", "directional"],
+  "core_signal_oneliner": "3-minute VWAP slope positive and building (slope_12 > slope_36) with price above VWAP and above 3-minute EMA, signaling institutional TWAP acceleration",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_slope_36", "vwap_slope_12", "slope_ma_18", "ema_36"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

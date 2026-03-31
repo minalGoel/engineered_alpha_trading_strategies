@@ -1,0 +1,218 @@
+// This Pine Script™ is subject to the terms of the Mozilla Public License 2.0
+// https://mozilla.org/MPL/2.0/
+//@version=5
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STRATEGY 1: TREND PULLBACK TO VWAP — MULTI-HOUR HOLD (v2.0)
+// Instrument: NSE:NIFTY1! continuous futures (1 lot = 65 units)
+//
+// v2.0 — Complete rebuild from v1.0 Gap Fill + Trend Pullback.
+//
+//   v1.0 results (23 trades, 8W/15L, -₹25,265):
+//     Gap-fill: KILLED (0W/3L). Thesis didn't hold on Nifty.
+//     Trend pullback: gross P&L was POSITIVE (+₹4,762) but 50-pt target
+//     couldn't clear 18-pt round trip cost. Winners averaged 36 pts net —
+//     the signal works, the holding period was too short.
+//
+//   v2.0 changes:
+//     - Gap-fill branch removed entirely.
+//     - Target widened 50 → 100 pts. At 100:55 R:R, breakeven = 47% WR.
+//       On synthetic futures (4.4 pts cost), breakeven drops to 38%.
+//     - Trailing stop added: activate at 50% of target, trail 30 pts behind.
+//       Locks profit on runners while letting the trend breathe.
+//     - Stronger trend filter: EMA slope > 5.0 + VWAP slope > 3.0.
+//       v1.0 had 4/20 trades with zero MFE (wrong immediately). These were
+//       marginal trends with EMA slope barely above 2.0. Raising to 5.0
+//       plus requiring VWAP itself to trend filters these out.
+//     - Invalidation relaxed: 24 bars (2 min) → 60 bars (5 min).
+//       Multi-hour holds need room for intra-trend pullbacks. A 2-min dip
+//       below VWAP is noise at this timescale.
+//     - Time stop: 90 min → 4 hours. Let trending days play out.
+//     - Entry cutoff: 15:10 → 13:00. Need 2+ hours for the hold to develop.
+//
+// THESIS:
+//   On trending days, institutional TWAP algos create pullback-and-resume
+//   patterns at session VWAP. Enter on the first confirmed bounce from VWAP
+//   in a strong trend (EMA sloping, VWAP sloping). Hold for 2-4 hours,
+//   targeting 100 pts of trend continuation.
+//
+// TIMING: Signal at bar[0] close → entry at bar[1] open
+//
+// COST MATH:
+//   Futures: ~₹907 regulatory + ₹260 slippage = ₹1,167 (18 pts). BEV 47%.
+//   Synthetic futures (ATM CE+PE): ~₹177 regulatory + ₹150 slippage = ₹327
+//   (4.4 pts). BEV 38%. To backtest synthetic, set commission_value=0.006.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("Trend Pullback to VWAP v2", overlay=true,
+  initial_capital=500000, default_qty_type=strategy.fixed, default_qty_value=1,
+  commission_type=strategy.commission.percent, commission_value=0.030,
+  slippage=2, process_orders_on_close=false, calc_on_every_tick=false)
+
+// ─── INPUTS — exactly 5 ────────────────────────────────────────────────────
+i_tgt   = input.float(100.0, "1. Profit Target (pts)",       step=5.0, tooltip="Target 100 pts = breakeven at 47% WR (futures) or 38% WR (synthetic)")
+i_stop  = input.float(55.0,  "2. Hard Stop (pts)",           step=5.0, tooltip="Wider than v1 (was 40). Multi-hour holds need room for noise.")
+i_trail = input.float(30.0,  "3. Trail Offset (pts)",        step=5.0, tooltip="After trail activates at 50% of target, stop follows peak minus this.")
+i_slope = input.float(5.0,   "4. Min EMA Slope (pts/5min)",  step=0.5, tooltip="v1 was 2.0 — too loose, let in 4 zero-MFE trades. 5.0 requires genuine trend.")
+i_vol   = input.float(1.3,   "5. Volume Ratio Threshold",    step=0.1, tooltip="Entry bar volume must exceed this × 10-min average.")
+
+// ─── HARDCODED CONSTANTS ────────────────────────────────────────────────────
+EMA_LEN       = 120     // 10-min EMA (5s bars: 120 × 5s = 600s)
+VOL_LEN       = 120     // 10-min volume SMA baseline
+PB_PROX       = 12.0    // VWAP pullback proximity (Nifty pts, slightly wider than v1's 10)
+PB_LOOK       = 36      // 3-min lookback for recent VWAP touch (wider than v1's 24)
+INV_BARS      = 60      // 5-min sustained wrong-side-of-VWAP for invalidation
+TIME_STOP     = 2880    // 4-hr time stop (5s bars: 2880 × 5s = 14400s)
+COOLDOWN      = 180     // 15-min between trades (wider than v1's 120)
+MAX_TRADES    = 2       // per session (down from v1's 3 — quality over quantity)
+VIX_MAX       = 25.0    // VIX exclusion
+VWAP_SLP_LEN  = 120     // VWAP slope measured over 10 min
+VWAP_SLP_MIN  = 3.0     // min VWAP movement (pts) over 10 min for confirmation
+ENTRY_CUTOFF  = 780     // 13:00 IST — need 2+ hours remaining for the hold
+
+// ─── SESSION & TIME ─────────────────────────────────────────────────────────
+new_sess = ta.change(time("D"))
+hr       = hour(time, "Asia/Kolkata")
+mn       = minute(time, "Asia/Kolkata")
+tmn      = hr * 60 + mn
+
+or_done   = tmn >= 575                          // 09:35 — entries allowed
+in_window = or_done and tmn < ENTRY_CUTOFF       // 09:35–13:00
+is_eod    = tmn >= 920                           // 15:20 — unconditional flatten
+
+// ─── VIX (previous day close) ───────────────────────────────────────────────
+vix    = request.security("NSE:INDIAVIX", "D", close[1], lookahead=barmerge.lookahead_on)
+vix_ok = na(vix) or vix < VIX_MAX
+
+// ─── VWAP & VWAP SLOPE ─────────────────────────────────────────────────────
+vw         = ta.vwap(hlc3)
+vwap_slope = vw - nz(vw[VWAP_SLP_LEN])
+
+// ─── EMA & EMA SLOPE ───────────────────────────────────────────────────────
+ema_t     = ta.ema(close, EMA_LEN)
+ema_slope = ema_t - nz(ema_t[60])   // 5-min EMA slope
+
+// ─── VOLUME ─────────────────────────────────────────────────────────────────
+vol_sma   = ta.sma(volume, VOL_LEN)
+vol_ratio = nz(vol_sma) > 0 ? volume / vol_sma : 0.0
+vol_ok    = vol_ratio >= i_vol
+
+// ─── VWAP PULLBACK TRACKING ────────────────────────────────────────────────
+// Tracks bars since any part of the bar was within PB_PROX pts of VWAP.
+// had_pb = recently touched VWAP (1-36 bars ago) but moved away (bouncing).
+var int bars_since_vwap = 999
+if new_sess
+    bars_since_vwap := 999
+
+touches_vwap = nz(vw) > 0 and low <= vw + PB_PROX and high >= vw - PB_PROX
+if touches_vwap
+    bars_since_vwap := 0
+else
+    bars_since_vwap := math.min(bars_since_vwap + 1, 9999)
+
+had_pb = bars_since_vwap > 0 and bars_since_vwap <= PB_LOOK
+
+// ─── 2-BAR BOUNCE CONFIRMATION ─────────────────────────────────────────────
+above_vw2 = close > vw and nz(close[1]) > nz(vw[1])
+below_vw2 = close < vw and nz(close[1]) < nz(vw[1])
+
+// ─── TREND CONDITIONS ───────────────────────────────────────────────────────
+// Dual confirmation: EMA must be sloping AND VWAP itself must be trending.
+// v1 used EMA slope only. Adding VWAP slope filters out the marginal setups
+// where EMA was barely trending but VWAP was flat (4 zero-MFE trades in v1).
+trend_up = ema_slope >  i_slope and close > ema_t and close > vw and vwap_slope >  VWAP_SLP_MIN
+trend_dn = ema_slope < -i_slope and close < ema_t and close < vw and vwap_slope < -VWAP_SLP_MIN
+
+// ─── COOLDOWN & TRADE LIMIT ────────────────────────────────────────────────
+var int  last_exit_bar = -COOLDOWN
+var bool was_in_pos    = false
+now_in_pos = strategy.position_size != 0
+if was_in_pos and not now_in_pos
+    last_exit_bar := bar_index
+was_in_pos := now_in_pos
+cooled     = bar_index - last_exit_bar >= COOLDOWN
+
+var int day_trades = 0
+if new_sess
+    day_trades := 0
+under_lim = day_trades < MAX_TRADES
+
+// ─── TRADEABLE BASE ────────────────────────────────────────────────────────
+flat = strategy.position_size == 0
+base = in_window and vix_ok and flat and cooled and under_lim
+
+// ─── ENTRY ──────────────────────────────────────────────────────────────────
+// Signal: strong trend (EMA + VWAP sloping) + recent VWAP pullback + bounce
+// confirmed by 2 bars on trend side of VWAP + volume.
+go_l = base and trend_up and had_pb and above_vw2 and vol_ok
+go_s = base and trend_dn and had_pb and below_vw2 and vol_ok
+
+var int ebar = 0
+
+if go_l
+    strategy.entry("L", strategy.long, comment="TP")
+    ebar := bar_index
+    day_trades += 1
+
+if go_s
+    strategy.entry("S", strategy.short, comment="TP")
+    ebar := bar_index
+    day_trades += 1
+
+// ─── EXITS: TARGET + STOP + TRAILING ───────────────────────────────────────
+// Trail activates at 50% of target. Once active, stop follows peak at i_trail
+// pts behind. This captures runaway trends while locking in profits.
+//
+// Example with defaults (100 tgt, 55 stop, 30 trail):
+//   Price hits +50 → trail activates. Stop starts trailing.
+//   Price reaches +80 → trail stop at +50. Price at +100 → profit target fires.
+//   Price reaches +75, reverses to +45 → trail stop fires at +45. Win.
+//   Price never reaches +50 → trail never activates. Hard stop at -55 is floor.
+
+tgt_t     = math.round(i_tgt / syminfo.mintick)
+stp_t     = math.round(i_stop / syminfo.mintick)
+trail_act = math.round(i_tgt * 0.50 / syminfo.mintick)
+trail_off = math.round(i_trail / syminfo.mintick)
+
+if strategy.position_size > 0
+    strategy.exit("XL", "L", profit=tgt_t, loss=stp_t,
+      trail_points=trail_act, trail_offset=trail_off)
+if strategy.position_size < 0
+    strategy.exit("XS", "S", profit=tgt_t, loss=stp_t,
+      trail_points=trail_act, trail_offset=trail_off)
+
+// ─── THESIS-BASED INVALIDATION ─────────────────────────────────────────────
+// 60 consecutive closes (5 min) on wrong side of VWAP = trend has reversed.
+// This is the thesis-based stop — fires before hard stop in most reversals.
+// Wider than v1's 24 bars (2 min) because multi-hour holds have deeper pullbacks.
+in_pos = strategy.position_size != 0
+held   = bar_index - ebar
+
+var int ws_cnt = 0
+if strategy.position_size > 0
+    ws_cnt := close < vw ? ws_cnt + 1 : 0
+else if strategy.position_size < 0
+    ws_cnt := close > vw ? ws_cnt + 1 : 0
+else
+    ws_cnt := 0
+
+if ws_cnt >= INV_BARS
+    strategy.close_all(comment="Inv")
+
+// ─── TIME STOP (4 hours) ───────────────────────────────────────────────────
+if in_pos and held >= TIME_STOP
+    strategy.close_all(comment="Time")
+
+// ─── EOD FLATTEN 15:20 IST ─────────────────────────────────────────────────
+if in_pos and is_eod
+    strategy.close_all(comment="EOD")
+
+// ─── DIAGNOSTIC PLOTS ───────────────────────────────────────────────────────
+plot(vw, "VWAP", color.purple, linewidth=2)
+plot(ema_t, "EMA(120)", color.blue)
+
+plotshape(go_l, "Long",  shape.triangleup,   location.belowbar, color.green, size=size.small)
+plotshape(go_s, "Short", shape.triangledown,  location.abovebar, color.red,   size=size.small)
+
+// Background: green when uptrend detected, red when downtrend
+bgcolor(trend_up and in_window ? color.new(color.green, 95) : trend_dn and in_window ? color.new(color.red, 95) : na, title="Trend Regime")

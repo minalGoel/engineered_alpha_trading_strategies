@@ -1,0 +1,17 @@
+{
+  "name": "orb_pullback_entry_v1",
+  "mechanism": "NIFTY's 09:15-09:30 opening range is the overnight information absorption window — institutional participants absorb FII/DII flow, global cues, and order imbalance before committing to direction. When NIFTY breaks above the ORB high (confirmed across 3 consecutive 5-second bars, meaning 15 seconds of sustained close above the level), it signals institutional buy-side flow has overwhelmed the opening range's supply ceiling. These algorithmic buyers — predominantly VWAP-benchmarked programs — temporarily exhaust their upside order queue, allowing a pullback to the ORB level. At the ORB high level, resting buy orders from the same institutions (who treat the breakout level as a cost-basis anchor) absorb fresh selling; a 5-second bar whose low touches the ORB high but whose close holds above it signals this absorption is complete. The next institutional wave then drives a 15-30 spot point continuation within 30-90 seconds — capturing the second leg of the breakout rather than the first.",
+  "tags": ["ORB", "pullback", "role_reversal", "support_resistance", "intraday"],
+  "core_signal_oneliner": "Entry on ORB level retest after initial breakout: low touches ORB high but close holds above, confirming institutional support at the former resistance",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high_15", "orb_low_15", "bull_breakout_confirmed", "bear_breakout_confirmed", "pullback_to_orb_high", "pullback_to_orb_low", "pullback_recency"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

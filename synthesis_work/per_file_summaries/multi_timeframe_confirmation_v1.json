@@ -1,0 +1,17 @@
+{
+  "name": "multi_timeframe_confirmation_v1",
+  "mechanism": "On NIFTY, large institutional directional orders (FII/DII TWAP programs) sustain price above both the 5-minute and 15-minute EMA throughout the execution window \u2014 visible as EMA(60) > EMA(180) alignment at 5-second bars. Within these institutional trends, retail stop-loss cascades and counter-trend scalpers create 30-90 second micro-pullbacks that temporarily drive the 1-minute RSI below 30. At the moment RSI crosses back above the oversold threshold, the counter-trend flow is exhausted and the institutional bid reasserts. At 5-second resolution we can detect this RSI crossing in real time and enter before the first 5-10 spot points of trend resumption.",
+  "tags": ["multi_timeframe", "trend_following", "pullback_entry", "ema_crossover", "rsi"],
+  "core_signal_oneliner": "1-minute RSI(12) crossing from below to above 30 while the 5-minute EMA sits above the 15-minute EMA and price is above VWAP, indicating pullback exhaustion within an institutional uptrend",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_60", "ema_180", "rsi_12", "vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

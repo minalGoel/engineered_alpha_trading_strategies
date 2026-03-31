@@ -1,0 +1,17 @@
+{
+  "name": "atr_breakout_v1",
+  "mechanism": "On NIFTY, when a 5-second candle's range exceeds 1.5× the recent 2-minute average true range, it signals that a large directional market order has swept multiple price levels within a single 5-second window — characteristic of institutional algo execution (TWAP/VWAP programs) that have initiated a directional leg. These programs typically fill only 30-60% of their intended size per burst, leaving continuation pressure that persists for the next 30-90 seconds. We enter at the close of the expansion candle in the direction of the bar (bullish close → CE, bearish close → PE), capturing the continuation leg before the program order is complete.",
+  "tags": ["breakout", "volatility", "momentum", "atr"],
+  "core_signal_oneliner": "Single 5-second bar range exceeds 1.5x the 2-minute ATR with above-average volume, signaling institutional program order initiation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["atr_24", "bar_range", "vol_mean_60"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

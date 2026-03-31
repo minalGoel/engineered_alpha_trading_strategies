@@ -1,0 +1,17 @@
+{
+  "name": "orb_plus_sector_filter_v1",
+  "mechanism": "On NIFTY, the 20-minute opening range (09:15-09:35) concentrates overnight information; false ORB breakouts occur when a single sector (IT, Energy) pushes NIFTY above the range while risk sentiment remains mixed. The differentiating signal is VIX ORB confirmation: as institutional buy programs overwhelm the opening range supply ceiling, option market makers simultaneously reduce hedging demand, causing India VIX to break below its own 20-minute opening range low. When NIFTY closes above its ORB high AND VIX simultaneously closes below its ORB low (dual-index ORB confirmation), the signal identifies broad-based institutional conviction — not a sector-specific spike — that carries NIFTY 20-30 spot points in 60-90 seconds. For the bearish case, NIFTY breaking its ORB low accompanied by VIX breaking its ORB high confirms synchronized fear escalation and institutional selling pressure.",
+  "tags": ["orb", "opening-range", "vix", "dual-confirmation", "sector-filter"],
+  "core_signal_oneliner": "Dual-index ORB: NIFTY ORB breakout confirmed simultaneously by VIX breaking its own opening range in the opposite direction",
+  "entry_type": "ce_pe",
+  "indicators_used": ["nifty_orb_high", "nifty_orb_low", "vix_orb_high", "vix_orb_low", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

@@ -1,0 +1,17 @@
+{
+  "name": "momentum_exhaustion_vix_reversal",
+  "mechanism": "On NIFTY, a sharp vertical price move (RSI(6) reaching extreme levels in 30 seconds) accompanied by a volume surge >3x the 10-minute baseline while VIX is simultaneously rising signals that directional flow is hitting absorption. Market makers and delta-hedgers who are short gamma from recent option sales begin reversing their hedges within 1-3 bars as the move stalls, creating an immediate mean reversion impulse. The first confirming bar \u2014 price ticking in the reversal direction \u2014 is the entry trigger; the reversal typically recovers 15-20 NIFTY spot points within 60-90 seconds as systematic stop-orders finish executing and resting limit orders on the other side absorb remaining flow.",
+  "tags": ["mean_reversion", "volatility", "exhaustion", "vix"],
+  "core_signal_oneliner": "Ultra-short RSI(6) at extreme (oversold/overbought) combined with volume climax (3x baseline) and rising VIX slope, confirmed by first price tick in reversal direction",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_6", "vol_climax", "vix_slope_6"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

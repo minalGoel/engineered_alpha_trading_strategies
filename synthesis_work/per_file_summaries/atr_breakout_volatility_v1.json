@@ -1,0 +1,17 @@
+{
+  "name": "atr_breakout_volatility_v1",
+  "mechanism": "When NIFTY's 5-minute ATR expands above its own 10-minute baseline (ratio > 1.2) and price breaches a 2.0 * ATR channel anchored to the session VWAP, it signals that an institutional directional order — a large TWAP execution or a triggered stop cascade — is actively overwhelming resting passive liquidity. At 5-second resolution we enter within the first 1-2 bars of the breach, before most 1-minute momentum algorithms have confirmed the move on their bar close. The VWAP-anchored channel self-adjusts to the day's realized volatility, so the breakout threshold is statistically significant regardless of whether the session is calm (ATR 8 pts) or volatile (ATR 18 pts).",
+  "tags": ["volatility", "ATR", "breakout", "intraday", "momentum"],
+  "core_signal_oneliner": "Price breaks the VWAP ± 2×ATR channel while 5-minute ATR ratio exceeds 1.2, confirming an expanding volatility breakout aligned with trend and volume",
+  "entry_type": "ce_pe",
+  "indicators_used": ["atr_60", "atr_ratio", "vwap", "upper_channel", "lower_channel", "sma_60", "vol_ratio"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

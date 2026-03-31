@@ -1,0 +1,17 @@
+{
+  "name": "inside_bar_breakout_v177",
+  "mechanism": "On NIFTY, sharp 5-second directional bars (>=5 index points range) represent algorithmic momentum bursts where a single institutional order temporarily dominates. The subsequent inside bar forms as market makers reprice and resting limit orders absorb the thrust — a micro-equilibrium where neither bulls nor bears commit. When the next 5-second bar closes beyond the inside bar's boundary in the direction of the mother bar, trapped opposing-side stop-losses trigger and the momentum algos re-enter, driving a 10-20 spot point continuation. The 5s resolution lets us enter at the exact moment directional consensus re-establishes, 30-90 seconds before the move completes.",
+  "tags": ["price_action", "breakout", "microstructure", "momentum"],
+  "core_signal_oneliner": "Inside bar breakout in direction of large-range mother bar with 3-minute trend alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["is_inside", "mother_range", "trend_36"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

@@ -1,0 +1,17 @@
+{
+  "name": "divergence_plus_level_confluence_v1",
+  "mechanism": "On NIFTY, when the index sells down to test a structural level — PDL, session VWAP, or a major round number like 22000 or 22500 — resting institutional buy orders at those pre-programmed price points absorb incremental selling. RSI bullish divergence (price lower low, RSI higher low) measured over the past 5 minutes confirms that selling momentum is thinning precisely as price arrives at the structural support: each successive push lower takes more selling to achieve, while passive buyers hold the level. The level provides a structural reason for reversal (stop clustering, VWAP-benchmarked algorithm accumulation) while divergence confirms momentum exhaustion — two independent reasons to reverse. Bearish divergence at PDH or VWAP resistance symmetrically marks exhaustion of buy-side flow at distributed institutional sell levels, triggering a 15-25 spot point reversal that translates to 7-12 option premium points.",
+  "tags": ["mean_reversion", "divergence", "levels", "confluence", "rsi"],
+  "core_signal_oneliner": "5-minute RSI divergence (price new extreme, RSI higher/lower low) coinciding with price proximity to PDH, PDL, session VWAP, or round number structural level",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_36", "bullish_divergence", "bearish_divergence", "session_vwap", "pdh_pdl"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

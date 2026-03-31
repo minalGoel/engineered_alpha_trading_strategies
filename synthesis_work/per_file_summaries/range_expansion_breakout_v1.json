@@ -1,0 +1,17 @@
+{
+  "name": "range_expansion_breakout_v1",
+  "mechanism": "On NIFTY, when the index compresses into a 2-minute micro-consolidation (range < 0.08% of price, ~18 spot points at 22500), dominant algorithms have paused directional orders and limit orders have equilibrated at both range extremes — forming a compressed orderbook. The first 5-second bar expanding to more than 2.5x the base-period average bar range signals a large institutional basket or futures order breaking through resting limit orders on one side. This expansion bar consuming the base high (or low) triggers automated stops placed by participants positioned within the base, creating a self-reinforcing directional push that sustains for 60-90 seconds. On NIFTY specifically — more liquid and less gappy than single stocks — these micro-expansions generate cleaner continuation because there are no single-stock event gaps to contaminate the signal.",
+  "tags": ["range-expansion", "tight-base", "consolidation", "breakout", "microstructure"],
+  "core_signal_oneliner": "A 5s bar expands to 2.5x the 2-min average bar range and closes above a tight 2-min consolidation base, signaling orderbook rupture",
+  "entry_type": "ce_pe",
+  "indicators_used": ["base_range_pct", "avg_bar_range_24", "expansion_ratio", "prev_base_high", "prev_base_low", "vwap", "avg_volume_24"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

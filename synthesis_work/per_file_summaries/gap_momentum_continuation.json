@@ -1,0 +1,17 @@
+{
+  "name": "gap_momentum_continuation",
+  "mechanism": "When NIFTY gaps >0.3% at the open due to overnight global cues (SGX Nifty, US futures, Asia markets), institutional desks carry a directional bias established before the bell. The first 15 minutes (09:15-09:30) acts as a price-discovery absorption window where algos benchmark against overnight gamma. When price breaks above the 15-minute opening range high on a bullish gap (or below the range low on a bearish gap) accompanied by a volume surge, it signals that resting institutional buy (or sell) interest has overwhelmed the supply ceiling, and TWAP/VWAP algorithms begin chasing fills — creating a 30-90 second momentum continuation window. At 5-second resolution, we can enter at the breakout bar itself rather than waiting for a full minute confirmation.",
+  "tags": ["momentum", "gap", "opening_range", "breakout"],
+  "core_signal_oneliner": "Gap > 0.3% day: first 5s close above 15-min ORB high (gap-up) or below ORB low (gap-down) with volume > 1.5x 20-min average",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "orb_high_180", "orb_low_180", "vol_rel_240"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vwap_zscore_bounce_v1",
+  "mechanism": "When NIFTY's VWAP z-score crosses ±2.0 sigma, the index is at a statistically rare deviation from session VWAP — a level where TWAP/VWAP-benchmarked institutional algorithms (mutual fund block desks, FII VWAP execution) start getting significantly worse fills relative to their benchmark. This creates mechanical reversal pressure: at z < −2.0, TWAP buy orders accelerate (buying cheap vs. benchmark), injecting demand that arrests the selloff; at z > +2.0, TWAP sell orders accelerate, capping the rally. At 5-second resolution we detect the exact bar where z-score begins turning back from its extreme (zscore_delta3 sign flip), entering the reversion within the first 15 seconds rather than waiting for a full 1-minute confirmation bar on the original timeframe.",
+  "tags": ["vwap", "z-score", "mean_reversion", "statistical", "intraday"],
+  "core_signal_oneliner": "VWAP z-score at ±2.0 sigma (30-minute std) with 15-second z-score momentum turning back toward zero (zscore_delta3 sign flip)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_dev", "vwap_dev_std", "vwap_zscore", "zscore_delta3"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

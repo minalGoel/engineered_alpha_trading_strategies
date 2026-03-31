@@ -1,0 +1,17 @@
+{
+  "name": "vix_regime_switch_v1",
+  "mechanism": "On NIFTY, when India VIX is elevated above its 60-minute session rolling mean by more than 1.5 standard deviations and begins declining (negative 60-second VIX slope), market makers and institutional hedgers start unwinding their defensive put positions — this unwind creates aggressive spot buying that drives 30-50 NIFTY point bounces over the next 30-90 seconds. The inverse holds: when VIX is depressed below session baseline and starts rising, fresh hedging demand enters the options market, and dealers delta-hedge by selling NIFTY futures, pushing spot down. VIX re-prices faster than spot (it is derived from option bid-ask midpoints), giving a 5-10 second lead on directional moves in the index.",
+  "tags": ["volatility", "vix", "regime", "mean_reversion"],
+  "core_signal_oneliner": "VIX z-score elevated above 60-min session mean then VIX slope turns negative, signaling hedge unwind and spot rally",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vix_zscore", "vix_slope_12", "ret_6"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

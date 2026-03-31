@@ -1,0 +1,17 @@
+{
+  "name": "zscore_reversion_v1",
+  "mechanism": "On NIFTY, when the index price deviates more than 2 standard deviations from its 10-minute rolling mean, VWAP-benchmarked institutional algorithms and intraday mean-reversion quants begin fading the move aggressively — they are getting fills 20-35 spot points away from recent equilibrium, which is statistically extreme at the 5-10 minute scale. The z-score velocity filter (30-second rate of change turning back toward zero) confirms the order flow rotation has begun before the full reversion impulse lands, allowing entry in the first 5 seconds of the bounce rather than waiting for a 1-minute bar confirmation. This is a pure price-level reversion signal: NIFTY's index construction (cap-weighted, 50 liquid large caps) means deviations from the 10-minute mean are quickly arbitraged by index futures market-makers keeping spot-futures basis tight.",
+  "tags": ["z-score", "mean_reversion", "statistical", "intraday", "short-term"],
+  "core_signal_oneliner": "Price z-score beyond ±2.0 sigma from 10-minute rolling mean with 30-second z-score velocity turning back toward zero (reversion onset confirmed)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rolling_mean_120", "rolling_std_120", "zscore", "zscore_velocity_6"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

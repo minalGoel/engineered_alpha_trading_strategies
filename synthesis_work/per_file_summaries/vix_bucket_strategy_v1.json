@@ -1,0 +1,17 @@
+{
+  "name": "vix_bucket_strategy_v1",
+  "mechanism": "India VIX is constructed from NIFTY option implied volatilities and reflects institutional hedging demand in real time. In Calm regimes (VIX < 13), NIFTY's tight intraday range means market makers aggressively fade 3-minute Bollinger Band excursions — they are collecting spread in low-vol, and any 10-15 spot point deviation from VWAP is absorbed within 30-60 seconds. In Normal regimes (VIX 13-18), large TWAP algorithms run directional orders lasting minutes; an EMA(9-min) crossing above EMA(21-min) on NIFTY signals a fresh wave of institutional buying that typically sustains for 45-90 seconds. In Elevated regimes (VIX 18-24), delta-hedging by options dealers creates self-reinforcing momentum: dealers short gamma who hedge must buy rising and sell falling NIFTY, extending Supertrend-confirmed directional moves for 60-120 seconds. Crisis regimes (VIX > 24) are excluded.",
+  "tags": ["vix", "regime", "volatility", "mean_reversion", "momentum", "trend-following", "adaptive"],
+  "core_signal_oneliner": "Three-regime VIX bucket strategy: BB mean-reversion in Calm, EMA crossover in Normal, Supertrend momentum in Elevated",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vix_bucket", "bb_36", "rsi_24", "vwap", "ema_108", "ema_252", "supertrend_120_2.5"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": null,
+  "exit_stop_points": null,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 12
+}

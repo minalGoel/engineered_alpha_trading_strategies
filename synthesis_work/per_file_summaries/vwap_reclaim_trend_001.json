@@ -1,0 +1,17 @@
+{
+  "name": "vwap_reclaim_trend_001",
+  "mechanism": "On NIFTY, when the index has been trading below session VWAP for most of a 3-minute window, every VWAP-benchmarked institutional algorithm is accumulating passively at better-than-benchmark prices. The moment price reclaims VWAP with the 3-minute EMA crossing back above the 15-minute EMA, those accumulated long positions shift from passive absorption to active continuation — algo systems now need to fill the remainder of their order at or above VWAP, creating a 20-35 spot point continuation burst over the next 30-90 seconds. The bearish mirror applies when sustained above-VWAP drift reverses through VWAP with EMA structure turning negative, as benchmark algos unwind longs and delta-hedging flows accelerate the move.",
+  "tags": ["vwap", "trend_following", "momentum", "continuation", "reclaim"],
+  "core_signal_oneliner": "NIFTY below VWAP 75%+ of last 3 minutes, then price crosses back above VWAP with 3-min EMA above 15-min EMA (trend-aligned reclaim)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "below_vwap_count_36", "above_vwap_count_36", "ema_fast", "ema_slow"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

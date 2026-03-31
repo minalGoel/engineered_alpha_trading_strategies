@@ -1,0 +1,17 @@
+{
+  "name": "vwap_cross_momentum_v1",
+  "mechanism": "On NIFTY, after the index has traded below VWAP for 5+ minutes (60+ bars at 5-second frequency), VWAP-benchmarked buy-side algorithms have accumulated underperformance vs their benchmark and are waiting to reset. When NIFTY's close crosses above VWAP on elevated volume (>1.5x 10-minute average) and the bar closes in the top 30% of its range, these algorithms interpret the cross as a regime confirmation and shift from passive accumulation to active bidding. The resulting institutional buy cohort, amplified by momentum algos triggering on the VWAP reclaim event, drives a 15-25 spot point continuation over the next 60-90 seconds before the new regime is fully absorbed.",
+  "tags": ["vwap", "crossover", "momentum", "trend-following", "intraday"],
+  "core_signal_oneliner": "VWAP cross after 5+ minutes of continuous one-sided dwell, with volume surge and bar closing in top/bottom 30% of range",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "bars_below_vwap", "bars_above_vwap", "vol_sma_120", "volume_surge", "ema_12", "bar_range_ratio"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

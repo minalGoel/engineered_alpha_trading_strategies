@@ -1,0 +1,17 @@
+{
+  "name": "vix_spike_mean_reversion",
+  "mechanism": "On NIFTY, a rapid 5%+ surge in India VIX within 10 minutes forces options market makers to delta-hedge aggressively by selling NIFTY futures, simultaneously triggering stop-loss cascades on leveraged long positions — pushing NIFTY 20-50 spot points below session VWAP. India VIX is the 30-day implied vol of NIFTY itself, so once VIX stabilizes (stops making new highs), the delta-hedge selling pressure dissipates, and resting buy orders accumulated below VWAP absorb remaining supply in a sharp 30-90 second reversion. At 5-second resolution we can detect the moment VIX stops rising (prior 30-second VIX delta <= 0) while the 10-minute spike is still active, entering the very first bar of the mean reversion rather than waiting for a full 1-minute bar confirmation.",
+  "tags": ["volatility", "mean_reversion", "vix", "microstructure"],
+  "core_signal_oneliner": "VIX 5%+ spike over 10 minutes stabilizes (30s plateau), RSI oversold, and price below VWAP, triggering mean-reversion entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vix_spike_120", "vix_stabilizing_6", "rsi_36", "vwap_session"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

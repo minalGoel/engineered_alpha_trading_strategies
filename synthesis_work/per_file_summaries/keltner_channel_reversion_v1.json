@@ -1,0 +1,17 @@
+{
+  "name": "keltner_channel_reversion_v1",
+  "mechanism": "On NIFTY, when the index price touches the outer Keltner Channel (EMA(24) ± 2.0 × ATR(24) = ±2 ATR from the 2-minute EMA), intraday momentum algorithms that drove the move have exhausted near-term order flow and the ATR-based band marks a micro-volatility-normalized extreme. Unlike Bollinger Bands that inflate on single outlier bars, ATR bands reflect the true recent micro-volatility — so a Keltner touch is a cleaner signal that the LAST bar was genuinely outsized relative to the prior 2 minutes of movement. At this point, delta-hedging dealers (long gamma from options they sold) and short-term mean-reversion desks that use EMA-anchored bands start fading aggressively with limit orders. The 5-second close BACK inside the band — with a bullish/bearish body showing that the current bar itself absorbed the excess — is the entry signal, targeting reversion to the 2-minute EMA within 30-90 seconds.",
+  "tags": ["keltner", "mean_reversion", "atr-based", "ema", "intraday", "band-touch"],
+  "core_signal_oneliner": "Price wicks outside 2-ATR Keltner band then closes back inside with confirming body in flat EMA regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["kc_mid", "kc_atr", "kc_upper", "kc_lower", "kc_position", "kc_mid_slope"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

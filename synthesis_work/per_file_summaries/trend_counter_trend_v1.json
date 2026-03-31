@@ -1,0 +1,17 @@
+{
+  "name": "trend_counter_trend_v1",
+  "mechanism": "On NIFTY, when the 2-minute Supertrend flips bullish (bearish) while price is above (below) session VWAP and the 5-minute EMA trend aligns, it signals that institutional directional algorithms have committed to a short-term trend — their TWAP/VWAP execution orders are now directionally biased and will sustain the move for the next 30-90 seconds. The counter-trend sell signal fires when 3-minute RSI diverges from price (new spot high but RSI lower) AND NIFTY has overshot VWAP by 15+ spot points — at that level, VWAP-benchmarked algorithms begin systematic fade-selling against the benchmark, providing an asymmetric early exit before trend exhaustion.",
+  "tags": ["trend-following", "counter-trend", "hybrid", "supertrend", "rsi-divergence", "exits"],
+  "core_signal_oneliner": "Supertrend flip aligned with VWAP and EMA trend, with RSI-divergence counter-trend exit at VWAP overshoot",
+  "entry_type": "ce_pe",
+  "indicators_used": ["supertrend_24_3", "rsi_36", "ema_60", "vwap_session"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

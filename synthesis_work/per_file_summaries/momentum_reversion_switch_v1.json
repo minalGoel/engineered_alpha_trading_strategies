@@ -1,0 +1,17 @@
+{
+  "name": "momentum_reversion_switch_v1",
+  "mechanism": "On NIFTY/BANKNIFTY, intraday sessions alternate between two microstructure states: (1) directional flow, where large institutional TWAP/VWAP algorithms push the index with sustained order imbalance visible as ADX > 25 on a 5-minute window \u2014 in this state, a 1.5-minute EMA crossing above a 3.5-minute EMA signals order-flow acceleration already underway, predicting 15-25 more spot points of continuation within 30-60 seconds; and (2) range-bound churning, where market makers are net-flat and delta-hedging activity creates tight oscillations \u2014 ADX < 18 identifies this state, and 2-sigma Bollinger Band extremes on a 5-minute window flag overshoots that market makers fade within 30 seconds, recovering 10-20 spot points back toward the band midline.",
+  "tags": ["regime-switching", "momentum", "mean_reversion", "hybrid", "adaptive", "adx"],
+  "core_signal_oneliner": "ADX-based regime classifier routing to EMA-crossover momentum entries (ADX > 25) or Bollinger Band extreme mean-reversion entries (ADX < 18) with VWAP confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["adx_60", "ema_fast_18", "ema_slow_42", "vwap", "bb_60_2sd"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

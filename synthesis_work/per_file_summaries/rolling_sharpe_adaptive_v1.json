@@ -1,0 +1,17 @@
+{
+  "name": "rolling_sharpe_adaptive_v1",
+  "mechanism": "On NIFTY, sustained institutional buy/sell programs create microtrend windows where the fast EMA (2-min) stays above the slow EMA (5-min) and price holds above VWAP — these reflect TWAP/VWAP algo order execution that persists for 30-120 seconds. The Rolling Signal Quality filter captures whether THIS session's microtrend structure is coherent: if over the last 3 minutes the EMA directional signal correctly predicted the next 5-second bar's direction more than ~52% of the time, the current regime is favorable (trending, not choppy). In contrast, when NIFTY is in a mean-reverting session, EMA/VWAP signals flip rapidly and the signal accuracy drops below 50% — the filter stands aside, avoiding the false breakouts that plague EMA strategies on range-bound NIFTY days. This regime-gating preserves the base EMA/VWAP edge while suppressing loss-making chop periods.",
+  "tags": ["momentum", "ema-crossover", "vwap", "regime-adaptive", "signal-quality-filter"],
+  "core_signal_oneliner": "Fast EMA above slow EMA with VWAP alignment, gated by a rolling 3-min EMA directional accuracy filter to exclude choppy sessions",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_24", "ema_slow_60", "vwap", "signal_quality_36", "vol_sma_30"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

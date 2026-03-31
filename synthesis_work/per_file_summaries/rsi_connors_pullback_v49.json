@@ -1,0 +1,17 @@
+{
+  "name": "rsi_connors_pullback_v49",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing directional mandates over 15-30 minute windows create persistent micro-trends visible as price holding above the 15-minute SMA. Within these flows, every 60-120 seconds there is a brief momentum pause as one algo batch completes — visible as RSI(12) (1-minute RSI) dipping below 45 while the trend structure remains intact. At this exact point, passive limit orders from delta-hedging market makers (who are continuously re-hedging short-gamma positions) provide a structural bid that absorbs the temporary selling pressure, triggering resumption of the institutional flow. Entering ATM calls at RSI(12) < 45 while close remains above the 15-min SMA exploits this predictable 30-90 second re-acceleration in NIFTY's institutional order flow.",
+  "tags": ["mean_reversion", "pullback", "rsi", "trend_following"],
+  "core_signal_oneliner": "1-minute RSI dips below 45 within a 15-min SMA uptrend, detecting the brief batch-completion pause in TWAP flow before re-acceleration",
+  "entry_type": "ce_pe",
+  "indicators_used": ["sma_180", "rsi_12"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

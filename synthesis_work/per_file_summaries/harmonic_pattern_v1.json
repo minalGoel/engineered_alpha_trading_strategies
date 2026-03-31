@@ -1,0 +1,17 @@
+{
+  "name": "harmonic_pattern_v1",
+  "mechanism": "On NIFTY, institutional algorithmic orders (FII/DII TWAP execution, momentum algo tranches) decompose large directional positions into two structured legs, creating measurable AB=CD wave patterns at the 30-second to 10-minute scale. When NIFTY's CD leg completes at 1.0x or 1.272x the AB length — the Fibonacci extension point where the algo's second participation tranche exhausts — a sharp contra-move of 10-25 spot points occurs within the first 15-90 seconds as resting limit orders clustered at the Fibonacci level absorb the exhausted flow. The BC retracement (38-88% of AB) confirms genuine institutional wave structure rather than random noise, because market-maker hedging during the BC phase is the mechanism that 'loads the spring' for the CD extension. At 5-second resolution, the D-pivot confirmation (available 30 seconds after the actual turning point) allows entry at the very start of the reversal, capturing 50-70% of the initial snap-back before new directional flow resumes.",
+  "tags": ["harmonic", "pattern_recognition", "fibonacci", "mean_reversion", "institutional_flow"],
+  "core_signal_oneliner": "ABCD harmonic pattern completion at Fibonacci extension D-pivot with 30-second confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["swing_pivot_high", "swing_pivot_low", "abcd_ratio", "bc_retracement"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

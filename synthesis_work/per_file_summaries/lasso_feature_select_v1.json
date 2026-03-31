@@ -1,0 +1,17 @@
+{
+  "name": "lasso_feature_select_v1",
+  "mechanism": "On NIFTY at 5-second resolution, the relative predictive power of individual technical indicators shifts continuously throughout the session: momentum signals (MACD histogram, 1-min ROC) dominate during institutional TWAP/VWAP execution windows that create sustained 30-90 second directional bursts, while mean-reversion signals (VWAP distance, RSI) dominate during gamma-hedging chop between those order blocks. A LASSO regression model refitted every 5 minutes on the trailing 60 minutes of 5-second NIFTY data automatically selects which subset of 9 technical features currently has non-zero predictive power for the next 60-second index return — zeroing out irrelevant features and adapting to intraday regime shifts without requiring manual regime detection. When the sparse model (at least 2 active features) predicts a positive 60-second return exceeding the threshold, we buy NIFTY ATM CE; when it predicts a negative return below the negative threshold, we buy NIFTY ATM PE.",
+  "tags": ["machine-learning", "feature-selection", "adaptive", "regression", "regime-adaptive"],
+  "core_signal_oneliner": "Rolling LASSO regression on 9 technical features predicts 60-second NIFTY return with sparse regime-adaptive weighting",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_dist", "rsi_36", "macd_hist", "bb_pos", "vol_ratio", "atr_norm", "obv_slope", "roc_12", "vix_level", "lasso_model"],
+  "hold_time_seconds": [30, 60],
+  "timeframe": "5s",
+  "exit_target_points": 7.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 9
+}

@@ -1,0 +1,17 @@
+{
+  "name": "gap_fade_v1",
+  "mechanism": "On NIFTY, large overnight gaps (>=0.5%, ~100+ spot pts) triggered by US equity futures or major macro events cause a 30-60 second burst of retail and short-term algo momentum in the gap direction as the market opens. This burst rapidly exhausts into a narrow congestion band as aggressive gap-chasers get absorbed — institutional VWAP algorithms benchmarked to the previous close now begin working directional flow opposite to the gap. When the 90-second rolling range compresses below 0.07% of spot price (congestion zone confirmed), and 30-second momentum turns opposite to the gap direction, the institutional fade is gaining control and the first 15-25 spot point reversal leg is imminent.",
+  "tags": ["gap", "fade", "mean_reversion", "opening", "congestion"],
+  "core_signal_oneliner": "Gap >= 0.5% day: 90-second rolling range compresses into congestion zone then 30s momentum breaks toward prev close within first 10 minutes",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "range_18", "mom_6"],
+  "hold_time_seconds": [15, 60],
+  "timeframe": "5s",
+  "exit_target_points": 9.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

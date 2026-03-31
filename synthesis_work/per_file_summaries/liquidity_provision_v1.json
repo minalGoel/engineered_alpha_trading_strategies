@@ -1,0 +1,17 @@
+{
+  "name": "liquidity_provision_v1",
+  "mechanism": "On NIFTY, institutional VWAP algorithms account for ~20-30% of daily buy-side volume and operate with a natural mean-reverting footprint: when NIFTY briefly dips below the tight VWAP lower band (0.5 σ computed over the recent 5 minutes), VWAP algos accelerate order submission because they're getting fills at prices significantly better than their benchmark — this burst of demand drives price back toward VWAP within 15-90 seconds. The reverse applies at the upper band, where VWAP sell-side algorithms unload at favourable prices, creating a ceiling. This effect is strongest when volume participation is normal (confirming active VWAP algo presence) and VIX < 18 (in high-VIX regimes, trend/panic flow overwhelms VWAP benchmark logic).",
+  "tags": ["microstructure", "vwap", "mean_reversion", "institutional_flow"],
+  "core_signal_oneliner": "NIFTY deviates beyond 0.5-sigma VWAP band in normal volume regime triggering VWAP algo re-entry reversion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_vwap", "vwap_dev_bps", "dev_std_60", "vol_ratio_12_60"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

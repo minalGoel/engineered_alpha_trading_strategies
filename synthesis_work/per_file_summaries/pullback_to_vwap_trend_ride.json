@@ -1,0 +1,17 @@
+{
+  "name": "pullback_to_vwap_trend_ride",
+  "mechanism": "On NIFTY, when a large institutional participant executes a TWAP/VWAP order spanning 15-30 minutes, the index drifts persistently in one direction (ADX rises above 25, DI lines diverge) while their algo periodically pauses, letting price drift back to the session VWAP. At the VWAP touch, every other VWAP-benchmarked algorithm sees a favorable fill opportunity and re-enters aggressively in trend direction — a reflexive buy cluster within 10-20 seconds that pushes NIFTY 15-25 spot points in the trend direction. At 5-second resolution, we can detect the precise bar where price re-touches VWAP within this trend context and enter before the re-acceleration pulse, rather than waiting for a 1-minute bar confirmation as the original did.",
+  "tags": ["trend_following", "vwap", "pullback", "adx", "institutional_flow"],
+  "core_signal_oneliner": "Price retraces to VWAP within an ADX-confirmed 5-min uptrend and prints a bullish 5s bar, triggering VWAP-algo re-entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "adx_60", "plus_di_60", "minus_di_60", "dist_to_vwap", "bullish_bar"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

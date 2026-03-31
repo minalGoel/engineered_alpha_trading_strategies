@@ -1,0 +1,17 @@
+{
+  "name": "hull_ma_momentum_v1",
+  "mechanism": "On NIFTY, micro-momentum shifts driven by VWAP algo re-benchmarking and delta-hedging flows create short 15-90 second directional bursts. The Hull Moving Average (HMA) on a 2-minute window at 5-second resolution detects these bursts ~50% earlier than EMA because its double-WMA construction cancels lag. When HMA slope flips from negative to positive (bullish) and NIFTY is above VWAP, the flip signals that buy-side institutional flow has just overwhelmed sell pressure — VWAP algos accumulating below their benchmark create a self-reinforcing 10-20 spot point push over the next 30-90 seconds. The VWAP alignment filter ensures we enter only when institutional delta-hedgers and index fund rebalancers are on our side.",
+  "tags": ["hull-ma", "momentum", "slope-flip", "low-lag", "intraday"],
+  "core_signal_oneliner": "Hull MA slope flip on 2-minute window above VWAP with volume surge and choppiness filter",
+  "entry_type": "ce_pe",
+  "indicators_used": ["HMA_24", "HMA_slope", "VWAP", "vol_sma_60", "flip_count_30"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

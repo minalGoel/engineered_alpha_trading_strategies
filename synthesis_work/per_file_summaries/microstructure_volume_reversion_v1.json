@@ -1,0 +1,17 @@
+{
+  "name": "microstructure_volume_reversion_v1",
+  "mechanism": "On NIFTY, when a 5-second bar prints with volume exceeding 3x the prior 5-minute rolling average but the bar range stays below 0.03% of spot (~7 pts at NIFTY 24,000), a large institutional VWAP or TWAP program order is being absorbed \u2014 two-sided matching or contra-flow liquidity suppresses price movement while the order is filled. The bar's direction (close > open = buy-side absorption, close < open = sell-side absorption) reveals which side is winning. Once the program order completes, market makers who were absorbing it delta-hedge and momentum algos pile in, generating a directional move of 6-12 NIFTY spot points within the next 30-90 seconds.",
+  "tags": ["microstructure", "volume", "absorption", "mean_reversion"],
+  "core_signal_oneliner": "High-volume (>3x baseline) narrow-range bar (<0.03%) signaling institutional order absorption, with direction determined by bar open-to-close sign",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vol_mean_60", "vol_ratio", "bar_range_pct", "bar_direction"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

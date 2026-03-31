@@ -1,0 +1,17 @@
+{
+  "name": "gap_fade_reversion_v116",
+  "mechanism": "When NIFTY gaps down >0.5% overnight, the first 5-10 minutes involve chaotic two-way flow as trapped overnight longs and opportunistic gap-extenders compete. Once NIFTY prints a 1-minute reversal candle — close in the upper 40% of its 1-minute high-low range and net positive over that minute — it signals that sell-at-open flows have been absorbed: VWAP-benchmarked institutional buyers, who are getting fills well below yesterday's close, have stepped in and overwhelmed the sellers. At 5-second resolution, we can detect this absorption signature (close-above-midrange + net 1-min gain) approximately 15-30 seconds before the bulk of the gap-fade impulse, entering with directional confirmation rather than blindly fading at open.",
+  "tags": ["gap", "mean_reversion", "opening", "reversal_candle"],
+  "core_signal_oneliner": "Gap > 0.5% day: confirmed 1-minute reversal candle (net positive return + close in upper 40% of 1-min range) signals institutional absorption complete",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "net_return_12", "range_position_12"],
+  "hold_time_seconds": [60, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

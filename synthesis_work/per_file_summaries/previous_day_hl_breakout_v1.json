@@ -1,0 +1,17 @@
+{
+  "name": "previous_day_hl_breakout_v1",
+  "mechanism": "When NIFTY breaks above its previous session high on 5-second bars with a >2.5x volume surge (vs 5-minute rolling average), VWAP-benchmarked institutional algorithms and delta-hedgers covering shorts near PDH strike clusters drive an immediate 8-15 spot point impulse within the first 60-90 seconds. The 3-bar (15-second) confirmation filter distinguishes sustained institutional breakouts from stop-hunt spikes that reverse within one or two bars — genuine PDH breaks on NIFTY sustain above the level because the buy-side order flow exceeds remaining supply at that price. The same logic applies inversely for PDL breaks: every seller from yesterday is at a loss and fresh stop-cascades accelerate the sell-off.",
+  "tags": ["breakout", "previous-day", "level-based", "institutional-flow", "intraday"],
+  "core_signal_oneliner": "Previous day high/low breakout with 3-bar persistence (15s), 2.5x volume surge on break bar, and VWAP directional filter, entry window 09:30-13:00 only",
+  "entry_type": "ce_pe",
+  "indicators_used": ["pdh", "pdl", "vwap", "volume_ratio"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "wavelet_decomposition_v1",
+  "mechanism": "NIFTY's 5-second price series has genuine multi-scale structure: sub-10s microstructure noise (order book flicker, partial fills), 20–80s directional bursts from institutional algo legs, and session-level drift. By applying a Haar wavelet level-3 approximation (equivalent to an 8-bar = 40s simple moving average), we separate the 'tradeable band' (20–80s cycles) from tick noise, producing a denoised trend line. When the raw NIFTY price crosses above this denoised line AND the denoised slope is rising, it means a momentum burst has emerged cleanly from noise — sustained institutional TWAP/VWAP order flow has pushed price above its own smoothed trend, signaling continuation over the next 30–90 seconds. Detail energy (std of raw-vs-denoised divergence) filters out choppy, flat markets where crossovers are meaningless noise events.",
+  "tags": ["wavelet", "signal-processing", "multi-scale", "momentum", "denoising"],
+  "core_signal_oneliner": "Raw price crosses above 40-second Haar-wavelet denoised trend (SMA-8) with rising denoised slope and active detail energy, filtered by bullish VWAP context",
+  "entry_type": "ce_pe",
+  "indicators_used": ["denoised_sma8", "denoised_slope_bps", "detail_energy_bps", "vwap_session"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

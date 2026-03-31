@@ -1,0 +1,17 @@
+{
+  "name": "low_vol_momentum_v1",
+  "mechanism": "When NIFTY's 5-minute realized vol is below 80% of its 20-minute baseline, institutional TWAP/VWAP algorithms are executing patient directional orders rather than reacting to episodic news events. In this quiet regime, EMA alignment across 1-minute and 5-minute windows reflects sustained buy-side or sell-side absorption — not noise spikes. We enter in the EMA direction on a confirming 5-second bar and capture the next 45-90 second continuation of this institutional flow before vol re-expands.",
+  "tags": ["volatility_regime", "momentum", "low_vol_anomaly", "ema_crossover"],
+  "core_signal_oneliner": "Low intraday vol regime (5-min vol < 80% of 20-min baseline) with 1/5-minute EMA alignment and confirming bar",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rvol_60", "rvol_240", "vol_ratio", "ema_12", "ema_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

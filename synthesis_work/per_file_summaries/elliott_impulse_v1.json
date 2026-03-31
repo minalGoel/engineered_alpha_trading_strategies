@@ -1,0 +1,17 @@
+{
+  "name": "elliott_impulse_v1",
+  "mechanism": "On NIFTY, large institutional TWAP/algorithmic orders execute in directional bursts — a 15-40 second sharp move (micro Wave 1, typically 8-15 spot points) as the algo aggressively fills. The burst exhausts available liquidity and triggers a 20-40 second counter-trend absorption pause (micro Wave 2, 38-62% retracement) as resting limit orders on the other side absorb flow. When price breaks back above the Wave 1 peak, it confirms those counter-trend limits are now exhausted and the original algorithm is resuming — this is the Wave 3 signal. The entry rides the first 30-60 seconds of the Wave 3 resumption before the next absorption pause, exploiting the predictable autocorrelation in institutional order flow execution at the sub-minute timescale.",
+  "tags": ["elliott_wave", "impulse", "wave_structure", "continuation", "microstructure"],
+  "core_signal_oneliner": "Elliott micro-wave 1-2-3 pattern: 8+ spot point impulse, 38-62% retracement, then breakout above Wave 1 high confirms Wave 3 entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["wave1_high", "wave1_low", "wave2_retrace_ratio", "rsi_60", "ema_36"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 7.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

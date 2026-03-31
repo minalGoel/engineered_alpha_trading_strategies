@@ -1,0 +1,17 @@
+{
+  "name": "first_hour_range_breakout_v1",
+  "mechanism": "NIFTY's first trading hour (09:15-10:15) absorbs overnight information, FII pre-positioning, and opening auction imbalances, forming a well-anchored high-low range. Many institutional TWAP algorithms and bracket-order participants set stop-losses just outside this range. When NIFTY closes above the first-hour high (or below the low) with elevated volume post-10:15, it triggers a cascade of stop-loss orders and directional VWAP algorithms that had been range-bound, creating a 20-35 spot point momentum burst in the first 30-90 seconds. We enter at the second consecutive close above/below the range level — this filters 5-second spikes — and ride the initial cascade momentum rather than the full multi-hour continuation.",
+  "tags": ["breakout", "range", "momentum", "first-hour", "cascade"],
+  "core_signal_oneliner": "Two consecutive 5s closes outside the first-hour range (09:15-10:15) with volume > 1.3x average and VWAP alignment, triggering stop-cascade momentum",
+  "entry_type": "ce_pe",
+  "indicators_used": ["fhr_high", "fhr_low", "fhr_width_pct", "vwap", "vol_ratio_60"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

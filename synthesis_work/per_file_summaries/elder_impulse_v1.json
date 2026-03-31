@@ -1,0 +1,17 @@
+{
+  "name": "elder_impulse_v1",
+  "mechanism": "On NIFTY, when the 2-minute EMA slope and the MACD(12,36,9) histogram slope simultaneously turn upward ('green impulse'), large institutional TWAP/VWAP orders are absorbing sell-side liquidity at multiple bid levels — the EMA captures the persistent directional drift while the accelerating MACD histogram signals that buy-side order flow intensity is growing, not plateauing. This dual alignment on the NIFTY index (driven by FII and large domestic fund flow rather than single-stock events) creates 30-90 second momentum bursts with statistically meaningful autocorrelation because institutional orders are typically only 40-60% executed when the initial impulse fires. Conversely, simultaneous EMA decline and MACD histogram decline ('red impulse') signals sustained institutional selling that compresses NIFTY 10-20 spot points before absorbing. Elder's core 'forbidden trade' rule — never buy CE on a red impulse, never buy PE on a green impulse — functions here as a regime filter that prevents trading against active institutional directional flow.",
+  "tags": ["trend_following", "momentum", "elder_impulse", "dual_indicator", "ema", "macd", "aligned_flow"],
+  "core_signal_oneliner": "Dual EMA slope + MACD histogram slope alignment ('green/red impulse') confirmed over 2 consecutive 5s bars above/below VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_24", "macd_line", "macd_histogram", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

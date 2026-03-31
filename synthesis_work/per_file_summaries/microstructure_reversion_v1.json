@@ -1,0 +1,17 @@
+{
+  "name": "microstructure_reversion_v1",
+  "mechanism": "On NIFTY, each 5-second bar's close location value (CLV) \u2014 how close the bar's close is to its high relative to the bar's range \u2014 approximates intra-bar buying vs selling pressure. When 20 consecutive 5-second bars (100 seconds) show more than 68% buy-side volume dominance and NIFTY has simultaneously risen 0.15%+ above where it was 100 seconds ago, institutional market-order buyers have systematically absorbed available limit-sell orders from the book. The moment the rolling buy imbalance fraction begins declining (sellers returning to quote), aggressive accumulation has exhausted near-side supply and NIFTY reverts toward session VWAP as one-sided institutional flow subsides.",
+  "tags": ["microstructure", "order-flow", "imbalance", "mean_reversion", "intraday", "vwap"],
+  "core_signal_oneliner": "CLV-based 100-second buy imbalance fraction exceeding 68% (or below 32%) with a price move confirmation, then inflecting back, signaling order flow exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["buy_vol_5s", "buy_imbalance_20", "price_change_20", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

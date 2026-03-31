@@ -1,0 +1,17 @@
+{
+  "name": "opening_drive_reversal_001",
+  "mechanism": "On NIFTY, the post-auction first 25-35 minutes produce a sharp directional burst of 30-80 spot points as gap-fill program trades, institutional TWAP launches, and retail market orders hit a book that was thinly pre-positioned overnight. When this opening drive stalls \u2014 signaled by price reaching 0.3%+ deviation from session VWAP, the 30-second RSI(6) reading entering extreme territory (\u226415 or \u226585), and a visible rejection wick consuming \u226535% of the bar range \u2014 VWAP-benchmarked institutional algorithms begin counter-flow aggressively since they are getting fills materially better/worse than their session-VWAP benchmark. At 5-second resolution we enter the moment the exhaustion wick forms, capturing the first 10-18 spot point mean-reversion leg within 30-90 seconds.",
+  "tags": ["mean_reversion", "opening_reversal", "vwap", "microstructure", "intraday"],
+  "core_signal_oneliner": "Opening drive price 0.3%+ beyond VWAP with RSI(6) at extreme and rejection wick >35% of bar range, with first reversal-direction bar confirming exhaustion within 09:20-10:00",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_vwap", "vwap_dev", "rsi_6", "wick_down_ratio", "wick_up_ratio", "rel_vol_60", "vwap_slope_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

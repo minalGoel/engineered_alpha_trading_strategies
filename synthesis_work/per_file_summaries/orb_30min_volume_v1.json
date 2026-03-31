@@ -1,0 +1,17 @@
+{
+  "name": "orb_30min_volume_v1",
+  "mechanism": "NIFTY's 30-minute opening range (09:15–09:45) is formed as mutual funds, FII VWAP programs, and domestic institutions execute their morning mandates. This window represents the market's full initial price discovery — not just the first 5 or 15 minutes, but the complete auction period where large directional orders are absorbed. When NIFTY closes above the 30-minute range high with a simultaneous volume surge (breakout bar volume exceeding 1.2× the recent 5-minute average) and VWAP alignment, it signals that the accumulated sell-side limit orders at the range ceiling have been overwhelmed by institutional buy flow — VWAP-benchmarked algos that missed the opening range formation are now forced to chase at market, creating 20-40 spot point momentum pushes in the first 60-120 seconds post-breakout. The 3-bar (15-second) persistence filter eliminates high-frequency 5-second noise spikes that touch but immediately revert inside the range.",
+  "tags": ["ORB", "opening_range", "volume_confirmation", "breakout", "intraday"],
+  "core_signal_oneliner": "30-minute ORB breakout with volume surge and VWAP alignment, confirmed by 3-bar persistence above range high",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high_360", "orb_low_360", "vwap_intraday", "vol_avg_60", "above_orb_3bar", "below_orb_3bar"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

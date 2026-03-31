@@ -1,0 +1,17 @@
+{
+  "name": "opening_drive_post_gap_v1",
+  "mechanism": "On NIFTY, overnight gaps >0.3% are driven by FII flows, US market close, and macro news absorbed after the Indian close. The first 5 minutes (09:15-09:20) serve as the price discovery window where pre-open auction imbalances resolve into live orders. When this discovery window closes in the same direction as the gap \u2014 confirmed by a strong candle body (>55% body/range ratio) and above-average volume \u2014 institutional VWAP/TWAP algorithms have committed to directional orders that are only 20-30% filled at 09:20. The residual unfilled institutional demand continues pushing NIFTY 10-20 spot points in the same direction for the next 30-120 seconds, creating a high-probability window for ATM CE/PE entry at exactly 09:20 IST.",
+  "tags": ["gap", "opening_drive", "momentum", "institutional_flow", "session_open"],
+  "core_signal_oneliner": "Overnight gap >0.3% with first 5-minute drive aligned to gap direction, strong body ratio, and volume surge confirming unfilled institutional orders pushing continuation at 09:20",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "first_5min_drive", "first_5min_body_ratio", "vol_surge_ratio"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

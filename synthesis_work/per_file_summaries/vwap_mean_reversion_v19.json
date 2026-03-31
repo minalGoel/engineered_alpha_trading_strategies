@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v19",
+  "mechanism": "On NIFTY, moderate 20-35 spot point deviations from session VWAP (z-score roughly -1.4 to -2.0) occur 5-10 times per session. Market makers who are short gamma from weekly ATM option writing are structurally delta-long when the index sells off and must delta-hedge by buying the index within 30-60 seconds — this buying is mechanical, not discretionary. The microstructure signature of impending market-maker hedge flow is a 30-second bar range contraction (the selling wave exhausts: the 6-bar high-low range shrinks relative to the prior 2-minute range) combined with the close near the top of that compressed range (buyers absorbing the last sellers). We enter at the first 5-second bar showing this basing pattern while the VWAP deviation is in the moderate zone, entering faster than v18's dev_momentum approach which waits a full 2 minutes for zscore improvement to confirm.",
+  "tags": ["mean_reversion", "vwap", "market_maker", "microstructure"],
+  "core_signal_oneliner": "Moderate VWAP z-score dislocation (-1.4 to -2.0) with 30-second range contraction and close near top of compressed range (basing microstructure)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_stddev_240", "vwap_zscore", "bar_range_6", "bar_range_24", "close_vs_low_6"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

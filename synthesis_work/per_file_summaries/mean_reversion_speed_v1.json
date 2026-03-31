@@ -1,0 +1,17 @@
+{
+  "name": "mean_reversion_speed_v1",
+  "mechanism": "On NIFTY, institutional VWAP algorithms (MF/pension fund TWAP orders, large-basket executions) continuously benchmark to session VWAP, creating a measurable mean-reverting force on price deviations. By fitting an Ornstein-Uhlenbeck process to the rolling 5-minute VWAP deviation series via OLS, we estimate theta \u2014 the per-bar reversion speed. When theta > 0.05 per 5-second bar (half-life \u2248 69 seconds), it signals that active absorption is occurring: multiple institutional orders are chasing the VWAP simultaneously, and the 60-80 spot-point oscillations get pulled back to VWAP within 1-2 minutes. We enter only when theta is both high AND stable for 10+ bars, eliminating transient spikes, then trade the OU z-score extremes where the deviation has overshot the equilibrium distribution.",
+  "tags": ["mean_reversion", "vwap", "ou-process", "speed-estimation", "quantitative"],
+  "core_signal_oneliner": "Ornstein-Uhlenbeck theta above threshold for 10+ consecutive bars with OU z-score extreme, indicating a measurably active VWAP mean-reversion force",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "vwap_dev_bps", "ou_theta", "ou_sigma", "ou_zscore", "theta_stable_10"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

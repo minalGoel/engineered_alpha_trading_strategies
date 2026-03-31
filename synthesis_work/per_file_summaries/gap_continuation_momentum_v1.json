@@ -1,0 +1,17 @@
+{
+  "name": "gap_continuation_momentum_v1",
+  "mechanism": "When NIFTY gaps up > 0.4% at open on global cues or FII-driven overnight information, institutions with unfinished buy programs allow price to consolidate during 09:15-09:30 as the opening order queue clears. When NIFTY then closes above the 15-minute post-open range high (ORB high), VWAP-benchmarked algorithms — still below their target allocation — trigger systematic buy orders simultaneously, creating a 30-90 second directional burst. At 5-second resolution we enter at the exact ORB breakout bar rather than waiting for a 1-minute confirmation, capturing the first 10-15 spot points of institutional flow resumption before the burst exhausts. The inverse holds for gap-down: break below ORB low on a gap-down day signals continued institutional selling.",
+  "tags": ["gap", "momentum", "continuation", "orb", "opening-range"],
+  "core_signal_oneliner": "Gap > 0.4% day: first 5s close above 15-min ORB high (gap-up) or below ORB low (gap-down) with volume surge > 1.2x and VWAP alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "orb_high_15", "orb_low_15", "vwap_session", "vol_sma_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

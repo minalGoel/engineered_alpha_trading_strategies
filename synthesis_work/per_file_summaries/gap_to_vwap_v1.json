@@ -1,0 +1,17 @@
+{
+  "name": "gap_to_vwap_v1",
+  "mechanism": "When NIFTY gaps and continues to deviate 20+ basis points below (or above) the developing session VWAP, VWAP-benchmarked institutional algorithms — index fund rebalancers, derivatives book delta-hedgers, and program traders tracking VWAP as their execution benchmark — begin accumulating against the gap direction to keep fills close to their VWAP target. On NIFTY, where these institutional flows are dominant and continuous, this creates a measurable first convergence thrust of 15-25 spot points within 60-90 seconds once RSI exhaustion signals the selling (or buying) pressure has peaked. At 5-second resolution we enter as the EMA(5) micro-cross confirms the institutional absorption has begun.",
+  "tags": ["gap", "vwap", "mean_reversion", "institutional_flow", "intraday"],
+  "core_signal_oneliner": "Gap day with VWAP deviation > 20 bps: RSI(12) at extreme and EMA(5) micro-cross confirms institutional absorption beginning, entry toward VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_dev_bps", "gap_pct", "rsi_12", "ema_5"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

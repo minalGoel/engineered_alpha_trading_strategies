@@ -1,0 +1,17 @@
+{
+  "name": "donchian_channel_breakout_v1",
+  "mechanism": "When NIFTY closes above its 5-minute Donchian channel high with a volume surge, systematic CTA and momentum algorithms that scan for N-period price extremes simultaneously trigger buy signals, creating a burst of institutional order flow over the next 30-90 seconds. Because NIFTY is index-aggregated (not a single stock), this breakout is not noise — it reflects broad market participation overcoming the supply zone established during the prior 5 minutes. The volume confirmation filters out wick-driven false breaks: a real breakout requires active demand, not a single large print. The VWAP alignment filter ensures the breakout is consistent with the session's dominant directional flow rather than a counter-trend spike.",
+  "tags": ["breakout", "trend_following", "donchian", "momentum"],
+  "core_signal_oneliner": "NIFTY close above 5-minute Donchian channel high (or below low) with 1.3x volume surge and VWAP directional alignment in moderate VIX environment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["donchian_high_60", "donchian_low_60", "volume_sma_60", "vwap"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

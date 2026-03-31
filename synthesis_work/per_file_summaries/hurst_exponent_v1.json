@@ -1,0 +1,17 @@
+{
+  "name": "hurst_exponent_v1",
+  "mechanism": "On NIFTY, the Hurst exponent of the 10-minute (120-bar at 5s) log-return series distinguishes two distinct microstructure states: when H > 0.55, large institutional TWAP/VWAP algorithms are executing directional orders, and each 5-second bar absorbs part of that flow — consecutive bars are autocorrelated, creating exploitable momentum over 30-90 seconds. When H < 0.45, NIFTY is oscillating between resting buy and sell limit orders as market makers quote both sides; at this point Bollinger Band touches reliably signal a 30-60 second bounce as those resting orders absorb the directional flow and price reverts. The regime switch is computed over 120 bars to filter noise while remaining responsive to the current session's microstructure — a 5-minute window is too short for reliable Hurst estimation (high variance), while a 30-minute window is too slow to adapt to mid-session regime changes.",
+  "tags": ["hurst-exponent", "regime", "persistence", "mean_reversion", "trend-following", "adaptive"],
+  "core_signal_oneliner": "Hurst exponent classifies trending (H>0.55) vs mean-reverting (H<0.45) regime, then applies EMA or Bollinger entry",
+  "entry_type": "ce_pe",
+  "indicators_used": ["hurst_120", "ema_12", "ema_36", "bb_24", "ret_1"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

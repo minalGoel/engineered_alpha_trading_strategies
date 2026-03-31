@@ -1,0 +1,17 @@
+{
+  "name": "range_day_band_fade_003",
+  "mechanism": "On NIFTY, range-bound sessions (ADX < 20, flat 5-minute VWAP slope) create a microstructure where VWAP-benchmarked institutional algorithms aggressively defend prices that deviate 0.05-0.10% from session VWAP — they treat every tick away from benchmark as a free fill opportunity and immediately place opposing limit orders. When 1-minute MFI simultaneously reaches extreme (≤22 or ≥78), it confirms that short-term buying or selling pressure has exhausted available counterparty interest, leaving only the VWAP algos on one side of the book. The 20-minute Bollinger band acts as a safety filter: if price has already pierced the band, the move is a regime break rather than an overreaction, and the fade is skipped. At 5-second resolution we enter the moment MFI exhaustion prints with a bullish/bearish close bar, capturing 5-8 option points of the first-leg VWAP reversion before the next directional impulse.",
+  "tags": ["mean_reversion", "range_day", "vwap", "bands", "mfi"],
+  "core_signal_oneliner": "Price deviates from VWAP on a low-ADX range day while 1-minute MFI signals exhaustion, fading the deviation back toward VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "adx_120", "bb_upper_240", "bb_lower_240", "vwap_slope_60", "mfi_12"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

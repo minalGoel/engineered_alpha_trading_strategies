@@ -1,0 +1,17 @@
+{
+  "name": "vol_adjusted_reversion_v1",
+  "mechanism": "On NIFTY, when the 5-minute realized volatility (last 60 bars) is compressing relative to the 30-minute baseline (last 360 bars), the dominant flow shifts from momentum algos and stop-cascade sellers to VWAP-benchmarked institutional accumulators who continuously pull price back toward their benchmark. In this regime, even a 1.5-sigma deviation from the 10-minute rolling mean becomes statistically meaningful and rapidly reverts. The adaptive threshold (wider in turbulent periods, tighter in calm) prevents entering during trending vol-expansion events where NIFTY deviations extend rather than revert. When RSI confirms oversold/overbought in a vol-compressing regime, institutional TWAP replenishment kicks in within 30-60 seconds creating the snap-back.",
+  "tags": ["mean_reversion", "adaptive", "volatility", "z_score", "intraday"],
+  "core_signal_oneliner": "Price z-score crosses adaptive threshold based on fast/slow vol ratio, RSI confirms exhaustion in vol-compressing regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["price_z", "vol_fast", "vol_slow", "vol_ratio", "adaptive_threshold", "rsi_36"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

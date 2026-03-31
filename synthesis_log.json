@@ -1,0 +1,5121 @@
+{
+  "total_strategies": 291,
+  "cv_passed": 6,
+  "cv_failed": 285,
+  "strategies": [
+    {
+      "name": "parabolic_sar_momentum_v1",
+      "cv_passed": true,
+      "default_sharpe": 1.5045,
+      "optimized_sharpe": 20767.69,
+      "cv_profitable_days": 9,
+      "total_cv_pnl": 249212.24,
+      "total_cv_trades": 88,
+      "avg_pnl_per_trade": 2831.96,
+      "profitable_folds": 9,
+      "total_folds": 12,
+      "fold_win_rate": 75.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_trend_following_v1",
+      "cv_passed": true,
+      "default_sharpe": -6.447,
+      "optimized_sharpe": 16043.44,
+      "cv_profitable_days": 9,
+      "total_cv_pnl": 192521.25,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 2005.43,
+      "profitable_folds": 9,
+      "total_folds": 12,
+      "fold_win_rate": 75.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_zscore_bounce_v1",
+      "cv_passed": true,
+      "default_sharpe": -2.5133,
+      "optimized_sharpe": 15180.7,
+      "cv_profitable_days": 9,
+      "total_cv_pnl": 182168.45,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 2530.12,
+      "profitable_folds": 9,
+      "total_folds": 12,
+      "fold_win_rate": 75.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_rsi_volume_hybrid_v1",
+      "cv_passed": true,
+      "default_sharpe": 4.677,
+      "optimized_sharpe": 3883.13,
+      "cv_profitable_days": 9,
+      "total_cv_pnl": 46597.61,
+      "total_cv_trades": 62,
+      "avg_pnl_per_trade": 751.57,
+      "profitable_folds": 9,
+      "total_folds": 12,
+      "fold_win_rate": 75.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "atr_breakout_volatility_v1",
+      "cv_passed": true,
+      "default_sharpe": 0.9579,
+      "optimized_sharpe": 2304.32,
+      "cv_profitable_days": 9,
+      "total_cv_pnl": 27651.78,
+      "total_cv_trades": 85,
+      "avg_pnl_per_trade": 325.32,
+      "profitable_folds": 9,
+      "total_folds": 12,
+      "fold_win_rate": 75.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "hull_ma_momentum_v1",
+      "cv_passed": true,
+      "default_sharpe": 1.5195,
+      "optimized_sharpe": -13818.86,
+      "cv_profitable_days": 9,
+      "total_cv_pnl": -165826.29,
+      "total_cv_trades": 75,
+      "avg_pnl_per_trade": -2211.02,
+      "profitable_folds": 9,
+      "total_folds": 12,
+      "fold_win_rate": 75.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bollinger_mean_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.8632,
+      "optimized_sharpe": 109388.93,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 656333.57,
+      "total_cv_trades": 37,
+      "avg_pnl_per_trade": 17738.75,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "correlation_breakdown_arb_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.8996,
+      "optimized_sharpe": 33469.65,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 401635.85,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 4183.71,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "adx_strong_trend_pullback",
+      "cv_passed": false,
+      "default_sharpe": 4.6797,
+      "optimized_sharpe": 30676.33,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 368115.96,
+      "total_cv_trades": 79,
+      "avg_pnl_per_trade": 4659.7,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v19",
+      "cv_passed": false,
+      "default_sharpe": 2.9504,
+      "optimized_sharpe": 29960.22,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 359522.61,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 3745.03,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "acceleration_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.807,
+      "optimized_sharpe": 27061.04,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 324732.53,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 4510.17,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "factor_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.1451,
+      "optimized_sharpe": 35735.28,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 321617.54,
+      "total_cv_trades": 27,
+      "avg_pnl_per_trade": 11911.76,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "fibonacci_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.9387,
+      "optimized_sharpe": 26244.74,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 314936.94,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 3280.59,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "donchian_channel_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.9857,
+      "optimized_sharpe": 28098.89,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 309087.77,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": 4683.15,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v12",
+      "cv_passed": false,
+      "default_sharpe": -1.0206,
+      "optimized_sharpe": 24748.24,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 296978.84,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 4124.71,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "microstructure_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5372,
+      "optimized_sharpe": 22711.38,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 272536.57,
+      "total_cv_trades": 44,
+      "avg_pnl_per_trade": 6194.01,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v3",
+      "cv_passed": false,
+      "default_sharpe": -4.8524,
+      "optimized_sharpe": 20491.91,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 245902.93,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 3415.32,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "low_vol_compression_long_v1",
+      "cv_passed": false,
+      "default_sharpe": 6.3066,
+      "optimized_sharpe": 19746.8,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 236961.61,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 3291.13,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v13",
+      "cv_passed": false,
+      "default_sharpe": 3.2348,
+      "optimized_sharpe": 19695.9,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 236350.79,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 2461.99,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "index_arb_nifty_components_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.0858,
+      "optimized_sharpe": 18568.13,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 222817.54,
+      "total_cv_trades": 82,
+      "avg_pnl_per_trade": 2717.29,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_reversal_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.038,
+      "optimized_sharpe": 18926.53,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 208191.79,
+      "total_cv_trades": 88,
+      "avg_pnl_per_trade": 2365.82,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "pivot_point_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.7171,
+      "optimized_sharpe": 40789.35,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 203946.75,
+      "total_cv_trades": 19,
+      "avg_pnl_per_trade": 10734.04,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bid_ask_imbalance_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.6056,
+      "optimized_sharpe": 21032.03,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 189288.31,
+      "total_cv_trades": 101,
+      "avg_pnl_per_trade": 1874.14,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_closing_range_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.0612,
+      "optimized_sharpe": 62051.39,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 186154.18,
+      "total_cv_trades": 5,
+      "avg_pnl_per_trade": 37230.84,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "cointegration_residual_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.1695,
+      "optimized_sharpe": 15481.77,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 185781.25,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 1935.22,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_cross_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 6.3458,
+      "optimized_sharpe": 18240.37,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 182403.68,
+      "total_cv_trades": 23,
+      "avg_pnl_per_trade": 7930.59,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "spread_dynamics_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.4209,
+      "optimized_sharpe": 15697.49,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 172672.36,
+      "total_cv_trades": 88,
+      "avg_pnl_per_trade": 1962.19,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "microstructure_volume_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.8509,
+      "optimized_sharpe": 14351.82,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 172221.85,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 1793.98,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_reclaim_trend_001",
+      "cv_passed": false,
+      "default_sharpe": 4.7951,
+      "optimized_sharpe": 14930.54,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 164235.96,
+      "total_cv_trades": 43,
+      "avg_pnl_per_trade": 3819.44,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "open_high_low_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.1642,
+      "optimized_sharpe": 17959.69,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 161637.2,
+      "total_cv_trades": 83,
+      "avg_pnl_per_trade": 1947.44,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "volume_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.4618,
+      "optimized_sharpe": 14283.35,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 157116.84,
+      "total_cv_trades": 64,
+      "avg_pnl_per_trade": 2454.95,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "fibonacci_intraday_retracement",
+      "cv_passed": false,
+      "default_sharpe": 4.8649,
+      "optimized_sharpe": 15246.42,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 152464.25,
+      "total_cv_trades": 33,
+      "avg_pnl_per_trade": 4620.13,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "first_pullback_after_trend_v1",
+      "cv_passed": false,
+      "default_sharpe": 6.0128,
+      "optimized_sharpe": 12686.45,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 152237.35,
+      "total_cv_trades": 19,
+      "avg_pnl_per_trade": 8012.49,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "multi_ema_ribbon_squeeze",
+      "cv_passed": false,
+      "default_sharpe": 2.1335,
+      "optimized_sharpe": 11949.38,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 143392.61,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 1991.56,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "pdh_pdl_fakeout_v141",
+      "cv_passed": false,
+      "default_sharpe": 5.8656,
+      "optimized_sharpe": 23823.45,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 142940.72,
+      "total_cv_trades": 23,
+      "avg_pnl_per_trade": 6214.81,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_zscore_mean_reversion",
+      "cv_passed": false,
+      "default_sharpe": 2.741,
+      "optimized_sharpe": 22424.74,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 134548.46,
+      "total_cv_trades": 48,
+      "avg_pnl_per_trade": 2803.09,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "ema_crossover_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.9554,
+      "optimized_sharpe": 11035.47,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 132425.68,
+      "total_cv_trades": 48,
+      "avg_pnl_per_trade": 2758.87,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "quality_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.063,
+      "optimized_sharpe": 9939.5,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 119273.98,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 1242.44,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v5",
+      "cv_passed": false,
+      "default_sharpe": 1.1126,
+      "optimized_sharpe": 9822.67,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 117872.06,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 1637.11,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "multi_factor_composite_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.0486,
+      "optimized_sharpe": 9525.32,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 114303.81,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 1190.66,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "multi_timeframe_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.8138,
+      "optimized_sharpe": 9232.77,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 110793.19,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 1538.79,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "overnight_gap_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 10.3111,
+      "optimized_sharpe": 18222.59,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 109335.55,
+      "total_cv_trades": 10,
+      "avg_pnl_per_trade": 10933.56,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "first_hour_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.1216,
+      "optimized_sharpe": 9412.75,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 103540.26,
+      "total_cv_trades": 55,
+      "avg_pnl_per_trade": 1882.55,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_filtered_index_trend_v126",
+      "cv_passed": false,
+      "default_sharpe": 1.9329,
+      "optimized_sharpe": 8830.89,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 97139.78,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": 1471.81,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "fractal_dimension_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.2156,
+      "optimized_sharpe": 8043.61,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 96523.28,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 1340.6,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_basic_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.1352,
+      "optimized_sharpe": 10694.37,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 96249.33,
+      "total_cv_trades": 39,
+      "avg_pnl_per_trade": 2467.93,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_connors_pullback_v42",
+      "cv_passed": false,
+      "default_sharpe": 5.0908,
+      "optimized_sharpe": 7888.72,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 94664.68,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 986.09,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_failure_trade_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.8951,
+      "optimized_sharpe": 8557.23,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 94129.56,
+      "total_cv_trades": 22,
+      "avg_pnl_per_trade": 4278.62,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "macd_histogram_divergence_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.7244,
+      "optimized_sharpe": 8295.32,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 91248.48,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": 1382.55,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "roc_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.5234,
+      "optimized_sharpe": 7543.46,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 90521.57,
+      "total_cv_trades": 62,
+      "avg_pnl_per_trade": 1460.03,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v14",
+      "cv_passed": false,
+      "default_sharpe": -1.3195,
+      "optimized_sharpe": 7975.07,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 87725.73,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": 1329.18,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v11",
+      "cv_passed": false,
+      "default_sharpe": -2.8489,
+      "optimized_sharpe": 7272.54,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 87270.47,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 1212.09,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "heikin_ashi_trend_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.8366,
+      "optimized_sharpe": 6971.3,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": 83655.6,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 871.41,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vol_clustering_v1",
+      "cv_passed": false,
+      "default_sharpe": -10.078,
+      "optimized_sharpe": 6801.75,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 81620.98,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 850.22,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bayesian_update_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.3751,
+      "optimized_sharpe": 6591.95,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 79103.41,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 823.99,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "european_open_momentum_continuation",
+      "cv_passed": false,
+      "default_sharpe": 4.574,
+      "optimized_sharpe": 13146.23,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 78877.38,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": 3286.56,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "pre_market_auction_edge_v1",
+      "cv_passed": false,
+      "default_sharpe": 7.2727,
+      "optimized_sharpe": 13092.1,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 78552.59,
+      "total_cv_trades": 15,
+      "avg_pnl_per_trade": 5236.84,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bollinger_squeeze_breakout_v82",
+      "cv_passed": false,
+      "default_sharpe": 8.7626,
+      "optimized_sharpe": 10895.54,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 76268.75,
+      "total_cv_trades": 13,
+      "avg_pnl_per_trade": 5866.83,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "moc_drift_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.1425,
+      "optimized_sharpe": 9201.5,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 73611.99,
+      "total_cv_trades": 32,
+      "avg_pnl_per_trade": 2300.37,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 6.264,
+      "optimized_sharpe": 23650.02,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 70950.06,
+      "total_cv_trades": 7,
+      "avg_pnl_per_trade": 10135.72,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.4422,
+      "optimized_sharpe": 11612.42,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 69674.5,
+      "total_cv_trades": 36,
+      "avg_pnl_per_trade": 1935.4,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.4422,
+      "optimized_sharpe": 11612.42,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 69674.5,
+      "total_cv_trades": 36,
+      "avg_pnl_per_trade": 1935.4,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.4422,
+      "optimized_sharpe": 11612.42,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 69674.5,
+      "total_cv_trades": 36,
+      "avg_pnl_per_trade": 1935.4,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "demark_sequential_v1",
+      "cv_passed": false,
+      "default_sharpe": -8.8026,
+      "optimized_sharpe": 6139.73,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 67537.08,
+      "total_cv_trades": 88,
+      "avg_pnl_per_trade": 767.47,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "atr_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.6267,
+      "optimized_sharpe": 5297.62,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 63571.39,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 662.2,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "opening_range_breakout_15",
+      "cv_passed": false,
+      "default_sharpe": 1.1579,
+      "optimized_sharpe": 6128.75,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 61287.47,
+      "total_cv_trades": 44,
+      "avg_pnl_per_trade": 1392.9,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "keltner_channel_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.9437,
+      "optimized_sharpe": 5079.37,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 60952.4,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 634.92,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_vwap_momentum_trifecta_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.3118,
+      "optimized_sharpe": 7140.29,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 57122.32,
+      "total_cv_trades": 22,
+      "avg_pnl_per_trade": 2596.47,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v18",
+      "cv_passed": false,
+      "default_sharpe": -1.3741,
+      "optimized_sharpe": 4720.93,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 56651.15,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 786.82,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_crossover_flow_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.3247,
+      "optimized_sharpe": 24417.9,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 48835.8,
+      "total_cv_trades": 2,
+      "avg_pnl_per_trade": 24417.9,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "previous_day_hl_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.5058,
+      "optimized_sharpe": 24053.46,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 48106.92,
+      "total_cv_trades": 2,
+      "avg_pnl_per_trade": 24053.46,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "etf_nav_arbitrage_v1",
+      "cv_passed": false,
+      "default_sharpe": -8.0722,
+      "optimized_sharpe": 3969.5,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 47633.98,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 496.19,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_anchored_support_v1",
+      "cv_passed": false,
+      "default_sharpe": 7.8927,
+      "optimized_sharpe": 15152.37,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 45457.12,
+      "total_cv_trades": 6,
+      "avg_pnl_per_trade": 7576.19,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "orb_retest_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.6033,
+      "optimized_sharpe": 4455.01,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 44550.07,
+      "total_cv_trades": 37,
+      "avg_pnl_per_trade": 1204.06,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "adversarial_ensemble_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.4016,
+      "optimized_sharpe": 13814.27,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 41442.82,
+      "total_cv_trades": 5,
+      "avg_pnl_per_trade": 8288.56,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "partial_gap_fill_scalp_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.1327,
+      "optimized_sharpe": 13297.64,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 39892.91,
+      "total_cv_trades": 4,
+      "avg_pnl_per_trade": 9973.23,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "volume_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.285,
+      "optimized_sharpe": 3298.09,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 39577.12,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 549.68,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "volume_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.285,
+      "optimized_sharpe": 3298.09,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 39577.12,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 549.68,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_pivot_rejection_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.5831,
+      "optimized_sharpe": 12007.96,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 36023.87,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": 1500.99,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_range_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.3055,
+      "optimized_sharpe": 3183.07,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 35013.72,
+      "total_cv_trades": 33,
+      "avg_pnl_per_trade": 1061.02,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "multi_indicator_consensus_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.149,
+      "optimized_sharpe": 2650.47,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 31805.58,
+      "total_cv_trades": 46,
+      "avg_pnl_per_trade": 691.43,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "entropy_regime_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.5928,
+      "optimized_sharpe": 10439.88,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 31319.64,
+      "total_cv_trades": 11,
+      "avg_pnl_per_trade": 2847.24,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_15min_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.7193,
+      "optimized_sharpe": 2952.27,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 29522.68,
+      "total_cv_trades": 36,
+      "avg_pnl_per_trade": 820.07,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_30min_volume_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.7076,
+      "optimized_sharpe": 3143.05,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 28287.43,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": 1178.64,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.3118,
+      "optimized_sharpe": 13506.93,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 27013.85,
+      "total_cv_trades": 5,
+      "avg_pnl_per_trade": 5402.77,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_fade_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.1814,
+      "optimized_sharpe": 5213.44,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 26067.18,
+      "total_cv_trades": 10,
+      "avg_pnl_per_trade": 2606.72,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.9697,
+      "optimized_sharpe": 2118.22,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 23300.47,
+      "total_cv_trades": 33,
+      "avg_pnl_per_trade": 706.07,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_momentum_v29",
+      "cv_passed": false,
+      "default_sharpe": 0.8892,
+      "optimized_sharpe": 2167.59,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 21675.94,
+      "total_cv_trades": 40,
+      "avg_pnl_per_trade": 541.9,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_volatility_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.352,
+      "optimized_sharpe": 3776.37,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 18881.84,
+      "total_cv_trades": 8,
+      "avg_pnl_per_trade": 2360.23,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "ema_crossover_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.2908,
+      "optimized_sharpe": 1385.89,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 16630.67,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 173.24,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_exhaustion_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.2061,
+      "optimized_sharpe": 7989.12,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 15978.24,
+      "total_cv_trades": 4,
+      "avg_pnl_per_trade": 3994.56,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "volatility_contraction_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5826,
+      "optimized_sharpe": 15711.67,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 15711.67,
+      "total_cv_trades": 1,
+      "avg_pnl_per_trade": 15711.67,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "robust_regression_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.4221,
+      "optimized_sharpe": 1270.86,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 15250.34,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 211.81,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_5min_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5826,
+      "optimized_sharpe": 13168.5,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 13168.5,
+      "total_cv_trades": 2,
+      "avg_pnl_per_trade": 6584.25,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "previous_day_high_low_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.564,
+      "optimized_sharpe": 2627.35,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": 13136.73,
+      "total_cv_trades": 14,
+      "avg_pnl_per_trade": 938.34,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "prev_day_hl_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 7.1488,
+      "optimized_sharpe": 1188.07,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": 13068.74,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": 198.01,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_index_aligned_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.3313,
+      "optimized_sharpe": 972.18,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 10693.97,
+      "total_cv_trades": 44,
+      "avg_pnl_per_trade": 243.04,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vol_of_vol_signal_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.116,
+      "optimized_sharpe": 841.87,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 10102.4,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": 140.31,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_spike_mean_reversion",
+      "cv_passed": false,
+      "default_sharpe": 4.5826,
+      "optimized_sharpe": 6175.99,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 6175.99,
+      "total_cv_trades": 2,
+      "avg_pnl_per_trade": 3087.99,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_reversal_volume_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.4759,
+      "optimized_sharpe": 1828.37,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": 5485.11,
+      "total_cv_trades": 8,
+      "avg_pnl_per_trade": 685.64,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "narrow_range_7_breakout",
+      "cv_passed": false,
+      "default_sharpe": 8.7339,
+      "optimized_sharpe": 303.65,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": 3643.75,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": 37.96,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "banknifty_lead_lag_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.5372,
+      "optimized_sharpe": 265.73,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": 3188.71,
+      "total_cv_trades": 69,
+      "avg_pnl_per_trade": 46.21,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_continuation_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5826,
+      "optimized_sharpe": 2993.97,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 2993.97,
+      "total_cv_trades": 3,
+      "avg_pnl_per_trade": 997.99,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_continuation_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5826,
+      "optimized_sharpe": 2993.97,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 2993.97,
+      "total_cv_trades": 3,
+      "avg_pnl_per_trade": 997.99,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_fill_partial_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5826,
+      "optimized_sharpe": 2801.0,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": 2801.0,
+      "total_cv_trades": 2,
+      "avg_pnl_per_trade": 1400.5,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "granger_causality_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.1185,
+      "optimized_sharpe": 273.25,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": 2732.51,
+      "total_cv_trades": 46,
+      "avg_pnl_per_trade": 59.4,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_momentum_v32",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vix_filtered_index_trend_v133",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "gap_fill_stall_001",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "opening_drive_reversal_001",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vwap_overshoot_fade_001",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vwap_overshoot_fade_002",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vwap_overshoot_fade_003",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "opening_drive_post_gap_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vix_regime_switch_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "bollinger_squeeze_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "implied_vs_realized_vol_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "straddle_proxy_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "regime_detection_vol_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "orb_wide_range_fade_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "price_impact_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "liquidity_provision_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "trade_arrival_rate_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "rbi_policy_reaction_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "multi_asset_signal_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "bootstrap_confidence_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "lasso_feature_select_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vix_regime_switch_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vix_regime_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 0,
+      "optimized_sharpe": 0,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": 0,
+      "total_cv_trades": 0,
+      "avg_pnl_per_trade": 0,
+      "profitable_folds": 0,
+      "total_folds": 0,
+      "fold_win_rate": 0,
+      "stages": []
+    },
+    {
+      "name": "vwap_gap_fill_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.5826,
+      "optimized_sharpe": -291.87,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -291.87,
+      "total_cv_trades": 4,
+      "avg_pnl_per_trade": -72.97,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "relative_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.0889,
+      "optimized_sharpe": -132.0,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -1583.96,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -16.5,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_fade_reversion_v104",
+      "cv_passed": false,
+      "default_sharpe": -0.1407,
+      "optimized_sharpe": -301.24,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -2108.69,
+      "total_cv_trades": 14,
+      "avg_pnl_per_trade": -150.62,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "macd_signal_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.4496,
+      "optimized_sharpe": -381.1,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -4573.24,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -47.64,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "lunch_hour_range_compression_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.5826,
+      "optimized_sharpe": -4954.59,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -4954.59,
+      "total_cv_trades": 3,
+      "avg_pnl_per_trade": -1651.53,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_to_vwap_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.366,
+      "optimized_sharpe": -1059.16,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -6354.96,
+      "total_cv_trades": 32,
+      "avg_pnl_per_trade": -198.59,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_pullback_entry_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.4495,
+      "optimized_sharpe": -1129.64,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -11296.42,
+      "total_cv_trades": 27,
+      "avg_pnl_per_trade": -418.39,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "premarket_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.7764,
+      "optimized_sharpe": -1045.33,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -11498.59,
+      "total_cv_trades": 33,
+      "avg_pnl_per_trade": -348.44,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "consolidation_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.5826,
+      "optimized_sharpe": -12321.91,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -12321.91,
+      "total_cv_trades": 1,
+      "avg_pnl_per_trade": -12321.91,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "mean_variance_optimal_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.3021,
+      "optimized_sharpe": -2062.95,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -12377.73,
+      "total_cv_trades": 6,
+      "avg_pnl_per_trade": -2062.95,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "vwap_band_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.2165,
+      "optimized_sharpe": -1589.28,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -14303.56,
+      "total_cv_trades": 42,
+      "avg_pnl_per_trade": -340.56,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_mean_reversion_intraday_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.7902,
+      "optimized_sharpe": -1793.61,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -14348.92,
+      "total_cv_trades": 31,
+      "avg_pnl_per_trade": -462.87,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_gap_combo_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.5724,
+      "optimized_sharpe": -4120.87,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -16483.49,
+      "total_cv_trades": 12,
+      "avg_pnl_per_trade": -1373.62,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "wavelet_decomposition_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.5187,
+      "optimized_sharpe": -3369.4,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -16847.01,
+      "total_cv_trades": 7,
+      "avg_pnl_per_trade": -2406.72,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "prev_day_hl_reversal",
+      "cv_passed": false,
+      "default_sharpe": -1.9446,
+      "optimized_sharpe": -4734.66,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -18938.63,
+      "total_cv_trades": 5,
+      "avg_pnl_per_trade": -3787.73,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "expiry_day_premium_decay_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.6062,
+      "optimized_sharpe": -10030.64,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -20061.27,
+      "total_cv_trades": 6,
+      "avg_pnl_per_trade": -3343.55,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "elder_impulse_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.6431,
+      "optimized_sharpe": -1792.85,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -21514.22,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -224.11,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_continuation_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -8.4953,
+      "optimized_sharpe": -7340.11,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -22020.34,
+      "total_cv_trades": 9,
+      "avg_pnl_per_trade": -2446.7,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_continuation_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -8.4953,
+      "optimized_sharpe": -7340.11,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -22020.34,
+      "total_cv_trades": 9,
+      "avg_pnl_per_trade": -2446.7,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "volume_clock_signal_v1",
+      "cv_passed": false,
+      "default_sharpe": 7.2081,
+      "optimized_sharpe": -1920.12,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -23041.45,
+      "total_cv_trades": 111,
+      "avg_pnl_per_trade": -207.58,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "pullback_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.9996,
+      "optimized_sharpe": -5922.9,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -23691.6,
+      "total_cv_trades": 25,
+      "avg_pnl_per_trade": -947.66,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "opening_range_breakout_002",
+      "cv_passed": false,
+      "default_sharpe": -0.6561,
+      "optimized_sharpe": -2370.83,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -23708.27,
+      "total_cv_trades": 40,
+      "avg_pnl_per_trade": -592.71,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "price_channel_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.8256,
+      "optimized_sharpe": -2215.37,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -26584.45,
+      "total_cv_trades": 70,
+      "avg_pnl_per_trade": -379.78,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "mean_reversion_hull_ma",
+      "cv_passed": false,
+      "default_sharpe": -2.0181,
+      "optimized_sharpe": -5420.52,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -27102.59,
+      "total_cv_trades": 12,
+      "avg_pnl_per_trade": -2258.55,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "overnight_vol_carry_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.8571,
+      "optimized_sharpe": -6120.25,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -30601.24,
+      "total_cv_trades": 28,
+      "avg_pnl_per_trade": -1092.9,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_narrow_range_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.5904,
+      "optimized_sharpe": -15657.12,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -31314.25,
+      "total_cv_trades": 4,
+      "avg_pnl_per_trade": -7828.56,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_and_go_with_volume_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.3099,
+      "optimized_sharpe": -6628.81,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -33144.05,
+      "total_cv_trades": 14,
+      "avg_pnl_per_trade": -2367.43,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_fade_reversion_v116",
+      "cv_passed": false,
+      "default_sharpe": -1.5607,
+      "optimized_sharpe": -4758.47,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -33309.31,
+      "total_cv_trades": 21,
+      "avg_pnl_per_trade": -1586.16,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "sma_crossover_banknifty_v1",
+      "cv_passed": false,
+      "default_sharpe": -15.298,
+      "optimized_sharpe": -2985.09,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": -35821.04,
+      "total_cv_trades": 60,
+      "avg_pnl_per_trade": -597.02,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_adjusted_mean_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.7446,
+      "optimized_sharpe": -3746.76,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -37467.64,
+      "total_cv_trades": 80,
+      "avg_pnl_per_trade": -468.35,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_fill_full_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.4121,
+      "optimized_sharpe": -13081.83,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -39245.49,
+      "total_cv_trades": 9,
+      "avg_pnl_per_trade": -4360.61,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "opening_range_breakout_30_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.0003,
+      "optimized_sharpe": -4370.75,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -39336.78,
+      "total_cv_trades": 10,
+      "avg_pnl_per_trade": -3933.68,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_fade_large_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.1908,
+      "optimized_sharpe": -5795.87,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -40571.08,
+      "total_cv_trades": 15,
+      "avg_pnl_per_trade": -2704.74,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_rsi_confluence_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.616,
+      "optimized_sharpe": -4114.4,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -41143.96,
+      "total_cv_trades": 41,
+      "avg_pnl_per_trade": -1003.51,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_momentum_continuation",
+      "cv_passed": false,
+      "default_sharpe": -9.174,
+      "optimized_sharpe": -10516.41,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -42065.64,
+      "total_cv_trades": 6,
+      "avg_pnl_per_trade": -7010.94,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "squeeze_release_breakout_001",
+      "cv_passed": false,
+      "default_sharpe": -3.1035,
+      "optimized_sharpe": -4337.23,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -43372.28,
+      "total_cv_trades": 23,
+      "avg_pnl_per_trade": -1885.75,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_slope_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.1366,
+      "optimized_sharpe": -3639.99,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": -43679.86,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -455.0,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_fill_fade_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.2558,
+      "optimized_sharpe": -6466.48,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -45265.37,
+      "total_cv_trades": 21,
+      "avg_pnl_per_trade": -2155.49,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_connors_pullback_v41",
+      "cv_passed": false,
+      "default_sharpe": -1.8005,
+      "optimized_sharpe": -7653.2,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -45919.19,
+      "total_cv_trades": 48,
+      "avg_pnl_per_trade": -956.65,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "ichimoku_cloud_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.0158,
+      "optimized_sharpe": -4979.35,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -49793.49,
+      "total_cv_trades": 60,
+      "avg_pnl_per_trade": -829.89,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_mean_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.909,
+      "optimized_sharpe": -16846.54,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -50539.63,
+      "total_cv_trades": 5,
+      "avg_pnl_per_trade": -10107.93,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "vwap_mean_reversion_v10",
+      "cv_passed": false,
+      "default_sharpe": 0.3994,
+      "optimized_sharpe": -4647.97,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -51127.69,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -774.66,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "hurst_exponent_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.0585,
+      "optimized_sharpe": -4296.99,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -51563.94,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -716.17,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "momentum_reversion_switch_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.3344,
+      "optimized_sharpe": -4547.84,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -54574.11,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -568.48,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "kernel_density_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.2095,
+      "optimized_sharpe": -5970.28,
+      "cv_profitable_days": 7,
+      "total_cv_pnl": -59702.83,
+      "total_cv_trades": 14,
+      "avg_pnl_per_trade": -4264.49,
+      "profitable_folds": 7,
+      "total_folds": 12,
+      "fold_win_rate": 58.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "weighted_indicator_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.226,
+      "optimized_sharpe": -5057.33,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -60687.96,
+      "total_cv_trades": 84,
+      "avg_pnl_per_trade": -722.48,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_15min_filtered_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.9052,
+      "optimized_sharpe": -21999.73,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -65999.2,
+      "total_cv_trades": 12,
+      "avg_pnl_per_trade": -5499.93,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "divergence_plus_level_confluence_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.8669,
+      "optimized_sharpe": -5670.11,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -68041.28,
+      "total_cv_trades": 48,
+      "avg_pnl_per_trade": -1417.53,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_bucket_strategy_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.3041,
+      "optimized_sharpe": -7620.87,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -68587.87,
+      "total_cv_trades": 71,
+      "avg_pnl_per_trade": -966.03,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_extreme_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.7297,
+      "optimized_sharpe": -11500.59,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -69003.55,
+      "total_cv_trades": 15,
+      "avg_pnl_per_trade": -4600.24,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_extreme_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.7297,
+      "optimized_sharpe": -11500.59,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -69003.55,
+      "total_cv_trades": 15,
+      "avg_pnl_per_trade": -4600.24,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.243,
+      "optimized_sharpe": -5783.33,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -69399.93,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": -2891.66,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.243,
+      "optimized_sharpe": -5783.33,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -69399.93,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": -2891.66,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "opening_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.243,
+      "optimized_sharpe": -5783.33,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -69399.93,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": -2891.66,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "momentum_exhaustion_vix_reversal",
+      "cv_passed": false,
+      "default_sharpe": -2.8444,
+      "optimized_sharpe": -6361.48,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -69976.31,
+      "total_cv_trades": 35,
+      "avg_pnl_per_trade": -1999.32,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "volume_profile_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.1635,
+      "optimized_sharpe": -6396.22,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -70358.45,
+      "total_cv_trades": 55,
+      "avg_pnl_per_trade": -1279.24,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vol_surface_signal_v1",
+      "cv_passed": false,
+      "default_sharpe": -10.0128,
+      "optimized_sharpe": -5926.46,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -71117.49,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -987.74,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "range_day_band_fade_003",
+      "cv_passed": false,
+      "default_sharpe": -4.7571,
+      "optimized_sharpe": -8938.71,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -71509.66,
+      "total_cv_trades": 25,
+      "avg_pnl_per_trade": -2860.39,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bollinger_price_action_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.5826,
+      "optimized_sharpe": -75376.87,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -75376.87,
+      "total_cv_trades": 8,
+      "avg_pnl_per_trade": -9422.11,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "gap_fade_reversion_v103",
+      "cv_passed": false,
+      "default_sharpe": -3.465,
+      "optimized_sharpe": -10817.12,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -75719.83,
+      "total_cv_trades": 19,
+      "avg_pnl_per_trade": -3985.25,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vol_breakout_squeeze_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.1996,
+      "optimized_sharpe": -6352.05,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -76224.63,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -1058.68,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "quantile_regression_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.5695,
+      "optimized_sharpe": -6389.96,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -76679.5,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -1064.99,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "changepoint_detection_v1",
+      "cv_passed": false,
+      "default_sharpe": 2.1028,
+      "optimized_sharpe": -6482.12,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -77785.42,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -1080.35,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "information_ratio_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.5568,
+      "optimized_sharpe": -6781.07,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -81372.8,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -847.63,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "monday_reversal_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.5826,
+      "optimized_sharpe": -82791.92,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -82791.92,
+      "total_cv_trades": 10,
+      "avg_pnl_per_trade": -8279.19,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_band_squeeze_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.2778,
+      "optimized_sharpe": -7662.62,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -84288.77,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -1277.1,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_rsi_volume_confluence_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.5588,
+      "optimized_sharpe": -7684.76,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -84532.32,
+      "total_cv_trades": 47,
+      "avg_pnl_per_trade": -1798.56,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bollinger_band_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -17.1387,
+      "optimized_sharpe": -7187.61,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -86251.32,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -898.45,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "elliott_impulse_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.2929,
+      "optimized_sharpe": -7571.37,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -90856.44,
+      "total_cv_trades": 95,
+      "avg_pnl_per_trade": -956.38,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rolling_sharpe_adaptive_v1",
+      "cv_passed": false,
+      "default_sharpe": 4.3242,
+      "optimized_sharpe": -7590.33,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -91083.93,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -948.79,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vol_regime_adaptive_v1",
+      "cv_passed": false,
+      "default_sharpe": -11.6879,
+      "optimized_sharpe": -7754.78,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -93057.32,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -969.35,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_trend_channel_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.452,
+      "optimized_sharpe": -7773.92,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -93287.1,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -971.74,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "ema200_dip_reversal_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.2117,
+      "optimized_sharpe": -16501.51,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -99009.04,
+      "total_cv_trades": 42,
+      "avg_pnl_per_trade": -2357.36,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "gap_fade_reversion_v106",
+      "cv_passed": false,
+      "default_sharpe": -6.6745,
+      "optimized_sharpe": -33367.61,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -100102.82,
+      "total_cv_trades": 6,
+      "avg_pnl_per_trade": -16683.8,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation"
+      ]
+    },
+    {
+      "name": "support_resistance_reversal_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.7922,
+      "optimized_sharpe": -25080.96,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -100323.85,
+      "total_cv_trades": 24,
+      "avg_pnl_per_trade": -4180.16,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "mean_reversion_speed_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.1108,
+      "optimized_sharpe": -9243.2,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -101675.17,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -1540.53,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "atr_expansion_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.9184,
+      "optimized_sharpe": -8486.52,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -101838.2,
+      "total_cv_trades": 43,
+      "avg_pnl_per_trade": -2368.33,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "atr_expansion_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.9184,
+      "optimized_sharpe": -8486.52,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -101838.2,
+      "total_cv_trades": 43,
+      "avg_pnl_per_trade": -2368.33,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "zscore_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -11.8555,
+      "optimized_sharpe": -8688.12,
+      "cv_profitable_days": 8,
+      "total_cv_pnl": -104257.44,
+      "total_cv_trades": 71,
+      "avg_pnl_per_trade": -1468.41,
+      "profitable_folds": 8,
+      "total_folds": 12,
+      "fold_win_rate": 66.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "keltner_channel_trend_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.861,
+      "optimized_sharpe": -9195.86,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -110350.3,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -1532.64,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "order_block_entry_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.3781,
+      "optimized_sharpe": -9201.03,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -110412.41,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -1150.13,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bollinger_squeeze_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.9158,
+      "optimized_sharpe": -10546.92,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -116016.14,
+      "total_cv_trades": 81,
+      "avg_pnl_per_trade": -1432.3,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "spectral_analysis_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.9469,
+      "optimized_sharpe": -10862.56,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -119488.2,
+      "total_cv_trades": 88,
+      "avg_pnl_per_trade": -1357.82,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_multi_stock_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.8453,
+      "optimized_sharpe": -11052.39,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -121576.25,
+      "total_cv_trades": 32,
+      "avg_pnl_per_trade": -3799.26,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bb_squeeze_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.7661,
+      "optimized_sharpe": -10310.24,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -123722.89,
+      "total_cv_trades": 59,
+      "avg_pnl_per_trade": -2097.0,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "macd_trend_continuation_v71",
+      "cv_passed": false,
+      "default_sharpe": 5.3963,
+      "optimized_sharpe": -10607.68,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -127292.11,
+      "total_cv_trades": 85,
+      "avg_pnl_per_trade": -1497.55,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_pinch_breakout",
+      "cv_passed": false,
+      "default_sharpe": 5.6877,
+      "optimized_sharpe": -11830.54,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -130135.92,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -1971.76,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "expiry_day_pattern_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.08,
+      "optimized_sharpe": -66030.43,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -132060.85,
+      "total_cv_trades": 12,
+      "avg_pnl_per_trade": -11005.07,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "composite_breadth_v1",
+      "cv_passed": false,
+      "default_sharpe": 6.3699,
+      "optimized_sharpe": -11767.76,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -141213.12,
+      "total_cv_trades": 70,
+      "avg_pnl_per_trade": -2017.33,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "adaptive_threshold_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.848,
+      "optimized_sharpe": -11910.97,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -142931.66,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -1985.16,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "connors_rsi_extreme_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.079,
+      "optimized_sharpe": -12994.47,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -142939.14,
+      "total_cv_trades": 87,
+      "avg_pnl_per_trade": -1642.98,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "last_30_min_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 5.9598,
+      "optimized_sharpe": -14142.63,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -155568.96,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -2357.11,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "market_profile_poc_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.6101,
+      "optimized_sharpe": -26270.24,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -157621.44,
+      "total_cv_trades": 31,
+      "avg_pnl_per_trade": -5084.56,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "stochastic_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.0051,
+      "optimized_sharpe": -13209.15,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -158509.81,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -2201.53,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_momentum_ema_cross_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.8511,
+      "optimized_sharpe": -13677.17,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -164126.08,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -1709.65,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "round_number_reversal_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.8192,
+      "optimized_sharpe": -14110.84,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -169330.13,
+      "total_cv_trades": 92,
+      "avg_pnl_per_trade": -1840.54,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "multi_timeframe_confirmation_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.1076,
+      "optimized_sharpe": -14184.38,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -170212.59,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -1773.05,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "atr_channel_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.734,
+      "optimized_sharpe": -14301.28,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -171615.39,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -2383.55,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "beta_neutral_stat_arb_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.4212,
+      "optimized_sharpe": -14440.41,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -173284.88,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -1805.05,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "harmonic_pattern_v1",
+      "cv_passed": false,
+      "default_sharpe": -2.0617,
+      "optimized_sharpe": -15784.18,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -173626.0,
+      "total_cv_trades": 59,
+      "avg_pnl_per_trade": -2942.81,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "hmm_regime_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.4164,
+      "optimized_sharpe": -14646.74,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -175760.87,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -1830.84,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_connors_pullback_v50",
+      "cv_passed": false,
+      "default_sharpe": -9.7653,
+      "optimized_sharpe": -14769.67,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -177236.09,
+      "total_cv_trades": 81,
+      "avg_pnl_per_trade": -2188.1,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_plus_sector_filter_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.4028,
+      "optimized_sharpe": -22220.61,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -177764.89,
+      "total_cv_trades": 44,
+      "avg_pnl_per_trade": -4040.11,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_atr_scaled_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.8888,
+      "optimized_sharpe": -22781.79,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -182254.35,
+      "total_cv_trades": 31,
+      "avg_pnl_per_trade": -5879.17,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_momentum_v22",
+      "cv_passed": false,
+      "default_sharpe": -11.0387,
+      "optimized_sharpe": -16592.66,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -182519.21,
+      "total_cv_trades": 44,
+      "avg_pnl_per_trade": -4148.16,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "maximum_entropy_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.5956,
+      "optimized_sharpe": -16737.84,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -184116.29,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -2789.64,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "fractal_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -11.2123,
+      "optimized_sharpe": -26538.82,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -185771.76,
+      "total_cv_trades": 56,
+      "avg_pnl_per_trade": -3317.35,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "three_bar_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.1123,
+      "optimized_sharpe": -15960.61,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -191527.34,
+      "total_cv_trades": 50,
+      "avg_pnl_per_trade": -3830.55,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_connors_pullback_v54",
+      "cv_passed": false,
+      "default_sharpe": -14.7992,
+      "optimized_sharpe": -16053.24,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -192638.82,
+      "total_cv_trades": 87,
+      "avg_pnl_per_trade": -2214.24,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "ma_crossover_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.3823,
+      "optimized_sharpe": -32757.89,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -196547.32,
+      "total_cv_trades": 36,
+      "avg_pnl_per_trade": -5459.65,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vol_adjusted_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.7929,
+      "optimized_sharpe": -16456.51,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -197478.12,
+      "total_cv_trades": 86,
+      "avg_pnl_per_trade": -2296.26,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "afternoon_profit_fade",
+      "cv_passed": false,
+      "default_sharpe": -10.6623,
+      "optimized_sharpe": -19779.01,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -197790.07,
+      "total_cv_trades": 30,
+      "avg_pnl_per_trade": -6593.0,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "global_cue_reaction_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.6001,
+      "optimized_sharpe": -22443.99,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -201995.94,
+      "total_cv_trades": 18,
+      "avg_pnl_per_trade": -11222.0,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "bollinger_squeeze_breakout",
+      "cv_passed": false,
+      "default_sharpe": 2.3247,
+      "optimized_sharpe": -17057.41,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -204688.96,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -2842.9,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "institutional_flow_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.5835,
+      "optimized_sharpe": -23369.62,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -210326.61,
+      "total_cv_trades": 45,
+      "avg_pnl_per_trade": -4673.92,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "volume_spike_exhaustion_fade",
+      "cv_passed": false,
+      "default_sharpe": 4.4187,
+      "optimized_sharpe": -17824.85,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -213898.15,
+      "total_cv_trades": 81,
+      "avg_pnl_per_trade": -2640.72,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_rsi_divergence_v1",
+      "cv_passed": false,
+      "default_sharpe": 0.9705,
+      "optimized_sharpe": -17982.78,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -215793.31,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2247.85,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "adverse_selection_filter_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.7978,
+      "optimized_sharpe": -18079.17,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -216950.06,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2259.9,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "ema_crossover_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.1403,
+      "optimized_sharpe": -18163.02,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -217956.22,
+      "total_cv_trades": 77,
+      "avg_pnl_per_trade": -2830.6,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "dynamic_stop_regime_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.264,
+      "optimized_sharpe": -18469.32,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -221631.88,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2308.67,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "low_vol_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.989,
+      "optimized_sharpe": -20662.02,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -247944.2,
+      "total_cv_trades": 92,
+      "avg_pnl_per_trade": -2695.05,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "implied_vol_dislocation_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.5192,
+      "optimized_sharpe": -20671.35,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -248056.21,
+      "total_cv_trades": 86,
+      "avg_pnl_per_trade": -2884.37,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "trend_counter_trend_v1",
+      "cv_passed": false,
+      "default_sharpe": 1.0293,
+      "optimized_sharpe": -21668.92,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -260026.99,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -3611.49,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "narrow_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.6604,
+      "optimized_sharpe": -23169.29,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -278031.45,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2896.16,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "narrow_range_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.6604,
+      "optimized_sharpe": -23169.29,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -278031.45,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2896.16,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_connors_pullback_v46",
+      "cv_passed": false,
+      "default_sharpe": 1.8245,
+      "optimized_sharpe": -23269.75,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -279236.95,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2908.72,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "nifty_banknifty_spread_v1",
+      "cv_passed": false,
+      "default_sharpe": -10.4559,
+      "optimized_sharpe": -23419.13,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -281029.51,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2927.39,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "index_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.9552,
+      "optimized_sharpe": -31321.31,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -281891.82,
+      "total_cv_trades": 56,
+      "avg_pnl_per_trade": -5033.78,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "market_state_classifier_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.203,
+      "optimized_sharpe": -23623.42,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -283480.99,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -2952.93,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "orb_vwap_confirmation_v1",
+      "cv_passed": false,
+      "default_sharpe": -1.192,
+      "optimized_sharpe": -26399.39,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -290393.28,
+      "total_cv_trades": 55,
+      "avg_pnl_per_trade": -5279.88,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "autocorrelation_regime_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.267,
+      "optimized_sharpe": -24288.68,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -291464.17,
+      "total_cv_trades": 77,
+      "avg_pnl_per_trade": -3785.25,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vix_filtered_index_trend_v124",
+      "cv_passed": false,
+      "default_sharpe": -7.9154,
+      "optimized_sharpe": -24643.05,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -295716.62,
+      "total_cv_trades": 84,
+      "avg_pnl_per_trade": -3520.44,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "momentum_score_composite_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.4582,
+      "optimized_sharpe": -24821.47,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -297857.65,
+      "total_cv_trades": 68,
+      "avg_pnl_per_trade": -4380.26,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "williams_r_reversion_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.9857,
+      "optimized_sharpe": -25049.92,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -300599.04,
+      "total_cv_trades": 66,
+      "avg_pnl_per_trade": -4554.53,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_slope_trend_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.3343,
+      "optimized_sharpe": -25054.43,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -300653.11,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -4175.74,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "pivot_camarilla_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.4698,
+      "optimized_sharpe": -27869.9,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -306568.95,
+      "total_cv_trades": 88,
+      "avg_pnl_per_trade": -3483.74,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "momentum_decay_adaptive_v1",
+      "cv_passed": false,
+      "default_sharpe": -11.3704,
+      "optimized_sharpe": -34197.34,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -307776.1,
+      "total_cv_trades": 45,
+      "avg_pnl_per_trade": -6839.47,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "psychological_level_mean_reversion",
+      "cv_passed": false,
+      "default_sharpe": -3.6478,
+      "optimized_sharpe": -27212.25,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -326546.95,
+      "total_cv_trades": 79,
+      "avg_pnl_per_trade": -4133.51,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "momentum_ignition_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.9632,
+      "optimized_sharpe": -30494.87,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -335443.55,
+      "total_cv_trades": 57,
+      "avg_pnl_per_trade": -5884.97,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "smart_beta_intraday_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.6422,
+      "optimized_sharpe": -30524.75,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -335772.28,
+      "total_cv_trades": 81,
+      "avg_pnl_per_trade": -4145.34,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "inside_bar_breakout_v177",
+      "cv_passed": false,
+      "default_sharpe": -11.7719,
+      "optimized_sharpe": -30822.08,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -339042.85,
+      "total_cv_trades": 63,
+      "avg_pnl_per_trade": -5381.63,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "vwap_volume_divergence_v1",
+      "cv_passed": false,
+      "default_sharpe": -4.8262,
+      "optimized_sharpe": -29790.37,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -357484.46,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -3723.8,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.0681,
+      "optimized_sharpe": -30288.0,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -363455.95,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -3786.0,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "order_flow_imbalance_v1",
+      "cv_passed": false,
+      "default_sharpe": -0.0681,
+      "optimized_sharpe": -30288.0,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -363455.95,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -3786.0,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "intraday_vol_pattern_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.3509,
+      "optimized_sharpe": -31261.1,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -375133.26,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -5210.18,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "ensemble_signal_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.0883,
+      "optimized_sharpe": -31495.12,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -377941.48,
+      "total_cv_trades": 78,
+      "avg_pnl_per_trade": -4845.4,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_divergence_vwap_v1",
+      "cv_passed": false,
+      "default_sharpe": -18.9244,
+      "optimized_sharpe": -31609.26,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -379311.18,
+      "total_cv_trades": 58,
+      "avg_pnl_per_trade": -6539.85,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "pullback_to_vwap_trend_ride",
+      "cv_passed": false,
+      "default_sharpe": 0.8018,
+      "optimized_sharpe": -31843.97,
+      "cv_profitable_days": 6,
+      "total_cv_pnl": -382127.62,
+      "total_cv_trades": 90,
+      "avg_pnl_per_trade": -4245.86,
+      "profitable_folds": 6,
+      "total_folds": 12,
+      "fold_win_rate": 50.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "deviation_from_ema_v1",
+      "cv_passed": false,
+      "default_sharpe": -6.3453,
+      "optimized_sharpe": -32660.42,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -391924.98,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -4082.55,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "drawdown_adaptive_v1",
+      "cv_passed": false,
+      "default_sharpe": -26.4372,
+      "optimized_sharpe": -32819.53,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -393834.41,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -4102.44,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "range_expansion_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -9.1552,
+      "optimized_sharpe": -36367.65,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -400044.14,
+      "total_cv_trades": 65,
+      "avg_pnl_per_trade": -6154.53,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "trade_size_clustering_v1",
+      "cv_passed": false,
+      "default_sharpe": -13.976,
+      "optimized_sharpe": -33442.36,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -401308.29,
+      "total_cv_trades": 72,
+      "avg_pnl_per_trade": -5573.73,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "adx_trend_strength_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.1538,
+      "optimized_sharpe": -33681.9,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -404182.85,
+      "total_cv_trades": 83,
+      "avg_pnl_per_trade": -4869.67,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "cross_listed_arb_v1",
+      "cv_passed": false,
+      "default_sharpe": -3.221,
+      "optimized_sharpe": -34394.85,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -412738.16,
+      "total_cv_trades": 120,
+      "avg_pnl_per_trade": -3439.48,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "trend_strength_adaptive_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.6967,
+      "optimized_sharpe": -34656.21,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -415874.53,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -4332.03,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "supertrend_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": 3.6,
+      "optimized_sharpe": -34845.22,
+      "cv_profitable_days": 5,
+      "total_cv_pnl": -418142.7,
+      "total_cv_trades": 95,
+      "avg_pnl_per_trade": -4401.5,
+      "profitable_folds": 5,
+      "total_folds": 12,
+      "fold_win_rate": 41.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "index_correlated_breakout_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.8272,
+      "optimized_sharpe": -40876.41,
+      "cv_profitable_days": 4,
+      "total_cv_pnl": -449640.53,
+      "total_cv_trades": 49,
+      "avg_pnl_per_trade": -9176.34,
+      "profitable_folds": 4,
+      "total_folds": 12,
+      "fold_win_rate": 33.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "index_momentum_stock_selection_v1",
+      "cv_passed": false,
+      "default_sharpe": -5.1867,
+      "optimized_sharpe": -46970.27,
+      "cv_profitable_days": 3,
+      "total_cv_pnl": -516672.96,
+      "total_cv_trades": 74,
+      "avg_pnl_per_trade": -6982.07,
+      "profitable_folds": 3,
+      "total_folds": 12,
+      "fold_win_rate": 25.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "rsi_connors_pullback_v49",
+      "cv_passed": false,
+      "default_sharpe": -11.8324,
+      "optimized_sharpe": -43064.45,
+      "cv_profitable_days": 0,
+      "total_cv_pnl": -516773.37,
+      "total_cv_trades": 96,
+      "avg_pnl_per_trade": -5383.06,
+      "profitable_folds": 0,
+      "total_folds": 12,
+      "fold_win_rate": 0.0,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "closing_auction_anticipation_v1",
+      "cv_passed": false,
+      "default_sharpe": -12.4923,
+      "optimized_sharpe": -47570.35,
+      "cv_profitable_days": 1,
+      "total_cv_pnl": -523273.86,
+      "total_cv_trades": 28,
+      "avg_pnl_per_trade": -18688.35,
+      "profitable_folds": 1,
+      "total_folds": 12,
+      "fold_win_rate": 8.3,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "kalman_filter_trend_v1",
+      "cv_passed": false,
+      "default_sharpe": -7.0701,
+      "optimized_sharpe": -79553.88,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -875092.73,
+      "total_cv_trades": 84,
+      "avg_pnl_per_trade": -10417.77,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    },
+    {
+      "name": "tick_direction_momentum_v1",
+      "cv_passed": false,
+      "default_sharpe": -11.542,
+      "optimized_sharpe": -73405.16,
+      "cv_profitable_days": 2,
+      "total_cv_pnl": -880861.88,
+      "total_cv_trades": 165,
+      "avg_pnl_per_trade": -5338.56,
+      "profitable_folds": 2,
+      "total_folds": 12,
+      "fold_win_rate": 16.7,
+      "stages": [
+        "default_backtest",
+        "nested_cross_validation",
+        "sensitivity"
+      ]
+    }
+  ]
+}

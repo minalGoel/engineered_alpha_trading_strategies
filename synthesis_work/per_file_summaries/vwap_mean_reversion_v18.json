@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v18",
+  "mechanism": "On NIFTY, sharp intraday selloffs push the index 40-80 spot points below session VWAP. At this deviation level, every VWAP-benchmarked institutional algorithm is sitting on large positive tracking error and begins aggressively accumulating — they are getting fills significantly better than their benchmark and are structurally compelled to buy. The accumulation shows up as a slowing in the rate of deviation change (dev_momentum turning positive) before price visibly recovers. We enter at the first bar where the z-score is still extreme (below -1.7 sigma of the session's deviation distribution) but momentum is already turning, capturing the onset of institutional re-entry rather than chasing after it.",
+  "tags": ["mean_reversion", "vwap", "institutional_flow"],
+  "core_signal_oneliner": "VWAP z-score below -1.7 sigma with 2-minute deviation momentum turning positive, signaling onset of institutional re-accumulation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_stddev_360", "vwap_zscore", "dev_momentum_24"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 10,
+  "exit_stop_points": 6,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

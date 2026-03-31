@@ -1,0 +1,17 @@
+{
+  "name": "deviation_from_ema_v1",
+  "mechanism": "On NIFTY, when the index deviates sharply from its 5-minute EMA — reflected as a z-score exceeding ±1.5 standard deviations of recent deviations — VWAP-benchmarked execution algorithms and market makers begin absorbing the overshoot. These participants are accumulating at prices well better than their benchmark, creating a floor (or ceiling) that arrests the drift and initiates a micro snap-back. At 5-second resolution we detect the first bar where the deviation z-score peaks and reverses (narrowing), signalling that fresh counter-directional orders have entered the book. The ATM CE or PE captures the initial 30-90 second reversion leg before the EMA is reached.",
+  "tags": ["ema", "deviation", "mean_reversion", "rubber-band", "zscore", "intraday", "scalp"],
+  "core_signal_oneliner": "10-minute rolling z-score of distance from 5-minute EMA exceeds ±1.5 and has begun narrowing (z-score peak confirmed), signaling institutional counter-flow absorption",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_60", "dev", "dev_zscore", "snap_confirmation"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

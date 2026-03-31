@@ -1,0 +1,17 @@
+{
+  "name": "gap_fade_large_v1",
+  "mechanism": "On NIFTY, large overnight gaps (>0.3%) driven by SGX Nifty futures and US equity moves cause retail market-on-open orders to push the index further in the gap direction during the first 30-90 seconds of trading, extending price beyond the fair open implied by pre-market futures. Institutional market makers — who have already hedged their overnight gamma exposure — absorb this directional retail flow and gradually fade the intra-session extension back toward session VWAP. At 5-second resolution, we detect the stall of this extension: RSI(12) reaches short-term extremes in the gap direction while 30-second momentum turns against the extension, signaling the handoff from retail-driven momentum to institutional fading.",
+  "tags": ["gap", "fade", "contrarian", "morning", "mean_reversion"],
+  "core_signal_oneliner": "Gap > 0.3% with price extended beyond open in gap direction: RSI(12) at extreme (>70 or <30) and 30s momentum turning against gap direction",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "extension_from_open", "rsi_12", "mom_6", "vix_close"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

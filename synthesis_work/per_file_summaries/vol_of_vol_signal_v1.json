@@ -1,0 +1,17 @@
+{
+  "name": "vol_of_vol_signal_v1",
+  "mechanism": "On NIFTY, the 2-minute ATR is itself a time series whose own volatility (vol-of-vol) signals whether the index is in a stable-drift or regime-transition state. When vol-of-vol z-score is low (ATR has been nearly constant over 10 minutes), NIFTY is absorbing orders symmetrically around VWAP and RSI extremes on 2-minute bars reliably revert within 30-60 seconds as resting limit orders absorb directional flow. When vol-of-vol z-score rises above 0.5 (ATR itself becomes erratic), a large institutional TWAP order or macro trigger has disrupted the equilibrium — the EMA(1min)/EMA(3min) crossover during this regime confirms a directional order flow shift that persists for 60-90 seconds before the next equilibrium forms.",
+  "tags": ["volatility", "vol_of_vol", "second_order", "regime_change", "mean_reversion", "breakout"],
+  "core_signal_oneliner": "Vol-of-vol z-score regime switch: RSI mean-reversion in stable regime, EMA crossover breakout in transitioning regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["atr_24", "vov_30", "vov_z", "rsi_24", "ema_12", "ema_36"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v13",
+  "mechanism": "On NIFTY, when the index sustains a z-score deviation below -2.4 relative to the 60-minute session standard deviation for at least two consecutive 5-second bars AND volume is elevated above the 5-minute average, this is the signature of multi-wave institutional forced selling — not a single algorithmic spike that corrects in one bar. The 2-bar persistence distinguishes sustained cascades (where stop-loss programs, FII sell orders, and VWAP-benchmarked algorithms overlap) from momentary data artifacts. At this depth of persistent dislocation, every VWAP-benchmarked program on NIFTY is aggressively under-benchmark and begins absorbing supply simultaneously, creating the snap-back within 30-120 seconds as buy programs overwhelm the now-depleted sell queue.",
+  "tags": ["mean_reversion", "vwap", "volume_confirmation", "persistence_filter"],
+  "core_signal_oneliner": "Sustained 2-bar z-score (-2.4 sigma vs 60-min std) with elevated volume, identifying multi-wave institutional forced-sell cascade",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_stddev_720", "vwap_zscore", "rel_volume_60", "zscore_prev1"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 10,
+  "exit_stop_points": 6,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

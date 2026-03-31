@@ -1,0 +1,17 @@
+{
+  "name": "quality_momentum_v1",
+  "mechanism": "On NIFTY, when the 3-minute EMA (EMA-36) diverges above the 10-minute EMA (EMA-120) AND the gap is actively widening over the prior 30 seconds, this signals large institutional TWAP/VWAP programs are accumulating at multiple timescales simultaneously — not just a brief noise spike but a sustained directional program. The EMA gap acceleration distinguishes a live institutional order from a decaying imbalance: if each successive 5-second bar is adding to the gap, the program has not finished. A 5-minute ROC above 15 bps confirms the move has macro follow-through across the prior 60 bars. The VWAP position filter ensures the trade aligns with the session's dominant order flow direction, filtering entries where spot has already overshot.",
+  "tags": ["momentum", "ema-crossover", "acceleration", "vwap", "trend-continuation"],
+  "core_signal_oneliner": "3-min EMA crosses above 10-min EMA and gap is actively widening over 30 seconds, confirming institutional program still running",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast_36", "ema_slow_120", "ema_gap_accel_6bar", "roc_60", "vwap_session"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 5.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

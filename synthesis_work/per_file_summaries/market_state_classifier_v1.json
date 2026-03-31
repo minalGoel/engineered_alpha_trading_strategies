@@ -1,0 +1,17 @@
+{
+  "name": "market_state_classifier_v1",
+  "mechanism": "NIFTY's intraday order flow alternates between institutional TWAP/VWAP-driven trending phases (persistent directional imbalance visible as rising 2-minute ADX) and market-maker-driven ranging phases (tight oscillation as gamma-hedgers quote both sides within a narrow band). When NIFTY ADX(24) rises above 22 with contained ATR acceleration, it signals institutional directional programs are active \u2014 a short EMA crossover (EMA12 crossing EMA36) aligned with VWAP confirms the next 30-50 spot point leg has begun. Conversely, when ADX(24) falls below 18 and Bollinger Band width sits in the bottom 40th percentile of its 5-minute history, market makers are the marginal price-setters \u2014 price touching the outer band immediately encounters their resting contra-side hedging flow, producing reliable 15-25 spot point mean-reversion within 30-60 seconds.",
+  "tags": ["classifier", "market-state", "trending", "ranging", "volatile", "regime", "adx", "bollinger"],
+  "core_signal_oneliner": "ADX-based regime classifier switching between EMA-crossover momentum entries (trending) and Bollinger Band extreme mean-reversion entries (ranging)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["adx_24", "bb_width_60", "bb_width_pctile", "atr_acceleration", "ema_12", "ema_36", "vwap", "bb_upper_60", "bb_lower_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 10
+}

@@ -1,0 +1,17 @@
+{
+  "name": "macd_trend_continuation_v71",
+  "mechanism": "On NIFTY, institutional TWAP/VWAP algorithms executing multi-minute directional orders create persistent 3-8 minute micro-trends visible via EMA(60) slope. Within these micro-trends, 20-40 second pullbacks cause the 5s MACD to dip briefly negative. When the MACD histogram crosses back above its signal line while still negative, it marks the moment institutional buying has resumed before the full momentum re-accelerates \u2014 resting buy orders just absorbed the pullback supply, and the directional order flow is restarting. At 5-second resolution we enter this resumption point 10-20 seconds before it becomes visible on 1-minute bars, capturing the first 10-15 NIFTY spot points of continuation (5-7 option pts at delta ~0.5).",
+  "tags": ["trend_following", "momentum", "pullback", "macd"],
+  "core_signal_oneliner": "MACD histogram crossing from negative to positive (zero-cross) during a pullback while the 5-minute EMA trend remains intact, signaling institutional order flow resumption",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast", "ema_slow", "macd_line", "macd_signal", "ema_trend"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

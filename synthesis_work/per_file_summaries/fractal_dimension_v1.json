@@ -1,0 +1,17 @@
+{
+  "name": "fractal_dimension_v1",
+  "mechanism": "When NIFTY's 5-second price series has Higuchi fractal dimension below 1.30 over a 4-minute rolling window, the index is in a low-complexity trending regime where institutional TWAP/VWAP algorithms are systematically absorbing directional flow without adequate counter-pressure. At this FD level, individual 5-second bars show strong autocorrelation — each bar's direction predicts the next with ~55-58% accuracy compared to ~50.5% in the noisy (FD > 1.40) regime seen for roughly 65% of the session. We enter when low-FD trending regime (persistent over 3+ bars, i.e. 15 seconds) coincides with EMA direction confirmation and price above/below session VWAP, then hold 30-120 seconds to capture the persistence of the institutional order flow before the sub-order cycle completes and FD reverts toward 1.5.",
+  "tags": ["fractal", "regime", "complexity", "trend-filter", "microstructure"],
+  "core_signal_oneliner": "Higuchi fractal dimension < 1.30 for 3+ consecutive bars (15s sustained low-complexity trending regime) with EMA alignment and VWAP confirmation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["higuchi_fd_48", "ema_fast_24", "ema_slow_60", "vwap", "vwap_slope_12"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 7.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

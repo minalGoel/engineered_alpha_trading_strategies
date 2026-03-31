@@ -1,0 +1,17 @@
+{
+  "name": "stochastic_reversion_v1",
+  "mechanism": "On NIFTY, when the index sells off sharply enough within a 70-second window to push the stochastic below 20, it reflects that aggressive order flow has briefly overwhelmed the available bid-side liquidity at that depth. The moment %K crosses above %D from the oversold zone, it marks the first measurable slowdown in the rate of decline — resting limit buy orders and institutional delta hedges begin absorbing the selling pressure. This creates a micro-reversion of 10-20 NIFTY spot points over the subsequent 30-90 seconds, captured by entering ATM calls on the cross bar. The inverse holds symmetrically for overbought crosses: supply absorbs demand at the short-term range top and the index fades 10-20 spot pts.",
+  "tags": ["stochastic", "mean_reversion", "oversold", "overbought", "cross-confirmation", "intraday"],
+  "core_signal_oneliner": "Stochastic %K crosses above %D from below the 20 oversold level within VWAP proximity, marking 70-second selling exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["stoch_k_14", "stoch_d_14_3", "vwap_session"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

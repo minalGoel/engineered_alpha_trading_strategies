@@ -1,0 +1,17 @@
+{
+  "name": "atr_channel_breakout_v1",
+  "mechanism": "When NIFTY closes above its 2-minute ATR-adaptive Keltner Channel (EMA_24 + 2×ATR_24) with above-average volume on a 5-second bar, passive sell-side liquidity at that level has been fully absorbed by active institutional buyers. On NIFTY, these breakouts trigger momentum-following algorithms and delta-hedging from option market makers within seconds, producing a 10-20 spot point continuation impulse in the first 30-90 seconds. The ATR-adaptive channel ensures the breakout exceeds current intraday volatility noise, distinguishing genuine institutional flow from routine price oscillation around the channel midline. Low-VIX filter (VIX < 22) excludes stress regimes where breakouts reverse violently due to gap risk.",
+  "tags": ["volatility", "breakout", "channel", "atr", "momentum"],
+  "core_signal_oneliner": "Close above 2-minute ATR-adaptive Keltner Channel upper band with relative volume surge, confirmed in low-VIX regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_24", "atr_24", "kc_upper", "kc_lower", "vol_sma_12", "rel_volume"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

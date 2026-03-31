@@ -1,0 +1,17 @@
+{
+  "name": "vwap_band_reversion_v1",
+  "mechanism": "On NIFTY, when the index spot extends to ±2 rolling standard deviations from session VWAP, domestic mutual funds and FIIs executing index rebalancing/TWAP orders begin aggressive absorption — they are receiving fills 2 sigma better than their VWAP benchmark, creating strong incentive to step in. A 5-second bar that closes back inside the 2SD band on elevated volume signals that this absorption has overwhelmed the directional flow and the index will revert toward the 1SD band within 60-90 seconds. At 5s resolution we capture the entry bar itself rather than waiting for a full 1-minute bar to confirm the reversal.",
+  "tags": ["mean_reversion", "vwap", "bands", "volume_confirmation"],
+  "core_signal_oneliner": "Price closes back inside ±2SD VWAP band from beyond it on elevated volume, signaling institutional absorption at the extreme",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_sd_120", "vol_avg_120", "vol_ratio"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

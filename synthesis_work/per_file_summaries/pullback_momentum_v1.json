@@ -1,0 +1,17 @@
+{
+  "name": "pullback_momentum_v1",
+  "mechanism": "On NIFTY, during an established 5-minute uptrend, the index periodically pulls back to session VWAP — the level at which VWAP-benchmarked institutional TWAP/VWAP execution algorithms receive fills at or better than their benchmark, triggering accelerated re-accumulation. When the VWAP deviation reaches -0.5 to -1.2 ATR units (approximately 10-25 NIFTY spot points below VWAP), both TWAP buyers improving their fill and delta-hedging market makers net long from put selling step in simultaneously, creating a 15-25 spot point bounce within 60-90 seconds. At 5-second resolution, entry on the first positive return tick after the VWAP touch captures 4-7 option points of this bounce before the index re-anchors above VWAP.",
+  "tags": ["pullback", "vwap", "momentum", "mean_reversion"],
+  "core_signal_oneliner": "Price pulls back to session VWAP in a 5-min uptrend and produces the first positive uptick, signaling VWAP-algo re-accumulation",
+  "entry_type": "ce_pe",
+  "indicators_used": ["session_vwap", "atr_24", "vwap_dev", "mom_60", "ret_1"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

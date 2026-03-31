@@ -1,0 +1,17 @@
+{
+  "name": "orb_atr_scaled_v1",
+  "mechanism": "NIFTY's 09:15-09:30 window is the overnight information absorption period; large institutional participants hold back directional orders until the range crystallises. When NIFTY breaks above the range high with expanding volume and ADX-confirmed directionality, the previously-withheld institutional TWAP flow begins executing and creates a sustained 15-25 spot point extension within the next 60-120 seconds. The KEY innovation over standard ORB: targets and stops scale with ATR(14 min at 5s) rather than the ORB range width. On high-volatility NIFTY mornings (wide ATR), the setup warrants wider stops and targets; on quiet days, tighter management avoids giving back small gains. This decouples the entry signal (ORB, about price structure) from trade management (ATR, about current volatility regime).",
+  "tags": ["ORB", "ATR_scaled", "adaptive_exits", "vol_adjusted", "intraday_breakout"],
+  "core_signal_oneliner": "15-minute ORB breakout with ADX trend filter and ATR-adaptive stop/target sizing based on current volatility regime",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high_180", "orb_low_180", "atr_168", "adx_36", "vwap", "vol_ratio_36"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": "ATR_adaptive: clip(ATR_168 × 0.5 × target_atr_mult, 6.0, 14.0) — default target_atr_mult=5.0",
+  "exit_stop_points": "ATR_adaptive: clip(ATR_168 × 0.5 × stop_atr_mult, 3.0, 8.0) — default stop_atr_mult=2.5",
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

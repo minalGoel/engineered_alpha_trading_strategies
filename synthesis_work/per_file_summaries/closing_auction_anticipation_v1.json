@@ -1,0 +1,17 @@
+{
+  "name": "closing_auction_anticipation_v1",
+  "mechanism": "On NIFTY, the 15:00-15:20 window concentrates institutional closing flow — index fund rebalancers matching NAV benchmarks, FII basket orders, and algorithmic TWAP executors finishing daily programs all lean in the same direction that the index has been trending over the prior 30 minutes. When NIFTY has moved more than 0.15% over the prior 30 minutes with volume accelerating into 15:00, these closing orders reinforce the directional bias and create a sharp 12-20 spot-point burst in the first 60-120 seconds. At 5-second resolution we enter at the first 15:00 bar and exit within 2 minutes — capturing only the initial surge of closing flow before the order book becomes diffuse near 15:20.",
+  "tags": ["time_of_day", "closing_auction", "microstructure", "momentum"],
+  "core_signal_oneliner": "NIFTY has trended >0.15% over prior 30 minutes, is above/below session VWAP, and volume is accelerating at 15:00 IST, anticipating concentrated institutional closing flow",
+  "entry_type": "ce_pe",
+  "indicators_used": ["return_360", "vwap_session", "volume_ratio_30s_5min"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

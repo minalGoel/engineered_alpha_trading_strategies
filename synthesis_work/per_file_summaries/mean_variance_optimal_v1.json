@@ -1,0 +1,17 @@
+{
+  "name": "mean_variance_optimal_v1",
+  "mechanism": "On NIFTY, when the instantaneous Sharpe ratio \u2014 computed as the 1-minute EMA of 5-second log returns divided by 3-minute realized volatility \u2014 ranks in the top 15% of its 20-minute history, it signals that institutional directional order flow has become coherent and low-noise. This state arises when VWAP-benchmarked buy algorithms are continuously absorbing sell flow without triggering retaliatory supply \u2014 price advances without the noise spikes that accompany contested moves. At 5-second resolution this 'coiled spring' condition typically precedes 30-60 second continuation as the one-sided imbalance is not yet fully priced in. The VWAP confirmation filters out high-Sharpe moments driven by volatile gaps above fair value where reversion is more likely than continuation.",
+  "tags": ["mean-variance", "sharpe-timing", "momentum", "volatility-compression", "quantitative"],
+  "core_signal_oneliner": "Instantaneous Sharpe ratio (1-min EMA return / 3-min realized vol) in the top or bottom 15% of its 20-minute history, indicating coherent low-noise institutional directional flow",
+  "entry_type": "ce_pe",
+  "indicators_used": ["log_ret", "ema_ret_12", "roll_var_36", "instant_sharpe", "sharpe_pct_240", "session_vwap"],
+  "hold_time_seconds": [30, 60],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

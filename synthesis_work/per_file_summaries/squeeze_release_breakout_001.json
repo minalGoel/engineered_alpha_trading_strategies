@@ -1,0 +1,17 @@
+{
+  "name": "squeeze_release_breakout_001",
+  "mechanism": "On NIFTY, when Bollinger Bands (2-minute window) compress inside Keltner Channels, institutional algorithms have temporarily suspended directional activity and resting limit orders are stacked symmetrically around a tight range. This equilibrium accumulates directional pressure. When price breaks above the 24-bar rolling high with 90-second and 3-minute EMAs both aligned bullishly and above-average volume participation, algorithmic TWAP/VWAP flow initiates a new directional wave, typically carrying NIFTY 15-25 spot points in the first 60-90 seconds before the next equilibrium forms. The volume surge confirms that institutional orders are actively absorbing supply (or demand) rather than a random spike through the compression range.",
+  "tags": ["breakout", "volatility", "squeeze", "momentum"],
+  "core_signal_oneliner": "Bollinger Bands compress inside Keltner Channels and price breaks the 2-min range with EMA alignment and volume expansion, releasing the accumulated directional pressure",
+  "entry_type": "ce_pe",
+  "indicators_used": ["bb_upper_24", "bb_lower_24", "kc_upper_24", "kc_lower_24", "squeeze_on", "squeeze_high_24", "squeeze_low_24", "ema_short_18", "ema_long_36", "vwap", "rel_volume_24"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

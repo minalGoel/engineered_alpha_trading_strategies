@@ -1,0 +1,17 @@
+{
+  "name": "volume_clock_signal_v1",
+  "mechanism": "On NIFTY, institutional TWAP/algo executions create bursts of high-volume 5-second bars where information content far exceeds low-volume drift bars. When the index RSI drops below 30 during a volume surge (vol > 1.5x rolling average), it means large sell programs have pushed price aggressively below the 5-minute Bollinger lower band AND below VWAP — a multi-confirmation exhaustion signal. The moment RSI turns up while volume remains elevated, market-makers and residual buy-side programs absorb the remaining sell flow, triggering a 10-20 NIFTY spot point bounce within 30-90 seconds. This approximates the volume-clock bar construction (treating high-volume 5s bars as information-dense bars) without requiring dynamic bar regrouping.",
+  "tags": ["microstructure", "volume_clock", "mean_reversion", "rsi", "bollinger"],
+  "core_signal_oneliner": "RSI below 30 turning up during volume surge (1.5x average) with price below 5-min BB lower band and VWAP, approximating volume-clock exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_12", "bb_upper_60", "bb_lower_60", "vwap", "vol_ratio_60"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 7
+}

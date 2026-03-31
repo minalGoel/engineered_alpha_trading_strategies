@@ -1,0 +1,17 @@
+{
+  "name": "ema200_dip_reversal_v1",
+  "mechanism": "When NIFTY dips to its 60-minute EMA — a major intraday reference level explicitly tracked by index futures desks, VWAP-algo overlays, and delta-hedging market makers — resting buy orders cluster just above this EMA because systematic programs treat it as a 'buy zone' for intraday mean reversion. Each time NIFTY touches this level and holds, the absorption becomes faster as confirmation builds across desks; at 5-second resolution we can detect the first recovery bar (positive 5s return) the moment price re-crosses above the EMA touch zone, entering CE options before the broader 1-minute bar even closes. The 60-minute EMA compresses the original multi-day EMA concept to an intraday one because at 5s resolution with 15-90s hold times we are capturing the institutional intraday reversion, not a multi-day trend recovery.",
+  "tags": ["mean_reversion", "support", "ema_bounce"],
+  "core_signal_oneliner": "Price dips to and immediately bounces off the 60-minute EMA (720-bar at 5s), with the first positive 5s return bar as entry trigger",
+  "entry_type": "long_only",
+  "indicators_used": ["ema_720", "dist_pct", "ret_1", "mom_6", "prior_min_dist"],
+  "hold_time_seconds": [15, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

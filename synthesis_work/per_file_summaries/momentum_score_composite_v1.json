@@ -1,0 +1,17 @@
+{
+  "name": "momentum_score_composite_v1",
+  "mechanism": "On NIFTY, when five independent momentum signals \u2014 2-minute RSI velocity, MACD histogram acceleration, 1-minute rate-of-change, ADX directional bias, and volume-price direction \u2014 simultaneously align in the same direction, it indicates that multiple algorithmic strategy families (momentum-chasers, trend-followers, volume-participation systems) are all positioned in the same direction at the same time. This simultaneous agreement at the 1-3 minute timescale on NIFTY signals that institutional order flow has reached critical mass: the underlying directional program trades still have unfilled volume that will continue to absorb liquidity for the next 30-90 seconds. A composite score > 55 (out of 100 max) with 15-second persistence filters out the cases where only one or two indicators spike.",
+  "tags": ["composite", "multi-indicator", "momentum-score", "weighted", "intraday", "confluence"],
+  "core_signal_oneliner": "Weighted composite of five momentum sub-signals (RSI, MACD, ROC, ADX, volume-direction) exceeding a threshold for 15 consecutive seconds, indicating multi-algorithm directional confluence",
+  "entry_type": "ce_pe",
+  "indicators_used": ["rsi_24", "macd_hist_52", "roc_12", "adx_24_dir", "vol_mom_60", "composite_score", "vwap"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 9
+}

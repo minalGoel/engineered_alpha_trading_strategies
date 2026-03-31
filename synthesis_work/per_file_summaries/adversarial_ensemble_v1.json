@@ -1,0 +1,17 @@
+{
+  "name": "adversarial_ensemble_v1",
+  "mechanism": "On NIFTY, simultaneous agreement across five independent microstructure signals — VWAP dislocation (short-term supply/demand imbalance), ORB directional break (institutional positioning established in the opening 20-minute window), RSI extreme (3-minute momentum exhaustion or initiation), volume spike on a directional bar (block trade or basket execution activity), and EMA trend alignment (10-minute institutional trend context) — indicates a program trade, FII basket order, or multi-strategy algo convergence is in progress. At 5-second resolution, this multi-signal confluence is rare (~2-4 times per session) but highly directional: when all signals agree and none contradicts, NIFTY typically sustains the move for 15-25 spot points over the next 30-120 seconds as the underlying institutional order continues to execute. The adversarial veto eliminates entries where any sub-strategy is actively signaling the opposite direction, filtering out fake breakouts driven by temporary liquidity gaps in the NIFTY order book.",
+  "tags": ["ensemble", "adversarial", "multi-signal", "meta-strategy", "momentum"],
+  "core_signal_oneliner": "Majority agreement (3-of-5) across VWAP dislocation, ORB break, RSI extreme, volume spike, and EMA alignment, with adversarial veto if any sub-signal contradicts",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_zscore", "orb_high_low", "rsi_36", "volume_spike", "ema_60_120"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 8
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vwap_anchored_support_v1",
+  "mechanism": "On NIFTY, the previous session's VWAP is the single most-tracked institutional benchmark — every VWAP-algorithm-driven fund evaluates their intraday P&L against yesterday's VWAP before initiating new directional positions. When NIFTY drifts to within 0.15% of the prior session's VWAP during the current day, institutional order clusters form: VWAP-lagging algos begin accumulating (support), while VWAP-beating algos reduce exposure (resistance). The first clean cross of this level — confirmed by a volume surge showing order-flow acceleration and a neutral RSI (40-62) indicating neither side has yet overwhelmed the other — resolves into a 15-25 spot-point impulse within the next 30-90 seconds.",
+  "tags": ["vwap", "anchored", "support-resistance", "cross-session", "volume-confirmation"],
+  "core_signal_oneliner": "Clean cross of prior session VWAP within 0.15% proximity, confirmed by volume surge and neutral RSI (38-62)",
+  "entry_type": "ce_pe",
+  "indicators_used": ["prev_day_vwap", "rsi_36", "vol_ratio_20"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "afternoon_profit_fade",
+  "mechanism": "On NIFTY/BANKNIFTY, when the index has moved more than 0.5% from session open by 14:45 IST, a predictable mean-reversion impulse emerges as leveraged retail and intraday prop-desk participants simultaneously unwind directional positions to avoid NSE EOD MTM margin calls and overnight risk. This creates concentrated one-sided order flow — heavy selling on strong up-days, aggressive covering on down-days — that pushes the index 15-25 spot points back toward session VWAP in the 14:45-15:15 window. BANKNIFTY exhibits a stronger version of this pattern given its higher retail F&O participation and leverage ratios. At 5-second bars we enter precisely as the unwinding flow begins at 14:45 rather than waiting for a full 1-minute bar confirmation, capturing the first leg of the VWAP reversion.",
+  "tags": ["mean_reversion", "time_of_day", "vwap", "afternoon"],
+  "core_signal_oneliner": "Index has moved >0.5% from open by 14:45 IST and is still extended versus session VWAP, anticipating EOD position-squaring reversal toward VWAP",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap_session", "day_return"],
+  "hold_time_seconds": [60, 600],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

@@ -1,0 +1,17 @@
+{
+  "name": "orb_5min_v1",
+  "mechanism": "NIFTY's 5-minute opening range (09:15-09:20, 60 bars at 5s) is formed exclusively by the most aggressive overnight-positioned participants — those with strong pre-open FII futures signals, macro catalysts, or large gap convictions who cannot wait for the broader 20-minute institutional window. When NIFTY's close breaks above this tight range with volume exceeding 1.5x the early session average, the aggressive buyer has overwhelmed early morning supply, forcing resting sellers to lift their offers; this triggers a chain of conditional algo entries and delta-hedging adjustments that creates a 10-20 spot point continuation burst within 30-90 seconds. The 5-minute range is narrower than the 20-minute ORB (typically 15-30 pts vs 30-55 pts), so the breakout signal is only meaningful when the range itself was sufficiently formed (not too narrow or too wide), filtering noise from low-conviction or already-exhausted opens.",
+  "tags": ["breakout", "opening_range", "orb", "gap", "5min", "institutional_flow"],
+  "core_signal_oneliner": "5-minute opening range breakout with 1.5x volume surge and VWAP direction confirmation, entry window 09:20-09:35 only",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high", "orb_low", "orb_range", "vwap", "vol_ratio_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

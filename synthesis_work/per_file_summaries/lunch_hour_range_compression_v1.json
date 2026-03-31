@@ -1,0 +1,17 @@
+{
+  "name": "lunch_hour_range_compression_v1",
+  "mechanism": "During 12:00-13:30, NIFTY's order flow shrinks as large domestic institutional desks pause rebalancing and algo momentum strategies reduce size in the low-information lunch window — the index typically compresses to a 30-50 spot point range (vs 70-120 points in the morning). At 13:30, NAV-linked mutual fund orders and FII afternoon directional flows re-enter simultaneously, overwhelming the thin resting orders at the range boundary. On NIFTY specifically (versus individual stocks), this breakout is cleaner because the index aggregates hundreds of names, dampening false breakouts from single-stock noise. The first 30-90 seconds of the breakout carries persistent directionality as the initial institutional order blocks — sized in hundreds of crores — cannot be fully absorbed by resting liquidity instantly, creating autocorrelation in the NIFTY spot order book.",
+  "tags": ["time_of_day", "range_breakout", "microstructure", "compression", "intraday"],
+  "core_signal_oneliner": "Post-lunch breakout of 12:00-13:30 compressed range with volume surge and morning trend alignment",
+  "entry_type": "ce_pe",
+  "indicators_used": ["lunch_high", "lunch_low", "lunch_range", "morning_direction", "vol_sma_60"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 7.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

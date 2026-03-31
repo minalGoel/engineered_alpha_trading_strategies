@@ -1,0 +1,17 @@
+{
+  "name": "gap_continuation_v1",
+  "mechanism": "When NIFTY gaps >0.7% at the open (driven by SGX Nifty futures or overnight US/global macro moves), and the gap holds un-filled during the first 30 minutes, institutional participants treat the sustained gap as a directional macro signal rather than noise. At 09:45, when the index then breaks above the first 30-min range high (gap-up case) or below the first 30-min range low (gap-down case), VWAP-benchmarked algorithms receive a confirmed reference level and begin working large directional orders simultaneously. This coordinated institutional flow creates a 30-90 second momentum burst on NIFTY as multiple systematic strategies trigger on the same breakout event.",
+  "tags": ["gap", "momentum", "continuation", "opening-range", "breakout"],
+  "core_signal_oneliner": "Gap > 0.7% that remains unfilled after 30 minutes then breaks above/below the first 30-min range with volume > 1.2x average",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "gap_filled_30", "first_30_high", "first_30_low", "vol_sma_240"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

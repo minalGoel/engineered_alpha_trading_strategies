@@ -1,0 +1,17 @@
+{
+  "name": "orb_failure_trade_v1",
+  "mechanism": "When NIFTY breaks above its 15-minute ORB high (09:15-09:30) but closes back inside the range within 30-90 seconds, it creates a 'bull trap' — breakout buyers who entered at the ORB high are immediately underwater and NIFTY's deep liquidity means they cut losses rapidly rather than hold. Market makers who delta-hedged their short calls during the upside breakout (buying futures) now reverse those hedges on the failure, creating a concentrated selling cascade that typically carries NIFTY 15-25 spot points below the ORB high within the next 60-120 seconds. The 5-second resolution lets us enter the reversal 30-55 seconds earlier than a 1-minute bar system — before the bulk of trapped-long liquidation completes — capturing a clean, directional entry at the turn.",
+  "tags": ["ORB", "failure", "reversal", "false_breakout", "intraday", "opening_range"],
+  "core_signal_oneliner": "Failed ORB breakout reversal: price breaches 15-min ORB then closes back inside within 60s, signalling trapped-long liquidation cascade",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high_15", "orb_low_15", "rsi_12", "bars_since_breakout"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 7,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

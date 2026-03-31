@@ -1,0 +1,17 @@
+{
+  "name": "ma_crossover_momentum_v1",
+  "mechanism": "On NIFTY, when the 2-minute EMA crosses above the 10-minute EMA with positive 1-minute spot return, multiple VWAP-benchmarked and systematic momentum algorithms simultaneously detect a directional regime shift and start building positions in parallel. This synchronous institutional order flow creates a self-reinforcing burst lasting 30-120 seconds — clean on NIFTY because the index aggregates individual stock noise and institutional TWAP orders must execute continuously, not in sporadic spikes. The freshness filter (crossover within last 5 minutes) prevents entry into stale trends where the momentum wave has already peaked; only the early acceleration phase is targeted.",
+  "tags": ["momentum", "crossover", "ema", "trend-following"],
+  "core_signal_oneliner": "Fresh 2-minute/10-minute EMA crossover with 1-minute momentum confirmation within 5 minutes of crossover",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_fast", "ema_slow", "ret_12", "crossover_age"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 5,
+  "exit_stop_points": 3,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

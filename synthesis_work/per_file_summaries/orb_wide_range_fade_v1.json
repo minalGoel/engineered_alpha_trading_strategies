@@ -1,0 +1,17 @@
+{
+  "name": "orb_wide_range_fade_v1",
+  "mechanism": "On NIFTY, when the 09:15-09:30 opening range exceeds 2x its 20-session average, institutional option writers at the ORB extreme strikes (puts at ORB_low, calls at ORB_high) become heavily gamma-exposed and delta-hedge aggressively against further extension. Simultaneously, VWAP-benchmarked buy-side desks — seeing the index pinned at the ORB extreme — begin fading the deviation to protect their intraday benchmark. Each subsequent test of the ORB extreme generates a 10-20 spot point micro-rejection within 30-90 seconds as these two flows converge. At 5-second resolution we enter the instant RSI exhaustion confirms the rejection is beginning, capturing the first leg of the mean-reversion toward ORB midpoint before the move extends.",
+  "tags": ["ORB", "wide_range", "fade", "mean_reversion", "opening_range"],
+  "core_signal_oneliner": "Counter-trend fade at ORB extremes on days where opening range exceeds 2x the 20-session average, confirmed by 3-min RSI exhaustion",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high_15", "orb_low_15", "avg_orb_range_20d", "price_position", "rsi_36"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6.0,
+  "exit_stop_points": 3.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 6
+}

@@ -1,0 +1,17 @@
+{
+  "name": "vwap_mean_reversion_v5",
+  "mechanism": "On NIFTY, when India VIX exceeds 15, market maker quote widening and elevated institutional hedging urgency amplify intraday moves — even moderate-volume directional selling (1.2x the 4-minute baseline, not panic levels) can drive NIFTY 80-100 spot points below session VWAP within minutes, creating a z-score below -2.7 on the 20-minute rolling standard deviation. In elevated-VIX regimes, VWAP-benchmarked buy-side algorithms increase their accumulation urgency threshold precisely because the cost of underperforming their benchmark compounds faster when volatility is high — they step in aggressively once deviation reaches the 2.7-sigma level to ensure VWAP-or-better fills before further vol expansion makes it impossible. This differs from low-VIX VWAP reversion (v1, v18) where deviations are shallower and slower, and from panic capitulation (v3) where 1.7x volume is required regardless of VIX regime — here the VIX filter does the selectivity work, allowing a lower volume bar (1.2x) to be the confirmation trigger.",
+  "tags": ["mean_reversion", "vwap", "vix_regime", "extreme_deviation", "elevated_volatility"],
+  "core_signal_oneliner": "VWAP z-score below -2.7 sigma in elevated-VIX sessions (VIX > 15), with low volume bar requirement (1.2x) made reliable by regime gate",
+  "entry_type": "ce_pe",
+  "indicators_used": ["vwap", "vwap_stddev_240", "vwap_zscore", "rel_volume_48", "vix_close"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 9,
+  "exit_stop_points": 5,
+  "has_vwap": true,
+  "has_volume_filter": true,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

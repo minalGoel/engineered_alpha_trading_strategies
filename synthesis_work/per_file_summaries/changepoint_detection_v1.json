@@ -1,0 +1,17 @@
+{
+  "name": "changepoint_detection_v1",
+  "mechanism": "On NIFTY/BANKNIFTY, large institutional TWAP/VWAP execution algorithms and macro news events generate persistent cumulative return deviations that build bar-by-bar before any lagging indicator confirms a trend. CUSUM (Cumulative Sum) control charts accumulate these micro-deviations against a 5-minute rolling baseline: the moment the positive CUSUM first crosses a volatility-scaled threshold, the index has entered a new buying regime where institutional demand is absorbing offers faster than the rolling mean. At 5-second resolution, we enter within the first 15-30 seconds of a new regime — before momentum strategies trigger and price moves further — riding the early continuation of the institutional order flow.",
+  "tags": ["changepoint", "CUSUM", "regime-shift", "structural-break", "momentum"],
+  "core_signal_oneliner": "CUSUM of 5-second returns versus 5-minute rolling baseline crosses a volatility-scaled threshold for the first time, signaling a new directional regime onset",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ret_1", "roll_mean_60", "roll_std_60", "cusum_pos", "cusum_neg"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 6,
+  "exit_stop_points": 4,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 4
+}

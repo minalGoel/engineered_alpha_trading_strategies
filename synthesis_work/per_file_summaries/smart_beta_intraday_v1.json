@@ -1,0 +1,17 @@
+{
+  "name": "smart_beta_intraday_v1",
+  "mechanism": "On NIFTY, intraday consolidation phases compress the Keltner Channel (EMA ± 1.5×ATR) as institutional algorithms pause their directional orders to rebalance or wait for a catalyst. When ATR drops to the bottom 30th percentile of its 10-minute rolling window, the index is in a coiling state where both buy and sell resting liquidity is thin. A breakout above the upper band with simultaneous range expansion (current bar range > 1.5× 5-min average) signals that institutional demand has overwhelmed the supply ceiling — these breakouts have 30-90 second momentum continuation because the underlying directional orders are typically only partially filled and the algo continues buying. Unlike individual stocks, NIFTY breakouts from Keltner compression are cleaner because index movements aggregate multiple institutional flows rather than single-name events.",
+  "tags": ["volatility-compression", "keltner-breakout", "range-expansion", "momentum"],
+  "core_signal_oneliner": "Keltner Channel breakout with prior ATR compression (bottom 30th percentile) and range expansion on the breakout bar, signaling post-coil institutional flow",
+  "entry_type": "ce_pe",
+  "indicators_used": ["ema_60", "atr_60", "keltner_upper", "keltner_lower", "range_ratio", "atr_12", "vol_percentile", "vol_pct_lag12", "mom_6"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 5.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

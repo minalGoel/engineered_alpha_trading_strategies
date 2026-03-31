@@ -1,0 +1,17 @@
+{
+  "name": "orb_index_aligned_v1",
+  "mechanism": "NIFTY's first 15 minutes (09:15–09:30) is the overnight information absorption window where FII hedges, pre-open auction imbalances, and gap-fill orders are digested into a defined price range. When NIFTY closes above that range's high with 3+ consecutive 5-second bars, it signals that buy-side institutional TWAP/VWAP algorithms have exhausted all resting supply at the ORB ceiling and are continuing to accumulate — the same institutional flow tailwind the original strategy used an index-alignment filter to detect. VWAP confirmation (close > VWAP) ensures the breakout is aligned with the dominant session bias rather than a counter-trend spike. At 5-second resolution we enter within 15 seconds of breakout confirmation, capturing the first impulse leg before TWAP algos pause for rebalancing.",
+  "tags": ["ORB", "opening_range", "breakout", "momentum", "intraday", "institutional_flow"],
+  "core_signal_oneliner": "15-minute ORB breakout confirmed by 3 consecutive 5s closes above range high plus VWAP alignment and VIX regime gate",
+  "entry_type": "ce_pe",
+  "indicators_used": ["orb_high", "orb_low", "vwap", "above_orb_count", "below_orb_count"],
+  "hold_time_seconds": [30, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": true,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

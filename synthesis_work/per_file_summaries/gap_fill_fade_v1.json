@@ -1,0 +1,17 @@
+{
+  "name": "gap_fill_fade_v1",
+  "mechanism": "When NIFTY or BANKNIFTY gaps 0.3-1.5% at open due to overnight global cues (SGX Nifty, Dow futures, Nasdaq), institutional desks with VWAP and arrival-price benchmarks immediately see sub-benchmark fills and begin accumulating (for gap-down) or distributing (for gap-up) against the gap direction. Within the first 25 minutes, this institutional flow is systematic and large enough to create measurable reversal momentum at the 5-second level. We detect the first 5-second reversal bar as confirmation that gap-fill flow has begun, then ride the initial 20-40 spot point impulse of this institutional rebalancing. Index gaps are smoother than single-stock gaps because no earnings or company events drive them — pure overnight noise from correlated global cues.",
+  "tags": ["mean_reversion", "gap", "opening", "index"],
+  "core_signal_oneliner": "Gap 0.3-1.5% day: first 5s bar closing against the gap direction with RSI showing momentum exhaustion, within the first 25 minutes of NIFTY/BANKNIFTY session",
+  "entry_type": "ce_pe",
+  "indicators_used": ["gap_pct", "rsi_36", "bar_green"],
+  "hold_time_seconds": [30, 90],
+  "timeframe": "5s",
+  "exit_target_points": 8,
+  "exit_stop_points": 5,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": true,
+  "has_time_filter": true,
+  "parameter_count": 5
+}

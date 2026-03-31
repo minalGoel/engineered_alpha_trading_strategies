@@ -1,0 +1,17 @@
+{
+  "name": "pre_market_auction_edge_v1",
+  "mechanism": "NIFTY's NSE pre-opening session (09:00–09:08) produces an indicative equilibrium price that reflects net overnight FII and institutional futures positioning. When NIFTY opens with a gap exceeding 0.2% from the previous close, the auction price has embedded a strong directional bias. If the first 2 minutes of continuous trading (09:15–09:17) confirm the gap direction — meaning institutional order flow is absorbing supply at the gap level rather than fading it — algo momentum strategies and options market makers delta-hedging their books amplify the move over the next 30–90 seconds. At 5-second resolution we can detect this 2-minute confirmation the moment it completes and enter before the burst has fully played out, capturing the continuation leg as remaining institutional TWAP/VWAP orders execute.",
+  "tags": ["time_of_day", "opening_gap", "momentum", "early_session", "auction"],
+  "core_signal_oneliner": "Pre-market auction gap (>0.2%) continuation confirmed by 2-minute intraday return in same direction within 09:17-09:21 entry window",
+  "entry_type": "ce_pe",
+  "indicators_used": ["opening_gap_pct", "intraday_ret", "bar_in_day"],
+  "hold_time_seconds": [15, 120],
+  "timeframe": "5s",
+  "exit_target_points": 8.0,
+  "exit_stop_points": 4.0,
+  "has_vwap": false,
+  "has_volume_filter": false,
+  "has_regime_filter": false,
+  "has_time_filter": true,
+  "parameter_count": 3
+}

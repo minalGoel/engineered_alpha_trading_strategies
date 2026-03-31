@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: its', 'Entry condition references unavailable column: up', 'Entry condition references unavailable column: down', 'Entry condition references unavailable column: VIX']"
+}

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: range_expanding', 'Entry condition references unparseable indicator: bar_return_2', 'Entry condition references unparseable indicator: bar_return_3', 'Entry condition references unparseable indicator: vol_expanding']"
+}

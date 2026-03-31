@@ -5,3 +5,4 @@ __pycache__/
 .optuna/
 .DS_Store
 pipeline.log
+logs/ec2/

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: term_structure', 'Entry condition references unavailable column: NIFTY_RSI_30', 'Entry condition references unavailable column: skew', 'Entry condition references unavailable column: skew_z']"
+}

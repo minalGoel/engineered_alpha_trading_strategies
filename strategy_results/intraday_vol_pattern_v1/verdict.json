@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: BB_mid_20', 'Entry condition references unavailable column: EMA_13', 'Entry condition references unavailable column: EMA_5', 'Entry condition references unavailable column: BB_lower_20', 'Entry condition references unavailable column: from', 'Entry condition references unavailable column: BB_upper_20', 'Entry condition references unavailable column: vol_surprise']"
+}

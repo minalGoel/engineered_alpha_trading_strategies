@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: nifty_session_low', 'Entry condition references unavailable column: stock_close', 'Entry condition references unparseable indicator: nifty_session_high']"
+}

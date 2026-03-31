@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: linreg_lower', 'Entry condition references unparseable indicator: linreg_upper', 'Entry condition references unparseable indicator: channel_position']"
+}

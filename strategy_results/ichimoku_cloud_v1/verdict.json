@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: price', 'Entry condition references unparseable indicator: tenkan_sen', 'Entry condition references unparseable indicator: kijun_sen', 'Entry condition references unavailable column: cloud', 'Entry condition references unparseable indicator: senkou_span_a', 'Entry condition references unparseable indicator: chikou_span']"
+}

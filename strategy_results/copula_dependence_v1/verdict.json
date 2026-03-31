@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: U_A', 'Entry condition references unavailable column: tail', 'Entry condition references unparseable indicator: Cond_Prob', 'Entry condition references unparseable indicator: Tail_Dep_Pctile', 'Entry condition references unparseable indicator: U_B']"
+}

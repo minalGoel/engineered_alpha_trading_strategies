@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: EMA_13', 'Entry condition references unavailable column: EMA_5', 'Entry condition references unavailable column: volume_surge', 'Entry condition references unavailable column: rel_strength']"
+}

@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unparseable indicator: wave3_breakout', 'Entry condition references unparseable indicator: wave1_detection', 'Entry condition references unavailable column: bearish', 'Entry condition references unavailable column: bullish', 'Entry condition references unparseable indicator: volume_surge_w3']"
+}

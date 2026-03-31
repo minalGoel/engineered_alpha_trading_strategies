@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_PARSE_ERROR",
+  "reason": "Parse errors: ['Entry condition references unavailable column: follower_VWAP', 'Entry condition references unavailable column: follower_close', 'Entry condition references unparseable indicator: historical_beta']"
+}

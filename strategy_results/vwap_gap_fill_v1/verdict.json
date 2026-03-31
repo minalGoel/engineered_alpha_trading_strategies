@@ -1,0 +1,4 @@
+{
+  "verdict": "FAILED_NO_TRADES",
+  "reason": "Only 1 trades on full training set (need 50)"
+}
